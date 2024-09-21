@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+
 
 const host =  process.env.DATABASE_HOST
 const username = process.env.DATABASE_USERNAME

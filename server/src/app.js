@@ -1,15 +1,19 @@
 import express from "express"
 import 'dotenv/config'
+import cookieParser from 'cookie-parser';
 import sequelize from './config/db.connection.js'
 import userRouter from "./api/v1/routes/userRoutes.js"
+import authRouter from "./api/v1/routes/authRoutes.js";
 
 const app = express()
 app.use(express.json())
+app.use(cookieParser())
 sequelize.sync()
 
-const PORT = process.env.PORT || 3000     // eslint-disable-line no-undef
+const PORT = process.env.PORT || 3000    
 
 app.use('/api/v1/users', userRouter)
+app.use('/api/v1/auth', authRouter)
 
 app.get('/', (req, res) => {
     res.send(`hi there`)

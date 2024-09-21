@@ -5,10 +5,13 @@ export const createUserController = async (req, res) => {
 
     try{
         const userData = await UserService.createUserService(req.body)
-        res.status(201).json({
+        res.status(201)
+        .set('Authorization', `Bearer ${userData.accessToken}`)
+        .cookie('refreshToken', userData.refreshToken, { httpOnly: true, sameSite: 'strict' })
+        .json({
             status: "success",
             message: "Successfully created user",
-            userData
+            user: userData.user
         })
     } catch(err){
         res.status(400).json({
@@ -39,6 +42,7 @@ export const getUserController = async(req, res) => {
 export const updateUserController = async(req, res) => {
     try{
         const user = await UserService.updateUserService(req)
+
         res.status(200).json({
             status: "success",
             message: "Successfully updated user",
@@ -48,7 +52,7 @@ export const updateUserController = async(req, res) => {
         res.status(400).json({
             status: "failure",
             message: "Error while updating user",
-            error: err
+            error: err.message
         })
     }
 }

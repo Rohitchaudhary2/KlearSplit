@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import { defaultPassword } from '../utils/passwordGenerator.js';
+import { generatePassword } from '../utils/passwordGenerator.js';
 import { createUserDb, getUserByIdDb, updateUserDb, deleteUserDb, getUserByEmailDb, getUserByPhoneDb } from '../db/userDb.js';
 import { validateUpdatedUser, validateUser } from '../validations/userValidations.js';
 import jwt from 'jsonwebtoken'
@@ -12,7 +12,7 @@ class UserService {
     }
 
     static generateRefreshToken = (id) => {
-        const refreshToken = jwt.sign({id}, process.env.ACCESS_SECRET_KEY, {expiresIn: '10d'})
+        const refreshToken = jwt.sign({id}, process.env.REFRESH_SECRET_KEY, {expiresIn: '10d'})
 
         return refreshToken
     }
@@ -32,17 +32,18 @@ class UserService {
 
         if(isPhoneExists) throw new Error('Phone number already exists')
 
-        const password = defaultPassword()
+        const password = generatePassword()
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt)
         value.password = hashedPassword
         
-
+        console.log(password) // Send mail for password to the user
+        
         user = await createUserDb(value)  
 
-        const accessToken = this.generateAccessToken(user.id)
+        const accessToken = this.generateAccessToken(user.user_id)
 
-        const refreshToken = this.generateRefreshToken(user.id)
+        const refreshToken = this.generateRefreshToken(user.user_id)
 
         return {user, accessToken, refreshToken}
     }

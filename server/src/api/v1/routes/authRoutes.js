@@ -1,8 +1,10 @@
 import { Router } from 'express'
-import { authController } from '../controllers/authController.js';
+import { loginController, logoutController } from '../controllers/authController.js';
+import { authenticateToken } from '../middlewares/auth.js';
 
 const authRouter = Router()
 
-authRouter.post('/login', authController);
+authRouter.post('/login', loginController);
+authRouter.get('/logout', authenticateToken, logoutController)
 
 export default authRouter

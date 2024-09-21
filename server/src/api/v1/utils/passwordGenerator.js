@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-export const defaultPassword = () => {
+export const generatePassword = () => {
 
     const length = Math.floor(Math.random() * 9) + 8
 

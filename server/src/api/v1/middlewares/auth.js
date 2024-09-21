@@ -23,17 +23,20 @@ export const authenticateToken = async (req, res, next) => {
   
       try {
         const refreshToken = req.cookies['refreshToken']
+        
         const userId = jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY);
+        
         const accessToken = jwt.sign({ id: userId.id }, process.env.ACCESS_SECRET_KEY, { expiresIn: '1h' });
+
+        const newRefreshToken = jwt.sign({ id: userId.id }, process.env.REFRESH_SECRET_KEY, { expiresIn: '10d' });
 
         const user = await getUserByIdDb(userId.id)
   
-        res
-          .cookie('refreshToken', refreshToken, { httpOnly: true, sameSite: 'strict' })
+        res.cookie('refreshToken', newRefreshToken, { httpOnly: true, sameSite: 'strict' })
           .header('Authorization', accessToken)
           .send(user);
       } catch (error) {
-        return res.status(400).json({
+        res.status(400).json({
             status: "failure",
             message: 'Invalid Token.',
             error: error.message

@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs"
-import { getUserByEmailDb } from "../db/userDb.js"
-import UserService from "./userServices.js"
-import { createRefreshTokenDb, deleteRefreshTokenDb, getRefreshTokenDb } from '../db/tokenDb.js'
+import { getUserByEmailDb } from "../users/userDb.js"
+import { createRefreshTokenDb, deleteRefreshTokenDb, getRefreshTokenDb } from './tokenDb.js'
 import { ErrorHandler } from "../middlewares/ErrorHandler.js"
+import { generateAccessToken, generateRefreshToken } from "../utils/tokenGenerator.js"
 
 class AuthService {
     static loginService = async (req) => {
@@ -14,8 +14,8 @@ class AuthService {
         const validPassword = bcrypt.compare(password, user.password)
         if(!validPassword) throw new ErrorHandler(404, 'Password is wrong')
 
-        const accessToken = UserService.generateAccessToken(user.user_id)
-        const refreshToken = UserService.generateRefreshToken(user.user_id)
+        const accessToken = generateAccessToken(user.user_id)
+        const refreshToken = generateRefreshToken(user.user_id)
 
         this.createRefreshTokenService({
             token: refreshToken,

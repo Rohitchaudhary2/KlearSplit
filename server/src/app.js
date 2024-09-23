@@ -3,8 +3,8 @@ import 'dotenv/config'
 import cors from 'cors'
 import cookieParser from 'cookie-parser';
 import sequelize from './config/db.connection.js'
-import userRouter from "./api/v1/routes/userRoutes.js"
-import authRouter from "./api/v1/routes/authRoutes.js";
+import userRouter from "./api/v1/users/userRoutes.js"
+import authRouter from "./api/v1/auth/authRoutes.js";
 import { ErrorMiddleware } from "./api/v1/middlewares/ErrorHandler.js";
 
 const app = express()
@@ -17,8 +17,8 @@ const PORT = process.env.PORT || 3000
 
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/auth', authRouter)
-app.use(ErrorMiddleware)
 
+app.use(ErrorMiddleware)
 app.listen(PORT, () => {
     `Server is listening on port ${PORT}`
 })

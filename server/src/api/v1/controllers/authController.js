@@ -1,6 +1,6 @@
 import AuthService from "../services/authServices.js"
 
-export const loginController = async (req, res) => {
+export const loginController = async (req, res, next) => {
     try{
         const userData = await AuthService.loginService(req)
         res.status(200)
@@ -12,15 +12,11 @@ export const loginController = async (req, res) => {
             user: userData.user,
         })
     } catch(err){
-        res.status(400).json({
-            status: "failure",
-            message: "Email or Password is wrong.",
-            error: err.message
-        })
+        next(err)
     }
 }
 
-export const logoutController = async (req, res) => {
+export const logoutController = async (req, res, next) => {
     try{   
         await AuthService.logoutService(req)   
         res.status(200)
@@ -31,10 +27,6 @@ export const logoutController = async (req, res) => {
             message: "User logged out successfully"
         })
     } catch(err) {
-        res.status(400).json({
-            status: "failure",
-            message: "Error while logging out",
-            error: err
-        })
+        next(err)
     }
 }

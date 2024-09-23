@@ -4,59 +4,61 @@ import { createUserDb, getUserByIdDb, updateUserDb, deleteUserDb, getUserByEmail
 import { validateUpdatedUser, validateUser } from '../validations/userValidations.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/tokenGenerator.js';
 import AuthService from './authServices.js';
+import { ErrorHandler } from '../middlewares/ErrorHandler.js';
 
 class UserService {
-    static createUserService = async (user) => {
-        const {error, value} = validateUser(user, { stripUnknown: true })
+    static createUserService = async (userData) => {
+        const {error, user} = validateUser(userData, { stripUnknown: true })
+        if(error) throw new ErrorHandler(400, error.message)
 
-        if(error) throw error
+        const isEmailExists = await getUserByEmailDb(user.email)
+        if(isEmailExists) throw new ErrorHandler(400, 'Email already exists!')
 
-        const isEmailExists = await getUserByEmailDb(value.email)
-        if(isEmailExists) throw new Error('Email already exists')
-
-        const isPhoneExists = await getUserByPhoneDb(value.phone)
-        if(isPhoneExists) throw new Error('Phone number already exists')
+        const isPhoneExists = await getUserByPhoneDb(user.phone)
+        if(isPhoneExists) throw new ErrorHandler(400, 'Phone Number already exists!')
 
         const password = generatePassword()
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt)
-        value.password = hashedPassword
+        user.password = hashedPassword
         
         console.log(password) // Send mail for password to the user
         
-        user = await createUserDb(value)  
+        const createdUser = await createUserDb(user)  
 
-        const accessToken = generateAccessToken(user.user_id)
-        const refreshToken = generateRefreshToken(user.user_id)
+        const accessToken = generateAccessToken(createdUser.user_id)
+
+        const refreshToken = generateRefreshToken(createdUser.user_id)
 
         await AuthService.createRefreshTokenService({
             token: refreshToken,
-            user_id: user.user_id
+            user_id: createdUser.user_id
         })
 
-        return {user, accessToken, refreshToken}
+        return {user: createdUser, accessToken, refreshToken}
     }
 
-    static getUserService = async(id) => await getUserByIdDb(id)
+    static getUserService = async(id) => {
+        const user = await getUserByIdDb(id)
+        if(!user) throw new ErrorHandler(404, 'User not found')
+        return user
+    }
         
     static updateUserService = async(req) => {
         const userData = req.body
         const id = req.params.id
-        const user = await getUserByIdDb(id)
-        
-        if(!user) throw new Error(`User does not exist`)
+        await this.getUserService(id)
 
-        const {error, value} = validateUpdatedUser(userData, { stripUnknown: true })
+        const {error, updateUserData} = validateUpdatedUser(userData, { stripUnknown: true })
 
-        if(error) throw error
+        if(error) throw new ErrorHandler(400, error.message)
 
-        return await updateUserDb(value, id)
+        return await updateUserDb(updateUserData, id)
     }
 
     static deleteUserService = async(req) => {
         const id = req.params.id
-        const user = await getUserByIdDb(id)
-        if(!user) throw new Error(`User does not exist`)
+        await this.getUserService(id)
 
         return await deleteUserDb(id)
     }

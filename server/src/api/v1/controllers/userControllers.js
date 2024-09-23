@@ -1,7 +1,6 @@
-
 import UserService from '../services/userServices.js';
  
-export const createUserController = async (req, res) => {
+export const createUserController = async (req, res, next) => {
     try{
         const userData = await UserService.createUserService(req.body)
         res.status(201)
@@ -13,15 +12,12 @@ export const createUserController = async (req, res) => {
             user: userData.user
         })
     } catch(err){
-        res.status(400).json({
-            status: "failure",
-            message: "Error while creating user",
-            error: err.message
-        })
+        console.log(err)
+        next(err)
     }
 }
 
-export const getUserController = async(req, res) => {
+export const getUserController = async(req, res, next) => {
     try{
         const userData = await UserService.getUserService(req.params.id)
         res.status(200).json({
@@ -30,15 +26,12 @@ export const getUserController = async(req, res) => {
             userData
         })
     } catch(err){
-        res.status(400).json({
-            status: "failure",
-            message: "Error while fetching user",
-            error: err
-        })
+        console.log(err)
+        next(err)
     }
 }
 
-export const updateUserController = async(req, res) => {
+export const updateUserController = async(req, res, next) => {
     try{
         const user = await UserService.updateUserService(req)
 
@@ -48,15 +41,12 @@ export const updateUserController = async(req, res) => {
             user
         })
     } catch(err) {
-        res.status(400).json({
-            status: "failure",
-            message: "Error while updating user",
-            error: err.message
-        })
+        console.log(err)
+        next(err)
     }
 }
 
-export const deleteUserController = async(req, res) => {
+export const deleteUserController = async(req, res, next) => {
     try{
         const deletedUser = await UserService.deleteUserService(req)
         res.status(200).json({
@@ -65,10 +55,7 @@ export const deleteUserController = async(req, res) => {
             deletedUser
         })
     } catch(err) {
-        res.status(400).json({
-            status: "failure",
-            message: "Error while deleting user",
-            error: err
-        })
+        console.log(err)
+        next(err)
     }
 }

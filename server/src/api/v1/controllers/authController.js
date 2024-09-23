@@ -20,8 +20,9 @@ export const loginController = async (req, res) => {
     }
 }
 
-export const logoutController = (req, res) => {
-    try{
+export const logoutController = async (req, res) => {
+    try{   
+        await AuthService.logoutService(req)   
         res.status(200)
         .set('Authorization', '')
         .clearCookie("refreshToken", { httpOnly: true, sameSite: 'strict'})

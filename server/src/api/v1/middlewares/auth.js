@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { getUserByIdDb } from '../db/userDb.js';
+import AuthService from '../services/authServices.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/tokenGenerator.js';
 
 export const authenticateToken = async (req, res, next) => {
@@ -23,11 +24,14 @@ export const authenticateToken = async (req, res, next) => {
 
   try {
     const refreshToken = req.cookies['refreshToken']
+
+    const refreshTokenDb = await AuthService.getRefreshTokenService(refreshToken)
+
+    if(refreshToken !== refreshTokenDb) throw Error
     
     const userId = jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY);
         
     const accessToken = generateAccessToken(userId.id)
-
     const newRefreshToken = generateRefreshToken(userId.id)
 
     const user = await getUserByIdDb(userId.id)

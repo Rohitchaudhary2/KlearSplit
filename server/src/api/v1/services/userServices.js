@@ -3,6 +3,7 @@ import { generatePassword } from '../utils/passwordGenerator.js';
 import { createUserDb, getUserByIdDb, updateUserDb, deleteUserDb, getUserByEmailDb, getUserByPhoneDb } from '../db/userDb.js';
 import { validateUpdatedUser, validateUser } from '../validations/userValidations.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/tokenGenerator.js';
+import AuthService from './authServices.js';
 
 class UserService {
     static createUserService = async (user) => {
@@ -27,6 +28,11 @@ class UserService {
 
         const accessToken = generateAccessToken(user.user_id)
         const refreshToken = generateRefreshToken(user.user_id)
+
+        await AuthService.createRefreshTokenService({
+            token: refreshToken,
+            user_id: user.user_id
+        })
 
         return {user, accessToken, refreshToken}
     }

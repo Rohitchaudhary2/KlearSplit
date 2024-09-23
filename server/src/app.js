@@ -17,10 +17,6 @@ const PORT = process.env.PORT || 3000
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/auth', authRouter)
 
-app.get('/', (req, res) => {
-    res.send(`hi there`)
-})
-
 app.listen(PORT, () => {
     `Server is listening on port ${PORT}`
 })

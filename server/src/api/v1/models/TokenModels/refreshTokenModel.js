@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import { sequelize } from "../../../config/db.connection.js";
+import sequelize from "../../../../config/db.connection.js"
 
 const RefreshToken = sequelize.define(
   "refresh_token",
@@ -22,6 +22,9 @@ const RefreshToken = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     }
+  }, 
+  {
+    timestamps: false
   },
 );
 

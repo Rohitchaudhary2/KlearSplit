@@ -2,7 +2,6 @@
 import UserService from '../services/userServices.js';
  
 export const createUserController = async (req, res) => {
-
     try{
         const userData = await UserService.createUserService(req.body)
         res.status(201)

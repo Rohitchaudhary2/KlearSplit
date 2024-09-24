@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { ErrorHandler } from "../middlewares/ErrorHandler.js";
 
+// Function to generate a new access token using the provided user_id
 export const generateAccessToken = (id) => {
   const accessToken = jwt.sign({ id }, process.env.ACCESS_SECRET_KEY, {
     expiresIn: process.env.ACCESS_EXPIRY,
@@ -12,6 +13,7 @@ export const generateAccessToken = (id) => {
   return accessToken;
 };
 
+// Function to generate a new access token using the provided user_id
 export const generateRefreshToken = (id) => {
   const refreshToken = jwt.sign({ id }, process.env.REFRESH_SECRET_KEY, {
     expiresIn: process.env.REFRESH_EXPIRY,

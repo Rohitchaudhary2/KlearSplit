@@ -1,15 +1,18 @@
 import RefreshToken from "./refreshTokenModel.js";
 
-export const createRefreshTokenDb = async(token) => RefreshToken.create(token)
+export const createRefreshTokenDb = async (token, transaction) =>
+  RefreshToken.create(token, { transaction });
 
-export const deleteRefreshTokenDb = async(token) => RefreshToken.destroy({
+export const deleteRefreshTokenDb = async (token) =>
+  RefreshToken.destroy({
     where: {
-        token
-    }
-})
+      token,
+    },
+  });
 
-export const getRefreshTokenDb = async(token) => RefreshToken.findOne({
+export const getRefreshTokenDb = async (token) =>
+  RefreshToken.findOne({
     where: {
-        token
-    }
-})
+      token,
+    },
+  });

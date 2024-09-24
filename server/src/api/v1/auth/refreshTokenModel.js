@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../../../config/db.connection.js"
+import sequelize from "../../../config/db.connection.js";
 
 const RefreshToken = sequelize.define(
   "refresh_token",
@@ -19,12 +19,12 @@ const RefreshToken = sequelize.define(
       onDelete: "CASCADE",
     },
     token: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: false,
-    }
-  }, 
+    },
+  },
   {
-    timestamps: false
+    timestamps: false,
   },
 );
 

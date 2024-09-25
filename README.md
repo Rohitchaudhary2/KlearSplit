@@ -1,0 +1,201 @@
+# KlearSplit
+
+**KlearSplit** is a web application that consists of a client built with Angular and a server built with Node.js, Express, and Sequelize (for database handling). The application uses JWT-based authentication and includes role-based access control, as well as cookie handling for refresh tokens.
+
+## Table of Contents
+- [Technologies Used](#technologies-used)
+- [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Cloning the Repository](#cloning-the-repository)
+  - [Backend (Node.js)](#backend-nodejs)
+  - [Frontend (Angular)](#frontend-angular)
+- [Environment Variables](#environment-variables)
+- [API Endpoints](#api-endpoints)
+- [Logging](#logging)
+
+## Technologies Used
+
+### Backend (Server):
+- **Node.js** and **Express**
+- **PostgreSQL** with **Sequelize ORM**
+- **JWT** for authentication (access & refresh tokens)
+- **Winston** for logging
+- **Morgan** for request logging
+- **Cookie-based authentication** (storing refresh tokens in cookies)
+- **CORS** for managing cross-origin resource sharing between frontend and backend
+- **bcrypt** for password hashing
+
+### Frontend (Client):
+- **Angular** (standalone approach)
+- **Reactive Forms** and **HTTP Client**
+- **LocalStorage** for access token management
+- **Angular Interceptors** for attaching tokens to requests
+
+## Installation
+
+### Prerequisites
+
+Ensure you have the following installed on your system:
+- **Node.js** (v14 or later)
+- **PostgreSQL**
+- **Angular CLI** (for frontend development)
+
+### Cloning the Repository
+
+Clone this repository using the following command:
+
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+```
+
+### Backend (Node.js)
+
+1. Navigate to the server directory:
+
+    ```bash
+    cd server
+    ```
+
+2. Install server dependencies:
+
+    ```bash
+    npm install
+    ```
+
+3. Start the backend server:
+
+    ```bash
+    npm run dev
+    ```
+
+   The backend server will run on `http://localhost:3000` by default.
+
+### Frontend (Angular)
+
+1. Navigate to the client directory:
+
+    ```bash
+    cd ../client
+    ```
+
+2. Install client dependencies:
+
+    ```bash
+    npm install
+    ```
+
+3. Start the Angular development server:
+
+    ```bash
+    npm start
+    ```
+
+   The Angular application will run on `http://localhost:4200` by default.
+
+## Environment Variables
+
+Create a `.env` file in the `server` directory with the following structure:
+
+```plaintext
+PORT=set_your_port
+DATABASE_HOST=your_database_hostname
+DATABASE_USERNAME=your_database_username
+DATABASE_PASSWORD=your_database_password
+DATABASE_NAME=your_database_name
+ACCESS_SECRET_KEY=your_access_secret_key
+ACCESS_EXPIRY=your_access_token_expiry_time
+REFRESH_SECRET_KEY=your_refresh_secret_key
+REFRESH_EXPIRY=your_refresh_token_expiry_time
+```
+
+Make sure to replace the placeholder values with your actual database credentials and secret keys.
+
+## API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/login`: Login and receive access/refresh tokens.
+- `GET /api/v1/auth/logout`: Logout and delete access/refresh tokens.
+
+### Users
+- `POST /api/v1/users/register`: Register a new user.
+- `GET /api/v1/users/:id`: Get user details (authentication required).
+- `PATCH /api/v1/users/:id`: Update a user's profile (authentication required).
+- `DELETE /api/v1/users/:id`: Soft delete a user's account (authentication required).
+
+## Logging
+
+The backend uses **Winston** and **Morgan** for logging purposes:
+
+- **Morgan** logs all incoming HTTP requests to provide detailed insights into request activities.
+- **Winston** is used for structured logging of application events and errors.
+
+Logs are stored in the following locations:
+- `src/log/app.log` for general logs
+- `src/log/appErrors.log` for error logs
+
+To customize how requests are logged, Morgan is integrated into the application middleware.
+
+By using these logging tools, you will be able to monitor all incoming requests and log detailed information about the application's operations and any errors encountered.
+
+## Deployment
+
+To deploy this application on a server, follow these steps:
+
+### Backend (Node.js)
+
+1. Set up a PostgreSQL database on your server and update the `.env` file with the appropriate environment variables.
+   
+2. Install Node.js and ensure the required dependencies are installed:
+
+    ```bash
+    npm install
+    ```
+
+3. For production, build the backend:
+
+    ```bash
+    npm run build
+    ```
+
+4. Start the server:
+
+    ```bash
+    npm start
+    ```
+
+### Frontend (Angular)
+
+1. Build the Angular application for production:
+
+    ```bash
+    ng build --prod
+    ```
+
+2. Serve the built static files using a server like **Nginx** or **Apache** by copying the `dist/` folder from Angular to your server's public directory.
+
+### Nginx Setup Example
+
+Here’s an example Nginx configuration to serve both the backend and frontend:
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        root /var/www/your-angular-app/dist;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Ensure that the `api` routes are correctly proxied to your Node.js backend, and static files are served from the Angular `dist/` directory.

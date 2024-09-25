@@ -9,6 +9,7 @@ import { authenticateToken } from "../middlewares/auth.js";
 
 const userRouter = Router();
 
+// User API routes
 userRouter.post("/register", createUserController);
 userRouter.get("/:id", authenticateToken, getUserController);
 userRouter.patch("/:id", authenticateToken, updateUserController);

@@ -1,6 +1,7 @@
 import AuthService from "./authServices.js";
 import { ResponseHandler } from "../utils/ResponseHandler.js";
 
+// Controller for login funnctionality
 export const loginController = async (req, res, next) => {
   try {
     const userData = await AuthService.loginService(req);
@@ -17,6 +18,7 @@ export const loginController = async (req, res, next) => {
   }
 };
 
+// Controller for logout functionality
 export const logoutController = async (req, res, next) => {
   try {
     await AuthService.logoutService(req);

@@ -12,7 +12,7 @@ const sequelize = new Sequelize(database, username, password, {
 
 try {
   await sequelize.authenticate();   // Attempting to authenticate the connection to the database
-  // console.log("Connection has been established successfully.");
+  console.log("Connection has been established successfully.");
 } catch {
   logger.log({
     level: "error",

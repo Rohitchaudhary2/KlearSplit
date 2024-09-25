@@ -1,18 +1,11 @@
 import AuthService from "./authServices.js";
-import { ResponseHandler } from "../utils/ResponseHandler.js";
+import { authResponseHandler } from "../utils/responseHandler.js";
 
 // Controller for login funnctionality
 export const loginController = async (req, res, next) => {
   try {
-    const userData = await AuthService.loginService(req);
-    res
-      .status(200)
-      .set("Authorization", `Bearer ${userData.accessToken}`)
-      .cookie("refreshToken", userData.refreshToken, {
-        httpOnly: true,
-        sameSite: "strict",
-      })
-      .json(ResponseHandler("User login successful", userData.user));
+    const userData = await AuthService.login(req, next);
+    authResponseHandler(res, 200, "User login successful", userData)
   } catch (err) {
     next(err);
   }
@@ -21,12 +14,15 @@ export const loginController = async (req, res, next) => {
 // Controller for logout functionality
 export const logoutController = async (req, res, next) => {
   try {
-    await AuthService.logoutService(req);
+    await AuthService.logout(req);
     res
       .status(200)
       .set("Authorization", "")
       .clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" })
-      .json(ResponseHandler("User logged out successfully"));
+      .json({
+        success: false,
+        message: "User logged out successfully"
+      });
   } catch (err) {
     next(err);
   }

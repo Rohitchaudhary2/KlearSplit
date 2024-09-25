@@ -1,4 +1,3 @@
-import bcrypt from "bcryptjs";
 import { generatePassword } from "../utils/passwordGenerator.js";
 import {
   createUserDb,
@@ -15,11 +14,12 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import AuthService from "../auth/authServices.js";
-import { ErrorHandler } from "../middlewares/ErrorHandler.js";
+import { ErrorHandler } from "../middlewares/errorHandler.js";
 import sequelize from "../../../config/db.connection.js";
+import { hashedPassword } from "../utils/hashPassword.js";
 
 class UserService {
-  static createUserService = async (userData, next) => {
+  static createUser = async (userData, next) => {
     // Validating and sanitizing the user data with JOI validator
     const { error, value: user } = validateUser(userData, {
       stripUnknown: true,
@@ -47,11 +47,9 @@ class UserService {
     const password = generatePassword();
 
     //Hashing the password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    user.password = hashedPassword;
+    user.password = hashedPassword(password);
 
-    console.log(password); // Send mail for password to the user
+    // console.log(password); // Send mail for password to the user
 
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
@@ -63,19 +61,21 @@ class UserService {
         createdUser = isEmailExists.dataValues
       }
         
-      else 
-      // Creating new user in the database
+      else {
+        // Creating new user in the database
         createdUser = await createUserDb(user, transaction);
+      }
 
       // Generate access and refresh tokens
-      const accessToken = generateAccessToken(createdUser.user_id);
-      const refreshToken = generateRefreshToken(createdUser.user_id);
+      const accessToken = generateAccessToken(createdUser.user_id, next);
+      const refreshToken = generateRefreshToken(createdUser.user_id, next);
 
       // Store the refresh token in the database
-      await AuthService.createRefreshTokenService(
+      await AuthService.createRefreshToken(
         {
           token: refreshToken,
           user_id: createdUser.user_id,
+          next
         },
         transaction,
       );
@@ -92,17 +92,17 @@ class UserService {
   };
 
   // Service to get user from database
-  static getUserService = async (id, next) => {
+  static getUser = async (id, next) => {
     const user = await getUserByIdDb(id);
     if (!user) throw next(new ErrorHandler(404, "User not found"));
     return user;
   };
 
   // Service for updating user in the database
-  static updateUserService = async (req, next) => {
+  static updateUser = async (req, next) => {
     const userData = req.body;
     const id = req.params.id;
-    await this.getUserService(id);
+    await this.getUser(id);
 
     const { error, updateUserData } = validateUpdatedUser(userData, {
       stripUnknown: true,
@@ -113,9 +113,9 @@ class UserService {
   };
 
   // Service for deleting user in the database
-  static deleteUserService = async (req) => {
+  static deleteUser = async (req) => {
     const id = req.params.id;
-    await this.getUserService(id);
+    await this.getUser(id);
 
     return await deleteUserDb(id);
   };

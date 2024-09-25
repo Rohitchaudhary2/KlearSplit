@@ -18,6 +18,7 @@
     "@angular/platform-browser": "^18.2.0",
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.0",
+    "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.3",
     "cors": "^2.8.5",
     "ngx-toastr": "^19.0.0",

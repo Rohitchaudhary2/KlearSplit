@@ -2,9 +2,10 @@ import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
-import { User, RegisterResponse } from '../../shared/user/types.model';
-import { map, tap } from 'rxjs';
+import { User } from '../../shared/user/types.model';
 import { HttpResponse } from '@angular/common/http';
+import { ToastrService } from 'ngx-toastr';
+import { FormErrorMessageService } from '../../shared/form-error-message.service';
 
 @Component({
   selector: 'app-register',
@@ -16,6 +17,8 @@ import { HttpResponse } from '@angular/common/http';
 export class RegisterComponent {
   router = inject(Router);
   authService = inject(AuthService);
+  toastr = inject(ToastrService);
+  formErrorMessages = inject(FormErrorMessageService);
 
   form = new FormGroup({
     first_name: new FormControl('', {
@@ -38,44 +41,28 @@ export class RegisterComponent {
     }),
   });
 
-  get isValidFirstName() {
-    return (
-      this.form.controls.first_name.touched &&
-      this.form.controls.first_name.dirty &&
-      this.form.controls.first_name.invalid
-    );
-  };
-
-  get isValidEmail() {
-    return (
-      this.form.controls.email.touched &&
-      this.form.controls.email.dirty &&
-      this.form.controls.email.invalid
-    );
-  };
-
-  get isValidPhone() {
-    return (
-      this.form.controls.phone.touched &&
-      this.form.controls.phone.dirty &&
-      this.form.controls.phone.invalid
-    );
-  };
+  getFormErrors(field: string): string | null {
+    return this.formErrorMessages.getErrorMessage(this.form, field);
+  }
+  
 
   onSubmit() {
     if (this.form.valid) {
       const user: User = this.form.value as User;
       this.authService.registerUser(user).subscribe((response: HttpResponse<any>): void => {
-        console.log(response);
         const accessToken = response.headers.get('Authorization');
         if (accessToken) {
           localStorage.setItem('accessToken', accessToken);
+          this.router.navigate(['/dashboard']);
         } else {
-          console.error('No access token found in response.');
+          this.toastr.error('Something wrong happened, please try again!', 'Error', {
+            timeOut: 3000,
+          })
         }
-        this.router.navigate(['/dashboard']);
       }, (error) => {
-        console.error('Registration failed:', error);
+        this.toastr.error('Registration failed!', 'Error', {
+            timeOut: 3000,
+          })
       });
     }
   }

@@ -12,7 +12,7 @@ export class AuthService {
   private apiUrl = 'http://localhost:3000/api/v1';
 
   registerUser (user: User): Observable<HttpResponse<RegisterResponse>> {
-    return this.httpClient.post<RegisterResponse>(`${this.apiUrl}/users/register`, user, {observe: 'response'})
+    return this.httpClient.post<RegisterResponse>(`${this.apiUrl}/users/register`, user, {observe: 'response', withCredentials: true})
   };
 
   setAccessToken (accessToken: string): void {

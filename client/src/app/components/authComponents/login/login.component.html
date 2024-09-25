@@ -22,8 +22,8 @@
                       <label class="form-label" for="email">Phone number or email address</label>
                   </div>
 
-                  @if (isValidEmail) {
-                    <p class="text-danger mt-0">Please enter a valid email.</p>
+                  @if (getFormErrors("email")) {
+                    <p class="text-danger mt-0">{{ getFormErrors("email") }}</p>
                   }
 
                   <div data-mdb-input-init class="form-outline mt-4 mb-0">
@@ -33,14 +33,14 @@
                     <label class="form-label" for="password">Password</label>
                   </div>
 
-                  @if (isValidPassword) {
-                    <p class="text-danger mt-0">Please enter a valid password.</p>
+                  @if (getFormErrors("password")) {
+                    <p class="text-danger mt-0">{{ getFormErrors("password") }}</p>
                   }
 
                   <div class="text-center pt-1 mb-1 pb-1">
                     <button data-mdb-button-init 
                     data-mdb-ripple-init 
-                    class="btn btn-primary btn-block fa-lg gradient-custom-2 mb-3 w-100" 
+                    class="btn btn-primary btn-block fa-lg gradient-custom-2 mt-3 w-100" 
                     type="submit">Login</button>
                   </div>
                   <div class="text-center pt-1 mb-5 pb-1">

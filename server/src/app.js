@@ -11,8 +11,8 @@ import { loggerMiddleware } from "./api/v1/middlewares/loggerMiddleware.js";
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:4200', // Allow requests from this origin
-  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+  origin: 'http://localhost:4200',    // Allow requests from this origin
+  credentials: true,                  // Allow credentials (cookies, authorization headers, etc.)
   exposedHeaders: ["Authorization"]
 }));
 app.use(cookieParser());

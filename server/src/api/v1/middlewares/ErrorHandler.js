@@ -1,17 +1,18 @@
 import logger from "../utils/logger.js";
 export class ErrorHandler extends Error {
+  // Constructor to initialize the error with a status code and message
   constructor(statusCode, message) {
     super(message);
     this.statusCode = statusCode;
-    this.message = message;
-    // Error.captureStackTrace(this,this.constructor);
   }
 }
 
+// Middleware function to handle errors in the Express app
 /* eslint-disable-next-line no-unused-vars */
 export const ErrorMiddleware = (error, req, res, next) => {
   const statusCode = error.statusCode || 500;
 
+  // Logging error details using the custom logger
   logger.log({
     level: "error",
     statusCode,
@@ -20,6 +21,7 @@ export const ErrorMiddleware = (error, req, res, next) => {
 
   const message = statusCode === 500 ? "Internal Server Error" : error.message;
 
+  // Sending a JSON response with the status code and message
   return res.status(statusCode).json({
     success: false,
     message,

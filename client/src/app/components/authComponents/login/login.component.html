@@ -1,62 +1,72 @@
-<section class="h-100 gradient-form" style="background-image: linear-gradient(to right, rgb(1, 96, 1), rgb(166, 247, 166));">
-    <div class="container py-5 h-100">
-      <div class="row d-flex justify-content-center align-items-center h-100">
-        <div class="col-xl-10">
-          <div class="card rounded-3 text-black">
-            <div class="row g-0">
-              <div class="col-lg-6">
-                <div class="card-body p-md-5 mx-md-4">
-  
-                  <div class="text-center">
-                    <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/lotus.webp"
-                      style="width: 185px;" alt="logo">
-                    <h4 class="mt-1 mb-5 pb-1">We are The Klear Split Team</h4>
+<section class="h-100 gradient-form">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100" >
+      <div class="col-xl-10">
+        <div class="card rounded-3 text-black" style="background-color: #F1F1F2;">
+          <div class="row g-0">
+            <div class="col-lg-6">
+              <div class="card-body p-md-5 mx-md-4">
+
+                <div class="text-center">
+                  <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/lotus.webp"
+                    style="width: 185px;" alt="logo">
+                  <h4 class="mt-1 mb-5 pb-1">We are The KlearSplit Team</h4>
+                </div>
+
+                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                  <p class="mb-4">Please login to your account</p>
+                  <div data-mdb-input-init class="form-outline mt-5 mb-0">
+                      <input type="email" id="email" 
+                      class="form-control"
+                      name="email" formControlName="email" />
+                      <label class="form-label" for="email">Phone number or email address</label>
                   </div>
-  
-                  <form>
-  
-                    <div data-mdb-input-init class="form-outline mb-4">
-                      <input type="email" id="form2Example11" class="form-control"
-                        placeholder="Phone number or email address" />
-                      <label class="form-label" for="form2Example11">Username</label>
-                    </div>
-  
-                    <div data-mdb-input-init class="form-outline mb-4">
-                      <input type="password" id="form2Example22" class="form-control" />
-                      <label class="form-label" for="form2Example22">Password</label>
-                    </div>
-  
-                    <div class="text-center pt-1 mb-5 pb-1">
-                      <button data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-block fa-lg gradient-custom-2 mb-3" type="button">Log
-                        in</button>
-                      <a class="text-muted" href="#!">Forgot password?</a>
-                    </div>
-  
-                    <div class="d-flex align-items-center justify-content-center pb-4">
-                      <p class="mb-0 me-2">Don't have an account?</p>
-                      <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-danger">Create new</button>
-                    </div>
-  
-                  </form>
-  
-                </div>
+
+                  @if (isValidEmail) {
+                    <p class="text-danger mt-0">Please enter a valid email.</p>
+                  }
+
+                  <div data-mdb-input-init class="form-outline mt-4 mb-0">
+                    <input type="password" id="password" 
+                    class="form-control" name="password" 
+                    formControlName="password" />
+                    <label class="form-label" for="password">Password</label>
+                  </div>
+
+                  @if (isValidPassword) {
+                    <p class="text-danger mt-0">Please enter a valid password.</p>
+                  }
+
+                  <div class="text-center pt-1 mb-1 pb-1">
+                    <button data-mdb-button-init 
+                    data-mdb-ripple-init 
+                    class="btn btn-primary btn-block fa-lg gradient-custom-2 mb-3 w-100" 
+                    type="submit">Login</button>
+                  </div>
+                  <div class="text-center pt-1 mb-5 pb-1">
+                      <a class="text-muted" routerLink="#!">Forgot password?</a>
+                  </div>
+
+                  <div class="d-flex align-items-center justify-content-center pb-4">
+                    <p class="mb-0 me-2">Don't have an account?</p>
+                    <a routerLink="/register">Create new</a>
+                  </div>
+
+                </form>
+
               </div>
-              <div class="col-lg-6 d-flex align-items-center gradient-custom-2">
-                <div class="text-white px-3 py-4 p-md-5 mx-md-4">
-                  <h4 class="mb-4">We are more than just a company</h4>
-                  <p class="small mb-0">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-                    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-                    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                </div>
+            </div>
+            <div class="col-lg-6 d-flex align-items-center d-none d-lg-flex d-xl-flex" style="background-color: #1995AD;">
+              <div class="text-white px-3 py-4 p-md-5 mx-md-4">
+                <h4 class="mb-4">We are more than just a company</h4>
+                <p class="small mb-0">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+                  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+                  exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </section>
-
-
-<section>
-    
+  </div>
 </section>

@@ -1,10 +1,10 @@
 import UserService from "./userServices.js";
 import { ResponseHandler } from "../utils/ResponseHandler.js";
 
+// Controller for creating or registering a user
 export const createUserController = async (req, res, next) => {
   try {
     const userData = await UserService.createUserService(req.body, next);
-    
     res
       .status(201)
       .set("Authorization", `Bearer ${userData.accessToken}`)
@@ -19,6 +19,7 @@ export const createUserController = async (req, res, next) => {
   }
 };
 
+// Controller for getting user information
 export const getUserController = async (req, res, next) => {
   try {
     const userData = await UserService.getUserService(req.params.id, next);
@@ -31,6 +32,7 @@ export const getUserController = async (req, res, next) => {
   }
 };
 
+// Controller for updating the user
 export const updateUserController = async (req, res, next) => {
   try {
     const user = await UserService.updateUserService(req, next);
@@ -41,6 +43,7 @@ export const updateUserController = async (req, res, next) => {
   }
 };
 
+// Controller for deleting the user
 export const deleteUserController = async (req, res, next) => {
   try {
     await UserService.deleteUserService(req, next);

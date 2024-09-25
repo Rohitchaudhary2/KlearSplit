@@ -53,7 +53,7 @@ class UserService {
 
     console.log(password); // Send mail for password to the user
 
-    const transaction = await sequelize.transaction(); // Start a new transaction
+    const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
       let createdUser;

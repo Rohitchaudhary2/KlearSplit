@@ -20,47 +20,51 @@ import sequelize from "../../../config/db.connection.js";
 
 class UserService {
   static createUserService = async (userData, next) => {
-    // const { error, value: user } = validateUser(userData, {
-    //   stripUnknown: true,
-    // });
+    // Validating and sanitizing the user data with JOI validator
+    const { error, value: user } = validateUser(userData, {
+      stripUnknown: true,
+    });
+    if (error) throw next(new ErrorHandler(400, error.message));
     
-    // if (error) throw next(new ErrorHandler(400, error.message));
-    const user = userData
-    
+    // Restore flag to indicate whether the user has deleted his/her account previously
     let restoreFlag = false
 
     const isEmailExists = await getUserByEmailDb(user.email, false);
     if (isEmailExists){
+      // If email already exists in database then checking whether user has deleted account
       if(isEmailExists.dataValues.deletedAt){
         restoreFlag = true
       }
       else throw next(new ErrorHandler(400, "Email already exists!"));
     }
       
-    if(!restoreFlag) {
-      const isPhoneExists = await getUserByPhoneDb(user.phone);
-      if (isPhoneExists)
-        throw next(new ErrorHandler(400, "Phone Number already exists!"));
-    }
+    // Checking whether phone number exists in database if so then checking whether we are restoring user.
+    const isPhoneExists = await getUserByPhoneDb(user.phone);
+    if (isPhoneExists && !restoreFlag)
+      throw next(new ErrorHandler(400, "Phone Number already exists!"));
 
+    //Generating random password
     const password = generatePassword();
+
+    //Hashing the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     user.password = hashedPassword;
 
-    console.log( password); // Send mail for password to the user
+    console.log(password); // Send mail for password to the user
 
-    const transaction = await sequelize.transaction(); // Start a new transaction
+    const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
-      // Create a user in the database
       let createdUser;
       if(restoreFlag){
+        // Restoring user in the database
         await restoreUserDb(user.email, transaction);
         createdUser = isEmailExists.dataValues
       }
         
       else 
+      // Creating new user in the database
         createdUser = await createUserDb(user, transaction);
 
       // Generate access and refresh tokens
@@ -87,12 +91,14 @@ class UserService {
     }
   };
 
+  // Service to get user from database
   static getUserService = async (id, next) => {
     const user = await getUserByIdDb(id);
     if (!user) throw next(new ErrorHandler(404, "User not found"));
     return user;
   };
 
+  // Service for updating user in the database
   static updateUserService = async (req, next) => {
     const userData = req.body;
     const id = req.params.id;
@@ -106,6 +112,7 @@ class UserService {
     return await updateUserDb(updateUserData, id);
   };
 
+  // Service for deleting user in the database
   static deleteUserService = async (req) => {
     const id = req.params.id;
     await this.getUserService(id);

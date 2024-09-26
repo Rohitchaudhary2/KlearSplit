@@ -1,4 +1,4 @@
-import User from "./userModel.js";
+import User from "./models/userModel.js";
 
 export const createUserDb = async (user, transaction) =>
   await User.create(user, { transaction });

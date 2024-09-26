@@ -17,9 +17,12 @@ import AuthService from "../auth/authServices.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import sequelize from "../../../config/db.connection.js";
 import { hashedPassword } from "../utils/hashPassword.js";
+import sendMail from "../utils/sendMail.js";
+import crypto from "crypto";
+import { createOtpDb, getOtpDb } from "./otpDb.js";
 
 class UserService {
-  static createUser = async (userData, next) => {
+  static verifyUser = async (userData, next) => {
     // Validating and sanitizing the user data with JOI validator
     const { error, value: user } = validateUser(userData, {
       stripUnknown: true,
@@ -42,13 +45,54 @@ class UserService {
     if (isPhoneExists && !restoreFlag)
       throw next(new ErrorHandler(400, "Phone Number already exists!"));
 
+    // send otp
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await createOtpDb({
+      email: user.email,
+      phone: user.phone,
+      otp,
+      otp_expiry_time: otpExpiresAt,
+    });
+
+    sendMail({
+      email: user.email,
+      subject: "Otp",
+      message: `This is your ${otp}. It is valid for 5 minutes.`,
+    });
+  };
+
+  static createUser = async (userData, next) => {
+    const userOtp = userData.otp;
+    delete userData.otp;
+    // Validating and sanitizing the user data with JOI validator
+    const { error, value: user } = validateUser(userData, {
+      stripUnknown: true,
+    });
+    if (error) throw next(new ErrorHandler(400, error.message));
+
+    // Restore flag to indicate whether the user has deleted his/her account previously
+    let restoreFlag = false;
+
+    const isEmailExists = await getUserByEmailDb(user.email, false);
+    if (isEmailExists) {
+      // If email already exists in database then checking whether user has deleted account
+      if (isEmailExists.dataValues.deletedAt) {
+        restoreFlag = true;
+      } else throw next(new ErrorHandler(400, "Email already exists!"));
+    }
+
+    const otp = await getOtpDb(user.email, user.phone);
+
+    if (userOtp !== otp.otp)
+      throw next(new ErrorHandler(400, "Invalid or expired Otp."));
+
     //Generating random password
     const password = generatePassword();
 
     //Hashing the password
-    user.password = hashedPassword(password);
-
-    // console.log(password); // Send mail for password to the user
+    user.password = await hashedPassword(password);
 
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
@@ -79,6 +123,14 @@ class UserService {
 
       // Commit the transaction
       await transaction.commit();
+
+      const options = {
+        email: user.email,
+        subject: "Password",
+        message: `This is your password ${password}`,
+      };
+
+      sendMail(options);
 
       return { user: createdUser, accessToken, refreshToken };
     } catch (error) {

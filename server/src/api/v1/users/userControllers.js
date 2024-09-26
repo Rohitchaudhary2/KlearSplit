@@ -4,6 +4,16 @@ import {
   responseHandler,
 } from "../utils/responseHandler.js";
 
+//Controller for verifying a user
+export const verifyUserContoller = async (req, res, next) => {
+  try {
+    await UserService.verifyUser(req.body, next);
+    responseHandler(res, 200, "Successfully Sent Otp");
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Controller for creating or registering a user
 export const createUserController = async (req, res, next) => {
   try {

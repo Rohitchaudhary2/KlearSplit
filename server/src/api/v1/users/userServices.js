@@ -46,7 +46,7 @@ class UserService {
 
     // send otp
     const otp = crypto.randomInt(100000, 999999).toString();
-    const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     await createOtpDb({
       email: user.email,
@@ -81,8 +81,10 @@ class UserService {
 
     const otp = await getOtpDb(user.email, user.phone);
 
-    if (userOtp !== otp.otp)
-      throw next(new ErrorHandler(400, "Invalid or expired Otp."));
+    if (new Date() >= otp.otp_expiry_time)
+      throw next(new ErrorHandler(400, "Otp has expired."));
+
+    if (userOtp !== otp.otp) throw next(new ErrorHandler(400, "Invalid Otp."));
 
     //Generating random password
     const password = generatePassword();

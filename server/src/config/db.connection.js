@@ -12,14 +12,17 @@ const sequelize = new Sequelize(database, username, password, {
 
 try {
   await sequelize.authenticate();   // Attempting to authenticate the connection to the database
-  console.log("Connection has been established successfully.");
+  logger.log({
+    level: "info", 
+    statusCode: 200,
+    message: "Connection has been established successfully."
+  })
 } catch {
   logger.log({
     level: "error",
     statusCode: 503,
     message: 'Service unavailable. Unable to connect to the database.',
   });
-  // console.error("Unable to connect to the database:", error);
 }
 
 export default sequelize;

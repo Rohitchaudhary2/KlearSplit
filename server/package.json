@@ -3,12 +3,23 @@
   "version": "1.0.0",
   "main": "src/app.js",
   "type": "module",
+  "husky": {
+    "hooks": {
+      "pre-commit": "npx lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "npm run format",
+      "npm run lint"
+    ]
+  },
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
     "lint": "eslint .",
     "format": "npx prettier --write .",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -33,6 +44,7 @@
     "eslint": "^9.10.0",
     "globals": "^15.9.0",
     "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
     "nodemon": "^3.1.6",
     "prettier": "^3.3.3"
   }

@@ -33,12 +33,11 @@ class UserService {
     let restoreFlag = false;
 
     const isEmailExists = await getUserByEmailDb(user.email, false);
-    if (isEmailExists) {
-      // If email already exists in database then checking whether user has deleted account
-      if (isEmailExists.dataValues.deletedAt) {
-        restoreFlag = true;
-      } else throw next(new ErrorHandler(400, "Email already exists!"));
-    }
+    // If email already exists in database then checking whether user has deleted account
+    if (isEmailExists && isEmailExists.dataValues.deletedAt) {
+      restoreFlag = true;
+    } else if (isEmailExists)
+      throw next(new ErrorHandler(400, "Email already exists!"));
 
     // Checking whether phone number exists in database if so then checking whether we are restoring user.
     const isPhoneExists = await getUserByPhoneDb(user.phone);
@@ -76,11 +75,8 @@ class UserService {
     let restoreFlag = false;
 
     const isEmailExists = await getUserByEmailDb(user.email, false);
-    if (isEmailExists) {
-      // If email already exists in database then checking whether user has deleted account
-      if (isEmailExists.dataValues.deletedAt) {
-        restoreFlag = true;
-      } else throw next(new ErrorHandler(400, "Email already exists!"));
+    if (isEmailExists && isEmailExists.dataValues.deletedAt) {
+      restoreFlag = true;
     }
 
     const otp = await getOtpDb(user.email, user.phone);

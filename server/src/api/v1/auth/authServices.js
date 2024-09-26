@@ -12,7 +12,7 @@ import {
 } from "../utils/tokenGenerator.js";
 
 class AuthService {
-  // Service for handling login functionality 
+  // Service for handling login functionality
   static login = async (req, next) => {
     const { email, password } = req.body;
 
@@ -37,7 +37,7 @@ class AuthService {
     return { user, accessToken, refreshToken };
   };
 
-  // Service for handling logout functionality 
+  // Service for handling logout functionality
   static logout = async (req) => {
     const refreshToken = req.cookies["refreshToken"];
 

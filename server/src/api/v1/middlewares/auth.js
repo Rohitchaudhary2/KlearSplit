@@ -9,21 +9,22 @@ import UserService from "../users/userServices.js";
 import sequelize from "../../../config/db.connection.js";
 
 const handleAccessToken = (req, next) => {
-  if(!req.headers["authorization"]){
-    throw next(new ErrorHandler(401, "Access Denied. No Access token provided."))
+  if (!req.headers["authorization"]) {
+    throw next(
+      new ErrorHandler(401, "Access Denied. No Access token provided."),
+    );
   }
 
   const accessToken = req.headers["authorization"].split(" ")[1];
   if (!accessToken)
     return next(
       new ErrorHandler(401, "Access Denied. No Access Token provided."),
-    )
+    );
 
-  return accessToken
-}
+  return accessToken;
+};
 
 const handleRefreshToken = async (req, res, next) => {
-
   const refreshToken = req.cookies["refreshToken"];
   if (!refreshToken)
     throw next(
@@ -63,12 +64,11 @@ const handleRefreshToken = async (req, res, next) => {
       );
     } else next(error);
   }
-}
+};
 
 // Middleware to check access and refresh token's authenticity and expiry
 export const authenticateToken = async (req, res, next) => {
-
-  const accessToken = handleAccessToken(req, next)
+  const accessToken = handleAccessToken(req, next);
 
   try {
     // Verify the access token
@@ -80,10 +80,9 @@ export const authenticateToken = async (req, res, next) => {
       return next(
         new ErrorHandler(401, "Access Denied. Invalid Access Token."),
       );
-    }
-    else {
+    } else {
       // If access token expired, attempt to use refresh token
-      handleRefreshToken(req, res, next)
+      handleRefreshToken(req, res, next);
     }
   }
 };

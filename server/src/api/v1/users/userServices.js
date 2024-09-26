@@ -6,7 +6,7 @@ import {
   deleteUserDb,
   getUserByEmailDb,
   getUserByPhoneDb,
-  restoreUserDb
+  restoreUserDb,
 } from "./userDb.js";
 import { validateUpdatedUser, validateUser } from "./userValidations.js";
 import {
@@ -25,19 +25,18 @@ class UserService {
       stripUnknown: true,
     });
     if (error) throw next(new ErrorHandler(400, error.message));
-    
+
     // Restore flag to indicate whether the user has deleted his/her account previously
-    let restoreFlag = false
+    let restoreFlag = false;
 
     const isEmailExists = await getUserByEmailDb(user.email, false);
-    if (isEmailExists){
+    if (isEmailExists) {
       // If email already exists in database then checking whether user has deleted account
-      if(isEmailExists.dataValues.deletedAt){
-        restoreFlag = true
-      }
-      else throw next(new ErrorHandler(400, "Email already exists!"));
+      if (isEmailExists.dataValues.deletedAt) {
+        restoreFlag = true;
+      } else throw next(new ErrorHandler(400, "Email already exists!"));
     }
-      
+
     // Checking whether phone number exists in database if so then checking whether we are restoring user.
     const isPhoneExists = await getUserByPhoneDb(user.phone);
     if (isPhoneExists && !restoreFlag)
@@ -55,13 +54,11 @@ class UserService {
 
     try {
       let createdUser;
-      if(restoreFlag){
+      if (restoreFlag) {
         // Restoring user in the database
         await restoreUserDb(user.email, transaction);
-        createdUser = isEmailExists.dataValues
-      }
-        
-      else {
+        createdUser = isEmailExists.dataValues;
+      } else {
         // Creating new user in the database
         createdUser = await createUserDb(user, transaction);
       }
@@ -75,7 +72,7 @@ class UserService {
         {
           token: refreshToken,
           user_id: createdUser.user_id,
-          next
+          next,
         },
         transaction,
       );

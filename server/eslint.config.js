@@ -6,7 +6,7 @@ export default [
   pluginJs.configs.recommended,
   {
     rules: {
-      'no-console': 'error', // Disallow console.log and other console methods
+      "no-console": "error", // Disallow console.log and other console methods
     },
   },
 ];

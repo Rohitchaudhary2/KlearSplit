@@ -5,7 +5,7 @@ import { authResponseHandler } from "../utils/responseHandler.js";
 export const loginController = async (req, res, next) => {
   try {
     const userData = await AuthService.login(req, next);
-    authResponseHandler(res, 200, "User login successful", userData)
+    authResponseHandler(res, 200, "User login successful", userData);
   } catch (err) {
     next(err);
   }
@@ -21,7 +21,7 @@ export const logoutController = async (req, res, next) => {
       .clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" })
       .json({
         success: false,
-        message: "User logged out successfully"
+        message: "User logged out successfully",
       });
   } catch (err) {
     next(err);

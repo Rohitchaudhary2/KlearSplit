@@ -10,7 +10,7 @@ export const loggerMiddleware = morgan(morganFormat, {
   stream: {
     // Custom write function to process each log message
     write: (message) => {
-      const messageParts = message.split(" ")
+      const messageParts = message.split(" ");
       const logObject = {
         method: messageParts[0],
         url: messageParts[1],

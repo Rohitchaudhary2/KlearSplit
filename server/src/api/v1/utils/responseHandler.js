@@ -1,4 +1,4 @@
-// This function will form the standardize API responses 
+// This function will form the standardize API responses
 export const responseHandler = (res, statusCode, message, data) => {
   return res.status(statusCode).json({
     success: true,
@@ -8,7 +8,8 @@ export const responseHandler = (res, statusCode, message, data) => {
 };
 
 export const authResponseHandler = (res, statusCode, message, userData) => {
-  return res.status(statusCode)
+  return res
+    .status(statusCode)
     .set("Authorization", `Bearer ${userData.accessToken}`)
     .cookie("refreshToken", userData.refreshToken, {
       httpOnly: true,
@@ -17,6 +18,6 @@ export const authResponseHandler = (res, statusCode, message, userData) => {
     .json({
       success: true,
       message,
-      data: userData.user
-    })
-}
+      data: userData.user,
+    });
+};

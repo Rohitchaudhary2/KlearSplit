@@ -12,7 +12,6 @@ const sequelize = new Sequelize(database, username, password, {
 
 try {
   await sequelize.authenticate();   // Attempting to authenticate the connection to the database
-  console.log('Testing Husky');
   logger.log({
     level: "info", 
     statusCode: 200,

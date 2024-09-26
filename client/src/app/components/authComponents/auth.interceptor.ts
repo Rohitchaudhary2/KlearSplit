@@ -12,7 +12,5 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       Authorization: token ? `${token}` : '',
     }
   });
-  console.log('hi from interceptor')
-  console.log(token)
   return next(req);
 };

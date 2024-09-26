@@ -6,6 +6,7 @@ import { AuthService } from '../authComponents/auth.service';
 import { TokenService } from '../authComponents/token.service';
 import { HttpClient } from '@angular/common/http';
 import { CurrentUser } from '../shared/user/types.model';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-dashboard',
@@ -16,7 +17,7 @@ import { CurrentUser } from '../shared/user/types.model';
 })
 export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
-
+  private toastr = inject(ToastrService);
   private tokenService = inject(TokenService);
   private httpClient = inject(HttpClient);
 
@@ -34,11 +35,12 @@ export class DashboardComponent implements OnInit {
       this.httpClient.get<any>(getUserUrlWithId).subscribe({
         next:(response) => {
           this.authService.currentUser.set(response.data);
-          console.log(response);
           
         },
         error:(error)=>{
-          console.error(error);
+          this.toastr.error(error, 'Error', {
+            timeOut: 3000,
+          })
         }
       });
     }

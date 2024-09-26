@@ -10,7 +10,8 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideToastr } from 'ngx-toastr';
 
 import { routes } from './app.routes';
-import { AuthInterceptor } from './components/authComponents/auth.interceptor';
+import { authInterceptor } from './components/authComponents/auth.interceptor';
+import { errorInterceptor } from './components/shared/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -22,7 +23,7 @@ export const appConfig: ApplicationConfig = {
         paramsInheritanceStrategy: 'always',
       })
     ),
-    provideHttpClient(withInterceptors([])),
+    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimations(), // required animations providers
     provideToastr(), // Toastr providers
   ],

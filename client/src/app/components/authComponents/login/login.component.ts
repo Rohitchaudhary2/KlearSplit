@@ -32,7 +32,5 @@ export class LoginComponent {
     if (this.form.invalid) {
       return
     };
-    console.log(this.form.value);
-    this.router.navigate(['/dashboard']);
   }
 }

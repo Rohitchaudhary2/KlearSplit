@@ -1,13 +1,17 @@
-@media (min-width: 768px) {
+/* @media (min-width: 768px) {
     .gradient-form {
         height: 50rem !important;
     }
-}
+} */
 
-@media (max-width: 767px) {
-    .gradient-form {
-        height: 100rem !important;
-    }
+.gradient-form {
+  /* min-height: 100vh; */
+  /* margin: auto; */
+  /* min-height: auto; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 
 .form-outline {

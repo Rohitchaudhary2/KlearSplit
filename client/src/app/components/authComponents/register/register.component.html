@@ -1,11 +1,11 @@
-<section class="h-100 gradient-form">
-    <div class="container py-5 h-100">
-      <div class="row d-flex justify-content-center align-items-center h-100" >
+<section class="gradient-form">
+    <div class="container d-flex justify-content-center align-items-center min-vh-100 py-4">
+      <div class="row d-flex justify-content-center align-items-center w-100" style="max-width: 1200px;">
         <div class="col-xl-10">
           <div class="card rounded-3 text-black" style="background-color: #F1F1F2;">
             <div class="row g-0">
               <div class="col-lg-6">
-                <div class="card-body p-md-5 mx-md-4">
+                <div class="card-body p-md-3 mx-md-4">
   
                   <div class="text-center">
                     <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/lotus.webp"
@@ -20,9 +20,9 @@
                         <label class="form-label" for="first_name">First Name</label>
                     </div>
 
-                    @if (isValidFirstName) {
+                    @if (getFormErrors("first_name")) {
                       <p class="text-danger mt-0 small">
-                        First name is required and must be between 2 to 50 characters.
+                        {{ getFormErrors("first_name") }}
                       </p>
                     }
   
@@ -36,8 +36,8 @@
                       <label class="form-label" for="email">Email</label>
                     </div>
 
-                    @if (isValidEmail) {
-                      <p class="text-danger mt-0 small">Please enter a valid email.</p>
+                    @if (getFormErrors("email")) {
+                      <p class="text-danger mt-0 small">{{ getFormErrors("email") }}</p>
                     }
 
                     <div data-mdb-input-init class="form-outline mt-4 mb-0">
@@ -45,8 +45,8 @@
                       <label class="form-label" for="phone">Phone Number</label>
                     </div>
 
-                    @if (isValidPhone) {
-                      <p class="text-danger mt-0 small">Please enter a 10 digit phone number only.</p>
+                    @if (getFormErrors("phone")) {
+                      <p class="text-danger mt-0 small">{{ getFormErrors("phone") }}</p>
                     }
   
                     <div class="text-center pt-1 mt-4 mb-1 pb-1">

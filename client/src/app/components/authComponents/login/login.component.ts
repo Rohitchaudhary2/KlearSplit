@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { FormErrorMessageService } from '../../shared/form-error-message.service';
 
 @Component({
   selector: 'app-login',
@@ -11,6 +12,7 @@ import { Router, RouterLink } from '@angular/router';
 })
 export class LoginComponent {
   router = inject(Router);
+  formErrorMessages = inject(FormErrorMessageService);
   form = new FormGroup({
     email: new FormControl('', {
       validators: [Validators.required, Validators.email]
@@ -22,27 +24,13 @@ export class LoginComponent {
     }),
   });
 
-  get isValidEmail() {
-    return (
-      this.form.controls.email.touched &&
-      this.form.controls.email.dirty &&
-      this.form.controls.email.invalid
-    );
-  };
-
-  get isValidPassword() {
-    return (
-      this.form.controls.password.touched &&
-      this.form.controls.password.dirty &&
-      this.form.controls.password.invalid
-    );
-  };
+  getFormErrors(field: string): string | null {
+    return this.formErrorMessages.getErrorMessage(this.form, field);
+  }
 
   onSubmit() {
     if (this.form.invalid) {
       return
     };
-    console.log(this.form.value);
-    this.router.navigate(['/dashboard']);
   }
 }

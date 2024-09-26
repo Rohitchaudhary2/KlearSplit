@@ -1,11 +1,11 @@
-<section class="h-100 gradient-form">
-  <div class="container py-5 h-100">
-    <div class="row d-flex justify-content-center align-items-center h-100" >
+<section class="gradient-form ">
+  <div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="row d-flex justify-content-center align-items-center" >
       <div class="col-xl-10">
         <div class="card rounded-3 text-black" style="background-color: #F1F1F2;">
           <div class="row g-0">
             <div class="col-lg-6">
-              <div class="card-body p-md-5 mx-md-4">
+              <div class="card-body p-md-3 mx-md-4">
 
                 <div class="text-center">
                   <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/lotus.webp"
@@ -22,8 +22,8 @@
                       <label class="form-label" for="email">Phone number or email address</label>
                   </div>
 
-                  @if (isValidEmail) {
-                    <p class="text-danger mt-0">Please enter a valid email.</p>
+                  @if (getFormErrors("email")) {
+                    <p class="text-danger mt-0">{{ getFormErrors("email") }}</p>
                   }
 
                   <div data-mdb-input-init class="form-outline mt-4 mb-0">
@@ -33,14 +33,14 @@
                     <label class="form-label" for="password">Password</label>
                   </div>
 
-                  @if (isValidPassword) {
-                    <p class="text-danger mt-0">Please enter a valid password.</p>
+                  @if (getFormErrors("password")) {
+                    <p class="text-danger mt-0">{{ getFormErrors("password") }}</p>
                   }
 
                   <div class="text-center pt-1 mb-1 pb-1">
                     <button data-mdb-button-init 
                     data-mdb-ripple-init 
-                    class="btn btn-primary btn-block fa-lg gradient-custom-2 mb-3 w-100" 
+                    class="btn btn-primary btn-block fa-lg gradient-custom-2 mt-3 w-100" 
                     type="submit">Login</button>
                   </div>
                   <div class="text-center pt-1 mb-5 pb-1">

@@ -10,8 +10,16 @@ const sequelize = new Sequelize(database, username, password, {
   logging: false,
 });
 
-try {await sequelize.authenticate();   // Attempting to authenticate the connection to the database
-  logger.log({level: "info", statusCode: 200, message: "Connection has been established successfully."})} catch {logger.log({
+try {
+  await sequelize.authenticate();   // Attempting to authenticate the connection to the database
+  console.log('Testing Husky');
+  logger.log({
+    level: "info", 
+    statusCode: 200,
+    message: "Connection has been established successfully."
+  })
+} catch {
+  logger.log({
     level: "error",
     statusCode: 503,
     message: 'Service unavailable. Unable to connect to the database.',

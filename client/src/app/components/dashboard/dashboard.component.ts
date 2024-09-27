@@ -2,10 +2,9 @@ import { Component, inject, OnInit } from '@angular/core';
 
 import { jwtDecode} from 'jwt-decode';
 
-import { AuthService } from '../authComponents/auth.service';
-import { TokenService } from '../authComponents/token.service';
+import { AuthService } from '../auth/auth.service';
+import { TokenService } from '../auth/token.service';
 import { HttpClient } from '@angular/common/http';
-import { CurrentUser } from '../shared/user/types.model';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({

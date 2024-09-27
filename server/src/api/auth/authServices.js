@@ -21,7 +21,7 @@ class AuthService {
     if (!user) throw next(new ErrorHandler(404, "Email not found"));
 
     // checking whether password is valid
-    const validPassword = bcrypt.compare(password, user.password);
+    const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) throw next(new ErrorHandler(404, "Password is wrong"));
 
     // Geneating access and refresh tokens
@@ -55,12 +55,18 @@ class AuthService {
       transaction,
     );
     if (!createdRefreshToken)
-      throw next(new ErrorHandler(500, "Error while storing refresh Token"));
+      return next(new ErrorHandler(500, "Error while storing refresh Token"));
     return createdRefreshToken;
   };
 
   // Service to get refresh token from the database
   static getRefreshToken = async (req) => await getRefreshTokenDb(req);
+
+  static deleteRefreshToken = async (req, next) => {
+    const isDeleted = await deleteRefreshTokenDb(req);
+    if (!isDeleted)
+      return next(new ErrorHandler(500, "Error while deleting refresh token."));
+  };
 }
 
 export default AuthService;

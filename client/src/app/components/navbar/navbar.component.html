@@ -1,25 +1,46 @@
-<nav class="navbar navbar-expand-md navbar-dark sticky-top" style="background-color: #1995AD;">
-    <div class="container-fluid">
-      <a class="navbar-brand" routerLink="">KlearSplit</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse d-lg-flex justify-content-end" id="navbarTogglerDemo02">
-        <div class="navbar-nav">
-            @if (authService.isAuthenticated() == true) {
-                <a class="nav-link" routerLink="/dashboard">Dashboard</a>
-                <a class="nav-link" routerLink="#">Friends</a>
-                <a class="nav-link" routerLink="#">Groups</a>
-                <a class="nav-link dropdown-toggle" role="button" href="#" data-bs-toggle="dropdown" aria-expanded="false">Profile</a>
-                <ul class="dropdown-menu" style="background-color: #1995AD;">
-                    <li><a class="dropdown-item" href="#">Profile</a></li>
-                    <li><a class="dropdown-item" href="#">Logout</a></li>
-                </ul>
-            } @else {
-                <a class="nav-link" routerLink="/login">Login</a>
-                <a class="nav-link" routerLink="/register">Register</a>
-            }
-        </div>
+<nav
+  class="navbar navbar-expand-md navbar-dark sticky-top"
+  style="background-color: #1995ad"
+>
+  <div class="container-fluid">
+    <a class="navbar-brand fs-2" routerLink="">KlearSplit</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarTogglerDemo02"
+      aria-controls="navbarTogglerDemo02"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div
+      class="collapse navbar-collapse d-lg-flex justify-content-end"
+      id="navbarTogglerDemo02"
+    >
+      <div class="navbar-nav">
+        @if (authService.isAuthenticated() == true) {
+          <a class="nav-link" routerLink="/dashboard">Dashboard</a>
+          <a class="nav-link" routerLink="#">Friends</a>
+          <a class="nav-link" routerLink="#">Groups</a>
+          <a
+            class="nav-link dropdown-toggle"
+            role="button"
+            href="#"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            >Profile</a
+          >
+          <ul class="dropdown-menu" style="background-color: #1995ad">
+            <li><a class="dropdown-item" href="#">Profile</a></li>
+            <li><a class="dropdown-item" href="#">Logout</a></li>
+          </ul>
+        } @else {
+          <a class="nav-link fs-3 me-2" routerLink="/login">Login</a>
+          <a class="nav-link fs-3" routerLink="/register">Register</a>
+        }
       </div>
     </div>
+  </div>
 </nav>

@@ -8,6 +8,9 @@
     "server/**/*.js": [
       "npm --prefix server run format",
       "npm --prefix server run lint"
+    ],
+    "client/**/*.ts": [
+      "npm --prefix client run format"
     ]
   },
   "scripts": {

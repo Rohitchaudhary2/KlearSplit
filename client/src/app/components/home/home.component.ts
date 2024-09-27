@@ -8,8 +8,6 @@ import { RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [NavbarComponent, FooterComponent],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.css'
+  styleUrl: './home.component.css',
 })
-export class HomeComponent {
-  
-}
+export class HomeComponent {}

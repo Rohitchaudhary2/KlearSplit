@@ -2,23 +2,30 @@ import { Injectable } from '@angular/core';
 import { AbstractControl, FormGroup } from '@angular/forms';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FormErrorMessageService {
-  
   getErrorMessage(form: FormGroup, field: string): string | null {
     const control: AbstractControl | null = form.get(field);
 
-    if (control?.hasError('required') && (control.touched && control.dirty)) {
+    if (control?.hasError('required') && control.touched && control.dirty) {
       return 'This field is required.';
-    } else if (control?.hasError('email') && (control.touched && control.dirty)) {
+    } else if (control?.hasError('email') && control.touched && control.dirty) {
       return 'Please enter a valid email.';
-    } else if (control?.hasError('minlength') && (control.touched && control.dirty)) {
+    } else if (
+      control?.hasError('minlength') &&
+      control.touched &&
+      control.dirty
+    ) {
       return `Minimum length should be ${control.errors?.['minlength'].requiredLength}.`;
-    } else if (control?.hasError('maxlength') && (control.touched && control.dirty)) {
+    } else if (
+      control?.hasError('maxlength') &&
+      control.touched &&
+      control.dirty
+    ) {
       return `Maximum length should be ${control.errors?.['maxlength'].requiredLength}.`;
-    } 
-    
+    }
+
     // Check for specific field types
     if (field === 'password') {
       return this.getPasswordErrorMessage(control);
@@ -29,8 +36,10 @@ export class FormErrorMessageService {
     return null;
   }
 
-  private getPasswordErrorMessage(control: AbstractControl | null): string | null {
-    if (control?.hasError('pattern') && (control.touched && control.dirty)) {
+  private getPasswordErrorMessage(
+    control: AbstractControl | null,
+  ): string | null {
+    if (control?.hasError('pattern') && control.touched && control.dirty) {
       const value = control.value;
 
       // Check for multiple password patterns
@@ -51,7 +60,7 @@ export class FormErrorMessageService {
   }
 
   private getPhoneErrorMessage(control: AbstractControl | null): string | null {
-    if (control?.hasError('pattern') && (control.touched && control.dirty)) {
+    if (control?.hasError('pattern') && control.touched && control.dirty) {
       const value = control.value;
 
       // Phone number pattern (example for US phone numbers)

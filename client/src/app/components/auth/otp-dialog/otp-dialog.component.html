@@ -3,12 +3,16 @@
   <form [formGroup]="otpForm">
     <mat-form-field appearance="fill">
       <mat-label>Enter OTP</mat-label>
-      <input matInput formControlName="otp">
-      <mat-error *ngIf="otpForm.controls['otp'].invalid">OTP is required and should be 6 digits.</mat-error>
+      <input matInput formControlName="otp" />
+      @if (otpForm.controls["otp"].invalid) {
+        <mat-error>OTP is required and should be 6 digits.</mat-error>
+      }
     </mat-form-field>
   </form>
 </div>
 <div mat-dialog-actions>
   <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-button (click)="onVerify()" [disabled]="otpForm.invalid">Submit</button>
+  <button mat-button (click)="onVerify()" [disabled]="otpForm.invalid">
+    Submit
+  </button>
 </div>

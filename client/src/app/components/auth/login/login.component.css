@@ -15,44 +15,44 @@
 }
 
 .form-outline {
-    position: relative;
-    margin-bottom: 1.5rem;
-  }
-  
-  .form-outline .form-control {
-    padding: 1rem 0.5rem 0.5rem 0.5rem;
-    font-size: 16px;
-  }
-  
-  .form-outline .form-label {
-    position: absolute;
-    top: 0.5rem;
-    left: 0.5rem;
-    transition: all 0.2s ease;
-    background-color: #F1F1F2;
-    padding: 0 0.2rem;
-  }
-  
-  .form-outline .form-control:focus ~ .form-label,
-  .form-outline .form-control:not(:placeholder-shown) ~ .form-label {
-    top: -0.8rem;
-    left: 0.5rem;
-    font-size: 12px;
-    color: #000; /* You can customize this color */
-  }
-  
-  .form-outline .form-control:focus {
-    outline: none;
-    border-color: #000; /* Add focus border color */
-  }
-  
-  .form-outline .form-control:not(:placeholder-shown) {
-    padding-top: 1.5rem;
-  }
-  
-  .form-outline .form-control {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100%;
-    box-sizing: border-box;
-  }
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.form-outline .form-control {
+  padding: 1rem 0.5rem 0.5rem 0.5rem;
+  font-size: 16px;
+}
+
+.form-outline .form-label {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  transition: all 0.2s ease;
+  background-color: #f1f1f2;
+  padding: 0 0.2rem;
+}
+
+.form-outline .form-control:focus ~ .form-label,
+.form-outline .form-control:not(:placeholder-shown) ~ .form-label {
+  top: -0.8rem;
+  left: 0.5rem;
+  font-size: 12px;
+  color: #000; /* You can customize this color */
+}
+
+.form-outline .form-control:focus {
+  outline: none;
+  border-color: #000; /* Add focus border color */
+}
+
+.form-outline .form-control:not(:placeholder-shown) {
+  padding-top: 1.5rem;
+}
+
+.form-outline .form-control {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}

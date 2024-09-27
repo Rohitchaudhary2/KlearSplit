@@ -27,7 +27,7 @@ export const createUserController = async (req, res, next) => {
 // Controller for getting user information
 export const getUserController = async (req, res, next) => {
   try {
-    const userData = await UserService.getUser(req.params.id, next);
+    const userData = await UserService.getUser(req.params.id);
     responseHandler(res, 200, "Successfully fetched user", userData);
   } catch (error) {
     next(error);
@@ -37,7 +37,7 @@ export const getUserController = async (req, res, next) => {
 // Controller for updating the user
 export const updateUserController = async (req, res, next) => {
   try {
-    const user = await UserService.updateUser(req, next);
+    const user = await UserService.updateUser(req);
     responseHandler(res, 200, "Successfully updated user", user);
   } catch (error) {
     next(error);
@@ -47,7 +47,7 @@ export const updateUserController = async (req, res, next) => {
 // Controller for deleting the user
 export const deleteUserController = async (req, res, next) => {
   try {
-    await UserService.deleteUser(req, next);
+    await UserService.deleteUser(req);
     responseHandler(res, 200, "Successfully deleted user");
   } catch (error) {
     next(error);

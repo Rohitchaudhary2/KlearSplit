@@ -14,7 +14,6 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import AuthService from "../auth/authServices.js";
-import { ErrorHandler } from "../middlewares/errorHandler.js";
 import sequelize from "../../../config/db.connection.js";
 import { hashedPassword } from "../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
@@ -80,10 +79,10 @@ class UserService {
 
     const otp = await getOtpDb(user.email, user.phone, userOtp);
 
-    if (!otp) return next(new ErrorHandler(400, "Invalid Otp."));
+    if (!otp) throw { statusCode: 400, message: "Invalid Otp." };
 
     if (new Date() >= otp.otp_expiry_time)
-      return next(new ErrorHandler(400, "Otp has expired."));
+      throw { statusCode: 400, message: "Otp has expired." };
 
     //Generating random password
     const password = generatePassword();
@@ -138,14 +137,14 @@ class UserService {
   };
 
   // Service to get user from database
-  static getUser = async (id, next) => {
+  static getUser = async (id) => {
     const user = await getUserByIdDb(id);
-    if (!user) return next(new ErrorHandler(404, "User not found"));
+    if (!user) throw { statusCode: 404, message: "User not found" };
     return user;
   };
 
   // Service for updating user in the database
-  static updateUser = async (req, next) => {
+  static updateUser = async (req) => {
     const userData = req.body;
     const id = req.params.id;
     await this.getUser(id);
@@ -153,7 +152,7 @@ class UserService {
     const { error, updateUserData } = validateUpdatedUser(userData, {
       stripUnknown: true,
     });
-    if (error) return next(new ErrorHandler(400, error.message));
+    if (error) throw { statusCode: 400, message: error.message };
 
     return await updateUserDb(updateUserData, id);
   };

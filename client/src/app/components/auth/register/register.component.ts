@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
-import { RegisterUser } from '../../shared/user/types.model';
+import { RegisterUser } from '../register-types.model';
 import { FormErrorMessageService } from '../../shared/form-error-message.service';
 import { ToastrService } from 'ngx-toastr';
 
@@ -27,7 +27,7 @@ export class RegisterComponent {
         Validators.maxLength(50)
       ],
     }),
-    last_name: new FormControl('', {
+    last_name: new FormControl<string | null>(null, {
       validators: [Validators.maxLength(50)],
     }),
     email: new FormControl('', {
@@ -47,18 +47,16 @@ export class RegisterComponent {
     return this.formErrorMessages.getErrorMessage(this.form, field);
   }
 
-  onSubmit() {
+  onClickVerify() {
     if (this.form.valid) {
       const user: RegisterUser = this.form.value as RegisterUser;
       this.authService.registerUser(user).subscribe({
-        next: (response) => {
+        next: () => {
           this.toastr.success('User registered successfully');
-          this.authService.currentUser.set(response.body?.user);
           this.router.navigate(['/dashboard']);
         },
         error: (err) => {
           // Assuming that the error will have a message
-          console.log(err);
           this.toastr.error(err?.error?.message || 'Registration failed!', 'Error', { timeOut: 3000 });
         }
       });

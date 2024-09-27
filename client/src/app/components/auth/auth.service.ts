@@ -1,9 +1,10 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { CurrentUser, RegisterResponse, RegisterUser } from '../shared/user/types.model';
+import { CurrentUser } from '../shared/types.model';
 import { Observable, map } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import { TokenService } from './token.service'; // Token service for access token management
+import { RegisterResponse, RegisterUser } from './register-types.model';
 
 @Injectable({
   providedIn: 'root',

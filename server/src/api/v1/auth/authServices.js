@@ -61,6 +61,12 @@ class AuthService {
 
   // Service to get refresh token from the database
   static getRefreshToken = async (req) => await getRefreshTokenDb(req);
+
+  static deleteRefreshToken = async (req, next) => {
+    const isDeleted = await deleteRefreshTokenDb(req);
+    if (!isDeleted)
+      return next(new ErrorHandler(500, "Error while deleting refresh token."));
+  };
 }
 
 export default AuthService;

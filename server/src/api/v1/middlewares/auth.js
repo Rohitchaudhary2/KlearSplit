@@ -55,6 +55,8 @@ const handleRefreshToken = async (req, res, next) => {
       next,
     );
 
+    await AuthService.deleteRefreshToken(refreshToken, next);
+
     req.user = await UserService.getUser(userId.id, next);
 
     res

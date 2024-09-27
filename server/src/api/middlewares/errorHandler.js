@@ -9,7 +9,7 @@ export class ErrorHandler extends Error {
 
 // Middleware function to handle errors in the Express app
 /* eslint-disable-next-line no-unused-vars */
-export const ErrorMiddleware = (error, req, res, next) => {
+export const errorMiddleware = (error, req, res, next) => {
   const statusCode = error.statusCode || 500;
 
   // Logging error details using the custom logger

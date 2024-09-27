@@ -1,0 +1,20 @@
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "npx lint-staged"
+    }
+  },
+  "lint-staged": {
+    "server/**/*.js": [
+      "npm --prefix server run format",
+      "npm --prefix server run lint"
+    ]
+  },
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "husky": "^8.0.0",
+    "lint-staged": "^15.2.10"
+  }
+}

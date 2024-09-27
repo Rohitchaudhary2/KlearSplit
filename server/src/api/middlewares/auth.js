@@ -4,9 +4,9 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
-import { ErrorHandler } from "./ErrorHandler.js";
+import { ErrorHandler } from "./errorHandler.js";
 import UserService from "../users/userServices.js";
-import sequelize from "../../../config/db.connection.js";
+import sequelize from "../../config/db.connection.js";
 
 const handleAccessToken = (req, next) => {
   if (!req.headers["authorization"]) {
@@ -38,7 +38,7 @@ const handleRefreshToken = async (req, res, next) => {
     // Check if the refresh token exists in the database
     const refreshTokenDb = await AuthService.getRefreshToken(refreshToken);
     if (!refreshTokenDb)
-      return next(new ErrorHandler(401, "Access Denied. Invalid Token"));
+      throw { statusCode: 401, message: "Access Denied. Invalid Token" };
 
     // Generate new access and refresh tokens
     const accessToken = generateAccessToken(userId.id, next);
@@ -47,9 +47,8 @@ const handleRefreshToken = async (req, res, next) => {
     const transaction = await sequelize.transaction();
     await AuthService.createRefreshToken(
       {
-        token: refreshToken,
+        token: newRefreshToken,
         user_id: userId.id,
-        next,
       },
       transaction,
       next,
@@ -68,7 +67,6 @@ const handleRefreshToken = async (req, res, next) => {
         sameSite: "strict",
       })
       .set("Authorization", `Bearer ${accessToken}`);
-      
     return next();
   } catch (error) {
     // Handle errors related to refresh token expiration

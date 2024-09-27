@@ -1,6 +1,6 @@
 // This function will form the standardize API responses
 export const responseHandler = (res, statusCode, message, data) => {
-  res.status(statusCode).json({
+  return res.status(statusCode).json({
     success: true,
     message,
     data,

@@ -14,7 +14,7 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import AuthService from "../auth/authServices.js";
-import sequelize from "../../../config/db.connection.js";
+import sequelize from "../../config/db.connection.js";
 import { hashedPassword } from "../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
 import crypto from "crypto";

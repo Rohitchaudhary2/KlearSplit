@@ -3,10 +3,10 @@ import "dotenv/config";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/db.connection.js";
-import userRouter from "./api/v1/users/userRoutes.js";
-import authRouter from "./api/v1/auth/authRoutes.js";
-import { errorMiddleware } from "./api/v1/middlewares/errorHandler.js";
-import { loggerMiddleware } from "./api/v1/middlewares/loggerMiddleware.js";
+import userRouter from "./api/users/userRoutes.js";
+import authRouter from "./api/auth/authRoutes.js";
+import { errorMiddleware } from "./api/middlewares/errorHandler.js";
+import { loggerMiddleware } from "./api/middlewares/loggerMiddleware.js";
 
 // Creating an instance of the Express application
 const app = express();

@@ -1,5 +1,4 @@
 import nodemailer from "nodemailer";
-import logger from "./logger.js";
 
 // Looking to send emails in production? Check out our Email API/SMTP product!
 const transporter = nodemailer.createTransport({
@@ -13,7 +12,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendMail = async (options) => {
+const sendMail = async (options, next) => {
   const mailOptions = {
     from: process.env.SMTP_MAIL,
     to: options.email,
@@ -24,11 +23,7 @@ const sendMail = async (options) => {
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    logger.log({
-      level: "error",
-      statusCode: 500,
-      message: error.message,
-    });
+    next(error);
   }
 };
 

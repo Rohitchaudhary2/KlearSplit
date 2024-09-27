@@ -55,11 +55,14 @@ class UserService {
       otp_expiry_time: otpExpiresAt,
     });
 
-    sendMail({
-      email: user.email,
-      subject: "Otp",
-      message: `This is your ${otp} for sign up in KlearSplit. It is valid for 5 minutes.`,
-    });
+    sendMail(
+      {
+        email: user.email,
+        subject: "Otp",
+        message: `This is your ${otp} for sign up in KlearSplit. It is valid for 5 minutes.`,
+      },
+      next,
+    );
   };
 
   static createUser = async (userData, next) => {
@@ -69,7 +72,7 @@ class UserService {
     const { error, value: user } = validateUser(userData, {
       stripUnknown: true,
     });
-    if (error) throw next(new ErrorHandler(400, error.message));
+    if (error) return next(new ErrorHandler(400, error.message));
 
     // Restore flag to indicate whether the user has deleted his/her account previously
     let restoreFlag = false;
@@ -81,10 +84,10 @@ class UserService {
 
     const otp = await getOtpDb(user.email, user.phone, userOtp);
 
-    if (!otp) throw next(new ErrorHandler(400, "Invalid Otp."));
+    if (!otp) return next(new ErrorHandler(400, "Invalid Otp."));
 
     if (new Date() >= otp.otp_expiry_time)
-      throw next(new ErrorHandler(400, "Otp has expired."));
+      return next(new ErrorHandler(400, "Otp has expired."));
 
     //Generating random password
     const password = generatePassword();
@@ -128,7 +131,7 @@ class UserService {
         message: `This is your password ${password} for signing in KlearSplit.`,
       };
 
-      sendMail(options);
+      sendMail(options, next);
 
       return { user: createdUser, accessToken, refreshToken };
     } catch (error) {
@@ -141,7 +144,7 @@ class UserService {
   // Service to get user from database
   static getUser = async (id, next) => {
     const user = await getUserByIdDb(id);
-    if (!user) throw next(new ErrorHandler(404, "User not found"));
+    if (!user) return next(new ErrorHandler(404, "User not found"));
     return user;
   };
 
@@ -154,7 +157,7 @@ class UserService {
     const { error, updateUserData } = validateUpdatedUser(userData, {
       stripUnknown: true,
     });
-    if (error) throw next(new ErrorHandler(400, error.message));
+    if (error) return next(new ErrorHandler(400, error.message));
 
     return await updateUserDb(updateUserData, id);
   };

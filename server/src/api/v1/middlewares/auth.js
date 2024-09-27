@@ -10,7 +10,7 @@ import sequelize from "../../../config/db.connection.js";
 
 const handleAccessToken = (req, next) => {
   if (!req.headers["authorization"]) {
-    throw next(
+    return next(
       new ErrorHandler(401, "Access Denied. No Access token provided."),
     );
   }
@@ -27,7 +27,7 @@ const handleAccessToken = (req, next) => {
 const handleRefreshToken = async (req, res, next) => {
   const refreshToken = req.cookies["refreshToken"];
   if (!refreshToken)
-    throw next(
+    return next(
       new ErrorHandler(401, "Access Denied. No Refresh Token provided."),
     );
 
@@ -38,16 +38,24 @@ const handleRefreshToken = async (req, res, next) => {
     // Check if the refresh token exists in the database
     const refreshTokenDb = await AuthService.getRefreshToken(refreshToken);
     if (!refreshTokenDb)
-      throw next(new ErrorHandler(401, "Access Denied. Invalid Token"));
+      return next(new ErrorHandler(401, "Access Denied. Invalid Token"));
 
     // Generate new access and refresh tokens
     const accessToken = generateAccessToken(userId.id, next);
     const newRefreshToken = generateRefreshToken(userId.id, next);
 
     const transaction = await sequelize.transaction();
-    await AuthService.createRefreshToken(newRefreshToken, transaction, next);
+    await AuthService.createRefreshToken(
+      {
+        token: refreshToken,
+        user_id: userId.id,
+        next,
+      },
+      transaction,
+      next,
+    );
 
-    req.user = await UserService.getUser(userId.id);
+    req.user = await UserService.getUser(userId.id, next);
 
     res
       .cookie("refreshToken", newRefreshToken, {
@@ -62,7 +70,9 @@ const handleRefreshToken = async (req, res, next) => {
       return next(
         new ErrorHandler(401, "Access Denied. Refresh Token expired."),
       );
-    } else next(error);
+    } else {
+      next(error);
+    }
   }
 };
 
@@ -73,16 +83,14 @@ export const authenticateToken = async (req, res, next) => {
   try {
     // Verify the access token
     const user = jwt.verify(accessToken, process.env.ACCESS_SECRET_KEY);
-    req.user = await UserService.getUser(user.id);
+    req.user = await UserService.getUser(user.id, next);
     next();
   } catch (error) {
-    if (error.name !== "TokenExpiredError") {
-      return next(
-        new ErrorHandler(401, "Access Denied. Invalid Access Token."),
-      );
-    } else {
+    if (error.name === "TokenExpiredError") {
       // If access token expired, attempt to use refresh token
       handleRefreshToken(req, res, next);
+    } else {
+      return next(error);
     }
   }
 };

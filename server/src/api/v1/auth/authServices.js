@@ -18,11 +18,11 @@ class AuthService {
 
     // Checking whether the email is correct
     const user = await getUserByEmailDb(email);
-    if (!user) throw next(new ErrorHandler(404, "Email not found"));
+    if (!user) return next(new ErrorHandler(404, "Email not found"));
 
     // checking whether password is valid
     const validPassword = bcrypt.compare(password, user.password);
-    if (!validPassword) throw next(new ErrorHandler(404, "Password is wrong"));
+    if (!validPassword) return next(new ErrorHandler(404, "Password is wrong"));
 
     // Geneating access and refresh tokens
     const accessToken = generateAccessToken(user.user_id, next);
@@ -55,7 +55,7 @@ class AuthService {
       transaction,
     );
     if (!createdRefreshToken)
-      throw next(new ErrorHandler(500, "Error while storing refresh Token"));
+      return next(new ErrorHandler(500, "Error while storing refresh Token"));
     return createdRefreshToken;
   };
 

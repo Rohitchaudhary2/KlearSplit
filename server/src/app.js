@@ -12,7 +12,14 @@ import { loggerMiddleware } from "./api/v1/middlewares/loggerMiddleware.js";
 const app = express();
 
 app.use(express.json());    // Parse incoming JSON requests and make the data available under req.body
-app.use(cors());            // Enable Cross-Origin Resource Sharing (CORS) to allow requests from different origins
+
+const corsOptions = {
+    origin: "http://localhost:4200",    // Allow requests from the frontend
+    credentials: true,                  // Allow credentials (cookies, authorization headers, etc.)
+    exposedHeaders: ["Authorization"],  
+};
+app.use(cors(corsOptions))
+
 app.use(cookieParser());    // Parse cookies from incoming requests and make them available under req.cookies
 
 sequelize.sync();           // Sync the Sequelize models with the database, creating tables if they don't exist

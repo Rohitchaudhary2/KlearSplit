@@ -10,14 +10,14 @@
                   <div class="text-center">
                     <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/lotus.webp"
                       style="width: 185px;" alt="logo">
-                    <h4 class="mt-1 mb-5 pb-1">We are The KlearSplit Team</h4>
+                    <h4 class="mt-1 pb-1">We are The KlearSplit Team</h4>
                   </div>
   
-                  <form [formGroup]="form" (ngSubmit)="onClickVerify()">
-                    <p class="mb-4">Please enter your details below.</p>
-                    <div data-mdb-input-init class="form-outline mt-4 mb-0">
-                        <input type="name" id="first_name" name="first_name" class="form-control" formControlName="first_name"/>
-                        <label class="form-label" for="first_name">First Name</label>
+                  <form class="was-validated" [formGroup]="form" (ngSubmit)="onClickVerify()">
+                    <p class="mt-4">Please enter your details below.</p>
+                    <div class="form-floating mt-4">
+                        <input type="name" class="form-control" id="formInput" name="first_name" placeholder="John" formControlName="first_name"/>
+                        <label for="formInput">First Name</label>
                     </div>
 
                     @if (getFormErrors("first_name")) {
@@ -26,23 +26,23 @@
                       </p>
                     }
   
-                    <div data-mdb-input-init class="form-outline mt-4">
-                      <input type="name" id="last_name" name="last_name" class="form-control" formControlName="last_name"/>
-                      <label class="form-label" for="last_name">Last Name</label>
+                    <div class="form-floating mt-4">
+                      <input type="name" class="form-control" id="formInput" name="last_name" placeholder="Doe" formControlName="last_name"/>
+                      <label for="formInput">Last Name</label>
                     </div>
 
-                    <div data-mdb-input-init class="form-outline mt-4 mb-0">
-                      <input type="email" id="email" name="email" class="form-control" formControlName="email"/>
-                      <label class="form-label" for="email">Email</label>
+                    <div class="form-floating mt-4">
+                      <input type="email" class="form-control" id="formInput" name="email" placeholder="john@example.com" formControlName="email"/>
+                      <label for="formInput">Email</label>
                     </div>
 
                     @if (getFormErrors("email")) {
                       <p class="text-danger mt-0 small">{{ getFormErrors("email") }}</p>
                     }
 
-                    <div data-mdb-input-init class="form-outline mt-4 mb-0">
-                      <input type="phone" id="phone" name="phone" class="form-control" formControlName="phone"/>
-                      <label class="form-label" for="phone">Phone Number</label>
+                    <div class="form-floating mt-4">
+                      <input type="phone" class="form-control" id="formInput" name="phone" placeholder="9876543210" formControlName="phone"/>
+                      <label for="formInput">Phone Number</label>
                     </div>
 
                     @if (getFormErrors("phone")) {
@@ -50,7 +50,7 @@
                     }
   
                     <div class="text-center pt-1 mt-4 mb-1 pb-1">
-                      <button data-mdb-button-init data-mdb-ripple-init [disabled]="form.invalid" class="btn btn-primary btn-block fa-lg gradient-custom-2 mb-3 w-100" type="submit">Verify
+                      <button [disabled]="form.invalid" class="btn w-100" type="submit" style="background-color: #1995AD;">Verify
                       </button>
                     </div>
   

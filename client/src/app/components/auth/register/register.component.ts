@@ -52,8 +52,7 @@ export class RegisterComponent {
       const user: RegisterUser = this.form.value as RegisterUser;
       this.authService.registerUser(user).subscribe({
         next: () => {
-          this.toastr.success('User registered successfully');
-          this.router.navigate(['/dashboard']);
+          this.toastr.success('User registered successfully', 'Success', { timeOut: 3000 });
         },
         error: (err) => {
           // Assuming that the error will have a message

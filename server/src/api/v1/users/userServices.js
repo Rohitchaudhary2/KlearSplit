@@ -58,7 +58,7 @@ class UserService {
     sendMail({
       email: user.email,
       subject: "Otp",
-      message: `This is your ${otp}. It is valid for 5 minutes.`,
+      message: `This is your ${otp} for sign up in KlearSplit. It is valid for 5 minutes.`,
     });
   };
 
@@ -79,12 +79,12 @@ class UserService {
       restoreFlag = true;
     }
 
-    const otp = await getOtpDb(user.email, user.phone);
+    const otp = await getOtpDb(user.email, user.phone, userOtp);
+
+    if (!otp) throw next(new ErrorHandler(400, "Invalid Otp."));
 
     if (new Date() >= otp.otp_expiry_time)
       throw next(new ErrorHandler(400, "Otp has expired."));
-
-    if (userOtp !== otp.otp) throw next(new ErrorHandler(400, "Invalid Otp."));
 
     //Generating random password
     const password = generatePassword();
@@ -125,7 +125,7 @@ class UserService {
       const options = {
         email: user.email,
         subject: "Password",
-        message: `This is your password ${password}`,
+        message: `This is your password ${password} for signing in KlearSplit.`,
       };
 
       sendMail(options);

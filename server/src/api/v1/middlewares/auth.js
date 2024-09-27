@@ -47,13 +47,15 @@ const handleRefreshToken = async (req, res, next) => {
     const transaction = await sequelize.transaction();
     await AuthService.createRefreshToken(
       {
-        token: refreshToken,
+        token: newRefreshToken,
         user_id: userId.id,
-        next,
       },
       transaction,
       next,
     );
+
+    // Commit the transaction
+    await transaction.commit();
 
     await AuthService.deleteRefreshToken(refreshToken, next);
 
@@ -64,8 +66,8 @@ const handleRefreshToken = async (req, res, next) => {
         httpOnly: true,
         sameSite: "strict",
       })
-      .set("Authorization", accessToken);
-    next();
+      .set("Authorization", `Bearer ${accessToken}`);
+    return next();
   } catch (error) {
     // Handle errors related to refresh token expiration
     if (error.name === "TokenExpiredError") {

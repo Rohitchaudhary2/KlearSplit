@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import User from "./models/userModel.js";
 
 export const createUserDb = async (user, transaction) =>
@@ -8,10 +9,17 @@ export const restoreUserDb = async (email, transaction) =>
 
 export const getUserByIdDb = async (id) => await User.findByPk(id);
 
-export const getUserByEmailDb = async (email, flag = true) =>
+export const getUserByEmailDb = async (email) =>
   await User.scope("withPassword").findOne({
     where: {
       email,
+    },
+  });
+
+export const getUserByEmailorPhoneDb = async (email, phone, flag = true) =>
+  await User.scope("withPassword").findOne({
+    where: {
+      [Op.or]: [{ email }, { phone }],
     },
     paranoid: flag,
   });

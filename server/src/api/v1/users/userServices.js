@@ -5,7 +5,7 @@ import {
   updateUserDb,
   deleteUserDb,
   getUserByEmailDb,
-  getUserByPhoneDb,
+  getUserByEmailorPhoneDb,
   restoreUserDb,
 } from "./userDb.js";
 import { validateUpdatedUser, validateUser } from "./userValidations.js";
@@ -27,22 +27,18 @@ class UserService {
     const { error, value: user } = validateUser(userData, {
       stripUnknown: true,
     });
-    if (error) throw next(new ErrorHandler(400, error.message));
+    if (error) throw { statusCode: 400, message: error.message };
 
-    // Restore flag to indicate whether the user has deleted his/her account previously
-    let restoreFlag = false;
-
-    const isEmailExists = await getUserByEmailDb(user.email, false);
-    // If email already exists in database then checking whether user has deleted account
-    if (isEmailExists && isEmailExists.dataValues.deletedAt) {
-      restoreFlag = true;
-    } else if (isEmailExists)
-      throw next(new ErrorHandler(400, "Email already exists!"));
-
-    // Checking whether phone number exists in database if so then checking whether we are restoring user.
-    const isPhoneExists = await getUserByPhoneDb(user.phone);
-    if (isPhoneExists && !restoreFlag)
-      throw next(new ErrorHandler(400, "Phone Number already exists!"));
+    const isUserExists = await getUserByEmailorPhoneDb(
+      user.email,
+      user.phone,
+      false,
+    );
+    // If email or phone already exists in database then checking whether user has deleted account
+    if (isUserExists && isUserExists.dataValues.deletedAt)
+      throw { statusCode: 400, message: "Looks like you had an account" };
+    else if (isUserExists)
+      throw { statusCode: 400, message: "Email already exists" };
 
     // send otp
     const otp = crypto.randomInt(100000, 999999).toString();
@@ -72,7 +68,7 @@ class UserService {
     const { error, value: user } = validateUser(userData, {
       stripUnknown: true,
     });
-    if (error) return next(new ErrorHandler(400, error.message));
+    if (error) throw { statusCode: 400, message: error.message };
 
     // Restore flag to indicate whether the user has deleted his/her account previously
     let restoreFlag = false;
@@ -117,9 +113,9 @@ class UserService {
         {
           token: refreshToken,
           user_id: createdUser.user_id,
-          next,
         },
         transaction,
+        next,
       );
 
       // Commit the transaction

@@ -24,10 +24,30 @@ export const createUserController = async (req, res, next) => {
   }
 };
 
+// Controller for verifying a user
+export const verifyRestoreUserContoller = async (req, res, next) => {
+  try {
+    await UserService.verifyRestoreUser(req.validatedUser, next);
+    return responseHandler(res, 200, "Successfully Sent Otp");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Controller for creating or registering a user
+export const restoreUserController = async (req, res, next) => {
+  try {
+    const userData = await UserService.restoreUser(req.validatedUser, next);
+    authResponseHandler(res, 201, "Successfully restored user", userData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Controller for getting user information
 export const getUserController = async (req, res, next) => {
   try {
-    const userData = await UserService.getUser(req.params.id);
+    const userData = await UserService.getUser(req.params.id, next);
     responseHandler(res, 200, "Successfully fetched user", userData);
   } catch (error) {
     next(error);

@@ -1,6 +1,7 @@
 import Joi from "joi";
 
-const userSchema = Joi.object({
+// Common fields for both create and update
+const commonFields = {
   email: Joi.string().trim().lowercase().email().max(128).required().messages({
     "string.email": "Please provide a valid email address.",
     "string.max": "Email must be less than or equal to 128 characters.",
@@ -10,10 +11,6 @@ const userSchema = Joi.object({
   first_name: Joi.string().trim().max(50).required().messages({
     "string.max": "First name must be less than or equal to 50 characters.",
     "any.required": "First name is required.",
-  }),
-
-  last_name: Joi.string().trim().max(50).messages({
-    "string.max": "Last name must be less than or equal to 50 characters.",
   }),
 
   phone: Joi.string()
@@ -26,23 +23,27 @@ const userSchema = Joi.object({
       "string.length": "Phone number must be exactly 10 digits long.",
       "any.required": "Phone number is required.",
     }),
-});
-
-export const validateUser = (userData) => {
-  return userSchema.validate(userData);
 };
 
-const updatedUserSchema = Joi.object({
-  email: Joi.string().trim().lowercase().email().max(128).messages({
-    "string.email": "Please provide a valid email address.",
-    "string.max": "Email must be less than or equal to 128 characters.",
-    "any.required": "Email is required.",
+// Create Schema: All Common fields required
+export const createUserSchema = Joi.object({
+  ...Object.keys(commonFields).reduce((acc, key) => {
+    acc[key] = commonFields[key].required();
+    return acc;
+  }, {}),
+
+  last_name: Joi.string().trim().max(50).messages({
+    "string.max": "Last name must be less than or equal to 50 characters.",
   }),
 
-  first_name: Joi.string().trim().max(50).messages({
-    "string.max": "First name must be less than or equal to 50 characters.",
-    "any.required": "First name is required.",
-  }),
+  otp: Joi.string().trim()
+});
+
+export const updateUserSchema = Joi.object({
+  ...Object.keys(commonFields).reduce((acc, key) => {
+    acc[key] = commonFields[key].optional();
+    return acc;
+  }, {}),
 
   last_name: Joi.string().trim().max(50).messages({
     "string.max": "Last name must be less than or equal to 50 characters.",
@@ -72,18 +73,4 @@ const updatedUserSchema = Joi.object({
     "number.min": "Notification settings must be at least 0.",
     "number.max": "Notification settings must be at most 63.",
   }),
-
-  phone: Joi.string()
-    .trim()
-    .pattern(/^[0-9]+$/)
-    .length(10)
-    .messages({
-      "string.pattern.base": "Phone number must contain only digits.",
-      "string.length": "Phone number must be exactly 10 digits long.",
-      "any.required": "Phone number is required.",
-    }),
 });
-
-export const validateUpdatedUser = (userData) => {
-  return updatedUserSchema.validate(userData);
-};

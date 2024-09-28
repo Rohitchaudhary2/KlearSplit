@@ -8,7 +8,6 @@ import {
   getUserByEmailorPhoneDb,
   restoreUserDb,
 } from "./userDb.js";
-import { validateUpdatedUser, validateUser } from "./userValidations.js";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -19,15 +18,10 @@ import { hashedPassword } from "../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
 import crypto from "crypto";
 import { createOtpDb, getOtpDb } from "./otpDb.js";
+import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 class UserService {
-  static verifyUser = async (userData, next) => {
-    // Validating and sanitizing the user data with JOI validator
-    const { error, value: user } = validateUser(userData, {
-      stripUnknown: true,
-    });
-    if (error) throw { statusCode: 400, message: error.message };
-
+  static verifyUser = async (user, next) => {
     const isUserExists = await getUserByEmailorPhoneDb(
       user.email,
       user.phone,
@@ -35,9 +29,9 @@ class UserService {
     );
     // If email or phone already exists in database then checking whether user has deleted account
     if (isUserExists && isUserExists.dataValues.deletedAt)
-      throw { statusCode: 400, message: "Looks like you had an account" };
+      throw next(new ErrorHandler(400, "Looks like you had an account."))
     else if (isUserExists)
-      throw { statusCode: 400, message: "Email already exists" };
+      throw next(new ErrorHandler(400, "Email or Phone number already exists."))
 
     // send otp
     const otp = crypto.randomInt(100000, 999999).toString();
@@ -50,24 +44,19 @@ class UserService {
       otp_expiry_time: otpExpiresAt,
     });
 
-    sendMail(
+    await sendMail(
       {
         email: user.email,
         subject: "Otp",
         message: `This is your ${otp} for sign up in KlearSplit. It is valid for 5 minutes.`,
-      },
-      next,
+      }, 
+      next
     );
   };
 
-  static createUser = async (userData, next) => {
-    const userOtp = userData.otp;
-    delete userData.otp;
-    // Validating and sanitizing the user data with JOI validator
-    const { error, value: user } = validateUser(userData, {
-      stripUnknown: true,
-    });
-    if (error) throw { statusCode: 400, message: error.message };
+  static createUser = async (user, next) => {
+    const userOtp = user.otp;
+    delete user.otp;
 
     // Restore flag to indicate whether the user has deleted his/her account previously
     let restoreFlag = false;
@@ -79,10 +68,10 @@ class UserService {
 
     const otp = await getOtpDb(user.email, user.phone, userOtp);
 
-    if (!otp) throw { statusCode: 400, message: "Invalid Otp." };
+    if (!otp) throw next(new ErrorHandler(400, "Invalid Otp."))
 
     if (new Date() >= otp.otp_expiry_time)
-      throw { statusCode: 400, message: "Otp has expired." };
+      throw next(new ErrorHandler(400, "Otp has been expired."))
 
     //Generating random password
     const password = generatePassword();
@@ -139,22 +128,17 @@ class UserService {
   // Service to get user from database
   static getUser = async (id) => {
     const user = await getUserByIdDb(id);
-    if (!user) throw { statusCode: 404, message: "User not found" };
+    if (!user) throw next(new ErrorHandler(404, "User not found.")) 
     return user;
   };
 
   // Service for updating user in the database
   static updateUser = async (req) => {
-    const userData = req.body;
+    const user = req.validatedUser;
     const id = req.params.id;
     await this.getUser(id);
 
-    const { error, updateUserData } = validateUpdatedUser(userData, {
-      stripUnknown: true,
-    });
-    if (error) throw { statusCode: 400, message: error.message };
-
-    return await updateUserDb(updateUserData, id);
+    return await updateUserDb(user, id);
   };
 
   // Service for deleting user in the database

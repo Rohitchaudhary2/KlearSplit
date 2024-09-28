@@ -6,3 +6,9 @@ export interface CurrentUser {
   phone: string;
   image_url: string;
 }
+
+export interface FetchResponse {
+  data: CurrentUser;
+  status: number;
+  message: string;
+}

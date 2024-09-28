@@ -20,25 +20,35 @@
       id="navbarTogglerDemo02"
     >
       <div class="navbar-nav">
-        @if (authService.isAuthenticated() == true) {
-          <a class="nav-link" routerLink="/dashboard">Dashboard</a>
-          <a class="nav-link" routerLink="#">Friends</a>
-          <a class="nav-link" routerLink="#">Groups</a>
-          <a
-            class="nav-link dropdown-toggle"
-            role="button"
-            href="#"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            >Profile</a
-          >
-          <ul class="dropdown-menu" style="background-color: #1995ad">
-            <li><a class="dropdown-item" href="#">Profile</a></li>
-            <li><a class="dropdown-item" href="#">Logout</a></li>
+        @if (authService.isAuthenticated() === true) {
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link fs-5" routerLink="/dashboard">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link fs-5" routerLink="#">Friends</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link fs-5" routerLink="#">Groups</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link fs-5 dropdown-toggle"
+                role="button"
+                href="#"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                >Profile</a
+              >
+            </li>
+            <ul class="dropdown-menu" style="background-color: #1995ad">
+              <li><a class="dropdown-item" href="#">Profile</a></li>
+              <li><a class="dropdown-item" href="#">Logout</a></li>
+            </ul>
           </ul>
         } @else {
-          <a class="nav-link fs-3 me-2" routerLink="/login">Login</a>
-          <a class="nav-link fs-3" routerLink="/register">Register</a>
+          <a class="nav-link fs-5 me-2" routerLink="/login">Login</a>
+          <a class="nav-link fs-5" routerLink="/register">Register</a>
         }
       </div>
     </div>

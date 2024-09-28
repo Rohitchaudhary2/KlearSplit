@@ -10,7 +10,8 @@
       "npm --prefix server run lint"
     ],
     "client/**/*.ts": [
-      "npm --prefix client run format"
+      "npm --prefix client run format",
+      "npm --prefix client run lint"
     ]
   },
   "scripts": {

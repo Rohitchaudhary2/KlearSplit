@@ -59,7 +59,7 @@ export class AuthService {
   }
 
   // Verify User Function (Send OTP for Verification)
-  verifyUser(user: RegisterUser): Observable<any> {
+  verifyUser(user: RegisterUser): Observable<object> {
     return this.httpClient
       .post(`${this.verifyUrl}`, user, { withCredentials: true })
       .pipe(
@@ -74,7 +74,7 @@ export class AuthService {
   // Register User with OTP Verification
   registerUserWithOtp(
     user: RegisterUser,
-    otp: any,
+    otp: { otp: string },
   ): Observable<HttpResponse<RegisterResponse>> {
     return this.httpClient
       .post<RegisterResponse>(

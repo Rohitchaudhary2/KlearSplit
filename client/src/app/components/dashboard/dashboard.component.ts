@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import { AuthService } from '../auth/auth.service';
 import { TokenService } from '../auth/token.service';
 import { HttpClient } from '@angular/common/http';
-import { ToastrService } from 'ngx-toastr';
+import { FetchResponse } from '../shared/types.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -16,7 +16,6 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
-  private toastr = inject(ToastrService);
   private tokenService = inject(TokenService);
   private httpClient = inject(HttpClient);
 
@@ -32,13 +31,10 @@ export class DashboardComponent implements OnInit {
       const getUserUrlWithId = `${this.getUserUrl}/${userId}`;
 
       this.httpClient
-        .get<any>(getUserUrlWithId, { withCredentials: true })
+        .get<FetchResponse>(getUserUrlWithId, { withCredentials: true })
         .subscribe({
           next: (response) => {
             this.authService.currentUser.set(response.data);
-            this.toastr.success('User data fetched successfully');
-            const accessToken = response.headers.get('Authorization');
-            this.tokenService.setAccessToken(accessToken);
           },
         });
     }

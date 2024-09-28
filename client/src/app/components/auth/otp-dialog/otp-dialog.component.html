@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Verify OTP</h2>
+<!-- <h2 mat-dialog-title>Verify OTP</h2>
 <div mat-dialog-content>
   <form [formGroup]="otpForm">
     <mat-form-field appearance="fill">
@@ -13,6 +13,27 @@
 <div mat-dialog-actions>
   <button mat-button (click)="onCancel()">Cancel</button>
   <button mat-button (click)="onVerify()" [disabled]="otpForm.invalid">
+    Submit
+  </button>
+</div> -->
+
+<h2 mat-dialog-title class="text-center">Verify OTP</h2>
+<div mat-dialog-content class="d-flex flex-column align-items-center p-4">
+  <form [formGroup]="otpForm" class="w-100">
+    <div class="mb-3">
+      <mat-form-field appearance="fill" class="w-100">
+        <mat-label>Enter OTP</mat-label>
+        <input matInput formControlName="otp" class="form-control" />
+        @if (otpForm.controls['otp'].invalid) {
+          <mat-error>OTP is required and should be 6 digits.</mat-error>
+        }
+      </mat-form-field>
+    </div>
+  </form>
+</div>
+<div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3">
+  <button mat-button class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+  <button mat-button class="btn" (click)="onVerify()" [disabled]="otpForm.invalid" style="background-color: #1995ad">
     Submit
   </button>
 </div>

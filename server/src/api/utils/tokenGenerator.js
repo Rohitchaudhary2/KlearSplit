@@ -21,6 +21,5 @@ export const generateRefreshToken = (id, next) => {
 
   if (!refreshToken)
     throw next(new ErrorHandler(500, "Error while generating access Token "));
-
   return refreshToken;
 };

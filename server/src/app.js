@@ -8,7 +8,6 @@ import authRouter from "./api/auth/authRoutes.js";
 import { errorMiddleware } from "./api/middlewares/errorHandler.js";
 import { loggerMiddleware } from "./api/middlewares/loggerMiddleware.js";
 
-// Creating an instance of the Express application
 const app = express();
 
 app.use(express.json()); // Parse incoming JSON requests and make the data available under req.body
@@ -26,7 +25,6 @@ sequelize.sync(); // Sync the Sequelize models with the database, creating table
 
 const PORT = process.env.PORT || 3000;
 
-//Custom logger middleware to log incoming requests and their details
 app.use(loggerMiddleware);
 
 // Routes

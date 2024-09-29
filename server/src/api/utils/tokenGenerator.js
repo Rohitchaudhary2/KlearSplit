@@ -8,7 +8,7 @@ export const generateAccessToken = (id, next) => {
   });
 
   if (!accessToken)
-    return next(new ErrorHandler(500, "Error while generating access Token "));
+    throw next(new ErrorHandler(500, "Error while generating access Token "));
 
   return accessToken;
 };
@@ -20,7 +20,6 @@ export const generateRefreshToken = (id, next) => {
   });
 
   if (!refreshToken)
-    return next(new ErrorHandler(500, "Error while generating refresh Token"));
-
+    throw next(new ErrorHandler(500, "Error while generating access Token "));
   return refreshToken;
 };

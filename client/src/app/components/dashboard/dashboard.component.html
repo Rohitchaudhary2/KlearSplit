@@ -1,0 +1,6 @@
+@if (authService.currentUser() === null) {
+    <p>Please Login or Register to move further!</p>
+} @else {
+    <p>Welcome, {{authService.currentUser()?.first_name}}</p>
+}
+<p>dashboard works!</p>

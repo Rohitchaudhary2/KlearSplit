@@ -95,7 +95,6 @@ export class RegisterComponent {
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
     });
-    console.log(user, 'after otp');
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.authService.registerUserWithOtp(user, result).subscribe({

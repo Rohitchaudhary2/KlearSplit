@@ -8,7 +8,9 @@
   border-radius: 4px; /* Rounded corners for a modern look */
   text-transform: none; /* Disable uppercase text (if applied by Material) */
   width: 100%; /* Full-width button */
-  transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth hover effect */
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease; /* Smooth hover effect */
   box-shadow: none; /* Remove material shadow */
 }
 

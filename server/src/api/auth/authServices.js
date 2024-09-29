@@ -18,11 +18,14 @@ class AuthService {
 
     // Checking whether the email is correct
     const user = await getUserByEmailDb(email);
-    if (!user) throw next(new ErrorHandler(404, "Email not found."))
+    if (!user) throw next(new ErrorHandler(404, "Email not found."));
 
     // checking whether password is valid
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) throw next(new ErrorHandler(404, "Password is wrong."))
+    const validPassword = await bcrypt.compare(
+      password,
+      user.dataValues.password,
+    );
+    if (!validPassword) throw next(new ErrorHandler(404, "Password is wrong."));
 
     // Geneating access and refresh tokens
     const accessToken = generateAccessToken(user.user_id, next);
@@ -55,7 +58,7 @@ class AuthService {
       transaction,
     );
     if (!createdRefreshToken)
-      throw next(new ErrorHandler(500, error.message))
+      throw next(new ErrorHandler(500, "Error while creating refresh token"));
     return createdRefreshToken;
   };
 
@@ -65,7 +68,7 @@ class AuthService {
   static deleteRefreshToken = async (req, next) => {
     const isDeleted = await deleteRefreshTokenDb(req);
     if (!isDeleted)
-      throw next(new ErrorHandler(404, error.message))
+      throw next(new ErrorHandler(404, "Error while deleting refresh token"));
   };
 }
 

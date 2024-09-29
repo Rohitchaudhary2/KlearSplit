@@ -38,7 +38,7 @@ const handleRefreshToken = async (req, res, next) => {
     // Check if the refresh token exists in the database
     const refreshTokenDb = await AuthService.getRefreshToken(refreshToken);
     if (!refreshTokenDb)
-      throw next(new ErrorHandler(401, "Access Denied. Invalid Token"))
+      throw next(new ErrorHandler(401, "Access Denied. Invalid Token"));
 
     // Generate new access and refresh tokens
     const accessToken = generateAccessToken(userId.id, next);

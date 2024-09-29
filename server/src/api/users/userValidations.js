@@ -36,7 +36,7 @@ export const createUserSchema = Joi.object({
     "string.max": "Last name must be less than or equal to 50 characters.",
   }),
 
-  otp: Joi.string().trim()
+  otp: Joi.string().trim(),
 });
 
 export const updateUserSchema = Joi.object({
@@ -73,4 +73,9 @@ export const updateUserSchema = Joi.object({
     "number.min": "Notification settings must be at least 0.",
     "number.max": "Notification settings must be at most 63.",
   }),
+});
+
+export const restoreUserSchema = Joi.object({
+  email: commonFields.email.required(),
+  otp: Joi.string().trim().optional(),
 });

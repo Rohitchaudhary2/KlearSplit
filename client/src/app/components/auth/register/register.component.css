@@ -1,54 +1,31 @@
-/* @media (min-width: 768px) {
-    .gradient-form {
-        height: 100vh !important;
-    }
+/* Custom styling for mat-button*/
+.custom-mat-button {
+  background-color: #1995ad; /* Primary button color */
+  color: white !important; /* Button text color */
+  font-size: 1.1rem; /* Slightly larger font size for better readability */
+  font-weight: 500; /* Make text slightly bold */
+  padding: 12px 0; /* Padding for a comfortable button height */
+  border-radius: 4px; /* Rounded corners for a modern look */
+  text-transform: none; /* Disable uppercase text (if applied by Material) */
+  width: 100%; /* Full-width button */
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease; /* Smooth hover effect */
+  box-shadow: none; /* Remove material shadow */
 }
 
-@media (max-width: 767px) {
-    .gradient-form {
-        height: 100vh !important;
-    }
-} */
+/* Hover and focus styles for interactivity */
+.custom-mat-button:hover,
+.custom-mat-button:focus {
+  background-color: #157a8a; /* Slightly darker shade on hover/focus */
+  transform: translateY(-1px); /* Subtle lift effect */
+}
 
-.form-outline {
-    position: relative;
-    margin-bottom: 1.5rem;
-  }
-  
-  .form-outline .form-control {
-    padding: 1rem 0.5rem 0.5rem 0.5rem;
-    font-size: 16px;
-  }
-  
-  .form-outline .form-label {
-    position: absolute;
-    top: 0.5rem;
-    left: 0.5rem;
-    transition: all 0.2s ease;
-    background-color: #F1F1F2;
-    padding: 0 0.2rem;
-  }
-  
-  .form-outline .form-control:focus ~ .form-label,
-  .form-outline .form-control:not(:placeholder-shown) ~ .form-label {
-    top: -0.5rem;
-    left: 0.5rem;
-    font-size: 12px;
-    color: #000; /* You can customize this color */
-  }
-  
-  .form-outline .form-control:focus {
-    outline: none;
-    border-color: #000; /* Add focus border color */
-  }
-  
-  .form-outline .form-control:not(:placeholder-shown) {
-    padding-top: 1.5rem;
-  }
-  
-  .form-outline .form-control {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100%;
-    box-sizing: border-box;
-  }
+/* Disabled button styles */
+.custom-mat-button[disabled] {
+  background-color: #6c757d !important; /* Grey color when disabled */
+  color: white !important; /* Force text color to stay white even when disabled */
+  cursor: not-allowed !important; /* Disable pointer events */
+  opacity: 0.65; /* Slightly faded look for disabled state */
+  pointer-events: none; /* Ensure no interactions when disabled */
+}

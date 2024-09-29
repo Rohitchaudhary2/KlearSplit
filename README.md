@@ -107,6 +107,9 @@ ACCESS_SECRET_KEY=your_access_secret_key
 ACCESS_EXPIRY=your_access_token_expiry_time
 REFRESH_SECRET_KEY=your_refresh_secret_key
 REFRESH_EXPIRY=your_refresh_token_expiry_time
+SMTP_USER=your_smtp_username
+SMTP_PASSWORD=your_smtp_password
+SMTP_MAIL=your_smtp_mail
 ```
 
 Make sure to replace the placeholder values with your actual database credentials and secret keys.
@@ -118,6 +121,7 @@ Make sure to replace the placeholder values with your actual database credential
 - `GET /api/v1/auth/logout`: Logout and delete access/refresh tokens.
 
 ### Users
+- `POST /api/v1/users/verify`: Verify a new user.
 - `POST /api/v1/users/register`: Register a new user.
 - `GET /api/v1/users/:id`: Get user details (authentication required).
 - `PATCH /api/v1/users/:id`: Update a user's profile (authentication required).

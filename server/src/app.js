@@ -3,29 +3,38 @@ import "dotenv/config";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/db.connection.js";
-import userRouter from "./api/v1/users/userRoutes.js";
-import authRouter from "./api/v1/auth/authRoutes.js";
-import { ErrorMiddleware } from "./api/v1/middlewares/ErrorHandler.js";
-import { loggerMiddleware } from "./api/v1/middlewares/loggerMiddleware.js";
+import userRouter from "./api/users/userRoutes.js";
+import authRouter from "./api/auth/authRoutes.js";
+import { errorMiddleware } from "./api/middlewares/errorHandler.js";
+import { loggerMiddleware } from "./api/middlewares/loggerMiddleware.js";
 
 const app = express();
-app.use(express.json());
-app.use(cors({
-  origin: 'http://localhost:4200',    // Allow requests from this origin
-  credentials: true,                  // Allow credentials (cookies, authorization headers, etc.)
-  exposedHeaders: ["Authorization"]
-}));
-app.use(cookieParser());
-sequelize.sync();
+
+app.use(express.json()); // Parse incoming JSON requests and make the data available under req.body
+
+const corsOptions = {
+  origin: "http://localhost:4200",
+  credentials: true,
+  exposedHeaders: ["Authorization"],
+};
+
+app.use(cors(corsOptions)); // Enable Cross-Origin Resource Sharing (CORS) to allow requests from different origins
+app.use(cookieParser()); // Parse cookies from incoming requests and make them available under req.cookies
+
+sequelize.sync(); // Sync the Sequelize models with the database, creating tables if they don't exist
 
 const PORT = process.env.PORT || 3000;
 
 app.use(loggerMiddleware);
 
-app.use("/api/v1/users", userRouter);
-app.use("/api/v1/auth", authRouter);
+// Routes
+app.use("/api/users", userRouter); // User-related routes
+app.use("/api/auth", authRouter); // Authentication related routes
 
-app.use(ErrorMiddleware);
+// ErrorMiddleware to handle any errors that occur during request processing
+app.use(errorMiddleware);
+
+// Starting the Express server and listening for incoming requests
 app.listen(PORT, () => {
   `Server is listening on port ${PORT}`;
 });

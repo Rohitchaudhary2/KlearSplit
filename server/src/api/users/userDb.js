@@ -9,11 +9,12 @@ export const restoreUserDb = async (email, transaction) =>
 
 export const getUserByIdDb = async (id) => await User.findByPk(id);
 
-export const getUserByEmailDb = async (email) =>
+export const getUserByEmailDb = async (email, flag = true) =>
   await User.scope("withPassword").findOne({
     where: {
       email,
     },
+    paranoid: flag,
   });
 
 export const getUserByEmailorPhoneDb = async (email, phone, flag = true) =>

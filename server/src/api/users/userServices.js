@@ -8,7 +8,6 @@ import {
   getUserByEmailorPhoneDb,
   restoreUserDb,
 } from "./userDb.js";
-import { validateUpdatedUser, validateUser } from "./userValidations.js";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -19,15 +18,10 @@ import { hashedPassword } from "../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
 import crypto from "crypto";
 import { createOtpDb, getOtpDb } from "./otpDb.js";
+import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 class UserService {
-  static verifyUser = async (userData, next) => {
-    // Validating and sanitizing the user data with JOI validator
-    const { error, value: user } = validateUser(userData, {
-      stripUnknown: true,
-    });
-    if (error) throw { statusCode: 400, message: error.message };
-
+  static verifyUser = async (user, next) => {
     const isUserExists = await getUserByEmailorPhoneDb(
       user.email,
       user.phone,
@@ -35,9 +29,11 @@ class UserService {
     );
     // If email or phone already exists in database then checking whether user has deleted account
     if (isUserExists && isUserExists.dataValues.deletedAt)
-      throw { statusCode: 400, message: "Looks like you had an account" };
+      throw next(new ErrorHandler(400, "Looks like you had an account."));
     else if (isUserExists)
-      throw { statusCode: 400, message: "Email already exists" };
+      throw next(
+        new ErrorHandler(400, "Email or Phone number already exists."),
+      );
 
     // send otp
     const otp = crypto.randomInt(100000, 999999).toString();
@@ -50,7 +46,7 @@ class UserService {
       otp_expiry_time: otpExpiresAt,
     });
 
-    sendMail(
+    await sendMail(
       {
         email: user.email,
         subject: "Otp",
@@ -60,29 +56,16 @@ class UserService {
     );
   };
 
-  static createUser = async (userData, next) => {
-    const userOtp = userData.otp;
-    delete userData.otp;
-    // Validating and sanitizing the user data with JOI validator
-    const { error, value: user } = validateUser(userData, {
-      stripUnknown: true,
-    });
-    if (error) throw { statusCode: 400, message: error.message };
-
-    // Restore flag to indicate whether the user has deleted his/her account previously
-    let restoreFlag = false;
-
-    const isEmailExists = await getUserByEmailDb(user.email, false);
-    if (isEmailExists && isEmailExists.dataValues.deletedAt) {
-      restoreFlag = true;
-    }
+  static createUser = async (user, next) => {
+    const userOtp = user.otp;
+    delete user.otp;
 
     const otp = await getOtpDb(user.email, user.phone, userOtp);
 
-    if (!otp) throw { statusCode: 400, message: "Invalid Otp." };
+    if (!otp) throw next(new ErrorHandler(400, "Invalid Otp."));
 
     if (new Date() >= otp.otp_expiry_time)
-      throw { statusCode: 400, message: "Otp has expired." };
+      throw next(new ErrorHandler(400, "Otp has been expired."));
 
     //Generating random password
     const password = generatePassword();
@@ -93,15 +76,9 @@ class UserService {
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
-      let createdUser;
-      if (restoreFlag) {
-        // Restoring user in the database
-        await restoreUserDb(user.email, transaction);
-        createdUser = isEmailExists.dataValues;
-      } else {
-        // Creating new user in the database
-        createdUser = await createUserDb(user, transaction);
-      }
+      // Creating new user in the database
+      const createdUser = await createUserDb(user, transaction);
+      // }
 
       // Generate access and refresh tokens
       const accessToken = generateAccessToken(createdUser.user_id, next);
@@ -136,31 +113,126 @@ class UserService {
     }
   };
 
+  static verifyRestoreUser = async (user, next) => {
+    const isEmailExists = await getUserByEmailDb(user.email, false);
+
+    if (!isEmailExists) {
+      throw next(
+        new ErrorHandler(400, "No Record found. Please Create new account."),
+      );
+    } else if (
+      isEmailExists &&
+      isEmailExists.dataValues &&
+      !isEmailExists.dataValues.deletedAt
+    ) {
+      throw next(
+        new ErrorHandler(400, "Account already exists for this Email."),
+      );
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    await createOtpDb({
+      email: user.email,
+      phone: isEmailExists.dataValues.phone,
+      otp,
+      otp_expiry_time: otpExpiresAt,
+    });
+
+    await sendMail(
+      {
+        email: user.email,
+        subject: "Otp",
+        message: `This is your ${otp} for sign up in KlearSplit. It is valid for 5 minutes.`,
+      },
+      next,
+    );
+  };
+
+  static restoreUser = async (user, next) => {
+    const isEmailExists = await getUserByEmailDb(user.email, false);
+    if (!isEmailExists) throw next(new ErrorHandler(400, "User not found"));
+    if (!isEmailExists.dataValues.deletedAt)
+      throw next(new ErrorHandler(400, "Account for this Email is active."));
+
+    const otp = await getOtpDb(
+      user.email,
+      isEmailExists.dataValues.phone,
+      user.otp,
+    );
+
+    if (!otp) throw next(new ErrorHandler(400, "Invalid Otp."));
+
+    if (new Date() >= otp.otp_expiry_time)
+      throw next(new ErrorHandler(400, "Otp has been expired."));
+
+    //Generating random password
+    const password = generatePassword();
+
+    //Hashing the password
+    user.password = await hashedPassword(password);
+
+    const transaction = await sequelize.transaction(); // Starting a new transaction
+
+    try {
+      // Restoring user in the database
+      await restoreUserDb(user.email, transaction);
+      const restoredUser = isEmailExists.dataValues;
+
+      // Generate access and refresh tokens
+      const accessToken = generateAccessToken(restoredUser.user_id, next);
+      const refreshToken = generateRefreshToken(restoredUser.user_id, next);
+
+      // Store the refresh token in the database
+      await AuthService.createRefreshToken(
+        {
+          token: refreshToken,
+          user_id: restoredUser.user_id,
+        },
+        transaction,
+        next,
+      );
+
+      // Commit the transaction
+      await transaction.commit();
+
+      const options = {
+        email: user.email,
+        subject: "Password",
+        message: `This is your password ${password} for signing in KlearSplit.`,
+      };
+
+      sendMail(options, next);
+
+      return { user: restoredUser, accessToken, refreshToken };
+    } catch (error) {
+      // Rollback the transaction in case of error
+      await transaction.rollback();
+      throw error; // Rethrow the error after rollback
+    }
+  };
+
   // Service to get user from database
-  static getUser = async (id) => {
+  static getUser = async (id, next) => {
     const user = await getUserByIdDb(id);
-    if (!user) throw { statusCode: 404, message: "User not found" };
+    if (!user) throw next(new ErrorHandler(404, "User not found."));
     return user;
   };
 
   // Service for updating user in the database
-  static updateUser = async (req) => {
-    const userData = req.body;
+  static updateUser = async (req, next) => {
+    const user = req.validatedUser;
     const id = req.params.id;
-    await this.getUser(id);
+    await this.getUser(id, next);
 
-    const { error, updateUserData } = validateUpdatedUser(userData, {
-      stripUnknown: true,
-    });
-    if (error) throw { statusCode: 400, message: error.message };
-
-    return await updateUserDb(updateUserData, id);
+    return await updateUserDb(user, id);
   };
 
   // Service for deleting user in the database
-  static deleteUser = async (req) => {
+  static deleteUser = async (req, next) => {
     const id = req.params.id;
-    await this.getUser(id);
+    await this.getUser(id, next);
 
     return await deleteUserDb(id);
   };

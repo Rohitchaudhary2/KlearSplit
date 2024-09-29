@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 // Looking to send emails in production? Check out our Email API/SMTP product!
 const transporter = nodemailer.createTransport({
@@ -23,7 +24,7 @@ const sendMail = async (options, next) => {
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    next(error);
+    throw next(new ErrorHandler(500, error.message));
   }
 };
 

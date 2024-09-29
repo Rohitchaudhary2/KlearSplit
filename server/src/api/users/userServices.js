@@ -47,9 +47,13 @@ class UserService {
     await sendMail(
       {
         email: user.email,
-        subject: "Otp",
-        message: `This is your ${otp} for sign up in KlearSplit. It is valid for 5 minutes.`,
+        subject: "Otp for sign up in KlearSplit",
       }, 
+      'otpTemplate',
+      {
+        name: user.first_name,
+        otp
+      },
       next
     );
   };
@@ -111,11 +115,16 @@ class UserService {
 
       const options = {
         email: user.email,
-        subject: "Password",
-        message: `This is your password ${password} for signing in KlearSplit.`,
+        subject: "Password for Sign in for KlearSplit",
       };
 
-      sendMail(options, next);
+      sendMail(options, 
+        'passwordTemplate',
+        {
+          name: user.first_name,
+          email: user.email,
+          password
+        }, next);
 
       return { user: createdUser, accessToken, refreshToken };
     } catch (error) {

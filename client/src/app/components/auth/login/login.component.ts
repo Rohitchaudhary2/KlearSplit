@@ -10,11 +10,12 @@ import { FormErrorMessageService } from '../../shared/form-error-message.service
 import { LoginUser } from '../login-types.model';
 import { AuthService } from '../auth.service';
 import { ToastrService } from 'ngx-toastr';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [RouterLink, ReactiveFormsModule, MatButtonModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
@@ -45,17 +46,15 @@ export class LoginComponent {
       const user: LoginUser = this.form.value as LoginUser;
       this.authService.login(user).subscribe({
         next: () => {
-          this.toastr.success('User registered successfully', 'Success', {
+          this.toastr.success('User logged in successfully', 'Success', {
             timeOut: 3000,
           });
         },
         error: (err) => {
           // Assuming that the error will have a message
-          this.toastr.error(
-            err?.error?.message || 'Registration failed!',
-            'Error',
-            { timeOut: 3000 },
-          );
+          this.toastr.error(err?.error?.message || 'Login failed!', 'Error', {
+            timeOut: 3000,
+          });
         },
       });
     } else {

@@ -28,8 +28,8 @@ const PORT = process.env.PORT || 3000;
 app.use(loggerMiddleware);
 
 // Routes
-app.use("/api/v1/users", userRouter); // User-related routes
-app.use("/api/v1/auth", authRouter); // Authentication related routes
+app.use("/api/users", userRouter); // User-related routes
+app.use("/api/auth", authRouter); // Authentication related routes
 
 // ErrorMiddleware to handle any errors that occur during request processing
 app.use(errorMiddleware);

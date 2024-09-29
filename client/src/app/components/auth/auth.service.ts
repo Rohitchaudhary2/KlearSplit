@@ -7,6 +7,7 @@ import { TokenService } from './token.service'; // Token service for access toke
 import { RegisterResponse, RegisterUser } from './register-types.model';
 import { Router } from '@angular/router';
 import { LoginResponse, LoginUser } from './login-types.model';
+import { API_URLS } from '../../constants/api-urls';
 
 @Injectable({
   providedIn: 'root',
@@ -17,10 +18,9 @@ export class AuthService {
   private tokenService = inject(TokenService); // Inject token service
   private router = inject(Router);
 
-  private apiUrl = 'http://localhost:3000/api/v1';
-  private registerUrl = `${this.apiUrl}/users/register`;
-  private verifyUrl = `${this.apiUrl}/users/verify`; // URL for OTP verification
-  private loginUrl = `${this.apiUrl}/auth/login`; // URL for login
+  private registerUrl = API_URLS.register;
+  private verifyUrl = API_URLS.verify; // URL for OTP verification
+  private loginUrl = API_URLS.login; // URL for login
 
   currentUser = signal<CurrentUser | undefined | null>(undefined);
 
@@ -59,7 +59,7 @@ export class AuthService {
   }
 
   // Verify User Function (Send OTP for Verification)
-  verifyUser(user: RegisterUser): Observable<object> {
+  verifyUser(user: Partial<RegisterUser>): Observable<object> {
     return this.httpClient
       .post(`${this.verifyUrl}`, user, { withCredentials: true })
       .pipe(
@@ -73,7 +73,7 @@ export class AuthService {
 
   // Register User with OTP Verification
   registerUserWithOtp(
-    user: RegisterUser,
+    user: Partial<RegisterUser>,
     otp: { otp: string },
   ): Observable<HttpResponse<RegisterResponse>> {
     return this.httpClient

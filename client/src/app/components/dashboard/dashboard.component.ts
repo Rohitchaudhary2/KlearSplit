@@ -6,6 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { TokenService } from '../auth/token.service';
 import { HttpClient } from '@angular/common/http';
 import { FetchResponse } from '../shared/types.model';
+import { API_URLS } from '../../constants/api-urls';
 
 @Component({
   selector: 'app-dashboard',
@@ -18,9 +19,7 @@ export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
   private tokenService = inject(TokenService);
   private httpClient = inject(HttpClient);
-
-  private apiUrl = 'http://localhost:3000/api/v1';
-  private getUserUrl = `${this.apiUrl}/users`;
+  private getUserUrl = API_URLS.fetchUser;
 
   ngOnInit(): void {
     const accessToken = this.tokenService.getAccessToken();

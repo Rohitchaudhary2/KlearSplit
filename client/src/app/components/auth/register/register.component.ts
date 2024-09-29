@@ -35,7 +35,7 @@ export class RegisterComponent {
         Validators.maxLength(50),
       ],
     }),
-    last_name: new FormControl<string | null>(null, {
+    last_name: new FormControl('', {
       validators: [Validators.maxLength(50)],
     }),
     email: new FormControl('', {
@@ -58,9 +58,18 @@ export class RegisterComponent {
   onClickVerify() {
     if (this.form.valid) {
       const user: RegisterUser = this.form.value as RegisterUser;
-      this.authService.verifyUser(user).subscribe({
+
+      // Create a new user object without empty fields
+      const userToSend: Partial<RegisterUser> = {};
+      Object.keys(user).forEach((key) => {
+        const typedKey = key as keyof RegisterUser; // Type assertion
+        if (user[typedKey] !== '' && user[typedKey] !== null) {
+          userToSend[typedKey] = user[typedKey];
+        }
+      });
+      this.authService.verifyUser(userToSend).subscribe({
         next: () => {
-          this.openOtpDialog(user); // Open dialog box for OTP input
+          this.openOtpDialog(userToSend); // Open dialog box for OTP input
         },
         error: (err) => {
           this.toastr.error(
@@ -79,13 +88,14 @@ export class RegisterComponent {
     }
   }
 
-  openOtpDialog(user: RegisterUser) {
+  openOtpDialog(user: Partial<RegisterUser>) {
     const dialogRef = this.dialog.open(OtpDialogComponent, {
       width: '500px',
       data: user,
-      enterAnimationDuration: '1000ms',
-      exitAnimationDuration: '1000ms',
+      enterAnimationDuration: '500ms',
+      exitAnimationDuration: '500ms',
     });
+    console.log(user, 'after otp');
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.authService.registerUserWithOtp(user, result).subscribe({

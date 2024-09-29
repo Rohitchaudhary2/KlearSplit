@@ -114,34 +114,6 @@ SMTP_MAIL=your_smtp_mail
 
 Make sure to replace the placeholder values with your actual database credentials and secret keys.
 
-## API Endpoints
-
-### Authentication
-- `POST /api/v1/auth/login`: Login and receive access/refresh tokens.
-- `GET /api/v1/auth/logout`: Logout and delete access/refresh tokens.
-
-### Users
-- `POST /api/v1/users/verify`: Verify a new user.
-- `POST /api/v1/users/register`: Register a new user.
-- `GET /api/v1/users/:id`: Get user details (authentication required).
-- `PATCH /api/v1/users/:id`: Update a user's profile (authentication required).
-- `DELETE /api/v1/users/:id`: Soft delete a user's account (authentication required).
-
-## Logging
-
-The backend uses **Winston** and **Morgan** for logging purposes:
-
-- **Morgan** logs all incoming HTTP requests to provide detailed insights into request activities.
-- **Winston** is used for structured logging of application events and errors.
-
-Logs are stored in the following locations:
-- `src/log/app.log` for general logs
-- `src/log/appErrors.log` for error logs
-
-To customize how requests are logged, Morgan is integrated into the application middleware.
-
-By using these logging tools, you will be able to monitor all incoming requests and log detailed information about the application's operations and any errors encountered.
-
 ## Deployment
 
 To deploy this application on a server, follow these steps:

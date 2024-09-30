@@ -2,7 +2,8 @@ import { environment } from '../../environments/environment';
 
 export const API_URLS = {
   login: `${environment.apiBaseUrl}/auth/login`,
-  register: `${environment.apiBaseUrl}/users/register`,
+  logout: `${environment.apiBaseUrl}/auth/logout`,
   verify: `${environment.apiBaseUrl}/users/verify`,
+  register: `${environment.apiBaseUrl}/users/register`,
   fetchUser: `${environment.apiBaseUrl}/users`,
 };

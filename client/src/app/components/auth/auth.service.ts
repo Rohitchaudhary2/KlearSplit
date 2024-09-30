@@ -18,44 +18,16 @@ export class AuthService {
   private tokenService = inject(TokenService); // Inject token service
   private router = inject(Router);
 
-  private registerUrl = API_URLS.register;
   private verifyUrl = API_URLS.verify; // URL for OTP verification
+  private registerUrl = API_URLS.register; // URL for user registeration
   private loginUrl = API_URLS.login; // URL for login
+  private logoutUrl = API_URLS.logout; // URL for logout
 
   currentUser = signal<CurrentUser | undefined | null>(undefined);
 
   isAuthenticated(): boolean {
     const token = this.tokenService.getAccessToken();
     return !!token; // Or validate token expiration here
-  }
-
-  // Register User Function
-  registerUser(user: RegisterUser): Observable<HttpResponse<RegisterResponse>> {
-    return this.httpClient
-      .post<RegisterResponse>(this.registerUrl, user, {
-        observe: 'response',
-        withCredentials: true,
-      })
-      .pipe(
-        map((response: HttpResponse<RegisterResponse>) => {
-          const accessToken = response.headers.get('Authorization');
-
-          if (accessToken) {
-            // Use TokenService to handle the access token
-            this.tokenService.setAccessToken(accessToken);
-            this.router.navigate(['/dashboard']);
-          } else {
-            this.toastr.error(
-              'Failed to receive access token. Please try again.',
-              'Error',
-              {
-                timeOut: 3000,
-              },
-            );
-          }
-          return response;
-        }),
-      );
   }
 
   // Verify User Function (Send OTP for Verification)
@@ -128,5 +100,24 @@ export class AuthService {
           return response;
         }),
       );
+  }
+
+  // logout user
+  logout(): void {
+    this.httpClient.get(this.logoutUrl, { withCredentials: true }).subscribe({
+      next: () => {
+        // Remove tokens from local storage
+        this.tokenService.removeAccessToken();
+        this.toastr.success('You have logged out successfully.', 'Logout', {
+          timeOut: 3000,
+        });
+        this.router.navigate(['/login']);
+      },
+      error: () => {
+        this.toastr.error('Logout failed. Please try again.', 'Error', {
+          timeOut: 3000,
+        });
+      },
+    });
   }
 }

@@ -94,7 +94,7 @@ export const authenticateToken = async (req, res, next) => {
       // If access token expired, attempt to use refresh token
       handleRefreshToken(req, res, next);
     } else {
-      return next(error);
+      next(error);
     }
   }
 };

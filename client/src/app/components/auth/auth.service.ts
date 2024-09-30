@@ -79,7 +79,10 @@ export class AuthService {
   // Login User
   login(user: LoginUser): Observable<HttpResponse<LoginResponse>> {
     return this.httpClient
-      .post<LoginResponse>(this.loginUrl, user, { observe: 'response' })
+      .post<LoginResponse>(this.loginUrl, user, {
+        observe: 'response',
+        withCredentials: true,
+      })
       .pipe(
         map((response: HttpResponse<LoginResponse>) => {
           const accessToken = response.headers.get('Authorization');
@@ -97,6 +100,7 @@ export class AuthService {
               },
             );
           }
+          console.log(response);
           return response;
         }),
       );

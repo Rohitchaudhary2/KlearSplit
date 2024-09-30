@@ -4,7 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 
 import { AuthService } from '../auth/auth.service';
 import { TokenService } from '../auth/token.service';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FetchResponse } from '../shared/types.model';
 import { API_URLS } from '../../constants/api-urls';
 
@@ -30,10 +30,20 @@ export class DashboardComponent implements OnInit {
       const getUserUrlWithId = `${this.getUserUrl}/${userId}`;
 
       this.httpClient
-        .get<FetchResponse>(getUserUrlWithId, { withCredentials: true })
+        .get<FetchResponse>(getUserUrlWithId, {
+          observe: 'response',
+          withCredentials: true,
+        })
         .subscribe({
           next: (response) => {
-            this.authService.currentUser.set(response.data);
+            this.authService.currentUser.set(response.body?.data);
+            if (response.headers instanceof HttpHeaders) {
+              const refreshedAccessToken =
+                response.headers.get('Authorization');
+              if (refreshedAccessToken) {
+                this.tokenService.setAccessToken(refreshedAccessToken);
+              }
+            }
           },
         });
     }

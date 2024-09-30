@@ -1,0 +1,20 @@
+.custom-mat-button {
+    background-color: white; /* Primary button color */
+    color: black !important; /* Button text color */
+    font-size: 1.1rem; /* Slightly larger font size for better readability */
+    font-weight: 500; /* Make text slightly bold */
+    border-radius: 8px; /* Rounded corners for a modern look */
+    text-transform: none; /* Disable uppercase text (if applied by Material) */
+    text-decoration: none;  /* Remove underline */
+    width: auto; /* Full-width button */
+    transition:
+      background-color 0.3s ease,
+      transform 0.2s ease; /* Smooth hover effect */
+    box-shadow: none; /* Remove material shadow */
+  }
+  
+  /* Hover and focus styles for interactivity */
+  .custom-mat-button:hover,
+  .custom-mat-button:focus {
+    background-color: lightgray; /* Slightly darker shade on hover/focus */
+  }

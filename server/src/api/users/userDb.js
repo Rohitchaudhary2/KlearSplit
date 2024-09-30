@@ -32,11 +32,12 @@ export const getUserByPhoneDb = async (phone) =>
     },
   });
 
-export const updateUserDb = async (user, id) =>
+export const updateUserDb = async (user, id, transaction = null) =>
   await User.update(user, {
     where: {
       user_id: id,
     },
+    transaction,
     returning: true,
   });
 

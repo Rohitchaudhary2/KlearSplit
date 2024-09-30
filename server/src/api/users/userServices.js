@@ -155,8 +155,12 @@ class UserService {
     await sendMail(
       {
         email: user.email,
-        subject: "Otp",
-        message: `This is your ${otp} for sign up in KlearSplit. It is valid for 5 minutes.`,
+        subject: "Otp for sign up in KlearSplit",
+      },
+      "otpTemplate",
+      {
+        name: isEmailExists.dataValues.first_name,
+        otp,
       },
       next,
     );
@@ -206,6 +210,12 @@ class UserService {
         next,
       );
 
+      await updateUserDb(
+        { password: user.password },
+        restoredUser.user_id,
+        transaction,
+      );
+
       // Commit the transaction
       await transaction.commit();
 
@@ -218,7 +228,7 @@ class UserService {
         options,
         "passwordTemplate",
         {
-          name: user.first_name,
+          name: restoredUser.first_name,
           email: user.email,
           password,
         },

@@ -147,4 +147,3 @@ Build the Angular application for production:
     ```bash
     ng build --prod
     ```
-```

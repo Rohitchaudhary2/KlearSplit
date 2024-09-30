@@ -33,7 +33,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             errorMessage = 'Internal server error. Please try again later.';
             break;
           default:
-            errorMessage = error.error.message || 'Something went wrong. Please try again.';
+            errorMessage =
+              error.error.message || 'Something went wrong. Please try again.';
             break;
         }
       }
@@ -44,6 +45,6 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       });
 
       return throwError(() => new Error(errorMessage));
-    })
+    }),
   );
 };

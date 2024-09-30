@@ -1,74 +1,117 @@
-<section class="gradient-form ">
-  <div class="container d-flex justify-content-center align-items-center min-vh-100">
-    <div class="row d-flex justify-content-center align-items-center" >
+<section class="gradient-form">
+  <div
+    class="container d-flex justify-content-center align-items-center min-vh-100"
+  >
+    <div class="row d-flex justify-content-center align-items-center">
       <div class="col-xl-10">
-        <div class="card rounded-3 text-black" style="background-color: #F1F1F2;">
+        <div
+          class="card rounded-3 text-black"
+          style="background-color: #f1f1f2"
+        >
           <div class="row g-0">
             <div class="col-lg-6">
               <div class="card-body p-md-3 mx-md-4">
-
                 <div class="text-center">
-                  <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/lotus.webp"
-                    style="width: 185px;" alt="logo">
-                  <h4 class="mt-1 mb-5 pb-1">We are The KlearSplit Team</h4>
+                  <img
+                    src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/lotus.webp"
+                    style="width: 185px"
+                    alt="logo"
+                  />
+                  <h4 class="mt-1 pb-1">We are The KlearSplit Team</h4>
                 </div>
 
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                  <p class="mb-4">Please login to your account</p>
-                  <div data-mdb-input-init class="form-outline mt-5 mb-0">
-                      <input type="email" id="email" 
+                <form
+                  class="was-validated"
+                  [formGroup]="form"
+                  (ngSubmit)="onSubmit()"
+                >
+                  <p class="mt-4">Please login to your account</p>
+                  <div class="form-floating mt-4">
+                    <input
+                      type="email"
+                      id="email"
                       class="form-control"
-                      name="email" formControlName="email" />
-                      <label class="form-label" for="email">Phone number or email address</label>
+                      name="email"
+                      placeholder="test@example.com"
+                      formControlName="email"
+                    />
+                    <label class="form-label" for="email">Email address</label>
                   </div>
 
                   @if (getFormErrors("email")) {
                     <p class="text-danger mt-0">{{ getFormErrors("email") }}</p>
                   }
 
-                  <div data-mdb-input-init class="form-outline mt-4 mb-0">
-                    <input type="password" id="password" 
-                    class="form-control" name="password" 
-                    formControlName="password" />
+                  <div class="form-floating mt-4">
+                    <input
+                      type="password"
+                      id="password"
+                      class="form-control"
+                      name="password"
+                      placeholder="Password"
+                      formControlName="password"
+                    />
                     <label class="form-label" for="password">Password</label>
                   </div>
 
                   @if (getFormErrors("password")) {
-                    <p class="text-danger mt-0">{{ getFormErrors("password") }}</p>
+                    <p class="text-danger mt-0">
+                      {{ getFormErrors("password") }}
+                    </p>
                   }
 
-                  <div class="text-center pt-1 mb-1 pb-1">
-                    <button data-mdb-button-init 
-                    data-mdb-ripple-init 
-                    class="btn btn-primary btn-block fa-lg gradient-custom-2 mt-3 w-100" 
-                    type="submit">Login</button>
+                  <div class="text-center text-light pt-1 mb-1 pb-1">
+                    <button
+                      [disabled]="form.invalid"
+                      mat-button
+                      disableRipple
+                      class="custom-mat-button mt-3 w-100"
+                      type="submit"
+                      style="background-color: #1995ad"
+                    >
+                      Login
+                    </button>
                   </div>
                   <div class="text-center pt-1 mb-5 pb-1">
-                      <a class="text-muted" routerLink="#!">Forgot password?</a>
+                    <a class="text-muted" routerLink="#!">Forgot password?</a>
                   </div>
 
-                  <div class="d-flex align-items-center justify-content-center pb-4">
+                  <div
+                    class="d-flex align-items-center justify-content-center pb-4"
+                  >
                     <p class="mb-0 me-2">Don't have an account?</p>
                     <a routerLink="/register">Create new</a>
                   </div>
-
                 </form>
-
               </div>
             </div>
-            <div class="col-lg-6 d-flex align-items-center d-none d-lg-flex d-xl-flex" style="background-color: #1995AD;">
+            <div
+              class="col-lg-6 d-flex align-items-center d-none d-lg-flex d-xl-flex"
+              style="background-color: #1995ad"
+            >
               <div class="text-white px-3 py-4 p-md-5 mx-md-4">
                 <h4 class="mb-4">Welcome to KlearSplit!</h4>
-                  <p class="small mb-0">Easily manage and split bills with friends and family. Whether you're sharing a meal, an apartment, or travel expenses, our intuitive platform takes the hassle out of dividing costs.
-                    Key Features:</p>
-                    <ul class="small mb-0">
-                      <li>Effortless Bill Splitting: Quickly calculate each person's share.</li>
-                      <li>Track Expenses: Keep an organized record of who owes what.</li>
-                      <li>Reminders: Never forget to settle up with gentle reminders.</li>
-                    </ul>
-                  <p class="small mb-0">
-                    Start enjoying stress-free sharing today!
-                  </p>
+                <p class="small mb-0">
+                  Easily manage and split bills with friends and family. Whether
+                  you're sharing a meal, an apartment, or travel expenses, our
+                  intuitive platform takes the hassle out of dividing costs. Key
+                  Features:
+                </p>
+                <ul class="small mb-0">
+                  <li>
+                    Effortless Bill Splitting: Quickly calculate each person's
+                    share.
+                  </li>
+                  <li>
+                    Track Expenses: Keep an organized record of who owes what.
+                  </li>
+                  <li>
+                    Reminders: Never forget to settle up with gentle reminders.
+                  </li>
+                </ul>
+                <p class="small mb-0">
+                  Start enjoying stress-free sharing today!
+                </p>
               </div>
             </div>
           </div>

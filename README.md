@@ -142,36 +142,8 @@ To deploy this application on a server, follow these steps:
 
 ### Frontend (Angular)
 
-1. Build the Angular application for production:
+Build the Angular application for production:
 
     ```bash
     ng build --prod
     ```
-
-2. Serve the built static files using a server like **Nginx** or **Apache** by copying the `dist/` folder from Angular to your server's public directory.
-
-### Nginx Setup Example
-
-Here’s an example Nginx configuration to serve both the backend and frontend:
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        root /var/www/your-angular-app/dist;
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /api {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-Ensure that the `api` routes are correctly proxied to your Node.js backend, and static files are served from the Angular `dist/` directory.

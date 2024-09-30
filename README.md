@@ -114,34 +114,6 @@ SMTP_MAIL=your_smtp_mail
 
 Make sure to replace the placeholder values with your actual database credentials and secret keys.
 
-## API Endpoints
-
-### Authentication
-- `POST /api/v1/auth/login`: Login and receive access/refresh tokens.
-- `GET /api/v1/auth/logout`: Logout and delete access/refresh tokens.
-
-### Users
-- `POST /api/v1/users/verify`: Verify a new user.
-- `POST /api/v1/users/register`: Register a new user.
-- `GET /api/v1/users/:id`: Get user details (authentication required).
-- `PATCH /api/v1/users/:id`: Update a user's profile (authentication required).
-- `DELETE /api/v1/users/:id`: Soft delete a user's account (authentication required).
-
-## Logging
-
-The backend uses **Winston** and **Morgan** for logging purposes:
-
-- **Morgan** logs all incoming HTTP requests to provide detailed insights into request activities.
-- **Winston** is used for structured logging of application events and errors.
-
-Logs are stored in the following locations:
-- `src/log/app.log` for general logs
-- `src/log/appErrors.log` for error logs
-
-To customize how requests are logged, Morgan is integrated into the application middleware.
-
-By using these logging tools, you will be able to monitor all incoming requests and log detailed information about the application's operations and any errors encountered.
-
 ## Deployment
 
 To deploy this application on a server, follow these steps:
@@ -170,36 +142,8 @@ To deploy this application on a server, follow these steps:
 
 ### Frontend (Angular)
 
-1. Build the Angular application for production:
+Build the Angular application for production:
 
     ```bash
     ng build --prod
     ```
-
-2. Serve the built static files using a server like **Nginx** or **Apache** by copying the `dist/` folder from Angular to your server's public directory.
-
-### Nginx Setup Example
-
-Here’s an example Nginx configuration to serve both the backend and frontend:
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        root /var/www/your-angular-app/dist;
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /api {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-Ensure that the `api` routes are correctly proxied to your Node.js backend, and static files are served from the Angular `dist/` directory.

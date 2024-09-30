@@ -8,7 +8,7 @@ import {
 export const verifyUserContoller = async (req, res, next) => {
   try {
     await UserService.verifyUser(req.validatedUser, next);
-    return responseHandler(res, 200, "Successfully Sent Otp");
+    responseHandler(res, 200, "Successfully Sent Otp");
   } catch (error) {
     next(error);
   }
@@ -28,7 +28,7 @@ export const createUserController = async (req, res, next) => {
 export const verifyRestoreUserContoller = async (req, res, next) => {
   try {
     await UserService.verifyRestoreUser(req.validatedUser, next);
-    return responseHandler(res, 200, "Successfully Sent Otp");
+    responseHandler(res, 200, "Successfully Sent Otp");
   } catch (error) {
     next(error);
   }

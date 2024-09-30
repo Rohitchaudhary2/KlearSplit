@@ -50,13 +50,13 @@ class UserService {
       {
         email: user.email,
         subject: "Otp for sign up in KlearSplit",
-      }, 
-      'otpTemplate',
+      },
+      "otpTemplate",
       {
         name: user.first_name,
-        otp
+        otp,
       },
-      next
+      next,
     );
   };
 
@@ -106,13 +106,16 @@ class UserService {
         subject: "Password for Sign in for KlearSplit",
       };
 
-      sendMail(options, 
-        'passwordTemplate',
+      sendMail(
+        options,
+        "passwordTemplate",
         {
           name: user.first_name,
           email: user.email,
-          password
-        }, next);
+          password,
+        },
+        next,
+      );
 
       return { user: createdUser, accessToken, refreshToken };
     } catch (error) {
@@ -211,113 +214,16 @@ class UserService {
         subject: "Password for Sign in for KlearSplit",
       };
 
-      sendMail(options, 
-        'passwordTemplate',
+      sendMail(
+        options,
+        "passwordTemplate",
         {
           name: user.first_name,
           email: user.email,
-          password
-        }, next);
-
-      return { user: restoredUser, accessToken, refreshToken };
-    } catch (error) {
-      // Rollback the transaction in case of error
-      await transaction.rollback();
-      throw error; // Rethrow the error after rollback
-    }
-  };
-
-  static verifyRestoreUser = async (user, next) => {
-    const isEmailExists = await getUserByEmailDb(user.email, false);
-
-    if (!isEmailExists) {
-      throw next(
-        new ErrorHandler(400, "No Record found. Please Create new account."),
-      );
-    } else if (
-      isEmailExists &&
-      isEmailExists.dataValues &&
-      !isEmailExists.dataValues.deletedAt
-    ) {
-      throw next(
-        new ErrorHandler(400, "Account already exists for this Email."),
-      );
-    }
-
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
-
-    await createOtpDb({
-      email: user.email,
-      phone: isEmailExists.dataValues.phone,
-      otp,
-      otp_expiry_time: otpExpiresAt,
-    });
-
-    await sendMail(
-      {
-        email: user.email,
-        subject: "Otp",
-        message: `This is your ${otp} for sign up in KlearSplit. It is valid for 5 minutes.`,
-      },
-      next,
-    );
-  };
-
-  static restoreUser = async (user, next) => {
-    const isEmailExists = await getUserByEmailDb(user.email, false);
-    if (!isEmailExists) throw next(new ErrorHandler(400, "User not found"));
-    if (!isEmailExists.dataValues.deletedAt)
-      throw next(new ErrorHandler(400, "Account for this Email is active."));
-
-    const otp = await getOtpDb(
-      user.email,
-      isEmailExists.dataValues.phone,
-      user.otp,
-    );
-
-    if (!otp) throw next(new ErrorHandler(400, "Invalid Otp."));
-
-    if (new Date() >= otp.otp_expiry_time)
-      throw next(new ErrorHandler(400, "Otp has been expired."));
-
-    //Generating random password
-    const password = generatePassword();
-
-    //Hashing the password
-    user.password = await hashedPassword(password);
-
-    const transaction = await sequelize.transaction(); // Starting a new transaction
-
-    try {
-      // Restoring user in the database
-      await restoreUserDb(user.email, transaction);
-      const restoredUser = isEmailExists.dataValues;
-
-      // Generate access and refresh tokens
-      const accessToken = generateAccessToken(restoredUser.user_id, next);
-      const refreshToken = generateRefreshToken(restoredUser.user_id, next);
-
-      // Store the refresh token in the database
-      await AuthService.createRefreshToken(
-        {
-          token: refreshToken,
-          user_id: restoredUser.user_id,
+          password,
         },
-        transaction,
         next,
       );
-
-      // Commit the transaction
-      await transaction.commit();
-
-      const options = {
-        email: user.email,
-        subject: "Password",
-        message: `This is your password ${password} for signing in KlearSplit.`,
-      };
-
-      sendMail(options, next);
 
       return { user: restoredUser, accessToken, refreshToken };
     } catch (error) {

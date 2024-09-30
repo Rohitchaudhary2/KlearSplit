@@ -148,5 +148,3 @@ Build the Angular application for production:
     ng build --prod
     ```
 ```
-
-Ensure that the `api` routes are correctly proxied to your Node.js backend, and static files are served from the Angular `dist/` directory.

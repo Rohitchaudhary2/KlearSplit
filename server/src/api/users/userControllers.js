@@ -7,7 +7,7 @@ import {
 // Controller for verifying a user
 export const verifyUserContoller = async (req, res, next) => {
   try {
-    await UserService.verifyUser(req.validatedUser, next);
+    await UserService.verifyUser(req.validatedUser);
     responseHandler(res, 200, "Successfully Sent Otp");
   } catch (error) {
     next(error);
@@ -17,7 +17,7 @@ export const verifyUserContoller = async (req, res, next) => {
 // Controller for creating or registering a user
 export const createUserController = async (req, res, next) => {
   try {
-    const userData = await UserService.createUser(req.validatedUser, next);
+    const userData = await UserService.createUser(req.validatedUser);
     authResponseHandler(res, 201, "Successfully created user", userData);
   } catch (error) {
     next(error);
@@ -27,7 +27,7 @@ export const createUserController = async (req, res, next) => {
 // Controller for verifying a user
 export const verifyRestoreUserContoller = async (req, res, next) => {
   try {
-    await UserService.verifyRestoreUser(req.validatedUser, next);
+    await UserService.verifyRestoreUser(req.validatedUser);
     responseHandler(res, 200, "Successfully Sent Otp");
   } catch (error) {
     next(error);
@@ -37,7 +37,7 @@ export const verifyRestoreUserContoller = async (req, res, next) => {
 // Controller for creating or registering a user
 export const restoreUserController = async (req, res, next) => {
   try {
-    const userData = await UserService.restoreUser(req.validatedUser, next);
+    const userData = await UserService.restoreUser(req.validatedUser);
     authResponseHandler(res, 201, "Successfully restored user", userData);
   } catch (error) {
     next(error);
@@ -47,7 +47,7 @@ export const restoreUserController = async (req, res, next) => {
 // Controller for getting user information
 export const getUserController = async (req, res, next) => {
   try {
-    const userData = await UserService.getUser(req.params.id, next);
+    const userData = await UserService.getUser(req.params.id);
     responseHandler(res, 200, "Successfully fetched user", userData);
   } catch (error) {
     next(error);

@@ -32,35 +32,6 @@ app.use(loggerMiddleware);
 // Routes
 app.use("/api/users", userRouter); // User-related routes
 app.use("/api/auth", authRouter); // Authentication related routes
-app.get(
-  "/auth/google",
-  passport.authenticate("google", {
-    session: false,
-    scope: ["profile", "email"],
-  }),
-);
-
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    session: false,
-    failureRedirect: "http://localhost:4200/login",
-  }),
-  (req, res) => {
-    const userData = {
-      user: req.user.user.dataValues,
-      accessToken: req.user.accessToken,
-      refreshToken: req.user.refreshToken,
-    };
-    res
-      .set("Authorization", `Bearer ${userData.accessToken}`)
-      .cookie("refreshToken", userData.refreshToken, {
-        httpOnly: true,
-        sameSite: "strict",
-      })
-      .redirect(`http://localhost:4200/dashboard?id=${userData.user.user_id}`);
-  },
-);
 
 // ErrorMiddleware to handle any errors that occur during request processing
 app.use(errorMiddleware);

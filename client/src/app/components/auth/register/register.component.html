@@ -1,88 +1,150 @@
 <section class="gradient-form">
-    <div class="container d-flex justify-content-center align-items-center min-vh-100 py-4">
-      <div class="row d-flex justify-content-center align-items-center w-100" style="max-width: 1200px;">
-        <div class="col-xl-10">
-          <div class="card rounded-3 text-black" style="background-color: #F1F1F2;">
-            <div class="row g-0">
-              <div class="col-lg-6">
-                <div class="card-body p-md-3 mx-md-4">
-  
-                  <div class="text-center">
-                    <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/lotus.webp"
-                      style="width: 185px;" alt="logo">
-                    <h4 class="mt-1 pb-1">We are The KlearSplit Team</h4>
+  <div
+    class="container d-flex justify-content-center align-items-center min-vh-100 py-4"
+  >
+    <div
+      class="row d-flex justify-content-center align-items-center w-100"
+      style="max-width: 1200px"
+    >
+      <div class="col-xl-10">
+        <div
+          class="card rounded-3 text-black"
+          style="background-color: #f1f1f2"
+        >
+          <div class="row g-0">
+            <div class="col-lg-6">
+              <div class="card-body p-md-3 mx-md-4">
+                <div class="text-center">
+                  <img src="/logo.png" style="width: 185px" alt="logo" />
+                  <h4 class="mt-1 pb-1">We are The KlearSplit Team</h4>
+                </div>
+
+                <form
+                  class="was-validated"
+                  [formGroup]="form"
+                  (ngSubmit)="onClickVerify()"
+                >
+                  <p class="mt-4">Please enter your details below.</p>
+                  <div class="form-floating mt-4">
+                    <input
+                      type="name"
+                      class="form-control"
+                      id="formInput"
+                      name="first_name"
+                      placeholder="John"
+                      formControlName="first_name"
+                    />
+                    <label for="formInput">First Name</label>
                   </div>
-  
-                  <form class="was-validated" [formGroup]="form" (ngSubmit)="onClickVerify()">
-                    <p class="mt-4">Please enter your details below.</p>
-                    <div class="form-floating mt-4">
-                        <input type="name" class="form-control" id="formInput" name="first_name" placeholder="John" formControlName="first_name"/>
-                        <label for="formInput">First Name</label>
-                    </div>
 
-                    @if (getFormErrors("first_name")) {
-                      <p class="text-danger mt-0 small">
-                        {{ getFormErrors("first_name") }}
-                      </p>
-                    }
-  
-                    <div class="form-floating mt-4">
-                      <input type="name" class="form-control" id="formInput" name="last_name" placeholder="Doe" formControlName="last_name"/>
-                      <label for="formInput">Last Name</label>
-                    </div>
+                  @if (getFormErrors("first_name")) {
+                    <p class="text-danger mt-0 small">
+                      {{ getFormErrors("first_name") }}
+                    </p>
+                  }
 
-                    <div class="form-floating mt-4">
-                      <input type="email" class="form-control" id="formInput" name="email" placeholder="john@example.com" formControlName="email"/>
-                      <label for="formInput">Email</label>
-                    </div>
+                  <div class="form-floating mt-4">
+                    <input
+                      type="name"
+                      class="form-control"
+                      id="formInput"
+                      name="last_name"
+                      placeholder="Doe"
+                      formControlName="last_name"
+                    />
+                    <label for="formInput">Last Name</label>
+                  </div>
 
-                    @if (getFormErrors("email")) {
-                      <p class="text-danger mt-0 small">{{ getFormErrors("email") }}</p>
-                    }
+                  <div class="form-floating mt-4">
+                    <input
+                      type="email"
+                      class="form-control"
+                      id="formInput"
+                      name="email"
+                      placeholder="john@example.com"
+                      formControlName="email"
+                    />
+                    <label for="formInput">Email</label>
+                  </div>
 
-                    <div class="form-floating mt-4">
-                      <input type="phone" class="form-control" id="formInput" name="phone" placeholder="9876543210" formControlName="phone"/>
-                      <label for="formInput">Phone Number</label>
-                    </div>
+                  @if (getFormErrors("email")) {
+                    <p class="text-danger mt-0 small">
+                      {{ getFormErrors("email") }}
+                    </p>
+                  }
 
-                    @if (getFormErrors("phone")) {
-                      <p class="text-danger mt-0 small">{{ getFormErrors("phone") }}</p>
-                    }
-  
-                    <div class="text-center pt-1 mt-4 mb-1 pb-1">
-                      <button [disabled]="form.invalid" class="btn w-100" type="submit" style="background-color: #1995AD;">Verify
-                      </button>
-                    </div>
+                  <div class="form-floating mt-4">
+                    <input
+                      type="phone"
+                      class="form-control"
+                      id="formInput"
+                      name="phone"
+                      placeholder="9876543210"
+                      formControlName="phone"
+                    />
+                    <label for="formInput">Phone Number</label>
+                  </div>
 
-                    <button (click)="googleLoginHandler()">Sign up with Google</button>
-  
-                    <div class="d-flex align-items-center justify-content-center pb-4">
-                      <p class="mb-0 me-2">Already have an account?</p>
-                      <a routerLink="/login">LogIn</a>
-                    </div>
-                    
-                  </form>
-  
-                </div>
+                  @if (getFormErrors("phone")) {
+                    <p class="text-danger mt-0 small">
+                      {{ getFormErrors("phone") }}
+                    </p>
+                  }
+
+                  <div class="text-center text-light pt-1 mt-4 mb-1 pb-1">
+                    <button
+                      [disabled]="form.invalid"
+                      mat-button
+                      disableRipple
+                      class="custom-mat-button w-100"
+                      type="submit"
+                      style="background-color: #1995ad"
+                    >
+                      Verify
+                    </button>
+                  </div>
+
+                  <div
+                    class="d-flex align-items-center justify-content-center pb-4"
+                  >
+                    <p class="mb-0 me-2">Already have an account?</p>
+                    <a routerLink="/login">LogIn</a>
+                  </div>
+                </form>
               </div>
-              <div class="col-lg-6 d-flex align-items-center d-none d-lg-flex d-xl-flex" style="background-color: #1995AD;">
-                <div class="text-white px-3 py-4 p-md-5 mx-md-4">
-                  <h4 class="mb-4">Welcome to KlearSplit!</h4>
-                  <p class="small mb-0">Easily manage and split bills with friends and family. Whether you're sharing a meal, an apartment, or travel expenses, our intuitive platform takes the hassle out of dividing costs.
-                    Key Features:</p>
-                    <ul class="small mb-0">
-                      <li>Effortless Bill Splitting: Quickly calculate each person's share.</li>
-                      <li>Track Expenses: Keep an organized record of who owes what.</li>
-                      <li>Reminders: Never forget to settle up with gentle reminders.</li>
-                    </ul>
-                  <p class="small mb-0">
-                    Start enjoying stress-free sharing today!
-                  </p>
-                </div>
+            </div>
+            <div
+              class="col-lg-6 d-flex align-items-center d-none d-lg-flex d-xl-flex"
+              style="background-color: #1995ad"
+            >
+              <div class="text-white px-3 py-4 p-md-5 mx-md-4">
+                <h4 class="mb-4">Welcome to KlearSplit!</h4>
+                <p class="small mb-0">
+                  Easily manage and split bills with friends and family. Whether
+                  you're sharing a meal, an apartment, or travel expenses, our
+                  intuitive platform takes the hassle out of dividing costs. Key
+                  Features:
+                </p>
+                <ul class="small mb-0">
+                  <li>
+                    Effortless Bill Splitting: Quickly calculate each person's
+                    share.
+                  </li>
+                  <li>
+                    Track Expenses: Keep an organized record of who owes what.
+                  </li>
+                  <li>
+                    Reminders: Never forget to settle up with gentle reminders.
+                  </li>
+                </ul>
+                <p class="small mb-0">
+                  Start enjoying stress-free sharing today!
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>

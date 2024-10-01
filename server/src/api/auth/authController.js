@@ -4,7 +4,7 @@ import { authResponseHandler } from "../utils/responseHandler.js";
 // Controller for login funnctionality
 export const loginController = async (req, res, next) => {
   try {
-    const userData = await AuthService.login(req, next);
+    const userData = await AuthService.login(req);
     authResponseHandler(res, 200, "User login successful", userData);
   } catch (err) {
     next(err);

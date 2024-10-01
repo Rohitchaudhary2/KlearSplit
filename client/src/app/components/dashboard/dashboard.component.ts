@@ -99,12 +99,11 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { jwtDecode } from 'jwt-decode';
 
 import { AuthService } from '../auth/auth.service';
-import { TokenService } from '../auth/token.service';
 import { API_URLS } from '../../constants/api-urls';
 import { FetchResponse } from '../shared/types.model';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-dashboard',
@@ -112,25 +111,23 @@ import { FetchResponse } from '../shared/types.model';
 })
 export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
-  private tokenService = inject(TokenService);
   private httpClient = inject(HttpClient);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private toastr = inject(ToastrService);
 
   private getUserUrl = API_URLS.fetchUser;
 
   ngOnInit(): void {
-    // Step 1: Check for Google OAuth access token and user_id in query params
+    // Authenticate the user
+    this.authService.isAuthenticated.set(true);
+    // Check for user_id in query params
     this.route.queryParams.subscribe((params) => {
-      const userIdFromGoogle = params['id'];
-      const accessTokenFromGoogle = params['token'];
+      const userId = params['id'];
 
-      if (userIdFromGoogle && accessTokenFromGoogle) {
-        // Store the access token in localStorage
-        this.tokenService.setAccessToken(accessTokenFromGoogle);
-
-        // Use the access token to fetch user details
-        this.fetchUserDetails(userIdFromGoogle);
+      if (userId) {
+        // Fetch User details
+        this.fetchUserDetails(userId);
 
         // Clean the URL to remove query params
         this.router.navigate([], { queryParams: {} });
@@ -141,7 +138,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  private fetchUserDetails(userId: string): void {
+  private fetchUserDetails(userId: string | undefined): void {
     const getUserUrlWithId = `${this.getUserUrl}/${userId}`;
     this.httpClient
       .get<FetchResponse>(getUserUrlWithId, {
@@ -151,10 +148,6 @@ export class DashboardComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.authService.currentUser.set(response.body?.data);
-          const refreshedAccessToken = response.headers.get('Authorization');
-          if (refreshedAccessToken) {
-            this.tokenService.setAccessToken(refreshedAccessToken);
-          }
         },
         error: (err) => {
           console.error('Error fetching user details:', err);
@@ -163,12 +156,6 @@ export class DashboardComponent implements OnInit {
   }
 
   private handleRegularUser(): void {
-    const accessToken = this.tokenService.getAccessToken();
-    if (accessToken) {
-      const decodedToken = jwtDecode<{ id: string }>(accessToken);
-      const userId = decodedToken.id;
-
-      this.fetchUserDetails(userId);
-    }
+    this.authService.currentUser();
   }
 }

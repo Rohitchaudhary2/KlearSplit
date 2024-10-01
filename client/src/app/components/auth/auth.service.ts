@@ -3,7 +3,6 @@ import { inject, Injectable, signal } from '@angular/core';
 import { CurrentUser } from '../shared/types.model';
 import { Observable, map } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { TokenService } from './token.service'; // Token service for access token management
 import { RegisterResponse, RegisterUser } from './register-types.model';
 import { Router } from '@angular/router';
 import { LoginResponse, LoginUser } from './login-types.model';
@@ -15,7 +14,6 @@ import { API_URLS } from '../../constants/api-urls';
 export class AuthService {
   private httpClient = inject(HttpClient);
   private toastr = inject(ToastrService);
-  private tokenService = inject(TokenService); // Inject token service
   private router = inject(Router);
 
   private verifyUrl = API_URLS.verify; // URL for OTP verification
@@ -25,10 +23,7 @@ export class AuthService {
 
   currentUser = signal<CurrentUser | undefined | null>(undefined);
 
-  isAuthenticated(): boolean {
-    const token = this.tokenService.getAccessToken();
-    return !!token;
-  }
+  isAuthenticated = signal(true);
 
   // Verify User Function (Send OTP for Verification)
   verifyUser(user: Partial<RegisterUser>): Observable<object> {
@@ -56,20 +51,17 @@ export class AuthService {
       )
       .pipe(
         map((response: HttpResponse<RegisterResponse>) => {
-          const accessToken = response.headers.get('Authorization');
+          this.isAuthenticated.set(true);
 
-          if (accessToken) {
-            // Handle the token after registration success
-            this.tokenService.setAccessToken(accessToken);
+          if (this.isAuthenticated()) {
+            // Set the current user
+            this.currentUser.set(response.body?.data);
+            // Reroute the user after successful registration
             this.router.navigate(['/dashboard']);
           } else {
-            this.toastr.error(
-              'Failed to receive access token. Please try again.',
-              'Error',
-              {
-                timeOut: 3000,
-              },
-            );
+            this.toastr.error('Please try again.', 'Error', {
+              timeOut: 3000,
+            });
           }
           return response;
         }),
@@ -85,22 +77,19 @@ export class AuthService {
       })
       .pipe(
         map((response: HttpResponse<LoginResponse>) => {
-          const accessToken = response.headers.get('Authorization');
+          this.isAuthenticated.set(true);
 
-          if (accessToken) {
-            // Handle the token after registration success
-            this.tokenService.setAccessToken(accessToken);
+          if (this.isAuthenticated()) {
+            // Set the current user
+            this.currentUser.set(response.body?.data);
+            console.log(this.currentUser());
+            // Reroute the user after successful login
             this.router.navigate(['/dashboard']);
           } else {
-            this.toastr.error(
-              'Failed to receive access token. Please try again.',
-              'Error',
-              {
-                timeOut: 3000,
-              },
-            );
+            this.toastr.error('Please try again.', 'Error', {
+              timeOut: 3000,
+            });
           }
-          console.log(response);
           return response;
         }),
       );
@@ -110,8 +99,8 @@ export class AuthService {
   logout(): void {
     this.httpClient.get(this.logoutUrl, { withCredentials: true }).subscribe({
       next: () => {
-        // Remove tokens from local storage
-        this.tokenService.removeAccessToken();
+        // Remove the access of user from protected routes
+        this.isAuthenticated.set(false);
         this.toastr.success('You have logged out successfully.', 'Logout', {
           timeOut: 3000,
         });

@@ -17,7 +17,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/auth/google/callback",
+      callbackURL: "http://localhost:3000/api/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       const transaction = await sequelize.transaction();
@@ -33,6 +33,7 @@ passport.use(
             newUser.last_name = profile._json.family_name;
           const password = generatePassword();
           newUser.password = await hashedPassword(password);
+          newUser.phone = "7894561238";
           user = await createUserDb(newUser, transaction);
 
           const options = {

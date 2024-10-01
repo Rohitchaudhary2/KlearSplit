@@ -27,7 +27,7 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     const token = this.tokenService.getAccessToken();
-    return !!token; // Or validate token expiration here
+    return !!token;
   }
 
   // Verify User Function (Send OTP for Verification)

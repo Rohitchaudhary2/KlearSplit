@@ -33,7 +33,7 @@ app.use(loggerMiddleware);
 app.use("/api/users", userRouter); // User-related routes
 app.use("/api/auth", authRouter); // Authentication related routes
 app.get(
-  "/auth/google",
+  "/api/auth/google",
   passport.authenticate("google", {
     session: false,
     scope: ["profile", "email"],
@@ -41,7 +41,7 @@ app.get(
 );
 
 app.get(
-  "/auth/google/callback",
+  "/api/auth/google/callback",
   passport.authenticate("google", {
     session: false,
     failureRedirect: "http://localhost:4200/login",
@@ -53,7 +53,10 @@ app.get(
       refreshToken: req.user.refreshToken,
     };
     res
-      .set("Authorization", `Bearer ${userData.accessToken}`)
+      .cookie("accessToken", userData.accessToken, {
+        httpOnly: true,
+        sameSite: "strict",
+      })
       .cookie("refreshToken", userData.refreshToken, {
         httpOnly: true,
         sameSite: "strict",

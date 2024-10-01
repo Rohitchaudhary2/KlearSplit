@@ -31,6 +31,10 @@ const optionalCommonFields = {
   }),
 };
 
+export const emailSchema = Joi.object({
+  email: commonFields.email,
+});
+
 // Create Schema: All Common fields required
 export const createUserSchema = Joi.object({
   ...Object.keys(commonFields).reduce((acc, key) => {

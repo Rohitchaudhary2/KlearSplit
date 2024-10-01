@@ -225,6 +225,27 @@ class UserService {
     }
   };
 
+  static forgotPassword = async (email) => {
+    const user = await getUserByEmailDb(email);
+    if (!user) throw new ErrorHandler(400, "Email does not exist");
+
+    const password = generatePassword();
+    const hashPassword = await hashedPassword(password);
+
+    await updateUserDb({ password: hashPassword }, user.user_id);
+
+    const options = {
+      email: user.email,
+      subject: "Password for Sign in for KlearSplit",
+    };
+
+    sendMail(options, "passwordTemplate", {
+      name: user.first_name,
+      email: user.email,
+      password,
+    });
+  };
+
   // Service to get user from database
   static getUser = async (id) => {
     const user = await getUserByIdDb(id);

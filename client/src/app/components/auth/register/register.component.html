@@ -53,12 +53,14 @@
                       <button [disabled]="form.invalid" class="btn w-100" type="submit" style="background-color: #1995AD;">Verify
                       </button>
                     </div>
+
+                    <button (click)="googleLoginHandler()">Sign up with Google</button>
   
                     <div class="d-flex align-items-center justify-content-center pb-4">
                       <p class="mb-0 me-2">Already have an account?</p>
                       <a routerLink="/login">LogIn</a>
                     </div>
-  
+                    
                   </form>
   
                 </div>

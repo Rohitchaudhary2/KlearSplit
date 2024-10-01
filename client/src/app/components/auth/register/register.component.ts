@@ -55,6 +55,10 @@ export class RegisterComponent {
     return this.formErrorMessages.getErrorMessage(this.form, field);
   }
 
+  googleLoginHandler(){
+    window.open('http://localhost:3000/auth/google', '_self');
+  }
+
   onClickVerify() {
     if (this.form.valid) {
       const user: RegisterUser = this.form.value as RegisterUser;

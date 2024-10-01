@@ -13,7 +13,7 @@ const handleAccessToken = (req) => {
     throw new ErrorHandler(401, "Access Denied. No Access token provided.");
   }
 
-  const accessToken = req.cookies["accessToken"].split(" ")[1];
+  const accessToken = req.cookies["accessToken"];
   if (!accessToken)
     throw new ErrorHandler(401, "Access Denied. No Access Token provided.");
 

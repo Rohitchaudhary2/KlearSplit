@@ -9,11 +9,11 @@ import UserService from "../users/userServices.js";
 import sequelize from "../../config/db.connection.js";
 
 const handleAccessToken = (req) => {
-  if (!req.headers["authorization"]) {
+  if (!req.cookies["accessToken"]) {
     throw new ErrorHandler(401, "Access Denied. No Access token provided.");
   }
 
-  const accessToken = req.headers["authorization"].split(" ")[1];
+  const accessToken = req.cookies["accessToken"].split(" ")[1];
   if (!accessToken)
     throw new ErrorHandler(401, "Access Denied. No Access Token provided.");
 
@@ -61,11 +61,14 @@ const handleRefreshToken = async (req, res, next) => {
     req.user = await UserService.getUser(userId.id, next);
 
     res
-      .cookie("refreshToken", newRefreshToken, {
+      .cookie("accessToken", accessToken, {
         httpOnly: true,
         sameSite: "strict",
       })
-      .set("Authorization", `Bearer ${accessToken}`);
+      .cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        sameSite: "strict",
+      });
     return next();
   } catch (error) {
     // Handle errors related to refresh token expiration

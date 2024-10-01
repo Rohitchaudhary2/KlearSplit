@@ -17,7 +17,7 @@ const commonFields = {
     .trim()
     .pattern(/^[0-9]+$/)
     .length(10)
-    .required()
+    .optional()
     .messages({
       "string.pattern.base": "Phone number must contain only digits.",
       "string.length": "Phone number must be exactly 10 digits long.",

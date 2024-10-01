@@ -85,8 +85,16 @@ class UserService {
       // }
 
       // Generate access and refresh tokens
-      const accessToken = generateAccessToken(createdUser.user_id, next);
-      const refreshToken = generateRefreshToken(createdUser.user_id, next);
+      const accessToken = generateAccessToken(createdUser.user_id);
+      if (!accessToken)
+        throw next(
+          new ErrorHandler(500, "Error while genrating access token."),
+        );
+      const refreshToken = generateRefreshToken(createdUser.user_id);
+      if (!refreshToken)
+        throw next(
+          new ErrorHandler(500, "Error while genrating Refresh token."),
+        );
 
       // Store the refresh token in the database
       await AuthService.createRefreshToken(
@@ -95,7 +103,6 @@ class UserService {
           user_id: createdUser.user_id,
         },
         transaction,
-        next,
       );
 
       // Commit the transaction
@@ -106,16 +113,11 @@ class UserService {
         subject: "Password for Sign in for KlearSplit",
       };
 
-      sendMail(
-        options,
-        "passwordTemplate",
-        {
-          name: user.first_name,
-          email: user.email,
-          password,
-        },
-        next,
-      );
+      sendMail(options, "passwordTemplate", {
+        name: user.first_name,
+        email: user.email,
+        password,
+      });
 
       return { user: createdUser, accessToken, refreshToken };
     } catch (error) {
@@ -155,8 +157,12 @@ class UserService {
     await sendMail(
       {
         email: user.email,
-        subject: "Otp",
-        message: `This is your ${otp} for sign up in KlearSplit. It is valid for 5 minutes.`,
+        subject: "Otp for sign up in KlearSplit",
+      },
+      "otpTemplate",
+      {
+        name: isEmailExists.dataValues.first_name,
+        otp,
       },
       next,
     );
@@ -203,7 +209,12 @@ class UserService {
           user_id: restoredUser.user_id,
         },
         transaction,
-        next,
+      );
+
+      await updateUserDb(
+        { password: user.password },
+        restoredUser.user_id,
+        transaction,
       );
 
       // Commit the transaction
@@ -214,16 +225,11 @@ class UserService {
         subject: "Password for Sign in for KlearSplit",
       };
 
-      sendMail(
-        options,
-        "passwordTemplate",
-        {
-          name: user.first_name,
-          email: user.email,
-          password,
-        },
-        next,
-      );
+      sendMail(options, "passwordTemplate", {
+        name: restoredUser.first_name,
+        email: user.email,
+        password,
+      });
 
       return { user: restoredUser, accessToken, refreshToken };
     } catch (error) {

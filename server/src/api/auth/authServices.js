@@ -28,8 +28,8 @@ class AuthService {
     if (!validPassword) throw next(new ErrorHandler(404, "Password is wrong."));
 
     // Geneating access and refresh tokens
-    const accessToken = generateAccessToken(user.user_id, next);
-    const refreshToken = generateRefreshToken(user.user_id, next);
+    const accessToken = generateAccessToken(user.user_id);
+    const refreshToken = generateRefreshToken(user.user_id);
 
     // Storing refresh token in the database
     this.createRefreshToken({
@@ -51,14 +51,14 @@ class AuthService {
   };
 
   // Service for creating refresh token
-  static createRefreshToken = async (refreshToken, transaction, next) => {
+  static createRefreshToken = async (refreshToken, transaction) => {
     // Storing refresh token in the datbase
     const createdRefreshToken = await createRefreshTokenDb(
       refreshToken,
       transaction,
     );
     if (!createdRefreshToken)
-      throw next(new ErrorHandler(500, "Error while creating refresh token"));
+      throw new ErrorHandler(500, "Error while generating refresh token");
     return createdRefreshToken;
   };
 

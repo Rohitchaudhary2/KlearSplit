@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { ErrorHandler } from "../middlewares/errorHandler";
+import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 // Function to generate a new access token using the provided user_id
 export const generateAccessToken = (id) => {

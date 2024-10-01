@@ -10,7 +10,7 @@ export const validateData = (req, res, next) => {
     const isUpdate = req.method === "PATCH";
     const schema = isUpdate ? updateUserSchema : createUserSchema;
     const { error, value } = schema.validate(req.body);
-    if (error) throw next(new ErrorHandler(400, error.message));
+    if (error) throw next(new ErrorHandler(400, error));
     req.validatedUser = value;
     next();
   } catch (error) {
@@ -21,7 +21,7 @@ export const validateData = (req, res, next) => {
 export const validateRestoreData = (req, res, next) => {
   try {
     const { error, value } = restoreUserSchema.validate(req.body);
-    if (error) throw next(new ErrorHandler(400, error.message));
+    if (error) throw next(new ErrorHandler(400, error));
     req.validatedUser = value;
     next();
   } catch (error) {

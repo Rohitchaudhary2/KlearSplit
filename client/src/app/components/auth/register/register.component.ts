@@ -56,7 +56,7 @@ export class RegisterComponent {
   }
 
   googleLoginHandler(){
-    window.open('http://localhost:3000/auth/google', '_self');
+    window.open('http://localhost:3000/api/auth/google', '_self');
   }
 
   onClickVerify() {

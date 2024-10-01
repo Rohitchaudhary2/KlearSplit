@@ -1,7 +1,6 @@
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 import passport from "passport";
-import User from "../users/models/userModel.js";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -11,6 +10,7 @@ import { hashedPassword } from "./../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
 import AuthService from "../auth/authServices.js";
 import sequelize from "../../config/db.connection.js";
+import { createUserDb, getUserByEmailDb } from "../users/userDb.js";
 
 passport.use(
   new GoogleStrategy(
@@ -20,11 +20,10 @@ passport.use(
       callbackURL: "http://localhost:3000/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
+      const transaction = await sequelize.transaction();
       try {
         // Check if the user already exists in the database
-        let user = await User.findOne({
-          where: { email: profile._json.email },
-        });
+        let user = await getUserByEmailDb(profile._json.email);
 
         if (!user) {
           const newUser = {};
@@ -34,7 +33,7 @@ passport.use(
             newUser.last_name = profile._json.family_name;
           const password = generatePassword();
           newUser.password = await hashedPassword(password);
-          user = await User.create(newUser);
+          user = await createUserDb(newUser, transaction);
 
           const options = {
             email: user.email,
@@ -52,7 +51,6 @@ passport.use(
         const accessToken = generateAccessToken(user.user_id);
         const refreshToken = generateRefreshToken(user.user_id);
 
-        const transaction = await sequelize.transaction();
         await AuthService.createRefreshToken(
           {
             token: refreshToken,
@@ -66,6 +64,7 @@ passport.use(
 
         return done(null, { user, accessToken, refreshToken });
       } catch (error) {
+        await transaction.rollback();
         return done(error);
       }
     },

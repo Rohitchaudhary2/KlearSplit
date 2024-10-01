@@ -41,8 +41,12 @@ const handleRefreshToken = async (req, res, next) => {
       throw next(new ErrorHandler(401, "Access Denied. Invalid Token"));
 
     // Generate new access and refresh tokens
-    const accessToken = generateAccessToken(userId.id, next);
-    const newRefreshToken = generateRefreshToken(userId.id, next);
+    const accessToken = generateAccessToken(userId.id);
+    if (!accessToken)
+      throw next(new ErrorHandler(500, "Error while generating access token"));
+    const newRefreshToken = generateRefreshToken(userId.id);
+    if (!newRefreshToken)
+      throw next(new ErrorHandler(500, "Error while generating refresh token"));
 
     const transaction = await sequelize.transaction();
     await AuthService.createRefreshToken(
@@ -51,7 +55,6 @@ const handleRefreshToken = async (req, res, next) => {
         user_id: userId.id,
       },
       transaction,
-      next,
     );
 
     // Commit the transaction

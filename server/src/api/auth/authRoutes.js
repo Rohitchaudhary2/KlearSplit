@@ -29,7 +29,10 @@ authRouter.get(
       refreshToken: req.user.refreshToken,
     };
     res
-      .set("Authorization", `Bearer ${userData.accessToken}`)
+      .cookie("accessToken", userData.accessToken, {
+        httpOnly: true,
+        sameSite: "strict",
+      })
       .cookie("refreshToken", userData.refreshToken, {
         httpOnly: true,
         sameSite: "strict",

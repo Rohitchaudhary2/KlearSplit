@@ -115,4 +115,8 @@ export class RegisterComponent {
       }
     });
   }
+
+  onGoogleSignUp() {
+    window.open('http://localhost:3000/auth/google', '_self');
+  }
 }

@@ -27,6 +27,7 @@ class UserService {
       user.phone,
       false,
     );
+
     // If email or phone already exists in database then checking whether user has deleted account
     if (isUserExists && isUserExists.dataValues.deletedAt)
       throw new ErrorHandler(400, "Looks like you had an account.");
@@ -39,7 +40,6 @@ class UserService {
 
     await createOtpDb({
       email: user.email,
-      phone: user.phone,
       otp,
       otp_expiry_time: otpExpiresAt,
     });
@@ -61,7 +61,7 @@ class UserService {
     const userOtp = user.otp;
     delete user.otp;
 
-    const otp = await getOtpDb(user.email, user.phone, userOtp);
+    const otp = await getOtpDb(user.email, userOtp);
 
     if (!otp) throw new ErrorHandler(400, "Invalid Otp.");
 
@@ -141,7 +141,6 @@ class UserService {
 
     await createOtpDb({
       email: user.email,
-      phone: isEmailExists.dataValues.phone,
       otp,
       otp_expiry_time: otpExpiresAt,
     });
@@ -165,11 +164,7 @@ class UserService {
     if (!isEmailExists.dataValues.deletedAt)
       throw new ErrorHandler(400, "Account for this Email is active.");
 
-    const otp = await getOtpDb(
-      user.email,
-      isEmailExists.dataValues.phone,
-      user.otp,
-    );
+    const otp = await getOtpDb(user.email, user.otp);
 
     if (!otp) throw new ErrorHandler(400, "Invalid Otp.");
 

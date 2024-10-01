@@ -1,0 +1,49 @@
+/* Custom styling for mat-button*/
+.custom-mat-button {
+  background-color: #1995ad; /* Primary button color */
+  color: white !important; /* Button text color */
+  font-size: 1.1rem; /* Slightly larger font size for better readability */
+  font-weight: 500; /* Make text slightly bold */
+  padding: 12px 0; /* Padding for a comfortable button height */
+  border-radius: 4px; /* Rounded corners for a modern look */
+  text-transform: none; /* Disable uppercase text (if applied by Material) */
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease; /* Smooth hover effect */
+  box-shadow: none; /* Remove material shadow */
+}
+
+/* Hover and focus styles for interactivity */
+.custom-mat-button:hover,
+.custom-mat-button:focus {
+  background-color: #157a8a; /* Slightly darker shade on hover/focus */
+  transform: translateY(-1px); /* Subtle lift effect */
+}
+
+/* Disabled button styles */
+.custom-mat-button[disabled] {
+  background-color: #6c757d !important; /* Grey color when disabled */
+  color: white !important; /* Force text color to stay white even when disabled */
+  cursor: not-allowed !important; /* Disable pointer events */
+  opacity: 0.65; /* Slightly faded look for disabled state */
+  pointer-events: none; /* Ensure no interactions when disabled */
+}
+
+.mat-dialog-container {
+  max-height: 90vh; /* Adjust to ensure it fits within the viewport */
+  overflow: hidden; /* Hide the scrollbar */
+}
+
+.mat-dialog-content {
+  max-height: 60vh; /* Adjust content height */
+  overflow-y: auto; /* Allow scroll only if absolutely necessary */
+}
+.mat-form-field input.mat-input-element {
+  background-color: transparent !important; /* Keep the background transparent */
+}
+
+.mat-form-field input.mat-input-element:focus {
+  background-color: transparent !important; /* Ensure the background stays transparent when focused */
+  outline: none; /* Remove any default outlines */
+  border-color: #1995ad; /* Optional: Customize border color on focus */
+}

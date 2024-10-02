@@ -22,6 +22,10 @@ export class AuthService {
   private registerUrl = API_URLS.register; // URL for user registeration
   private loginUrl = API_URLS.login; // URL for login
   private logoutUrl = API_URLS.logout; // URL for logout
+  private forgotPasswordVerifyUrl = API_URLS.verifyForgotPassword; // URL to verify user for forgot password
+  private forgotPasswordUrl = API_URLS.forgotPassword; // URL for forgot password
+  private restoreAccountVerifyUrl = API_URLS.restoreAccountVerify; // URL to verify user for restore account
+  private restoreAccountUrl = API_URLS.restoreAccount; // URL for restore account
 
   currentUser = signal<CurrentUser | undefined | null>(undefined); // Store user data
 
@@ -125,5 +129,84 @@ export class AuthService {
         });
       },
     });
+  }
+
+  // Verify a user who already exists to resend them a password
+  verifyForgotPasswordUser(user: { email: string }): Observable<object> {
+    return this.httpClient
+      .post(`${this.forgotPasswordVerifyUrl}`, user, { withCredentials: true })
+      .pipe(
+        map((response) => {
+          this.toastr.success('OTP sent successfully', 'Success', {
+            timeOut: 3000,
+          });
+          return response;
+        }),
+      );
+  }
+
+  // Get a new password if you forgot your current one
+  forgotPassword(user: { email: string }, otp: { otp: string }) {
+    return this.httpClient
+      .post(
+        `${this.forgotPasswordUrl}`,
+        { ...user, ...otp },
+        { withCredentials: true },
+      )
+      .pipe(
+        map((response) => {
+          this.toastr.success('New Password sent successfully', 'Success', {
+            timeOut: 3000,
+          });
+          // Reroute to login
+          this.router.navigate(['/login']);
+          return response;
+        }),
+      );
+  }
+
+  // Verify a user who already exists to restore their account
+  verifyExistingUser(user: { email: string }): Observable<object> {
+    return this.httpClient
+      .post(`${this.restoreAccountVerifyUrl}`, user, { withCredentials: true })
+      .pipe(
+        map((response) => {
+          this.toastr.success('OTP sent successfully', 'Success', {
+            timeOut: 3000,
+          });
+          return response;
+        }),
+      );
+  }
+
+  // Restore a deleted account
+  restoreAccount(
+    user: { email: string },
+    otp: { otp: string },
+  ): Observable<HttpResponse<RegisterResponse>> {
+    return this.httpClient
+      .post<RegisterResponse>(
+        `${this.restoreAccountUrl}`,
+        { ...user, ...otp },
+        { observe: 'response', withCredentials: true },
+      )
+      .pipe(
+        map((response) => {
+          if (response.body) {
+            this.setAuthenticatedUser(response.body?.data);
+            this.tokenService.setUserId(response.body?.data?.user_id);
+          }
+
+          if (this.isAuthenticated()) {
+            // Reroute the user after successful registration
+            this.router.navigate(['/dashboard']);
+          } else {
+            this.toastr.error('Please try again.', 'Error', {
+              timeOut: 3000,
+            });
+          }
+          return response;
+        }),
+      );
   }
 }

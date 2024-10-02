@@ -69,13 +69,13 @@
                     </button>
                   </div>
                   <div class="text-center pt-1 mb-3 pb-1">
-                    <a class="text-muted" routerLink="#!">Forgot password?</a>
+                    <button class="text-muted" (click)="openForgotPasswordDialog()" style="border: none; text-decoration: underline;">Forgot password?</button>
                   </div>
 
                   <div class="text-center mt-4">
                     <button
                       class="google-signup-btn custom-google-btn w-100 d-flex align-items-center justify-content-center"
-                      (click)="onGoogleSignUp()"
+                      (click)="onGoogleSignIn()"
                     >
                       <img
                         src="https://w7.pngwing.com/pngs/326/85/png-transparent-google-logo-google-text-trademark-logo-thumbnail.png"

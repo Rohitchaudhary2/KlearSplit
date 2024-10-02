@@ -225,6 +225,43 @@ class UserService {
     }
   };
 
+  static verifyForgotPasswordUser = async (user) => {
+    const isEmailExists = await getUserByEmailDb(user.email, false);
+
+    if (!isEmailExists) {
+      throw new ErrorHandler(
+        400,
+        "No Record found. Please Create new account.",
+      );
+    } else if (isEmailExists && isEmailExists.dataValues.deletedAt) {
+      throw new ErrorHandler(
+        400,
+        "Account is deleted for this Email. Please restore account.",
+      );
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    await createOtpDb({
+      email: user.email,
+      otp,
+      otp_expiry_time: otpExpiresAt,
+    });
+
+    await sendMail(
+      {
+        email: user.email,
+        subject: "Otp for sign up in KlearSplit",
+      },
+      "otpTemplate",
+      {
+        name: isEmailExists.dataValues.first_name,
+        otp,
+      },
+    );
+  };
+
   static forgotPassword = async (email) => {
     const user = await getUserByEmailDb(email);
     if (!user) throw new ErrorHandler(400, "Email does not exist");

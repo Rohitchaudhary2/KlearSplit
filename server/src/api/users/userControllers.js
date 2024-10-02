@@ -44,6 +44,15 @@ export const restoreUserController = async (req, res, next) => {
   }
 };
 
+export const verifyForgotPasswordController = async (req, res, next) => {
+  try {
+    await UserService.verifyForgotPasswordUser(req.validatedUser);
+    responseHandler(res, 200, "Successfully Sent Otp");
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const forgotPasswordController = async (req, res, next) => {
   try {
     await UserService.forgotPassword(req.validatedUser.email);

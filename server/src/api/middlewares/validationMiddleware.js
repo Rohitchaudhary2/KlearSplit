@@ -1,5 +1,6 @@
 import {
   createUserSchema,
+  emailSchema,
   restoreUserSchema,
   updateUserSchema,
 } from "../users/userValidations.js";
@@ -10,6 +11,17 @@ export const validateData = (req, res, next) => {
     const isUpdate = req.method === "PATCH";
     const schema = isUpdate ? updateUserSchema : createUserSchema;
     const { error, value } = schema.validate(req.body);
+    if (error) throw next(new ErrorHandler(400, error));
+    req.validatedUser = value;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const validateEmail = (req, res, next) => {
+  try {
+    const { error, value } = emailSchema.validate(req.body);
     if (error) throw next(new ErrorHandler(400, error));
     req.validatedUser = value;
     next();

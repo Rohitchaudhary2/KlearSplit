@@ -44,6 +44,15 @@ export const restoreUserController = async (req, res, next) => {
   }
 };
 
+export const forgotPasswordController = async (req, res, next) => {
+  try {
+    await UserService.forgotPassword(req.validatedUser.email);
+    responseHandler(res, 200, "Successfully sent new Password.");
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Controller for getting user information
 export const getUserController = async (req, res, next) => {
   try {

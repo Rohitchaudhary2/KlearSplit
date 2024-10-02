@@ -5,7 +5,6 @@ import {
   updateUserDb,
   deleteUserDb,
   getUserByEmailDb,
-  getUserByEmailorPhoneDb,
   restoreUserDb,
 } from "./userDb.js";
 import {
@@ -22,17 +21,12 @@ import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 class UserService {
   static verifyUser = async (user) => {
-    const isUserExists = await getUserByEmailorPhoneDb(
-      user.email,
-      user.phone,
-      false,
-    );
+    const isUserExists = await getUserByEmailDb(user.email, false);
 
     // If email or phone already exists in database then checking whether user has deleted account
     if (isUserExists && isUserExists.dataValues.deletedAt)
       throw new ErrorHandler(400, "Looks like you had an account.");
-    else if (isUserExists)
-      throw new ErrorHandler(400, "Email or Phone number already exists.");
+    else if (isUserExists) throw new ErrorHandler(400, "Email already exists.");
 
     // send otp
     const otp = crypto.randomInt(100000, 999999).toString();

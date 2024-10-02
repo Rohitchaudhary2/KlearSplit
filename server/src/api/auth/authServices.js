@@ -13,19 +13,19 @@ import {
 
 class AuthService {
   // Service for handling login functionality
-  static login = async (req, next) => {
+  static login = async (req) => {
     const { email, password } = req.body;
 
     // Checking whether the email is correct
     const user = await getUserByEmailDb(email);
-    if (!user) throw next(new ErrorHandler(404, "Email not found."));
+    if (!user) throw new ErrorHandler(404, "Email not found.");
 
     // checking whether password is valid
     const validPassword = await bcrypt.compare(
       password,
       user.dataValues.password,
     );
-    if (!validPassword) throw next(new ErrorHandler(404, "Password is wrong."));
+    if (!validPassword) throw new ErrorHandler(404, "Password is wrong.");
 
     // Geneating access and refresh tokens
     const accessToken = generateAccessToken(user.user_id);
@@ -65,10 +65,10 @@ class AuthService {
   // Service to get refresh token from the database
   static getRefreshToken = async (req) => await getRefreshTokenDb(req);
 
-  static deleteRefreshToken = async (req, next) => {
+  static deleteRefreshToken = async (req) => {
     const isDeleted = await deleteRefreshTokenDb(req);
     if (!isDeleted)
-      throw next(new ErrorHandler(404, "Error while deleting refresh token"));
+      throw new ErrorHandler(404, "Error while deleting refresh token");
   };
 }
 

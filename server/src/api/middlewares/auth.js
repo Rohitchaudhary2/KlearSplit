@@ -8,18 +8,14 @@ import { ErrorHandler } from "./errorHandler.js";
 import UserService from "../users/userServices.js";
 import sequelize from "../../config/db.connection.js";
 
-const handleAccessToken = (req, next) => {
-  if (!req.headers["authorization"]) {
-    return next(
-      new ErrorHandler(401, "Access Denied. No Access token provided."),
-    );
+const handleAccessToken = (req) => {
+  if (!req.cookies["accessToken"]) {
+    throw new ErrorHandler(401, "Access Denied. No Access token provided.");
   }
 
-  const accessToken = req.headers["authorization"].split(" ")[1];
+  const accessToken = req.cookies["accessToken"];
   if (!accessToken)
-    return next(
-      new ErrorHandler(401, "Access Denied. No Access Token provided."),
-    );
+    throw new ErrorHandler(401, "Access Denied. No Access Token provided.");
 
   return accessToken;
 };
@@ -38,15 +34,15 @@ const handleRefreshToken = async (req, res, next) => {
     // Check if the refresh token exists in the database
     const refreshTokenDb = await AuthService.getRefreshToken(refreshToken);
     if (!refreshTokenDb)
-      throw next(new ErrorHandler(401, "Access Denied. Invalid Token"));
+      throw new ErrorHandler(401, "Access Denied. Invalid Token");
 
     // Generate new access and refresh tokens
     const accessToken = generateAccessToken(userId.id);
     if (!accessToken)
-      throw next(new ErrorHandler(500, "Error while generating access token"));
+      throw new ErrorHandler(500, "Error while generating access token");
     const newRefreshToken = generateRefreshToken(userId.id);
     if (!newRefreshToken)
-      throw next(new ErrorHandler(500, "Error while generating refresh token"));
+      throw new ErrorHandler(500, "Error while generating refresh token");
 
     const transaction = await sequelize.transaction();
     await AuthService.createRefreshToken(
@@ -65,11 +61,14 @@ const handleRefreshToken = async (req, res, next) => {
     req.user = await UserService.getUser(userId.id, next);
 
     res
-      .cookie("refreshToken", newRefreshToken, {
+      .cookie("accessToken", accessToken, {
         httpOnly: true,
         sameSite: "strict",
       })
-      .set("Authorization", `Bearer ${accessToken}`);
+      .cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        sameSite: "strict",
+      });
     return next();
   } catch (error) {
     // Handle errors related to refresh token expiration
@@ -85,9 +84,8 @@ const handleRefreshToken = async (req, res, next) => {
 
 // Middleware to check access and refresh token's authenticity and expiry
 export const authenticateToken = async (req, res, next) => {
-  const accessToken = handleAccessToken(req, next);
-
   try {
+    const accessToken = handleAccessToken(req);
     // Verify the access token
     const user = jwt.verify(accessToken, process.env.ACCESS_SECRET_KEY);
     req.user = await UserService.getUser(user.id, next);

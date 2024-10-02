@@ -7,6 +7,7 @@ import { RegisterResponse, RegisterUser } from './register-types.model';
 import { Router } from '@angular/router';
 import { LoginResponse, LoginUser } from './login-types.model';
 import { API_URLS } from '../../constants/api-urls';
+import { TokenService } from './token.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,15 +16,25 @@ export class AuthService {
   private httpClient = inject(HttpClient);
   private toastr = inject(ToastrService);
   private router = inject(Router);
+  private tokenService = inject(TokenService);
 
   private verifyUrl = API_URLS.verify; // URL for OTP verification
   private registerUrl = API_URLS.register; // URL for user registeration
   private loginUrl = API_URLS.login; // URL for login
   private logoutUrl = API_URLS.logout; // URL for logout
 
-  currentUser = signal<CurrentUser | undefined | null>(undefined);
+  currentUser = signal<CurrentUser | undefined | null>(undefined); // Store user data
 
-  isAuthenticated = signal(true);
+  // Getter for authentication status
+  isAuthenticated(): boolean {
+    const userId = this.tokenService.getUserId();
+    return !!userId;
+  }
+
+  // Method to set user as authenticated after login/register
+  setAuthenticatedUser(user: CurrentUser | undefined): void {
+    this.currentUser.set(user);
+  }
 
   // Verify User Function (Send OTP for Verification)
   verifyUser(user: Partial<RegisterUser>): Observable<object> {
@@ -51,11 +62,12 @@ export class AuthService {
       )
       .pipe(
         map((response: HttpResponse<RegisterResponse>) => {
-          this.isAuthenticated.set(true);
+          if (response.body) {
+            this.setAuthenticatedUser(response.body?.data);
+            this.tokenService.setUserId(response.body?.data?.user_id);
+          }
 
           if (this.isAuthenticated()) {
-            // Set the current user
-            this.currentUser.set(response.body?.data);
             // Reroute the user after successful registration
             this.router.navigate(['/dashboard']);
           } else {
@@ -77,12 +89,12 @@ export class AuthService {
       })
       .pipe(
         map((response: HttpResponse<LoginResponse>) => {
-          this.isAuthenticated.set(true);
+          if (response.body) {
+            this.setAuthenticatedUser(response.body?.data);
+            this.tokenService.setUserId(response.body?.data?.user_id);
+          }
 
           if (this.isAuthenticated()) {
-            // Set the current user
-            this.currentUser.set(response.body?.data);
-            console.log(this.currentUser());
             // Reroute the user after successful login
             this.router.navigate(['/dashboard']);
           } else {
@@ -100,7 +112,8 @@ export class AuthService {
     this.httpClient.get(this.logoutUrl, { withCredentials: true }).subscribe({
       next: () => {
         // Remove the access of user from protected routes
-        this.isAuthenticated.set(false);
+        this.currentUser.set(null);
+        this.tokenService.removeUserId();
         this.toastr.success('You have logged out successfully.', 'Logout', {
           timeOut: 3000,
         });

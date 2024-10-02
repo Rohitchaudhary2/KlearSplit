@@ -17,13 +17,22 @@ export const getUserByEmailDb = async (email, flag = true) =>
     paranoid: flag,
   });
 
-export const getUserByEmailorPhoneDb = async (email, phone, flag = true) =>
-  await User.scope("withPassword").findOne({
+export const getUserByEmailorPhoneDb = async (email, phone, flag = true) => {
+  if (phone)
+    return await User.scope("withPassword").findOne({
+      where: {
+        [Op.or]: [{ email }, { phone }],
+      },
+      paranoid: flag,
+    });
+
+  return await User.scope("withPassword").findOne({
     where: {
-      [Op.or]: [{ email }, { phone }],
+      email,
     },
     paranoid: flag,
   });
+};
 
 export const getUserByPhoneDb = async (phone) =>
   await User.findOne({

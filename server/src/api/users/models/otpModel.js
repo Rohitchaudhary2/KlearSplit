@@ -15,10 +15,6 @@ const Otp = sequelize.define(
       type: DataTypes.STRING(128),
       allowNull: false,
     },
-    phone: {
-      type: DataTypes.STRING(10),
-      allowNull: false,
-    },
     otp: {
       type: DataTypes.STRING(6),
       allowNull: false,

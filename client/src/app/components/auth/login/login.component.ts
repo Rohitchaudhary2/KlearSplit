@@ -57,12 +57,10 @@ export class LoginComponent {
           });
         },
       });
-    } else {
-      this.toastr.error(
-        'Please fill out the form correctly.',
-        'Validation Error',
-        { timeOut: 3000 },
-      );
     }
+  }
+
+  onGoogleSignUp() {
+    window.open('http://localhost:3000/api/auth/google', '_self');
   }
 }

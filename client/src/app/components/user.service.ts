@@ -37,7 +37,6 @@ export class UserService {
           this.toastr.error('Error fetching user details:', 'Error', {
             timeOut: 3000,
           });
-          // this.authService.logout();
         },
       });
   }

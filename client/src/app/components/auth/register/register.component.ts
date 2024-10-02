@@ -79,12 +79,6 @@ export class RegisterComponent {
           );
         },
       });
-    } else {
-      this.toastr.error(
-        'Please fill out the form correctly.',
-        'Validation Error',
-        { timeOut: 3000 },
-      );
     }
   }
 

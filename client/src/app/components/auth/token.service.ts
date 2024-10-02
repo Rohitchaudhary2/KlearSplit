@@ -6,7 +6,6 @@ import { config } from '../../../environments/config';
   providedIn: 'root',
 })
 export class TokenService {
-  private readonly userIdKey = 'userId';
   private readonly secretKey = config.encryptionSecretKey; // You should store this key securely
 
   // Encrypt and store the userId
@@ -15,16 +14,22 @@ export class TokenService {
       userId,
       this.secretKey,
     ).toString();
-    localStorage.setItem(this.userIdKey, encryptedUserId);
+    localStorage.setItem('userId', encryptedUserId);
   }
 
   // Decrypt and retrieve the userId
   getUserId(): string | null {
-    const encryptedUserId = localStorage.getItem(this.userIdKey);
+    const encryptedUserId = localStorage.getItem('userId');
     if (encryptedUserId) {
       try {
         const bytes = CryptoJS.AES.decrypt(encryptedUserId, this.secretKey);
-        return bytes.toString(CryptoJS.enc.Utf8);
+        const decryptedId = bytes.toString(CryptoJS.enc.Utf8);
+
+        if (!decryptedId) {
+          throw new Error('Failed to decrypt the user ID.');
+        }
+
+        return decryptedId;
       } catch {
         return null;
       }
@@ -34,6 +39,6 @@ export class TokenService {
 
   // Remove the userId from localStorage
   removeUserId(): void {
-    localStorage.removeItem(this.userIdKey);
+    localStorage.removeItem('userId');
   }
 }

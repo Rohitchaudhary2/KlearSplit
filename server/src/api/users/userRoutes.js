@@ -7,6 +7,7 @@ import {
   verifyUserContoller,
   verifyRestoreUserContoller,
   restoreUserController,
+  verifyForgotPasswordController,
   forgotPasswordController,
 } from "./userControllers.js";
 import { authenticateToken } from "../middlewares/auth.js";
@@ -26,8 +27,17 @@ userRouter.post(
   validateRestoreData,
   verifyRestoreUserContoller,
 );
-userRouter.post("/forgotpassword", validateEmail, forgotPasswordController);
 userRouter.post("/restore", validateRestoreData, restoreUserController);
+userRouter.post(
+  "/verifyforgotpassword",
+  validateEmail,
+  verifyForgotPasswordController,
+);
+userRouter.post(
+  "/forgotpassword",
+  validateRestoreData,
+  forgotPasswordController,
+);
 userRouter.get("/:id", authenticateToken, getUserController);
 userRouter.patch("/:id", validateData, authenticateToken, updateUserController);
 userRouter.delete("/:id", authenticateToken, deleteUserController);

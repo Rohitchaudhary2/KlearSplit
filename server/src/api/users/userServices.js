@@ -219,8 +219,45 @@ class UserService {
     }
   };
 
-  static forgotPassword = async (email) => {
-    const user = await getUserByEmailDb(email);
+  static verifyForgotPassword = async (user) => {
+    const isEmailExists = await getUserByEmailDb(user.email, false);
+
+    if (!isEmailExists) {
+      throw new ErrorHandler(
+        400,
+        "No Record found. Please Create new account.",
+      );
+    } else if (isEmailExists.dataValues && isEmailExists.dataValues.deletedAt) {
+      throw new ErrorHandler(
+        400,
+        "Account for this email is deactivated. Please restore it.",
+      );
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    await createOtpDb({
+      email: user.email,
+      otp,
+      otp_expiry_time: otpExpiresAt,
+    });
+
+    await sendMail(
+      {
+        email: user.email,
+        subject: "Otp for changing password for KlearSplit",
+      },
+      "otpTemplate",
+      {
+        name: isEmailExists.dataValues.first_name,
+        otp,
+      },
+    );
+  };
+
+  static forgotPassword = async (userData) => {
+    const user = await getUserByEmailDb(userData.email);
     if (!user) throw new ErrorHandler(400, "Email does not exist");
 
     const password = generatePassword();
@@ -230,7 +267,7 @@ class UserService {
 
     const options = {
       email: user.email,
-      subject: "Password for Sign in for KlearSplit",
+      subject: "Changed Password for Sign in for KlearSplit",
     };
 
     sendMail(options, "passwordTemplate", {

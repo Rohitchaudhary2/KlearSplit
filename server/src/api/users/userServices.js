@@ -7,17 +7,14 @@ import {
   getUserByEmailDb,
   restoreUserDb,
 } from "./userDb.js";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../utils/tokenGenerator.js";
+import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import AuthService from "../auth/authServices.js";
 import sequelize from "../../config/db.connection.js";
 import { hashedPassword } from "../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
-import crypto from "crypto";
 import { createOtpDb, getOtpDb } from "./otpDb.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
+import { otpGenrator } from "../utils/otpGenerator.js";
 
 class UserService {
   static verifyUser = async (user) => {
@@ -29,8 +26,7 @@ class UserService {
     else if (isUserExists) throw new ErrorHandler(400, "Email already exists.");
 
     // send otp
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const { otp, otpExpiresAt } = otpGenrator();
 
     await createOtpDb({
       email: user.email,
@@ -73,15 +69,11 @@ class UserService {
     try {
       // Creating new user in the database
       const createdUser = await createUserDb(user, transaction);
-      // }
 
       // Generate access and refresh tokens
-      const accessToken = generateAccessToken(createdUser.user_id);
-      if (!accessToken)
-        throw new ErrorHandler(500, "Error while genrating access token.");
-      const refreshToken = generateRefreshToken(createdUser.user_id);
-      if (!refreshToken)
-        throw new ErrorHandler(500, "Error while genrating Refresh token.");
+      const { accessToken, refreshToken } = generateAccessAndRefereshTokens(
+        createdUser.user_id,
+      );
 
       // Store the refresh token in the database
       await AuthService.createRefreshToken(
@@ -130,8 +122,7 @@ class UserService {
       throw new ErrorHandler(400, "Account already exists for this Email.");
     }
 
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const { otp, otpExpiresAt } = otpGenrator();
 
     await createOtpDb({
       email: user.email,
@@ -179,8 +170,9 @@ class UserService {
       const restoredUser = isEmailExists.dataValues;
 
       // Generate access and refresh tokens
-      const accessToken = generateAccessToken(restoredUser.user_id);
-      const refreshToken = generateRefreshToken(restoredUser.user_id);
+      const { accessToken, refreshToken } = generateAccessAndRefereshTokens(
+        restoredUser.user_id,
+      );
 
       // Store the refresh token in the database
       await AuthService.createRefreshToken(
@@ -234,8 +226,7 @@ class UserService {
       );
     }
 
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const { otp, otpExpiresAt } = otpGenrator();
 
     await createOtpDb({
       email: user.email,

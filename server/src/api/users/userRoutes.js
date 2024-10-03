@@ -1,15 +1,5 @@
 import { Router } from "express";
-import {
-  createUserController,
-  getUserController,
-  updateUserController,
-  deleteUserController,
-  verifyUserContoller,
-  verifyRestoreUserContoller,
-  restoreUserController,
-  verifyForgotPasswordController,
-  forgotPasswordController,
-} from "./userControllers.js";
+import UserController from "./userControllers.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import {
   validateData,
@@ -20,26 +10,31 @@ import {
 const userRouter = Router();
 
 // User API routes
-userRouter.post("/verify", validateData, verifyUserContoller);
-userRouter.post("/register", validateData, createUserController);
+userRouter.post("/verify", validateData, UserController.verifyUser);
+userRouter.post("/register", validateData, UserController.createUser);
 userRouter.post(
   "/verifyrestore",
   validateRestoreData,
-  verifyRestoreUserContoller,
+  UserController.verifyRestoreUser,
 );
-userRouter.post("/restore", validateRestoreData, restoreUserController);
+userRouter.post("/restore", validateRestoreData, UserController.restoreUser);
 userRouter.post(
   "/verifyforgotpassword",
   validateEmail,
-  verifyForgotPasswordController,
+  UserController.verifyForgotPassword,
 );
 userRouter.post(
   "/forgotpassword",
   validateRestoreData,
-  forgotPasswordController,
+  UserController.forgotPassword,
 );
-userRouter.get("/:id", authenticateToken, getUserController);
-userRouter.patch("/:id", validateData, authenticateToken, updateUserController);
-userRouter.delete("/:id", authenticateToken, deleteUserController);
+userRouter.get("/:id", authenticateToken, UserController.getUser);
+userRouter.patch(
+  "/:id",
+  validateData,
+  authenticateToken,
+  UserController.updateUser,
+);
+userRouter.delete("/:id", authenticateToken, UserController.deleteUser);
 
 export default userRouter;

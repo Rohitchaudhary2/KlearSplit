@@ -1,12 +1,12 @@
 import { Router } from "express";
 
 import passport from "../middlewares/googleStrategy.js";
-import { loginController, logoutController } from "./authController.js";
+import { login, logout } from "./authController.js";
 import { authenticateToken } from "../middlewares/auth.js";
 
 const authRouter = Router();
 
-authRouter.post("/login", loginController);
+authRouter.post("/login", login);
 
 authRouter.get(
   "/google",
@@ -41,6 +41,6 @@ authRouter.get(
   },
 );
 
-authRouter.get("/logout", authenticateToken, logoutController);
+authRouter.get("/logout", authenticateToken, logout);
 
 export default authRouter;

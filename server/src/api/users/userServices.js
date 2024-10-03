@@ -1,12 +1,5 @@
 import { generatePassword } from "../utils/passwordGenerator.js";
-import {
-  createUserDb,
-  getUserByIdDb,
-  updateUserDb,
-  deleteUserDb,
-  getUserByEmailDb,
-  restoreUserDb,
-} from "./userDb.js";
+import UserDb from "./userDb.js";
 import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import AuthService from "../auth/authServices.js";
 import sequelize from "../../config/db.connection.js";
@@ -18,7 +11,7 @@ import { otpGenrator } from "../utils/otpGenerator.js";
 
 class UserService {
   static verifyUser = async (user) => {
-    const isUserExists = await getUserByEmailDb(user.email, false);
+    const isUserExists = await UserDb.getUserByEmail(user.email, false);
 
     // If email or phone already exists in database then checking whether user has deleted account
     if (isUserExists && isUserExists.dataValues.deletedAt)
@@ -68,7 +61,7 @@ class UserService {
 
     try {
       // Creating new user in the database
-      const createdUser = await createUserDb(user, transaction);
+      const createdUser = await UserDb.createUser(user, transaction);
 
       // Generate access and refresh tokens
       const { accessToken, refreshToken } = generateAccessAndRefereshTokens(
@@ -107,7 +100,7 @@ class UserService {
   };
 
   static verifyRestoreUser = async (user) => {
-    const isEmailExists = await getUserByEmailDb(user.email, false);
+    const isEmailExists = await UserDb.getUserByEmail(user.email, false);
 
     if (!isEmailExists) {
       throw new ErrorHandler(
@@ -143,7 +136,7 @@ class UserService {
   };
 
   static restoreUser = async (user) => {
-    const isEmailExists = await getUserByEmailDb(user.email, false);
+    const isEmailExists = await UserDb.getUserByEmail(user.email, false);
     if (!isEmailExists) throw new ErrorHandler(400, "User not found");
     if (!isEmailExists.dataValues.deletedAt)
       throw new ErrorHandler(400, "Account for this Email is active.");
@@ -165,7 +158,7 @@ class UserService {
 
     try {
       // Restoring user in the database
-      await restoreUserDb(user.email, transaction);
+      await UserDb.restoreUser(user.email, transaction);
       const restoredUser = isEmailExists.dataValues;
 
       // Generate access and refresh tokens
@@ -182,7 +175,7 @@ class UserService {
         transaction,
       );
 
-      await updateUserDb(
+      await UserDb.updateUser(
         { password: user.password },
         restoredUser.user_id,
         transaction,
@@ -211,7 +204,7 @@ class UserService {
   };
 
   static verifyForgotPassword = async (user) => {
-    const isEmailExists = await getUserByEmailDb(user.email, false);
+    const isEmailExists = await UserDb.getUserByEmail(user.email, false);
 
     if (!isEmailExists) {
       throw new ErrorHandler(
@@ -247,13 +240,13 @@ class UserService {
   };
 
   static forgotPassword = async (userData) => {
-    const user = await getUserByEmailDb(userData.email);
+    const user = await UserDb.getUserByEmail(userData.email);
     if (!user) throw new ErrorHandler(400, "Email does not exist");
 
     const password = generatePassword();
     const hashPassword = await hashedPassword(password);
 
-    await updateUserDb({ password: hashPassword }, user.user_id);
+    await UserDb.updateUser({ password: hashPassword }, user.user_id);
 
     const options = {
       email: user.email,
@@ -269,7 +262,7 @@ class UserService {
 
   // Service to get user from database
   static getUser = async (id) => {
-    const user = await getUserByIdDb(id);
+    const user = await UserDb.getUserById(id);
     if (!user) throw new ErrorHandler(404, "User not found.");
     return user;
   };
@@ -280,7 +273,7 @@ class UserService {
     const id = req.params.id;
     await this.getUser(id);
 
-    return await updateUserDb(user, id);
+    return await UserDb.updateUser(user, id);
   };
 
   // Service for deleting user in the database
@@ -288,7 +281,7 @@ class UserService {
     const id = req.params.id;
     await this.getUser(id);
 
-    return await deleteUserDb(id);
+    return await UserDb.deleteUser(id);
   };
 }
 

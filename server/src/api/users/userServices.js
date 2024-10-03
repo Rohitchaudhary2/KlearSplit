@@ -36,6 +36,7 @@ class UserService {
       {
         name: user.first_name,
         otp,
+        message: "Thank you for registering with us.",
       },
     );
   };
@@ -87,8 +88,10 @@ class UserService {
 
       sendMail(options, "passwordTemplate", {
         name: user.first_name,
+        heading: "Welcome to Our Service",
         email: user.email,
         password,
+        message: "Thank you for registering with us.",
       });
 
       return { user: createdUser, accessToken, refreshToken };
@@ -125,12 +128,13 @@ class UserService {
     await sendMail(
       {
         email: user.email,
-        subject: "Otp for sign up in KlearSplit",
+        subject: "Otp for restoring your account for KlearSplit",
       },
       "otpTemplate",
       {
         name: isEmailExists.dataValues.first_name,
         otp,
+        message: "We received a request to restore access to your account.",
       },
     );
   };
@@ -184,17 +188,6 @@ class UserService {
       // Commit the transaction
       await transaction.commit();
 
-      const options = {
-        email: user.email,
-        subject: "Password for Sign in for KlearSplit",
-      };
-
-      sendMail(options, "passwordTemplate", {
-        name: restoredUser.first_name,
-        email: user.email,
-        password,
-      });
-
       return { user: restoredUser, accessToken, refreshToken };
     } catch (error) {
       // Rollback the transaction in case of error
@@ -235,6 +228,7 @@ class UserService {
       {
         name: isEmailExists.dataValues.first_name,
         otp,
+        message: "We received a request to reset your password.",
       },
     );
   };
@@ -250,13 +244,15 @@ class UserService {
 
     const options = {
       email: user.email,
-      subject: "Changed Password for Sign in for KlearSplit",
+      subject: "Password Reset Confirmation",
     };
 
     sendMail(options, "passwordTemplate", {
       name: user.first_name,
       email: user.email,
+      heading: "Password Successfully Changed",
       password,
+      message: "Your password has been successfully reset.",
     });
   };
 

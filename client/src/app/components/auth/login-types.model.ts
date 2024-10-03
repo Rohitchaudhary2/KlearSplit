@@ -1,7 +1,7 @@
 import { CurrentUser } from '../shared/types.model';
 
 export interface LoginResponse {
-  user: CurrentUser;
+  data: CurrentUser;
   accessToken: string;
   refreshToken: string;
 }

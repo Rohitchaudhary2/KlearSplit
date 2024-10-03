@@ -31,8 +31,9 @@ const optionalCommonFields = {
   }),
 };
 
-export const emailSchema = Joi.object({
-  email: commonFields.email,
+export const forgotPasswordSchema = Joi.object({
+  email: commonFields.email.required(),
+  otp: Joi.string().trim().optional(),
 });
 
 // Create Schema: All Common fields required

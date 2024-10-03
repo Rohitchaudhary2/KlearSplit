@@ -1,9 +1,6 @@
 import jwt from "jsonwebtoken";
 import AuthService from "../auth/authServices.js";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../utils/tokenGenerator.js";
+import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import { ErrorHandler } from "./errorHandler.js";
 import UserService from "../users/userServices.js";
 import sequelize from "../../config/db.connection.js";
@@ -36,13 +33,9 @@ const handleRefreshToken = async (req, res, next) => {
     if (!refreshTokenDb)
       throw new ErrorHandler(401, "Access Denied. Invalid Token");
 
-    // Generate new access and refresh tokens
-    const accessToken = generateAccessToken(userId.id);
-    if (!accessToken)
-      throw new ErrorHandler(500, "Error while generating access token");
-    const newRefreshToken = generateRefreshToken(userId.id);
-    if (!newRefreshToken)
-      throw new ErrorHandler(500, "Error while generating refresh token");
+    // Generate access and refresh tokens
+    const { accessToken, refreshToken: newRefreshToken } =
+      generateAccessAndRefereshTokens(userId.id);
 
     const transaction = await sequelize.transaction();
     await AuthService.createRefreshToken(

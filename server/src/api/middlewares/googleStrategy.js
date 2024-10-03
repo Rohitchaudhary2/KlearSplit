@@ -1,10 +1,7 @@
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 import passport from "passport";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../utils/tokenGenerator.js";
+import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import { generatePassword } from "../utils/passwordGenerator.js";
 import { hashedPassword } from "./../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
@@ -47,9 +44,10 @@ passport.use(
           });
         }
 
-        // Generate new access and refresh tokens
-        const accessToken = generateAccessToken(user.user_id);
-        const refreshToken = generateRefreshToken(user.user_id);
+        // Generate access and refresh tokens
+        const { accessToken, refreshToken } = generateAccessAndRefereshTokens(
+          user.user_id,
+        );
 
         await AuthService.createRefreshToken(
           {

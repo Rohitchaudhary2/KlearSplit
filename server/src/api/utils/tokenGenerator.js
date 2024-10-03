@@ -1,6 +1,15 @@
 import jwt from "jsonwebtoken";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 
+export const generateAccessAndRefereshTokens = (id) => {
+  const accessToken = generateAccessToken(id);
+  if (!accessToken)
+    throw new ErrorHandler(500, "Error while generating access token.");
+  const refreshToken = generateRefreshToken(id);
+  if (!refreshToken)
+    throw new ErrorHandler(500, "Error while generating Refresh token.");
+};
+
 // Function to generate a new access token using the provided user_id
 export const generateAccessToken = (id) => {
   const accessToken = jwt.sign({ id }, process.env.ACCESS_SECRET_KEY, {
@@ -8,7 +17,7 @@ export const generateAccessToken = (id) => {
   });
 
   if (!accessToken)
-    throw new ErrorHandler(500, "Error while genrating access token");
+    throw new ErrorHandler(500, "Error while generating access token");
 
   return accessToken;
 };
@@ -20,6 +29,6 @@ export const generateRefreshToken = (id) => {
   });
 
   if (!refreshToken)
-    throw new ErrorHandler(500, "Error while genrating refresh token");
+    throw new ErrorHandler(500, "Error while generating refresh token");
   return refreshToken;
 };

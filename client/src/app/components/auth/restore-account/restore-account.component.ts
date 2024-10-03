@@ -20,7 +20,6 @@ import { MatInputModule } from '@angular/material/input';
     MatButtonModule,
   ],
   templateUrl: './restore-account.component.html',
-  styleUrl: './restore-account.component.css',
 })
 export class RestoreAccountComponent {
   dialogRef = inject(MatDialogRef<RestoreAccountComponent>);

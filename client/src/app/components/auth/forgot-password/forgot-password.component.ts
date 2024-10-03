@@ -20,7 +20,6 @@ import { MatInputModule } from '@angular/material/input';
     MatButtonModule,
   ],
   templateUrl: './forgot-password.component.html',
-  styleUrl: './forgot-password.component.css',
 })
 export class ForgotPasswordComponent {
   dialogRef = inject(MatDialogRef<ForgotPasswordComponent>);

@@ -33,11 +33,6 @@ export class UserService {
             this.tokenService.setUserId(response.body?.data?.user_id);
           }
         },
-        error: () => {
-          this.toastr.error('Error fetching user details:', 'Error', {
-            timeOut: 3000,
-          });
-        },
       });
   }
 }

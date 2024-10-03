@@ -22,11 +22,11 @@ import { RestoreAccountComponent } from '../restore-account/restore-account.comp
   styleUrls: ['./register.component.css'], // Fix: styleUrl -> styleUrls
 })
 export class RegisterComponent {
-  router = inject(Router);
-  authService = inject(AuthService);
-  formErrorMessages = inject(FormErrorMessageService);
-  toastr = inject(ToastrService);
-  dialog = inject(MatDialog); // Inject MatDialog service
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  private formErrorMessages = inject(FormErrorMessageService);
+  private toastr = inject(ToastrService);
+  private dialog = inject(MatDialog); // Inject MatDialog service
 
   form = new FormGroup({
     first_name: new FormControl('', {

@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { FormErrorMessageService } from '../../shared/form-error-message.service';
 import { LoginUser } from '../login-types.model';
 import { AuthService } from '../auth.service';
@@ -23,9 +23,8 @@ import { OtpDialogComponent } from '../otp-dialog/otp-dialog.component';
   styleUrl: './login.component.css',
 })
 export class LoginComponent {
-  private router = inject(Router);
-  formErrorMessages = inject(FormErrorMessageService);
-  dialog = inject(MatDialog);
+  private formErrorMessages = inject(FormErrorMessageService);
+  private dialog = inject(MatDialog);
 
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);

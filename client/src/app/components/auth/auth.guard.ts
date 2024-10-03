@@ -17,6 +17,11 @@ export class AuthGuard implements CanActivate {
   canActivate(route: ActivatedRouteSnapshot): boolean {
     if (Object.keys(route.queryParams).length > 0) {
       this.tokenService.setUserId(route.queryParams['id']);
+      this.router.navigate(['/dashboard'], {
+        queryParams: {},
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
     }
     const userId = this.tokenService.getUserId();
     this.userService.fetchUserDetails(userId);

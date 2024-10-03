@@ -115,7 +115,6 @@ class UserService {
         "No Record found. Please Create new account.",
       );
     } else if (
-      isEmailExists &&
       isEmailExists.dataValues &&
       !isEmailExists.dataValues.deletedAt
     ) {

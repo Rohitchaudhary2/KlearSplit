@@ -1,4 +1,3 @@
-import { Op } from "sequelize";
 import User from "./models/userModel.js";
 
 export const createUserDb = async (user, transaction) =>
@@ -16,23 +15,6 @@ export const getUserByEmailDb = async (email, flag = true) =>
     },
     paranoid: flag,
   });
-
-export const getUserByEmailorPhoneDb = async (email, phone, flag = true) => {
-  if (phone)
-    return await User.scope("withPassword").findOne({
-      where: {
-        [Op.or]: [{ email }, { phone }],
-      },
-      paranoid: flag,
-    });
-
-  return await User.scope("withPassword").findOne({
-    where: {
-      email,
-    },
-    paranoid: flag,
-  });
-};
 
 export const getUserByPhoneDb = async (phone) =>
   await User.findOne({

@@ -7,6 +7,7 @@ import {
   verifyUserContoller,
   verifyRestoreUserContoller,
   restoreUserController,
+  verifyForgotPasswordController,
   forgotPasswordController,
   verifyForgotPasswordController,
 } from "./userControllers.js";
@@ -27,17 +28,17 @@ userRouter.post(
   validateRestoreData,
   verifyRestoreUserContoller,
 );
+userRouter.post("/restore", validateRestoreData, restoreUserController);
 userRouter.post(
   "/verifyforgotpassword",
-  validateForgotPassword,
+  validateEmail,
   verifyForgotPasswordController,
 );
 userRouter.post(
   "/forgotpassword",
-  validateForgotPassword,
+  validateRestoreData,
   forgotPasswordController,
 );
-userRouter.post("/restore", validateRestoreData, restoreUserController);
 userRouter.get("/:id", authenticateToken, getUserController);
 userRouter.patch("/:id", validateData, authenticateToken, updateUserController);
 userRouter.delete("/:id", authenticateToken, deleteUserController);

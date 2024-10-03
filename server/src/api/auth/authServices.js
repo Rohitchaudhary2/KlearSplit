@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { getUserByEmailDb } from "../users/userDb.js";
+import UserDb from "../users/userDb.js";
 import {
   createRefreshTokenDb,
   deleteRefreshTokenDb,
@@ -14,7 +14,7 @@ class AuthService {
     const { email, password } = req.body;
 
     // Checking whether the email is correct
-    const user = await getUserByEmailDb(email);
+    const user = await UserDb.getUserByEmail(email);
     if (!user) throw new ErrorHandler(404, "Email not found.");
 
     // checking whether password is valid

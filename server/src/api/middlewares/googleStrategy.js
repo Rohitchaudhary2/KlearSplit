@@ -1,13 +1,13 @@
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-
 import passport from "passport";
+
 import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import { generatePassword } from "../utils/passwordGenerator.js";
 import { hashedPassword } from "./../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
 import AuthService from "../auth/authServices.js";
 import sequelize from "../../config/db.connection.js";
-import { createUserDb, getUserByEmailDb } from "../users/userDb.js";
+import UserDb from "../users/userDb.js";
 
 passport.use(
   new GoogleStrategy(
@@ -20,7 +20,7 @@ passport.use(
       const transaction = await sequelize.transaction();
       try {
         // Check if the user already exists in the database
-        let user = await getUserByEmailDb(profile._json.email);
+        let user = await UserDb.getUserByEmail(profile._json.email);
 
         if (!user) {
           const newUser = {};
@@ -30,7 +30,7 @@ passport.use(
             newUser.last_name = profile._json.family_name;
           const password = generatePassword();
           newUser.password = await hashedPassword(password);
-          user = await createUserDb(newUser, transaction);
+          user = await UserDb.createUser(newUser, transaction);
 
           const options = {
             email: user.email,

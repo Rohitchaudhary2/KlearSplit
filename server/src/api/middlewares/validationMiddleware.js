@@ -1,6 +1,6 @@
 import {
   createUserSchema,
-  forgotPasswordSchema,
+  emailSchema,
   restoreUserSchema,
   updateUserSchema,
 } from "../users/userValidations.js";
@@ -19,9 +19,9 @@ export const validateData = (req, res, next) => {
   }
 };
 
-export const validateForgotPassword = (req, res, next) => {
+export const validateEmail = (req, res, next) => {
   try {
-    const { error, value } = forgotPasswordSchema.validate(req.body);
+    const { error, value } = emailSchema.validate(req.body);
     if (error) throw next(new ErrorHandler(400, error));
     req.validatedUser = value;
     next();

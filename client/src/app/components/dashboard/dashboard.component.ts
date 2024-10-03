@@ -1,51 +1,46 @@
 import { Component, inject, OnInit } from '@angular/core';
-
-import { jwtDecode } from 'jwt-decode';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthService } from '../auth/auth.service';
-import { TokenService } from '../auth/token.service';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { FetchResponse } from '../shared/types.model';
 import { API_URLS } from '../../constants/api-urls';
+import { TokenService } from '../auth/token.service';
+import { UserService } from '../user.service';
 
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
-  imports: [],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
   authService = inject(AuthService);
   private tokenService = inject(TokenService);
-  private httpClient = inject(HttpClient);
+  private userService = inject(UserService);
+
   private getUserUrl = API_URLS.fetchUser;
 
   ngOnInit(): void {
-    const accessToken = this.tokenService.getAccessToken();
-    if (accessToken) {
-      const decodedToken = jwtDecode<{ id: string }>(accessToken);
-      const userId = decodedToken.id;
+    // Check for user_id in query params
+    this.route.queryParams.subscribe((params) => {
+      const userId = params['id'];
 
-      const getUserUrlWithId = `${this.getUserUrl}/${userId}`;
+      if (userId) {
+        // Fetch User details
+        this.tokenService.setUserId(userId);
+        this.userService.fetchUserDetails(userId);
 
-      this.httpClient
-        .get<FetchResponse>(getUserUrlWithId, {
-          observe: 'response',
-          withCredentials: true,
-        })
-        .subscribe({
-          next: (response) => {
-            this.authService.currentUser.set(response.body?.data);
-            if (response.headers instanceof HttpHeaders) {
-              const refreshedAccessToken =
-                response.headers.get('Authorization');
-              if (refreshedAccessToken) {
-                this.tokenService.setAccessToken(refreshedAccessToken);
-              }
-            }
-          },
-        });
-    }
+        // Clean the URL to remove query params
+        this.router.navigate(['/dashboard'], { queryParams: {} });
+      } else {
+        // Handle regular login scenario
+        this.handleRegularUser();
+      }
+    });
+  }
+
+  private handleRegularUser(): void {
+    const userId = this.tokenService.getUserId();
+    this.userService.fetchUserDetails(userId);
   }
 }

@@ -9,11 +9,12 @@ import {
   restoreUserController,
   verifyForgotPasswordController,
   forgotPasswordController,
+  verifyForgotPasswordController,
 } from "./userControllers.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import {
   validateData,
-  validateEmail,
+  validateForgotPassword,
   validateRestoreData,
 } from "../middlewares/validationMiddleware.js";
 

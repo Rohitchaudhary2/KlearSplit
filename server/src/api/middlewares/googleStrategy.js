@@ -30,6 +30,7 @@ passport.use(
             newUser.last_name = profile._json.family_name;
           const password = generatePassword();
           newUser.password = await hashedPassword(password);
+          newUser.phone = "7894561238";
           user = await createUserDb(newUser, transaction);
 
           const options = {

@@ -12,6 +12,7 @@ import { FormErrorMessageService } from '../../shared/form-error-message.service
 import { ToastrService } from 'ngx-toastr';
 import { MatDialog } from '@angular/material/dialog';
 import { OtpDialogComponent } from '../otp-dialog/otp-dialog.component';
+import { RestoreAccountComponent } from '../restore-account/restore-account.component';
 
 @Component({
   selector: 'app-register',
@@ -43,7 +44,6 @@ export class RegisterComponent {
     }),
     phone: new FormControl('', {
       validators: [
-        Validators.required,
         Validators.minLength(10),
         Validators.maxLength(10),
         Validators.pattern(/^[0-9]{10}$/),
@@ -53,10 +53,6 @@ export class RegisterComponent {
 
   getFormErrors(field: string): string | null {
     return this.formErrorMessages.getErrorMessage(this.form, field);
-  }
-
-  googleLoginHandler(){
-    window.open('http://localhost:3000/api/auth/google', '_self');
   }
 
   onClickVerify() {
@@ -83,12 +79,6 @@ export class RegisterComponent {
           );
         },
       });
-    } else {
-      this.toastr.error(
-        'Please fill out the form correctly.',
-        'Validation Error',
-        { timeOut: 3000 },
-      );
     }
   }
 
@@ -118,5 +108,48 @@ export class RegisterComponent {
         });
       }
     });
+  }
+
+  openRestoreAccountDialog() {
+    const dialogRef = this.dialog.open(RestoreAccountComponent, {
+      width: '500px',
+      enterAnimationDuration: '500ms',
+      exitAnimationDuration: '500ms',
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.authService.verifyExistingUser(result).subscribe({
+          next: () => {
+            this.openOtpDialogRestoreAccount(result);
+          },
+        });
+      }
+    });
+  }
+
+  openOtpDialogRestoreAccount(user: { email: string }) {
+    const dialogRef = this.dialog.open(OtpDialogComponent, {
+      width: '500px',
+      data: user,
+      enterAnimationDuration: '500ms',
+      exitAnimationDuration: '500ms',
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.authService.restoreAccount(user, result).subscribe({
+          error: (err) => {
+            this.toastr.error(
+              err?.error?.message || 'Unable to restore account at the moment!',
+              'Error',
+              { timeOut: 3000 },
+            );
+          },
+        });
+      }
+    });
+  }
+
+  onGoogleSignUp() {
+    window.open('http://localhost:3000/api/auth/google', '_self');
   }
 }

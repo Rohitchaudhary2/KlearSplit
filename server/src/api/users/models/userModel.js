@@ -47,7 +47,6 @@ const User = sequelize.define(
     phone: {
       type: DataTypes.STRING(10),
       allowNull: true,
-      unique: true,
     },
     notification_settings: {
       type: DataTypes.JSONB,

@@ -8,6 +8,7 @@ export const generateAccessAndRefereshTokens = (id) => {
   const refreshToken = generateRefreshToken(id);
   if (!refreshToken)
     throw new ErrorHandler(500, "Error while generating Refresh token.");
+  return { accessToken, refreshToken };
 };
 
 // Function to generate a new access token using the provided user_id

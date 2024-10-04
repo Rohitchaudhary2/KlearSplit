@@ -28,6 +28,5 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(), // required animations providers
     provideToastr(),
     provideAnimationsAsync(),
-    provideAnimationsAsync(), // Toastr providers
   ],
 };

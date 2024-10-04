@@ -3,11 +3,17 @@ import UserDb from "../users/userDb.js";
 import FriendDb from "./friendDb.js";
 
 class FriendService {
-  static addFriend = async (email) => {
-    const friendRequestTo = await UserDb.getUserByEmail(email);
+  static addFriend = async (friendData) => {
+    const friendRequestTo = await UserDb.getUserByEmail(friendData.email);
     if (!friendRequestTo) throw new ErrorHandler(404, "User not found");
-    const friendExist = FriendDb.checkFriendExist(email);
+    const newFriendData = {
+      friend1_id: friendData.dataValues.user_id,
+      friend2_id: friendRequestTo.user_id,
+    };
+    const friendExist = await FriendDb.checkFriendExist(newFriendData);
     if (friendExist) throw new ErrorHandler(400, "Friend already exist");
+    const friend = await FriendDb.addFriend(newFriendData);
+    return friend;
   };
 }
 

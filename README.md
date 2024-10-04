@@ -10,8 +10,6 @@
   - [Backend (Node.js)](#backend-nodejs)
   - [Frontend (Angular)](#frontend-angular)
 - [Environment Variables](#environment-variables)
-- [API Endpoints](#api-endpoints)
-- [Logging](#logging)
 
 ## Technologies Used
 

@@ -8,7 +8,7 @@ const commonFields = {
     "any.required": "Email is required.",
   }),
 
-  first_name: Joi.string().trim().max(50).required().messages({
+  first_name: Joi.string().trim().min(2).max(50).required().messages({
     "string.max": "First name must be less than or equal to 50 characters.",
     "any.required": "First name is required.",
   }),

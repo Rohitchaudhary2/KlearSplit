@@ -1,48 +1,57 @@
-.container{
-    min-height: 80vh;
-    border-radius: 20px;
+.container {
+  min-height: 80vh;
+  border-radius: 20px;
 }
 
-.subcontainer{
-    min-height: 78vh;
-    border-radius: 20px;
+.subcontainer {
+  min-height: 78vh;
+  border-radius: 20px;
 }
 
-.subcontainer2{
-    background: linear-gradient(to bottom right, rgba(252, 203, 144, 1), rgba(213, 126, 235, 1));
-    /* box-shadow: 0 4px 6px rgba(65, 184, 131, 0.8), 0 2px 4px rgb(16, 146, 239); */
+.subcontainer2 {
+  background: linear-gradient(
+    to bottom right,
+    rgba(252, 203, 144, 1),
+    rgba(213, 126, 235, 1)
+  );
+  /* box-shadow: 0 4px 6px rgba(65, 184, 131, 0.8), 0 2px 4px rgb(16, 146, 239); */
 }
 
-.search-container{
-    background: white;
-    padding: 0.5rem;
-    width: 21vw; 
-    border-radius: 20px;
-    /* box-shadow: 0 4px 6px rgba(65, 184, 131, 0.8), 0 2px 4px rgba(56, 142, 203, 0.5); */
+.search-container {
+  background: white;
+  padding: 0.5rem;
+  width: 21vw;
+  border-radius: 20px;
+  /* box-shadow: 0 4px 6px rgba(65, 184, 131, 0.8), 0 2px 4px rgba(56, 142, 203, 0.5); */
 }
 
-input, input:focus{
-    width: 17vw;
-    outline: none;
-    border: none;
+input,
+input:focus {
+  width: 17vw;
+  outline: none;
+  border: none;
 }
 
-.search-button{
-    border: none;
-    background-color: transparent;
+.search-button {
+  border: none;
+  background-color: transparent;
 }
 
-.user-add{
-    background: linear-gradient(to bottom right, rgba(252, 203, 144, 1), rgba(213, 126, 235, 1));
-    border-radius: 20%;
-    /* box-shadow: 0 4px 6px rgba(65, 184, 131, 0.8), 0 2px 4px rgba(56, 142, 203, 0.5); */
+.user-add {
+  background: linear-gradient(
+    to bottom right,
+    rgba(252, 203, 144, 1),
+    rgba(213, 126, 235, 1)
+  );
+  border-radius: 20%;
+  /* box-shadow: 0 4px 6px rgba(65, 184, 131, 0.8), 0 2px 4px rgba(56, 142, 203, 0.5); */
 }
 
-.user-add:hover{
+.user-add:hover {
   transform: translateY(-1px); /* Subtle lift effect */
 }
 
-.pending-request{
-    min-height: 20vh; 
-    background-color: white; 
+.pending-request {
+  min-height: 20vh;
+  background-color: white;
 }

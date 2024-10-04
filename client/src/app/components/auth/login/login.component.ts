@@ -5,12 +5,15 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { FormErrorMessageService } from '../../shared/form-error-message.service';
 import { LoginUser } from '../login-types.model';
 import { AuthService } from '../auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { MatButtonModule } from '@angular/material/button';
+import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
+import { MatDialog } from '@angular/material/dialog';
+import { OtpDialogComponent } from '../otp-dialog/otp-dialog.component';
 
 @Component({
   selector: 'app-login',
@@ -20,8 +23,9 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrl: './login.component.css',
 })
 export class LoginComponent {
-  router = inject(Router);
-  formErrorMessages = inject(FormErrorMessageService);
+  private formErrorMessages = inject(FormErrorMessageService);
+  private dialog = inject(MatDialog);
+
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
 
@@ -57,12 +61,49 @@ export class LoginComponent {
           });
         },
       });
-    } else {
-      this.toastr.error(
-        'Please fill out the form correctly.',
-        'Validation Error',
-        { timeOut: 3000 },
-      );
     }
+  }
+
+  openForgotPasswordDialog() {
+    const dialogRef = this.dialog.open(ForgotPasswordComponent, {
+      width: '500px',
+      enterAnimationDuration: '500ms',
+      exitAnimationDuration: '500ms',
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.authService.verifyForgotPasswordUser(result).subscribe({
+          next: () => {
+            this.openOtpDialog(result);
+          },
+        });
+      }
+    });
+  }
+
+  openOtpDialog(user: { email: string }) {
+    const dialogRef = this.dialog.open(OtpDialogComponent, {
+      width: '500px',
+      data: user,
+      enterAnimationDuration: '500ms',
+      exitAnimationDuration: '500ms',
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.authService.forgotPassword(user, result).subscribe({
+          error: (err) => {
+            this.toastr.error(
+              err?.error?.message || 'Unable to send password at the moment!',
+              'Error',
+              { timeOut: 3000 },
+            );
+          },
+        });
+      }
+    });
+  }
+
+  onGoogleSignIn() {
+    window.open('http://localhost:3000/api/auth/google', '_self');
   }
 }

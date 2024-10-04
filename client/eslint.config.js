@@ -30,6 +30,7 @@ module.exports = tseslint.config(
           style: "kebab-case",
         },
       ],
+      "no-console": "error", // Disallow console.log and other console methods
     },
   },
   {

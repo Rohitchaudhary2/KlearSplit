@@ -24,6 +24,11 @@ const User = sequelize.define(
     first_name: {
       type: DataTypes.STRING(50),
       allowNull: false,
+      validate: {
+        notEmpty: {
+          msg: "First name can't be empty.",
+        },
+      },
     },
     last_name: {
       type: DataTypes.STRING(50),
@@ -41,8 +46,7 @@ const User = sequelize.define(
     },
     phone: {
       type: DataTypes.STRING(10),
-      allowNull: false,
-      unique: true,
+      allowNull: true,
     },
     notification_settings: {
       type: DataTypes.JSONB,

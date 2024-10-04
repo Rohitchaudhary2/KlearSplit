@@ -3,12 +3,10 @@ import ejs from "ejs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import path from "path";
-import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Looking to send emails in production? Check out our Email API/SMTP product!
 const transporter = nodemailer.createTransport({
   service: "Gmail",
   host: "smtp.gmail.com",
@@ -20,22 +18,18 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendMail = async (options, template, data, next) => {
-  try {
-    const html = await ejs.renderFile(
-      path.join(__dirname, "../views/" + template + ".ejs"),
-      data,
-      { async: true },
-    );
-    const mailOptions = {
-      from: process.env.SMTP_MAIL,
-      to: options.email,
-      subject: options.subject,
-      html,
-    };
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    throw next(new ErrorHandler(500, error.message));
-  }
+const sendMail = async (options, template, data) => {
+  const html = await ejs.renderFile(
+    path.join(__dirname, "../views/" + template + ".ejs"),
+    data,
+    { async: true },
+  );
+  const mailOptions = {
+    from: process.env.SMTP_MAIL,
+    to: options.email,
+    subject: options.subject,
+    html,
+  };
+  await transporter.sendMail(mailOptions);
 };
 export default sendMail;

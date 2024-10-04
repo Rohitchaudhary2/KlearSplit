@@ -3,6 +3,7 @@ import "dotenv/config";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/db.connection.js";
+import passport from "./api/middlewares/googleStrategy.js";
 import userRouter from "./api/users/userRoutes.js";
 import authRouter from "./api/auth/authRoutes.js";
 import { errorMiddleware } from "./api/middlewares/errorHandler.js";
@@ -11,6 +12,7 @@ import { loggerMiddleware } from "./api/middlewares/loggerMiddleware.js";
 const app = express();
 
 app.use(express.json()); // Parse incoming JSON requests and make the data available under req.body
+app.use(passport.initialize());
 
 const corsOptions = {
   origin: "http://localhost:4200",

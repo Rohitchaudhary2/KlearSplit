@@ -2,9 +2,9 @@ import AuthService from "./authServices.js";
 import { authResponseHandler } from "../utils/responseHandler.js";
 
 // Controller for login funnctionality
-export const loginController = async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
-    const userData = await AuthService.login(req, next);
+    const userData = await AuthService.login(req);
     authResponseHandler(res, 200, "User login successful", userData);
   } catch (err) {
     next(err);
@@ -12,12 +12,12 @@ export const loginController = async (req, res, next) => {
 };
 
 // Controller for logout functionality
-export const logoutController = async (req, res, next) => {
+export const logout = async (req, res, next) => {
   try {
     await AuthService.logout(req);
     res
       .status(200)
-      .set("Authorization", "")
+      .clearCookie("accessToken", { httpOnly: true, sameSite: "strict" })
       .clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" })
       .json({
         success: false,

@@ -45,5 +45,5 @@
 .mat-form-field input.mat-input-element:focus {
   background-color: transparent !important; /* Ensure the background stays transparent when focused */
   outline: none; /* Remove any default outlines */
-  border-color: #1995ad; /* Optional: Customize border color on focus */
+  border-color: transparent; /* Optional: Customize border color on focus */
 }

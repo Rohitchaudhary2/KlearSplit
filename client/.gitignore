@@ -43,3 +43,6 @@ Thumbs.db
 
 # Environment files
 /src/environments/environment.prod.ts
+
+# Crypto config file
+/src/environments/config.ts

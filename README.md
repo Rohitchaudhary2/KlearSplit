@@ -44,7 +44,7 @@ Ensure you have the following installed on your system:
 Clone this repository using the following command:
 
 ```bash
-git clone -b feature/register https://github.com/Rohitchaudhary2/KlearSplit.git
+git clone https://github.com/Rohitchaudhary2/KlearSplit.git
 cd KlearSplit
 ```
 

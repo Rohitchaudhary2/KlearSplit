@@ -34,7 +34,7 @@
 ### Prerequisites
 
 Ensure you have the following installed on your system:
-- **Node.js** (v14 or later)
+- **Node.js** (v20)
 - **PostgreSQL**
 - **pgAdmin**
 - **Angular CLI** (v18 for frontend development)
@@ -44,8 +44,8 @@ Ensure you have the following installed on your system:
 Clone this repository using the following command:
 
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
+git clone -b feature/register https://github.com/Rohitchaudhary2/KlearSplit.git
+cd KlearSplit
 ```
 
 ### Backend (Node.js)

@@ -114,36 +114,10 @@ SMTP_MAIL=your_smtp_mail
 
 Make sure to replace the placeholder values with your actual database credentials and secret keys.
 
-## Deployment
+Create a `config.ts` file in the `client/src/environments` directory with the following structure:
 
-To deploy this application on a server, follow these steps:
-
-### Backend (Node.js)
-
-1. Set up a PostgreSQL database on your server and update the `.env` file with the appropriate environment variables.
-   
-2. Install Node.js and ensure the required dependencies are installed:
-
-    ```bash
-    npm install
-    ```
-
-3. For production, build the backend:
-
-    ```bash
-    npm run build
-    ```
-
-4. Start the server:
-
-    ```bash
-    npm start
-    ```
-
-### Frontend (Angular)
-
-Build the Angular application for production:
-
-    ```bash
-    ng build --prod
-    ```
+```plaintext
+export const config = {
+    encryptionSecretKey: 'your_secret_code'
+};
+```

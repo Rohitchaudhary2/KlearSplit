@@ -38,7 +38,8 @@
 Ensure you have the following installed on your system:
 - **Node.js** (v14 or later)
 - **PostgreSQL**
-- **Angular CLI** (for frontend development)
+- **pgAdmin**
+- **Angular CLI** (v18 for frontend development)
 
 ### Cloning the Repository
 
@@ -110,9 +111,15 @@ REFRESH_EXPIRY=your_refresh_token_expiry_time
 SMTP_USER=your_smtp_username
 SMTP_PASSWORD=your_smtp_password
 SMTP_MAIL=your_smtp_mail
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
+Firstly create a database in pgAdmin.
 Make sure to replace the placeholder values with your actual database credentials and secret keys.
+Create your app password from app passwords in Google account for SMTP_PASSWORD and use your email for both SMTP_USER as well as for SMTP_MAIL.
+Create your google client credentials from google's developer console by creating new project.
+
 
 Create a `config.ts` file in the `client/src/environments` directory with the following structure:
 

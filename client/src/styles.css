@@ -2,7 +2,7 @@
 
 body {
   box-sizing: border-box;
-  background-color: #a1d6e2 !important;
+  background:  linear-gradient(45deg, #a1d6e2 0%, #c4e1c4 100%); 
   background-attachment: fixed !important;
   margin: 0;
   padding: 0;

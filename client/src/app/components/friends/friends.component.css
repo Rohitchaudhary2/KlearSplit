@@ -9,12 +9,12 @@
   box-sizing: border-box;
 }
 
-.chat-box{
+.chat-box {
   background: white;
 }
 
 .vertical-dots {
-  cursor: pointer; 
+  cursor: pointer;
   justify-content: center;
   border-radius: 50%;
   /* width: 3rem; */
@@ -24,9 +24,9 @@
 }
 
 .dot {
-  width: 7px;  /* Width of the dots */
+  width: 7px; /* Width of the dots */
   height: 7px; /* Height of the dots */
-  background-color: #7D0DC3; /* Dot color */
+  background-color: #7d0dc3; /* Dot color */
   border-radius: 50%; /* Make dots circular */
   margin: 3px 0; /* Spacing between dots */
 }
@@ -83,15 +83,15 @@ input:focus {
   box-sizing: border-box;
 }
 
-hr{
-  border-top: 4px solid #7D0DC3;
+hr {
+  border-top: 4px solid #7d0dc3;
 }
 
-td{
+td {
   vertical-align: middle;
 }
 
-.input-container{
+.input-container {
   min-height: 10vh;
   border-radius: 0px 0px 20px 20px;
   text-align: center;
@@ -103,7 +103,7 @@ td{
 
 .input-field {
   flex: 80%; /* 80% width for the input field */
-  border: 1px solid #7D0DC3;
+  border: 1px solid #7d0dc3;
 }
 
 ::-webkit-scrollbar {
@@ -115,7 +115,7 @@ td{
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #7D0DC3; /* Color of the scrollbar thumb */
+  background: #7d0dc3; /* Color of the scrollbar thumb */
 }
 
 ::-webkit-scrollbar-thumb:hover {

@@ -6,28 +6,41 @@
 .subcontainer {
   min-height: 77vh;
   border-radius: 20px;
+  box-sizing: border-box;
 }
 
-.subcontainer2 {
-  background: linear-gradient(
-    to bottom right,
-    rgba(252, 203, 144, 1),
-    rgba(213, 126, 235, 1)
-  );
-  /* box-shadow: 0 4px 6px rgba(65, 184, 131, 0.8), 0 2px 4px rgb(16, 146, 239); */
+.chat-box{
+  background: white;
+}
+
+.vertical-dots {
+  cursor: pointer; 
+  justify-content: center;
+  border-radius: 50%;
+  /* width: 3rem; */
+  align-items: center;
+  border: none;
+  background: transparent;
+}
+
+.dot {
+  width: 7px;  /* Width of the dots */
+  height: 7px; /* Height of the dots */
+  background-color: #7D0DC3; /* Dot color */
+  border-radius: 50%; /* Make dots circular */
+  margin: 3px 0; /* Spacing between dots */
 }
 
 .search-container {
   background: white;
   padding: 0.5rem;
-  width: 21vw;
   border-radius: 20px;
   /* box-shadow: 0 4px 6px rgba(65, 184, 131, 0.8), 0 2px 4px rgba(56, 142, 203, 0.5); */
 }
 
 input,
 input:focus {
-  width: 17vw;
+  width: 80%;
   outline: none;
   border: none;
 }
@@ -48,11 +61,49 @@ input:focus {
 }
 
 .pending-request {
-  max-height: 20vh;
+  max-height: 22vh;
   background-color: white;
   border-radius: 20px;
+}
+
+.requests {
+  max-height: 17vh;
+  overflow-y: auto;
+}
+
+.friend-list {
+  max-height: 46.8vh;
+  background-color: white;
+  border-radius: 20px;
+}
+
+.friends {
+  max-height: 42vh;
   overflow-y: auto;
   box-sizing: border-box;
+}
+
+hr{
+  border-top: 4px solid #7D0DC3;
+}
+
+td{
+  vertical-align: middle;
+}
+
+.input-container{
+  min-height: 10vh;
+  border-radius: 0px 0px 20px 20px;
+  text-align: center;
+}
+
+.custom-width {
+  flex: 20%; /* 20% width for the button */
+}
+
+.input-field {
+  flex: 80%; /* 80% width for the input field */
+  border: 1px solid #7D0DC3;
 }
 
 ::-webkit-scrollbar {
@@ -64,7 +115,7 @@ input:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #665dfe; /* Color of the scrollbar thumb */
+  background: #7D0DC3; /* Color of the scrollbar thumb */
 }
 
 ::-webkit-scrollbar-thumb:hover {

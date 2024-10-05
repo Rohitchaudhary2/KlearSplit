@@ -12,4 +12,10 @@ friendRouter.post(
   FriendController.addFriend,
 );
 
+friendRouter.get(
+  "/getallfriends",
+  authenticateToken,
+  FriendController.getAllFriends,
+);
+
 export default friendRouter;

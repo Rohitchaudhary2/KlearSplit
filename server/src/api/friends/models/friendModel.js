@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 
 import sequelize from "../../../config/db.connection.js";
+import User from "../../users/models/userModel.js";
 
 const Friend = sequelize.define(
   "friends",
@@ -55,5 +56,15 @@ const Friend = sequelize.define(
     paranoid: true,
   },
 );
+
+Friend.belongsTo(User, {
+  foreignKey: "friend1_id",
+  as: "friend1", // Alias for friend1
+});
+
+Friend.belongsTo(User, {
+  foreignKey: "friend2_id",
+  as: "friend2", // Alias for friend2
+});
 
 export default Friend;

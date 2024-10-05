@@ -15,6 +15,12 @@ class FriendService {
     const friend = await FriendDb.addFriend(newFriendData);
     return friend;
   };
+
+  static getAllFriends = async (friendData) => {
+    const userId = friendData.dataValues.user_id;
+    const friends = await FriendDb.getAllFriends(userId);
+    return friends;
+  };
 }
 
 export default FriendService;

@@ -1,0 +1,175 @@
+<div class="d-flex justify-content-center align-items-center m-5">
+  <div class="col-md-4" style="flex: 0 0 auto">
+    <div class="transparent subcontainer d-flex flex-column">
+      <!-- Search Div -->
+      <div class="d-flex justify-content-evenly align-items-center gap-3 mx-3">
+        <div
+          class="d-flex justify-content-between search-container shadow col-md-10 ps-3"
+        >
+          <input type="text" placeholder="Search" />
+          <button type="submit" class="search-button">
+            <i class="fa fa-search"></i>
+          </button>
+        </div>
+        <div class="col-md-1">
+          <button
+            class="material-icons user-add shadow-lg"
+            (click)="onAddFriendClick()"
+          >
+            person_add
+          </button>
+        </div>
+      </div>
+
+      <!-- pending friend requests -->
+      <div class="pending-request shadow-lg mt-3 mx-3">
+        <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">
+          Friend Requests
+        </h6>
+        <hr class="m-0 mt-1" />
+        <div class="requests">
+          <table class="table table-hover">
+            <tbody>
+              @for (request of friendRequests(); track $index) {
+                <tr
+                  class="row equal-height-row d-flex justify-content-between m-0"
+                >
+                  <td
+                    class="col-md-2"
+                    style="
+                      flex: 0 0 auto;
+                      text-align: center;
+                      align-content: center;
+                    "
+                  >
+                    <span><img [src]="request.image" alt="Image" /></span>
+                  </td>
+                  <td class="col-md-4" style="flex: 1 1 0">
+                    <span>{{ request.name }}</span>
+                    <div>{{ request.name }}9999</div>
+                  </td>
+                  <td
+                    class="text-end col-md-6 pt-3 pe-3"
+                    style="flex: 0 0 auto"
+                  >
+                    <span
+                      ><button
+                        class="btn btn-success btn-sm"
+                        data-mdb-ripple-duration="0"
+                      >
+                        Accept
+                      </button></span
+                    >
+                    <span
+                      ><button
+                        class="btn btn-danger btn-sm ms-3"
+                        data-mdb-ripple-duration="0"
+                      >
+                        Reject
+                      </button>
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Friends List -->
+      <div
+        class="friend-list d-flex flex-column shadow-lg mt-3 mx-3 flex-grow-1"
+      >
+        <div class="friend-request-heading">
+          <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">
+            Friend List
+          </h6>
+          <hr class="m-0 mt-1" />
+        </div>
+        <div class="friends">
+          <table class="table table-hover">
+            <tbody>
+              @for (request of friendRequests(); track $index) {
+                <tr
+                  class="row equal-height-row d-flex justify-content-between m-0"
+                >
+                  <td
+                    class="col-md-2"
+                    style="
+                      flex: 0 0 auto;
+                      text-align: center;
+                      align-content: center;
+                    "
+                  >
+                    <span><img [src]="request.image" alt="Image" /></span>
+                  </td>
+                  <td class="col-md-6" style="flex: 1 1 0">
+                    <span>{{ request.name }}</span>
+                    <div>{{ request.name }}9999</div>
+                  </td>
+                  <td
+                    class="text-end col-md-4 pt-3 pe-3"
+                    style="flex: 0 0 auto"
+                  >
+                    <span>Balance - 2000</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- chatbox -->
+  <div class="col-md-8 ps-5" style="flex: 1 1 0">
+    <div class="chat-box d-flex flex-column subcontainer shadow-lg mx-3">
+      <div class="d-flex justify-content-between p-2">
+        <div>
+          <span
+            ><img
+              src="https://picsum.photos/50"
+              alt="Friend 1"
+              class="img-fluid rounded-circle"
+          /></span>
+          <span class="ms-3 fs-4" style="vertical-align: middle">Friend 7</span>
+        </div>
+        <button
+          class="vertical-dots d-flex flex-column me-3 btn"
+          data-mdb-ripple-duration="0"
+        >
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </button>
+      </div>
+      <hr class="m-0" />
+
+      <div class="message-body flex-grow-1"></div>
+
+      <hr class="m-0" />
+      <div
+        class="d-flex input-container justify-content-around align-items-center mx-3"
+      >
+        <div class="custom-width">
+          <button class="btn btn-success w-100" data-mdb-ripple-duration="0">
+            Add Expense
+          </button>
+        </div>
+        <div class="input-field ms-3">
+          <input
+            class="message-input"
+            style="width: 100%"
+            type="text"
+            class="form-control"
+            placeholder="Type something..."
+          />
+        </div>
+        <button class="send-message m-3">
+          <i class="fa fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

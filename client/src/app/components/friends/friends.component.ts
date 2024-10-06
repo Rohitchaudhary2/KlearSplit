@@ -1,16 +1,22 @@
 import { Component, inject, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AddFriendComponent } from './add-friend/add-friend.component';
+import { HttpClient } from '@angular/common/http';
+import { ToastrService } from 'ngx-toastr';
+import { CurrencyPipe } from '@angular/common';
 
 @Component({
   selector: 'app-friends',
   standalone: true,
-  imports: [],
+  imports: [CurrencyPipe],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })
 export class FriendsComponent {
   private dialog = inject(MatDialog);
+  private httpClient = inject(HttpClient);
+
+  private toastr = inject(ToastrService);
   friendRequests = signal([
     {
       image: 'https://picsum.photos/50',
@@ -60,6 +66,21 @@ export class FriendsComponent {
       name: 'Sachin',
       balanceAmount: 1000,
     },
+    {
+      image: 'https://picsum.photos/50',
+      name: 'Harsh',
+      balanceAmount: 10000,
+    },
+    {
+      image: 'https://picsum.photos/50',
+      name: 'Harman',
+      balanceAmount: -2000,
+    },
+    {
+      image: 'https://picsum.photos/50',
+      name: 'Ravneet Singh',
+      balanceAmount: 1000,
+    },
   ]);
 
   onAddFriendClick() {
@@ -71,11 +92,26 @@ export class FriendsComponent {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        // this.authService.verifyForgotPasswordUser(result).subscribe({
-        //   next: () => {
-        //     this.openOtpDialog(result);
-        //   },
-        // });
+        this.httpClient
+          .post('http://localhost:3000/api/friends/addfriend', result, {
+            withCredentials: true,
+          })
+          .subscribe({
+            next: () => {
+              this.toastr.success('Request Sent Successfully', 'Success', {
+                timeOut: 3000,
+              });
+            },
+            error: (err) => {
+              this.toastr.error(
+                err?.error?.message || 'Request Failed!',
+                'Error',
+                {
+                  timeOut: 3000,
+                },
+              );
+            },
+          });
       }
     });
   }

@@ -1,4 +1,4 @@
-<div class="d-flex justify-content-center align-items-center m-5">
+<div class="d-flex row justify-content-center align-items-center m-5">
   <div class="col-md-4" style="flex: 0 0 auto">
     <div class="transparent subcontainer d-flex flex-column">
       <!-- Search Div -->
@@ -35,7 +35,7 @@
                   class="row equal-height-row d-flex justify-content-between m-0"
                 >
                   <td
-                    class="col-md-2"
+                    class="col-md-2 col-sm-3"
                     style="
                       flex: 0 0 auto;
                       text-align: center;
@@ -44,12 +44,12 @@
                   >
                     <span><img [src]="request.image" alt="Image" /></span>
                   </td>
-                  <td class="col-md-4" style="flex: 1 1 0">
+                  <td class="col-md-4 col-sm-3" style="flex: 1 1 0">
                     <span>{{ request.name }}</span>
                     <div>{{ request.name }}9999</div>
                   </td>
                   <td
-                    class="text-end col-md-6 pt-3 pe-3"
+                    class="text-end col-md-6 col-sm-6 pt-3 pe-3"
                     style="flex: 0 0 auto"
                   >
                     <span
@@ -89,29 +89,34 @@
         <div class="friends">
           <table class="table table-hover">
             <tbody>
-              @for (request of friendRequests(); track $index) {
+              @for (friend of friends(); track $index) {
                 <tr
                   class="row equal-height-row d-flex justify-content-between m-0"
                 >
                   <td
-                    class="col-md-2"
+                    class="col-md-2 col-sm-3"
                     style="
                       flex: 0 0 auto;
                       text-align: center;
                       align-content: center;
                     "
                   >
-                    <span><img [src]="request.image" alt="Image" /></span>
+                    <span><img [src]="friend.image" alt="Image" /></span>
                   </td>
-                  <td class="col-md-6" style="flex: 1 1 0">
-                    <span>{{ request.name }}</span>
-                    <div>{{ request.name }}9999</div>
+                  <td class="col-md-6 col-sm-6" style="flex: 1 1 0">
+                    <span>{{ friend.name }}</span>
+                    <div>{{ friend.name }}9999</div>
                   </td>
                   <td
-                    class="text-end col-md-4 pt-3 pe-3"
+                    class="text-end col-md-4 col-sm-2 pt-3 pe-3"
                     style="flex: 0 0 auto"
                   >
-                    <span>Balance - 2000</span>
+                  @if(friend.balanceAmount < 0){
+                    <span class="text-danger">{{-friend.balanceAmount | currency: "INR"}}</span>
+                  }
+                  @else{
+                    <span class="text-success">{{friend.balanceAmount | currency: "INR"}}</span>
+                  }
                   </td>
                 </tr>
               }
@@ -123,7 +128,7 @@
   </div>
 
   <!-- chatbox -->
-  <div class="col-md-8 ps-5" style="flex: 1 1 0">
+  <div class="col-md-8 ps-5 d-none d-md-block" style="flex: 1 1 0">
     <div class="chat-box d-flex flex-column subcontainer shadow-lg mx-3">
       <div class="d-flex justify-content-between p-2">
         <div>

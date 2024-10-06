@@ -111,12 +111,15 @@
                     class="text-end col-md-4 col-sm-2 pt-3 pe-3"
                     style="flex: 0 0 auto"
                   >
-                  @if(friend.balanceAmount < 0){
-                    <span class="text-danger">{{-friend.balanceAmount | currency: "INR"}}</span>
-                  }
-                  @else{
-                    <span class="text-success">{{friend.balanceAmount | currency: "INR"}}</span>
-                  }
+                    @if (friend.balanceAmount < 0) {
+                      <span class="text-danger">{{
+                        -friend.balanceAmount | currency: "INR"
+                      }}</span>
+                    } @else {
+                      <span class="text-success">{{
+                        friend.balanceAmount | currency: "INR"
+                      }}</span>
+                    }
                   </td>
                 </tr>
               }

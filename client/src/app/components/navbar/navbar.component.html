@@ -31,48 +31,28 @@
         @if (authService.isAuthenticated() === true) {
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a
-                class="nav-link fs-5"
-                style="color: black"
-                routerLink="/dashboard"
-                >Dashboard</a
-              >
+              <a class="nav-link fs-5" style="color: black;" routerLink="/dashboard">Dashboard</a>
             </li>
             <li class="nav-item">
-              <a
-                class="nav-link fs-5"
-                style="color: black"
-                routerLink="/friends"
-                >Friends</a
-              >
+              <a class="nav-link fs-5" style="color: black;" routerLink="/friends">Friends</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link fs-5" style="color: black" routerLink="#"
-                >Groups</a
-              >
+              <a class="nav-link fs-5" style="color: black;" routerLink="#">Groups</a>
             </li>
             <li class="nav-item dropdown">
               <a
                 class="nav-link fs-5 dropdown-toggle"
-                style="color: black"
+                style="color: black;"
                 role="button"
                 href="#"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
                 >Profile</a
               >
-              <ul class="dropdown-menu">
+              <ul class="dropdown-menu" >
+                <li><a class="dropdown-item" style="color: black;" href="#">Profile</a></li>
                 <li>
-                  <a class="dropdown-item" style="color: black" href="#"
-                    >Profile</a
-                  >
-                </li>
-                <li>
-                  <button
-                    class="dropdown-item"
-                    style="color: black"
-                    (click)="onLogout()"
-                  >
+                  <button class="dropdown-item" style="color: black;" (click)="onLogout()">
                     Logout
                   </button>
                 </li>

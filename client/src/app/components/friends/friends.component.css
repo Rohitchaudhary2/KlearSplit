@@ -4,6 +4,7 @@
 }
 
 .subcontainer {
+  flex-wrap: wrap;
   min-height: 77vh;
   border-radius: 20px;
   box-sizing: border-box;
@@ -24,11 +25,22 @@
 }
 
 .dot {
-  width: 7px; /* Width of the dots */
-  height: 7px; /* Height of the dots */
-  background-color: #7d0dc3; /* Dot color */
+  width: 5px; /* Width of the dots */
+  height: 5px; /* Height of the dots */
+  background-color: black; /* Dot color */
   border-radius: 50%; /* Make dots circular */
   margin: 3px 0; /* Spacing between dots */
+}
+
+img{
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50%;
+}
+
+.send-message {
+  border: none;
+  background-color: transparent;
 }
 
 .search-container {
@@ -63,28 +75,29 @@ input:focus {
 .pending-request {
   max-height: 22vh;
   background-color: white;
-  border-radius: 20px;
+  border-radius: 10px 10px 10px 10px;
 }
 
 .requests {
-  max-height: 17vh;
+  max-height: 16vh;
   overflow-y: auto;
+  border-radius: 0px 0px 10px 10px;
 }
 
 .friend-list {
-  max-height: 46.8vh;
+  max-height: 46.2vh;
   background-color: white;
-  border-radius: 20px;
+  border-radius: 10px 10px 10px 10px;
 }
 
 .friends {
-  max-height: 42vh;
+  max-height: 42.1vh;
   overflow-y: auto;
-  box-sizing: border-box;
+  border-radius: 0px 0px 10px 10px;
 }
 
 hr {
-  border-top: 4px solid #7d0dc3;
+  border-top: 4px solid black;
 }
 
 td {
@@ -98,12 +111,18 @@ td {
 }
 
 .custom-width {
-  flex: 20%; /* 20% width for the button */
+  flex: 2; /* 20% width for the button */
 }
 
 .input-field {
-  flex: 80%; /* 80% width for the input field */
-  border: 1px solid #7d0dc3;
+  flex: 6; /* 60% width for the input field */
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
+.message-input:focus{
+  border-radius: 5px;
+  border: 2px solid black !important;
 }
 
 ::-webkit-scrollbar {
@@ -111,13 +130,15 @@ td {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1; /* Background of the scrollbar track */
+  background: rgba(128, 128, 128, 0.854); /* Background of the scrollbar track */
+  margin-bottom: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #7d0dc3; /* Color of the scrollbar thumb */
+  border-radius: 10px;  
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555; /* Color when hovered */
+  background: #7d0dc3; /* Color when hovered */
 }

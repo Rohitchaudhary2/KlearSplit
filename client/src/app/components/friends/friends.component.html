@@ -1,5 +1,5 @@
-<div class="d-flex justify-content-evenly align-items-center m-5">
-  <div class="col-md-4">
+<div class="d-flex justify-content-center align-items-center m-5">
+  <div class="col-md-4" style="flex: 0 0 auto">
     <div class="transparent subcontainer d-flex flex-column">
       <!-- Search Div -->
       <div class="d-flex justify-content-evenly align-items-center gap-3 mx-3">
@@ -12,51 +12,36 @@
           </button>
         </div>
         <div class="col-md-1">
-          <button class="material-icons user-add shadow-lg">person_add</button>
+          <button class="material-icons user-add shadow-lg" (click)="onAddFriendClick()">person_add</button>
         </div>
       </div>
 
       <!-- pending friend requests -->
-      <!-- <div class="pending-request shadow-lg mt-3 mx-3">
+      <div class="pending-request shadow-lg mt-3 mx-3">
         <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem;">Friend Requests</h6>
         <hr class="m-0 mt-1">
-        <div class="requests me-3">
-          <table class="table">
+        <div class="requests">
+          <table class="table table-hover" >
             <tbody>
-                <tr >
-                    <td class="d-flex align-items-center ms-3">
-                      <span><img src="https://picsum.photos/50" alt="Friend 1" class="img-fluid rounded-circle"></span>
-                      <span class="ms-3">Friend 1</span>
-                    </td>
-                    <td class="text-end pe-3">
-                        <span><button class="btn btn-success btn-sm" data-mdb-ripple-duration="0">Accept</button></span>
-                        <span class="ms-3"><button class="btn btn-danger btn-sm" data-mdb-ripple-duration="0">Reject</button></span>
-                    </td>
-                </tr>
-                <tr >
-                  <td class="d-flex align-items-center ms-3">
-                    <span><img src="https://picsum.photos/50" alt="Friend 1" class="img-fluid rounded-circle"></span>
-                    <span class="ms-3">Friend 2</span>
+              @for (request of friendRequests(); track $index) {
+                <tr class="row equal-height-row d-flex justify-content-between m-0"> 
+                  <td class="col-md-2" style="flex: 0 0 auto; text-align: center; align-content: center;">
+                      <span ><img [src]=request.image alt="Image"></span>
                   </td>
-                  <td class="text-end pe-3">
-                      <button class="btn btn-success btn-sm" data-mdb-ripple-duration="0">Accept</button>
-                      <button class="ms-3 btn btn-danger btn-sm" data-mdb-ripple-duration="0">Reject</button>
+                  <td class="col-md-4" style="flex: 1 1 0;"> 
+                    <span >{{request.name}}</span>
+                    <div>{{request.name}}9999</div>
                   </td>
+                  <td class="text-end col-md-6 pt-3 pe-3" style="flex: 0 0 auto">
+                    <span><button class="btn btn-success btn-sm" data-mdb-ripple-duration="0">Accept</button></span>
+                  <span><button class="btn btn-danger btn-sm ms-3" data-mdb-ripple-duration="0">Reject</button>
+                  </span></td>
               </tr>
-              <tr >
-                <td class="d-flex align-items-center ms-3">
-                  <span><img src="https://picsum.photos/50" alt="Friend 1" class="img-fluid rounded-circle"></span>
-                  <span class="ms-3">Friend 3</span>
-                </td>
-                <td class="text-end pe-3">
-                    <button class="btn btn-success btn-sm" data-mdb-ripple-duration="0">Accept</button>
-                    <button class="ms-3 btn btn-danger btn-sm" data-mdb-ripple-duration="0">Reject</button>
-                </td>
-            </tr>
+              }
             </tbody>
         </table>
         </div>
-       </div> -->
+       </div>
 
       <!-- Friends List -->
       <div
@@ -68,142 +53,33 @@
           </h6>
           <hr class="m-0 mt-1" />
         </div>
-        <div class="friends me-3">
-          <table class="table">
+        <div class="friends">
+          <table class="table table-hover">
             <tbody>
-              <tr>
-                <td class="d-flex align-items-center ms-3">
-                  <span
-                    ><img
-                      src="https://picsum.photos/50"
-                      alt="Friend 1"
-                      class="img-fluid rounded-circle"
-                  /></span>
-                  <span class="ms-3">Friend 1</span>
-                </td>
-                <td class="text-end pe-3">
-                  <span style="color: red">Balance - 2000</span>
-                </td>
+              @for (request of friendRequests(); track $index) {
+                <tr class="row equal-height-row d-flex justify-content-between m-0"> 
+                  <td class="col-md-2" style="flex: 0 0 auto; text-align: center; align-content: center;">
+                      <span ><img [src]=request.image alt="Image"></span>
+                  </td>
+                  <td class="col-md-6" style="flex: 1 1 0;"> 
+                    <span >{{request.name}}</span>
+                    <div>{{request.name}}9999</div>
+                  </td>
+                  <td class="text-end col-md-4 pt-3 pe-3" style="flex: 0 0 auto; ">
+                    <span>Balance - 2000</span>  
+                  </td>
               </tr>
-              <tr>
-                <td class="d-flex align-items-center ms-3">
-                  <span
-                    ><img
-                      src="https://picsum.photos/50"
-                      alt="Friend 1"
-                      class="img-fluid rounded-circle"
-                  /></span>
-                  <span class="ms-3">Friend 2</span>
-                </td>
-                <td class="text-end pe-3">
-                  <span style="color: green"> Balance - 2000</span>
-                </td>
-              </tr>
-              <tr>
-                <td class="d-flex align-items-center ms-3">
-                  <span
-                    ><img
-                      src="https://picsum.photos/50"
-                      alt="Friend 1"
-                      class="img-fluid rounded-circle"
-                  /></span>
-                  <span class="ms-3">Friend 3</span>
-                </td>
-                <td class="text-end pe-3">
-                  <span style="color: red">Balance - 2000</span>
-                </td>
-              </tr>
-              <tr>
-                <td class="d-flex align-items-center ms-3">
-                  <span
-                    ><img
-                      src="https://picsum.photos/50"
-                      alt="Friend 1"
-                      class="img-fluid rounded-circle"
-                  /></span>
-                  <span class="ms-3">Friend 4</span>
-                </td>
-                <td class="text-end pe-3">
-                  <span style="color: red">Balance - 2000</span>
-                </td>
-              </tr>
-              <tr>
-                <td class="d-flex align-items-center ms-3">
-                  <span
-                    ><img
-                      src="https://picsum.photos/50"
-                      alt="Friend 1"
-                      class="img-fluid rounded-circle"
-                  /></span>
-                  <span class="ms-3">Friend 5</span>
-                </td>
-                <td class="text-end pe-3">
-                  <span style="color: green">Balance - 2000</span>
-                </td>
-              </tr>
-              <tr>
-                <td class="d-flex align-items-center ms-3">
-                  <span
-                    ><img
-                      src="https://picsum.photos/50"
-                      alt="Friend 1"
-                      class="img-fluid rounded-circle"
-                  /></span>
-                  <span class="ms-3">Friend 6</span>
-                </td>
-                <td class="text-end pe-3">
-                  <span style="color: red">Balance - 2000</span>
-                </td>
-              </tr>
-              <tr>
-                <td class="d-flex align-items-center ms-3">
-                  <span
-                    ><img
-                      src="https://picsum.photos/50"
-                      alt="Friend 1"
-                      class="img-fluid rounded-circle"
-                  /></span>
-                  <span class="ms-3">Friend 7</span>
-                </td>
-                <td class="text-end pe-3">
-                  <span style="color: red">Balance - 2000</span>
-                </td>
-              </tr>
-              <tr>
-                <td class="d-flex align-items-center ms-3">
-                  <span
-                    ><img
-                      src="https://picsum.photos/50"
-                      alt="Friend 1"
-                      class="img-fluid rounded-circle"
-                  /></span>
-                  <span class="ms-3">Friend 8</span>
-                </td>
-                <td class="text-end pe-3">
-                  <span style="color: red">Balance - 2000</span>
-                </td>
-              </tr>
-              <tr>
-                <td class="d-flex align-items-center ms-3">
-                  <span
-                    ><img
-                      src="https://picsum.photos/50"
-                      alt="Friend 1"
-                      class="img-fluid rounded-circle"
-                  /></span>
-                  <span class="ms-3">Friend 9</span>
-                </td>
-                <td class="text-end pe-3">
-                  <span style="color: red">Balance - 2000</span>
-                </td>
-              </tr>
+              }
+              
             </tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
-  <div class="col-md-8">
+
+  <!-- chatbox -->
+  <div class="col-md-8 ps-5" style="flex: 1 1 0;">
     <div class="chat-box d-flex flex-column subcontainer shadow-lg mx-3">
       <div class="d-flex justify-content-between p-2">
         <div>
@@ -225,20 +101,26 @@
         </button>
       </div>
       <hr class="m-0" />
+
       <div class="message-body flex-grow-1"></div>
+
+      <hr class="m-0">
       <div
-        class="d-flex input-container justify-content-between align-items-center"
+        class="d-flex input-container justify-content-around align-items-center mx-3"
       >
         <div class="custom-width">
-          <button class="btn btn-success w-100">Click Me</button>
+          <button class="btn btn-success w-100" data-mdb-ripple-duration="0">Add Expense</button>
         </div>
         <div class="input-field ms-3">
-          <input
+          <input class="message-input" style="width: 100%;"
             type="text"
             class="form-control"
             placeholder="Type something..."
           />
         </div>
+        <button class="send-message m-3">
+          <i class="fa fa-paper-plane"></i>
+        </button>
       </div>
     </div>
   </div>

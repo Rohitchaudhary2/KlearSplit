@@ -32,7 +32,7 @@
   margin: 3px 0; /* Spacing between dots */
 }
 
-img{
+img {
   width: 40px !important;
   height: 40px !important;
   border-radius: 50%;
@@ -120,7 +120,7 @@ td {
   border-radius: 5px;
 }
 
-.message-input:focus{
+.message-input:focus {
   border-radius: 5px;
   border: 2px solid black !important;
 }
@@ -130,13 +130,18 @@ td {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(128, 128, 128, 0.854); /* Background of the scrollbar track */
+  background: rgba(
+    128,
+    128,
+    128,
+    0.854
+  ); /* Background of the scrollbar track */
   margin-bottom: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #7d0dc3; /* Color of the scrollbar thumb */
-  border-radius: 10px;  
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

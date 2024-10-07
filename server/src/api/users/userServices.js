@@ -86,7 +86,7 @@ class UserService {
         subject: "Password for Sign in for KlearSplit",
       };
 
-      sendMail(options, "passwordTemplate", {
+      await sendMail(options, "passwordTemplate", {
         name: user.first_name,
         heading: "Welcome to Our Service",
         email: user.email,
@@ -247,7 +247,7 @@ class UserService {
       subject: "Password Reset Confirmation",
     };
 
-    sendMail(options, "passwordTemplate", {
+    await sendMail(options, "passwordTemplate", {
       name: user.first_name,
       email: user.email,
       heading: "Password Successfully Changed",

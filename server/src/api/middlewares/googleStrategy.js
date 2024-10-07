@@ -39,7 +39,9 @@ passport.use(
 
           await sendMail(options, "passwordTemplate", {
             name: user.first_name,
+            heading: "Welcome to our Service",
             email: user.email,
+            message: "Thank you for registering with us.",
             password,
           });
         }

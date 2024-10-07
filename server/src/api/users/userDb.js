@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import User from "./models/userModel.js";
 
 class UserDb {
@@ -23,6 +24,19 @@ class UserDb {
         phone,
       },
     });
+
+  static getUsersByRegex = async (regex) => {
+    const users = await User.findAll({
+      where: {
+        email: {
+          [Op.like]: `%${regex}%`,
+        },
+      },
+      attributes: ["email"], // Only fetch the 'email' field
+    });
+
+    return users;
+  };
 
   static updateUser = async (user, id, transaction = null) =>
     await User.update(user, {

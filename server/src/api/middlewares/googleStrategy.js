@@ -43,7 +43,6 @@ passport.use(
             email: user.email,
             message: "Thank you for registering with us.",
             password,
-            message: "Thank you for registering with us.",
           });
         }
 

@@ -1,9 +1,9 @@
 export interface Friend {
   success: string;
   message: string;
-  data: [
-    {
-      email: string;
-    },
-  ];
+  data: User[];
+}
+
+export interface User {
+  email: string;
 }

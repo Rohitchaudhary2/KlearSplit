@@ -266,7 +266,6 @@ class UserService {
   // Service to get users by a regular expression
   static getUsersByRegex = async (data) => {
     const users = await UserDb.getUsersByRegex(data);
-    if (users.length === 0) throw new ErrorHandler(404, "No such users found.");
     return users;
   };
 

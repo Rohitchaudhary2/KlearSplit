@@ -26,13 +26,41 @@ class UserDb {
     });
 
   static getUsersByRegex = async (regex) => {
+    const nameParts = regex.split(" ").filter(Boolean); // Split by space and remove empty values
+
+    let whereCondition;
+
+    if (nameParts.length > 1) {
+      const [firstNameRegex, lastNameRegex] = nameParts;
+
+      whereCondition = {
+        [Op.or]: [
+          { email: { [Op.iLike]: `%${regex}%` } },
+          {
+            [Op.and]: [
+              // Try to match both first_name and last_name
+              { first_name: { [Op.iLike]: `%${firstNameRegex}%` } },
+              { last_name: { [Op.iLike]: `%${lastNameRegex}%` } },
+            ],
+          },
+          { first_name: { [Op.iLike]: `%${regex}%` } },
+          { last_name: { [Op.iLike]: `%${regex}%` } },
+        ],
+      };
+    } else {
+      // If only one part (either first name or last name or email)
+      whereCondition = {
+        [Op.or]: [
+          { email: { [Op.iLike]: `%${regex}%` } },
+          { first_name: { [Op.iLike]: `%${regex}%` } },
+          { last_name: { [Op.iLike]: `%${regex}%` } },
+        ],
+      };
+    }
+
     const users = await User.findAll({
-      where: {
-        email: {
-          [Op.like]: `%${regex}%`,
-        },
-      },
-      attributes: ["email"], // Only fetch the 'email' field
+      where: whereCondition,
+      attributes: ["email", "first_name", "last_name"],
     });
 
     return users;

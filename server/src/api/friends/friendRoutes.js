@@ -18,4 +18,10 @@ friendRouter.get(
   FriendController.getAllFriends,
 );
 
+friendRouter.patch(
+  "/acceptrejectfriend/:conversation_id",
+  authenticateToken,
+  FriendController.acceptRejectFriendRequest,
+);
+
 export default friendRouter;

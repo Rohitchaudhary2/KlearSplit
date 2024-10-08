@@ -3,6 +3,7 @@ import UserDb from "../users/userDb.js";
 import FriendDb from "./friendDb.js";
 
 class FriendService {
+  // Service to add a friend
   static addFriend = async (friendData) => {
     const friendRequestTo = await UserDb.getUserByEmail(friendData.email);
     if (!friendRequestTo) throw new ErrorHandler(404, "User not found");
@@ -16,10 +17,28 @@ class FriendService {
     return friend;
   };
 
+  // Service to get all friends
   static getAllFriends = async (friendData) => {
     const userId = friendData.dataValues.user_id;
     const friends = await FriendDb.getAllFriends(userId);
     return friends;
+  };
+
+  // Service to accept and reject friend requests
+  static acceptRejectFriendRequest = async (requestStatus) => {
+    const { conversation_id } = requestStatus;
+    const friendRequest = await FriendDb.getFriendRequest(conversation_id);
+    if (!friendRequest) throw new ErrorHandler(404, "Friend request not found");
+    if (
+      requestStatus.user_id === friendRequest.dataValues.friend2_id &&
+      (requestStatus.status === "ACCEPTED" ||
+        requestStatus.status === "REJECTED")
+    ) {
+      const friendRequestUpdate =
+        await FriendDb.acceptRejectFriendRequest(requestStatus);
+      return friendRequestUpdate;
+    }
+    throw new ErrorHandler(400, "Invalid request");
   };
 }
 

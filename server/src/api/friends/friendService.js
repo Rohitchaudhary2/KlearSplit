@@ -3,6 +3,7 @@ import UserDb from "../users/userDb.js";
 import FriendDb from "./friendDb.js";
 
 class FriendService {
+  // Service to add a friend
   static addFriend = async (friendData) => {
     const friendRequestTo = await UserDb.getUserByEmail(friendData.email);
     if (!friendRequestTo) throw new ErrorHandler(404, "User not found");
@@ -16,6 +17,7 @@ class FriendService {
     return friend;
   };
 
+  // Service to get all friends
   static getAllFriends = async (friendData) => {
     const userId = friendData.dataValues.user_id;
     const friends = await FriendDb.getAllFriends(userId);

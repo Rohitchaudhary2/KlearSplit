@@ -18,7 +18,12 @@ class FriendController {
   static getAllFriends = async (req, res, next) => {
     try {
       const { user_id } = req.user;
-      const friendData = await FriendService.getAllFriends(user_id);
+      const { status, archival_status, block_status } = req.query;
+      const friendData = await FriendService.getAllFriends(user_id, {
+        status,
+        archival_status,
+        block_status,
+      });
       responseHandler(
         res,
         200,

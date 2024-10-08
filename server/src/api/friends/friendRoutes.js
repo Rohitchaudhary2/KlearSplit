@@ -19,7 +19,7 @@ friendRouter.get(
 );
 
 friendRouter.patch(
-  "/acceptrejectfriend/:conversation_id",
+  "/acceptrejectfriend",
   authenticateToken,
   FriendController.acceptRejectFriendRequest,
 );

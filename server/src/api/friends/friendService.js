@@ -18,8 +18,8 @@ class FriendService {
   };
 
   // Service to get all friends
-  static getAllFriends = async (userId) => {
-    const friends = await FriendDb.getAllFriends(userId);
+  static getAllFriends = async (userId, filters) => {
+    const friends = await FriendDb.getAllFriends(userId, filters);
     return friends;
   };
 

@@ -14,6 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
 import { MatDialog } from '@angular/material/dialog';
 import { OtpDialogComponent } from '../otp-dialog/otp-dialog.component';
+import { API_URLS } from '../../../constants/api-urls';
 
 @Component({
   selector: 'app-login',
@@ -28,6 +29,8 @@ export class LoginComponent {
 
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
+
+  private readonly googleAuthUrl = API_URLS.googleAuth;
 
   form = new FormGroup({
     email: new FormControl('', {
@@ -104,6 +107,6 @@ export class LoginComponent {
   }
 
   onGoogleSignIn() {
-    window.open('http://localhost:3000/api/auth/google', '_self');
+    window.open(this.googleAuthUrl, '_self');
   }
 }

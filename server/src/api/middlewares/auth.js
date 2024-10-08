@@ -57,10 +57,12 @@ const handleRefreshToken = async (req, res, next) => {
       .cookie("accessToken", accessToken, {
         httpOnly: true,
         sameSite: "strict",
+        maxAge: 10 * 24 * 60 * 60 * 1000,
       })
       .cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
         sameSite: "strict",
+        maxAge: 10 * 24 * 60 * 60 * 1000,
       });
     return next();
   } catch (error) {

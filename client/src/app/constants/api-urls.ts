@@ -5,6 +5,7 @@ export const API_URLS = {
   logout: `${environment.apiBaseUrl}/auth/logout`,
   verify: `${environment.apiBaseUrl}/users/verify`,
   register: `${environment.apiBaseUrl}/users/register`,
+  googleAuth: `${environment.apiBaseUrl}/auth/google`,
   verifyForgotPassword: `${environment.apiBaseUrl}/users/verifyforgotpassword`,
   forgotPassword: `${environment.apiBaseUrl}/users/forgotpassword`,
   restoreAccountVerify: `${environment.apiBaseUrl}/users/verifyrestore`,

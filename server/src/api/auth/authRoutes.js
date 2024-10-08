@@ -32,10 +32,12 @@ authRouter.get(
       .cookie("accessToken", userData.accessToken, {
         httpOnly: true,
         sameSite: "strict",
+        maxAge: 10 * 24 * 60 * 60 * 1000,
       })
       .cookie("refreshToken", userData.refreshToken, {
         httpOnly: true,
         sameSite: "strict",
+        maxAge: 10 * 24 * 60 * 60 * 1000,
       })
       .redirect(`http://localhost:4200/dashboard?id=${userData.user.user_id}`);
   },

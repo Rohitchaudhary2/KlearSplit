@@ -2,7 +2,6 @@
   Add Friends for Easier Bill Splitting
 </h3>
 <div mat-dialog-content class="d-flex flex-column align-items-center p-4 pb-0">
-  <form [formGroup]="AddfriendForm" class="w-100">
     <mat-form-field appearance="outline" class="w-100" style="border: none">
       <mat-label>Enter Email</mat-label>
       <input
@@ -17,7 +16,6 @@
         "
       />
     </mat-form-field>
-  </form>
 </div>
 <div mat-dialog-actions class="d-flex justify-content-end gap-2 pb-2 px-3">
   <button
@@ -33,7 +31,6 @@
     disableRipple
     class="custom-mat-button"
     (click)="onAdd()"
-    [disabled]="AddfriendForm.invalid"
   >
     Add
   </button>

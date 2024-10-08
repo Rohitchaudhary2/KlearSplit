@@ -6,14 +6,15 @@
         <div
           class="d-flex justify-content-between search-container shadow col-md-10 ps-3"
         >
-          <input type="text" placeholder="Search" />
+          <input type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Search" />
           <button type="submit" class="search-button">
             <i class="fa fa-search"></i>
           </button>
         </div>
-        <div class="col-md-1">
+        <div class="col-md-1 " >
           <button
             class="material-icons user-add shadow-lg"
+            data-bs-toggle="tooltip" data-bs-placement="top" title="Tooltip on top"
             (click)="onAddFriendClick()"
           >
             person_add
@@ -30,7 +31,7 @@
         <div class="requests">
           <table class="table table-hover">
             <tbody>
-              @for (request of friendRequests(); track $index) {
+              @for (request of requests(); track $index) {
                 <tr
                   class="row equal-height-row d-flex justify-content-between m-0"
                 >
@@ -55,7 +56,7 @@
                     <span
                       ><button
                         class="btn btn-success btn-sm"
-                        data-mdb-ripple-duration="0"
+                        (click)="onAccept(request.conversation_id)"
                       >
                         Accept
                       </button></span
@@ -63,7 +64,6 @@
                     <span
                       ><button
                         class="btn btn-danger btn-sm ms-3"
-                        data-mdb-ripple-duration="0"
                       >
                         Reject
                       </button>
@@ -89,7 +89,7 @@
         <div class="friends">
           <table class="table table-hover">
             <tbody>
-              @for (friend of friends(); track $index) {
+              @for (friend of friendList(); track $index) {
                 <tr
                   class="row equal-height-row d-flex justify-content-between m-0"
                 >
@@ -144,8 +144,7 @@
           <span class="ms-3 fs-4" style="vertical-align: middle">Friend 7</span>
         </div>
         <button
-          class="vertical-dots d-flex flex-column me-3 btn"
-          data-mdb-ripple-duration="0"
+          class="vertical-dots d-flex flex-column me-2 btn"
         >
           <div class="dot"></div>
           <div class="dot"></div>
@@ -161,7 +160,7 @@
         class="d-flex input-container justify-content-around align-items-center mx-3"
       >
         <div class="custom-width">
-          <button class="btn btn-success w-100" data-mdb-ripple-duration="0">
+          <button class="btn btn-success w-100">
             Add Expense
           </button>
         </div>

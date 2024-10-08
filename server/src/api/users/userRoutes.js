@@ -29,6 +29,11 @@ userRouter.post(
   UserController.forgotPassword,
 );
 userRouter.get("/:id", authenticateToken, UserController.getUser);
+userRouter.get(
+  "/getusers/:regex",
+  authenticateToken,
+  UserController.getUsersByRegex,
+);
 userRouter.patch(
   "/:id",
   validateData,

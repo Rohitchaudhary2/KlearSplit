@@ -41,6 +41,7 @@ passport.use(
             name: user.first_name,
             heading: "Welcome to Our Service",
             email: user.email,
+            message: "Thank you for registering with us.",
             password,
             message: "Thank you for registering with us.",
           });

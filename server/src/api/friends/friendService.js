@@ -8,7 +8,7 @@ class FriendService {
     const friendRequestTo = await UserDb.getUserByEmail(friendData.email);
     if (!friendRequestTo) throw new ErrorHandler(404, "User not found");
     const newFriendData = {
-      friend1_id: friendData.dataValues.user_id,
+      friend1_id: friendData.user_id,
       friend2_id: friendRequestTo.user_id,
     };
     const friendExist = await FriendDb.checkFriendExist(newFriendData);
@@ -18,8 +18,7 @@ class FriendService {
   };
 
   // Service to get all friends
-  static getAllFriends = async (friendData) => {
-    const userId = friendData.dataValues.user_id;
+  static getAllFriends = async (userId) => {
     const friends = await FriendDb.getAllFriends(userId);
     return friends;
   };

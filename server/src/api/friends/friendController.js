@@ -3,9 +3,10 @@ import { responseHandler } from "../utils/responseHandler.js";
 
 class FriendController {
   static addFriend = async (req, res, next) => {
+    const { user_id } = req.user;
     try {
       const friendData = await FriendService.addFriend({
-        ...req.user,
+        user_id,
         ...req.validatedUser,
       });
       responseHandler(res, 201, "Successfully added friend", friendData);
@@ -16,7 +17,8 @@ class FriendController {
 
   static getAllFriends = async (req, res, next) => {
     try {
-      const friendData = await FriendService.getAllFriends(req.user);
+      const { user_id } = req.user;
+      const friendData = await FriendService.getAllFriends(user_id);
       responseHandler(
         res,
         200,

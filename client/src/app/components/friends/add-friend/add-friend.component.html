@@ -2,20 +2,20 @@
   Add Friends for Easier Bill Splitting
 </h3>
 <div mat-dialog-content class="d-flex flex-column align-items-center p-4 pb-0">
-    <mat-form-field appearance="outline" class="w-100" style="border: none">
-      <mat-label>Enter Email</mat-label>
-      <input
-        matInput
-        formControlName="email"
-        style="
-          background-color: transparent;
-          outline: none !important;
-          border-color: transparent !important;
-          padding-top: 0 !important;
-          padding-bottom: 0 !important;
-        "
-      />
-    </mat-form-field>
+  <mat-form-field appearance="outline" class="w-100" style="border: none">
+    <mat-label>Enter Email</mat-label>
+    <input
+      matInput
+      formControlName="email"
+      style="
+        background-color: transparent;
+        outline: none !important;
+        border-color: transparent !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+      "
+    />
+  </mat-form-field>
 </div>
 <div mat-dialog-actions class="d-flex justify-content-end gap-2 pb-2 px-3">
   <button
@@ -26,12 +26,7 @@
   >
     Cancel
   </button>
-  <button
-    mat-button
-    disableRipple
-    class="custom-mat-button"
-    (click)="onAdd()"
-  >
+  <button mat-button disableRipple class="custom-mat-button" (click)="onAdd()">
     Add
   </button>
 </div>

@@ -48,6 +48,25 @@ class FriendDb {
         },
       ],
     });
+
+  // DB query for fetching friend request
+  static getFriendRequest = async (conversation_id) =>
+    await Friend.findByPk(conversation_id);
+
+  // DB query for accepting or rejecting friend request
+  static acceptRejectFriendRequest = async (requestStatus) => {
+    const result = await Friend.update(
+      {
+        status: requestStatus.status,
+      },
+      {
+        where: {
+          conversation_id: requestStatus.conversation_id,
+        },
+      },
+    );
+    return result.length > 0;
+  };
 }
 
 export default FriendDb;

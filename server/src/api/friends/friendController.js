@@ -27,6 +27,24 @@ class FriendController {
       next(error);
     }
   };
+
+  static acceptRejectFriendRequest = async (req, res, next) => {
+    try {
+      const { conversation_id, status } = req.body;
+      const { user_id } = req.user;
+      const updatedFriendStatus = await FriendService.acceptRejectFriendRequest(
+        { user_id, conversation_id, status },
+      );
+      responseHandler(
+        res,
+        200,
+        "Successfully updated friend request status",
+        updatedFriendStatus,
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default FriendController;

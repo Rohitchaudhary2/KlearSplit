@@ -13,4 +13,5 @@ export const API_URLS = {
   fetchUser: `${environment.apiBaseUrl}/users`,
   getUsers: `${environment.apiBaseUrl}/users/getUsers/`,
   appFriend: `${environment.apiBaseUrl}/friends/addfriend`,
+  getFriends: `${environment.apiBaseUrl}/friends/getallfriends`,
 };

@@ -104,10 +104,9 @@ export class FriendsComponent {
   friendList = signal(this.friends());
 
   // ngOnInIt(){
-  //   this.httpClient.get('http://localhost:3000/api/friends/getallfriends').subscribe(({
-
-  //     next: () => {
-
+  //   this.httpClient.get<Friend>(`API_URLS.getFriends?status=PENDING`).subscribe(({
+  //     next: (response) => {
+  //       this.friendRequests.set(response)
   //     }
   //   }))
   // }

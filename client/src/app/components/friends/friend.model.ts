@@ -16,17 +16,15 @@ export interface Friend {
 
 export interface FriendData {
   conversation_id: string;
-  friend1_id: string;
-  friend2_id: string;
   status: string;
   balance_amount: string;
   archival_status: string;
   block_status: string;
-  friend1: AddedFriend | null;
-  friend2: AddedFriend | null;
+  friend: AddedFriend;
 }
 
 export interface AddedFriend {
+  user_id: string;
   first_name: string;
   last_name: string;
   email: string;

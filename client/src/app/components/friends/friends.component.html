@@ -50,11 +50,12 @@
                       align-content: center;
                     "
                   >
-                    <span><img [src]="request.image" alt="Image" /></span>
+                    <span><img [src]="request.friend.image_url" alt="Image" /></span>
                   </td>
                   <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
-                    <span>{{ request.name }}</span>
-                    <div>{{ request.name }}99</div>
+                    <span>{{ request.friend.first_name }}</span> 
+                    <span>{{ request.friend.last_name }}</span> 
+                    <div>{{ request.friend.first_name }}99</div>
                   </td>
                   <td
                     class="text-end col-md-5 col-lg-6 col-sm-6 pt-3 pe-3"
@@ -73,6 +74,8 @@
                     </span>
                   </td>
                 </tr>
+              } @empty {
+                <div class="pt-3">No Friend Requests</div>
               }
             </tbody>
           </table>
@@ -104,23 +107,24 @@
                       align-content: center;
                     "
                   >
-                    <span><img [src]="friend.image" alt="Image" /></span>
+                    <span><img [src]="friend.friend.image_url" alt="Image" /></span>
                   </td>
                   <td class="col-md-5 col-lg-6 col-sm-5" style="flex: 1 1 0">
-                    <span>{{ friend.name }}</span>
-                    <div>{{ friend.name }}99</div>
+                    <span>{{ friend.friend.first_name }}</span>
+                    <span>{{ friend.friend.last_name }}</span>
+                    <div>{{ friend.friend.email }}99</div>
                   </td>
                   <td
                     class="text-end col-md-4 col-lg-4 col-sm-3 pt-3 pe-3"
                     style="flex: 0 0 auto"
                   >
-                    @if (friend.balanceAmount < 0) {
+                    @if (getBalanceAsNumber(friend.balance_amount) < 0) {
                       <span class="text-danger">{{
-                        -friend.balanceAmount | currency: "INR"
+                        -getBalanceAsNumber(friend.balance_amount) | currency: "INR"
                       }}</span>
                     } @else {
                       <span class="text-success">{{
-                        friend.balanceAmount | currency: "INR"
+                        getBalanceAsNumber(friend.balance_amount) | currency: "INR"
                       }}</span>
                     }
                   </td>

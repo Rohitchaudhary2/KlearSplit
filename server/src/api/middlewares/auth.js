@@ -49,7 +49,7 @@ const handleRefreshToken = async (req, res, next) => {
     // Commit the transaction
     await transaction.commit();
 
-    await AuthService.deleteRefreshToken(refreshToken, next);
+    await AuthService.deleteRefreshToken(refreshToken);
 
     req.user = await UserService.getUser(userId.id, next);
 

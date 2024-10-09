@@ -6,6 +6,7 @@ import { ToastrService } from 'ngx-toastr';
 import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { API_URLS } from '../../constants/api-urls';
+import { Friend, FriendData } from './friend.model';
 
 @Component({
   selector: 'app-friends',
@@ -20,33 +21,7 @@ export class FriendsComponent {
   searchTerm = signal('');
 
   private toastr = inject(ToastrService);
-  private friendRequests = signal([
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Rohit',
-      conversation_id: 'gshksdksd',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Ritik Palial',
-      conversation_id: 'gsjksdksd',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Ranveer Singh',
-      conversation_id: 'gshksdksdsx',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Vikas Choudhary',
-      conversation_id: 'gshksdksd12',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Sachin',
-      conversation_id: 'gshksd5ksd',
-    },
-  ]);
+  private friendRequests = signal<FriendData[]>([]);
 
   requests = signal(this.friendRequests());
 
@@ -103,13 +78,15 @@ export class FriendsComponent {
 
   friendList = signal(this.friends());
 
-  // ngOnInIt(){
-  //   this.httpClient.get<Friend>(`API_URLS.getFriends?status=PENDING`).subscribe(({
-  //     next: (response) => {
-  //       this.friendRequests.set(response)
-  //     }
-  //   }))
-  // }
+  ngOnInIt() {
+    this.httpClient
+      .get<Friend>(`API_URLS.getFriends?status=PENDING`)
+      .subscribe({
+        next: (response) => {
+          this.friendRequests.set(response.data);
+        },
+      });
+  }
 
   onAddFriendClick() {
     const dialogRef = this.dialog.open(AddFriendComponent, {
@@ -153,10 +130,10 @@ export class FriendsComponent {
   }
 
   onAccept(id: string) {
-    this.friendList().unshift({
-      ...this.requests().filter((request) => request.conversation_id === id)[0],
-      balanceAmount: 0,
-    });
+    // this.friendList().unshift({
+    //   ...this.requests().filter((request) => request.conversation_id === id)[0],
+    //   balanceAmount: 0,
+    // });
     this.requests.set(
       this.requests().filter((request) => request.conversation_id !== id),
     );

@@ -54,24 +54,34 @@
                   </td>
                   <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
                     <span>{{ request.friend.first_name }}</span> 
-                    <span>{{ request.friend.last_name }}</span> 
-                    <div>{{ request.friend.first_name }}99</div>
+                    <span> {{ request.friend.last_name }}</span> 
+                    <div>{{ request.friend.first_name }}</div>
                   </td>
                   <td
                     class="text-end col-md-5 col-lg-6 col-sm-6 pt-3 pe-3"
                     style="flex: 0 0 auto"
                   >
+                  @if(request.status === 'RECEIVER'){
                     <span
                       ><button
                         class="btn btn-success btn-sm"
-                        (click)="onAccept(request.conversation_id)"
+                        (click)="onAccept(request.conversation_id, 'ACCEPTED')"
                       >
                         Accept
                       </button></span
                     >
                     <span class="ps-2"
-                      ><button class="btn btn-danger btn-sm">Reject</button>
+                      ><button class="btn btn-danger btn-sm" (click)="onAccept(request.conversation_id, 'REJECTED')">Reject</button>
                     </span>
+                  } @else {
+                    <span
+                      ><button
+                        class="btn btn-danger btn-sm"
+                      >
+                        Withdraw Request
+                      </button></span
+                    >
+                  }
                   </td>
                 </tr>
               } @empty {

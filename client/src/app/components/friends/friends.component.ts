@@ -7,6 +7,7 @@ import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { API_URLS } from '../../constants/api-urls';
 import { Friend, FriendData } from './friend.model';
+import { TokenService } from '../auth/token.service';
 
 @Component({
   selector: 'app-friends',
@@ -19,6 +20,7 @@ export class FriendsComponent implements OnInit {
   private dialog = inject(MatDialog);
   private httpClient = inject(HttpClient);
   searchTerm = signal('');
+  tokenService = inject(TokenService);
 
   private toastr = inject(ToastrService);
 
@@ -31,66 +33,27 @@ export class FriendsComponent implements OnInit {
   friendList = signal(this.friends());
 
   ngOnInit() {
-    const params = new HttpParams().set('status', 'PENDING');
+    let params = new HttpParams().set('status', 'PENDING');
 
     this.httpClient
       .get<Friend>(`${API_URLS.getFriends}`, { params, withCredentials: true })
       .subscribe({
         next: (response) => {
           this.friendRequests.set(response.data);
+          this.requests.set(this.friendRequests());
+        },
+      });
+
+    params = new HttpParams().set('status', 'ACCEPTED');
+    this.httpClient
+      .get<Friend>(`${API_URLS.getFriends}`, { params, withCredentials: true })
+      .subscribe({
+        next: (response) => {
+          this.friends.set(response.data);
+          this.friendList.set(this.friends());
         },
       });
   }
-
-  //   {
-  //     image: 'https://picsum.photos/50',
-  //     name: 'Rohit',
-  //     balanceAmount: 1000,
-  //     conversation_id: 'gshksd5k8d',
-  //   },
-  //   {
-  //     image: 'https://picsum.photos/50',
-  //     name: 'Ritik Palial',
-  //     balanceAmount: -1000,
-  //     conversation_id: 'gshksd5k8d',
-  //   },
-  //   {
-  //     image: 'https://picsum.photos/50',
-  //     name: 'Ranveer Singh',
-  //     balanceAmount: 5000,
-  //     conversation_id: 'gshksd5k8d',
-  //   },
-  //   {
-  //     image: 'https://picsum.photos/50',
-  //     name: 'Vikas Choudhary',
-  //     balanceAmount: -2000,
-  //     conversation_id: 'gshksd5k8d',
-  //   },
-  //   {
-  //     image: 'https://picsum.photos/50',
-  //     name: 'Sachin',
-  //     balanceAmount: 1000,
-  //     conversation_id: 'gshksd5k8d',
-  //   },
-  //   {
-  //     image: 'https://picsum.photos/50',
-  //     name: 'Harsh',
-  //     balanceAmount: 5000,
-  //     conversation_id: 'gshksd5k8d',
-  //   },
-  //   {
-  //     image: 'https://picsum.photos/50',
-  //     name: 'Harman',
-  //     balanceAmount: -2000,
-  //     conversation_id: 'gshksd5k8d',
-  //   },
-  //   {
-  //     image: 'https://picsum.photos/50',
-  //     name: 'Ravneet Singh',
-  //     balanceAmount: 1000,
-  //     conversation_id: 'gshksd5k8d',
-  //   },
-  // ]);
 
   onAddFriendClick() {
     const dialogRef = this.dialog.open(AddFriendComponent, {
@@ -139,30 +102,43 @@ export class FriendsComponent implements OnInit {
     );
   }
 
-  onAccept(id: string) {
-    this.friendList().unshift({
-      ...this.requests().filter((request) => request.conversation_id === id)[0],
-      balance_amount: '0',
-    });
-    this.requests.set(
-      this.requests().filter((request) => request.conversation_id !== id),
-    );
+  onAccept(id: string, status: string) {
+    this.httpClient
+      .patch(
+        `${API_URLS.acceptRejectRequest}`,
+        { conversation_id: id, status },
+        { withCredentials: true },
+      )
+      .subscribe({
+        next: () => {
+          this.toastr.success(`Request ${status} Successfully`, 'Success', {
+            timeOut: 3000,
+          });
+        },
+        error: (err) => {
+          this.toastr.error(
+            err?.error?.message || `${status} Request Failed!`,
+            'Error',
+            {
+              timeOut: 3000,
+            },
+          );
+        },
+      });
+    if (status === 'ACCEPTED') {
+      this.friendList().unshift({
+        ...this.requests().filter(
+          (request) => request.conversation_id === id,
+        )[0],
+        balance_amount: '0',
+      });
+      this.requests.set(
+        this.requests().filter((request) => request.conversation_id !== id),
+      );
+    } else {
+      this.requests.set(
+        this.requests().filter((request) => request.conversation_id !== id),
+      );
+    }
   }
 }
-
-// friends = signal([
-//   {
-//   conversation_id: "657hajsgjhvna",
-//   status: "PENDING",
-//   balance_amount: "0",
-//   archival_status: "NONE",
-//   block_status: "NONE",
-//   friend: {
-//     user_id: "gjtguye454",
-//     first_name: "string",
-//     last_name: "string",
-//     email: "gdyjge@gsja.shf",
-//     image_url: "string",
-//   }
-// }
-//   ])

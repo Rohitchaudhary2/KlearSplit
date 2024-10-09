@@ -6,7 +6,8 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { debounceTime, of, Subject, switchMap } from 'rxjs';
-import { Friend, User } from '../friend.model';
+import { SearchedUser, User } from '../friend.model';
+import { API_URLS } from '../../../constants/api-urls';
 
 @Component({
   selector: 'app-add-friend',
@@ -23,6 +24,7 @@ export class AddFriendComponent implements OnInit {
   private httpClient = inject(HttpClient);
 
   searchInput = signal('');
+  selectedUser = signal<User | undefined>(undefined);
 
   ngOnInit() {
     this.searchSubject
@@ -31,7 +33,11 @@ export class AddFriendComponent implements OnInit {
         switchMap((query) => {
           if (query.trim() === '') {
             this.loading.set(false); // Set loading to false if query is empty
-            return of({ success: 'false', message: 'jsgkud', data: [] }); // Return an empty result
+            return of({
+              success: 'false',
+              message: 'Query is empty',
+              data: [],
+            }); // Return an empty result
           } else {
             this.loading.set(true); // Set loading to true for non-empty queries
             return this.searchUsers(query); // Call the API for valid queries
@@ -50,15 +56,15 @@ export class AddFriendComponent implements OnInit {
   }
 
   searchUsers(query: string) {
-    return this.httpClient.get<Friend>(
-      `http://localhost:3000/api/users/getUsers/${query}`,
-      { withCredentials: true },
-    );
+    return this.httpClient.get<SearchedUser>(`${API_URLS.getUsers}${query}`, {
+      withCredentials: true,
+    });
   }
 
   selectUser(user: User) {
-    this.searchInput.set(user.email); // user has a 'email' property
-    this.users.set([]); // Clear the user list
+    this.searchInput.set(user.email);
+    this.users.set([]);
+    this.selectedUser.set(user);
   }
 
   onAdd(): void {

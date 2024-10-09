@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
 import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { API_URLS } from '../../constants/api-urls';
 
 @Component({
   selector: 'app-friends',
@@ -65,7 +66,7 @@ export class FriendsComponent {
     {
       image: 'https://picsum.photos/50',
       name: 'Ranveer Singh',
-      balanceAmount: 10000,
+      balanceAmount: 5000,
       conversation_id: 'gshksd5k8d',
     },
     {
@@ -83,7 +84,7 @@ export class FriendsComponent {
     {
       image: 'https://picsum.photos/50',
       name: 'Harsh',
-      balanceAmount: 10000,
+      balanceAmount: 5000,
       conversation_id: 'gshksd5k8d',
     },
     {
@@ -102,6 +103,15 @@ export class FriendsComponent {
 
   friendList = signal(this.friends());
 
+  // ngOnInIt(){
+  //   this.httpClient.get('http://localhost:3000/api/friends/getallfriends').subscribe(({
+
+  //     next: () => {
+
+  //     }
+  //   }))
+  // }
+
   onAddFriendClick() {
     const dialogRef = this.dialog.open(AddFriendComponent, {
       width: '500px',
@@ -112,7 +122,7 @@ export class FriendsComponent {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.httpClient
-          .post('http://localhost:3000/api/friends/addfriend', result, {
+          .post(API_URLS.appFriend, result, {
             withCredentials: true,
           })
           .subscribe({

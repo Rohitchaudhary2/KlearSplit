@@ -43,7 +43,7 @@
                   class="row equal-height-row d-flex justify-content-between m-0"
                 >
                   <td
-                    class="col-md-2 col-sm-3"
+                    class="col-md-3 col-lg-2 col-sm-3"
                     style="
                       flex: 0 0 auto;
                       text-align: center;
@@ -52,24 +52,24 @@
                   >
                     <span><img [src]="request.image" alt="Image" /></span>
                   </td>
-                  <td class="col-md-4 col-sm-3" style="flex: 1 1 0">
+                  <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
                     <span>{{ request.name }}</span>
                     <div>{{ request.name }}9999</div>
                   </td>
                   <td
-                    class="text-end col-md-6 col-sm-6 pt-3 pe-3"
-                    style="flex: 0 0 auto"
+                    class="text-end col-md-5 col-lg-6 col-sm-6 pt-3 pe-3"
+                    style="flex: 0 0 auto;"
                   >
-                    <span
+                    <span  
                       ><button
-                        class="btn btn-success btn-sm"
+                        class="btn btn-success btn-sm " 
                         (click)="onAccept(request.conversation_id)"
                       >
                         Accept
                       </button></span
                     >
-                    <span
-                      ><button class="btn btn-danger btn-sm ms-3">
+                    <span class="ps-2"
+                      ><button class="btn btn-danger btn-sm">
                         Reject
                       </button>
                     </span>
@@ -99,7 +99,7 @@
                   class="row equal-height-row d-flex justify-content-between m-0"
                 >
                   <td
-                    class="col-md-2 col-sm-3"
+                    class="col-md-3 col-lg-2 col-sm-3"
                     style="
                       flex: 0 0 auto;
                       text-align: center;
@@ -108,12 +108,12 @@
                   >
                     <span><img [src]="friend.image" alt="Image" /></span>
                   </td>
-                  <td class="col-md-6 col-sm-6" style="flex: 1 1 0">
+                  <td class="col-md-5 col-lg-6 col-sm-5" style="flex: 1 1 0">
                     <span>{{ friend.name }}</span>
                     <div>{{ friend.name }}9999</div>
                   </td>
                   <td
-                    class="text-end col-md-4 col-sm-2 pt-3 pe-3"
+                    class="text-end col-md-4 col-lg-4 col-sm-3 pt-3 pe-3"
                     style="flex: 0 0 auto"
                   >
                     @if (friend.balanceAmount < 0) {

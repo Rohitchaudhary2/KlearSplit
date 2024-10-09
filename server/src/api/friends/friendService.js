@@ -20,7 +20,25 @@ class FriendService {
   // Service to get all friends
   static getAllFriends = async (userId, filters) => {
     const friends = await FriendDb.getAllFriends(userId, filters);
-    return friends;
+
+    // Map the result to pick the actual friend (either friend1 or friend2)
+    return friends.map((friend) => {
+      const actualFriend = friend.friend1 || friend.friend2; // Pick the one that's not null
+      return {
+        conversation_id: friend.conversation_id,
+        status: friend.status,
+        balance_amount: friend.balance_amount,
+        archival_status: friend.archival_status,
+        block_status: friend.block_status,
+        friend: {
+          user_id: actualFriend.user_id,
+          first_name: actualFriend.first_name,
+          last_name: actualFriend.last_name,
+          email: actualFriend.email,
+          image_url: actualFriend.image_url,
+        },
+      };
+    });
   };
 
   // Service to accept and reject friend requests

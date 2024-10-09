@@ -23,31 +23,47 @@ class FriendDb {
     return result.length > 0;
   };
 
-  static getAllFriends = async (userId) =>
-    await Friend.findAll({
-      where: {
-        [Op.or]: [
-          {
-            friend1_id: userId,
-          },
-          {
-            friend2_id: userId,
-          },
-        ],
-      },
+  // DB query for fetching all the friend
+  static getAllFriends = async (userId, filters) => {
+    const { status, archival_status, block_status } = filters;
+
+    const whereCondition = {
+      [Op.or]: [{ friend1_id: userId }, { friend2_id: userId }],
+    };
+
+    // Add filters if provided
+    if (status) whereCondition.status = status;
+    if (archival_status) whereCondition.archival_status = archival_status;
+    if (block_status) whereCondition.block_status = block_status;
+
+    return await Friend.findAll({
+      where: whereCondition,
       include: [
         {
           model: User,
-          as: "friend1", // Alias for friend1
-          attributes: ["first_name", "last_name"], // Fetch only first_name
+          as: "friend1",
+          attributes: ["first_name", "last_name", "email"],
+          where: {
+            user_id: {
+              [Op.ne]: userId,
+            },
+          },
+          required: false,
         },
         {
           model: User,
-          as: "friend2", // Alias for friend2
-          attributes: ["first_name", "last_name"], // Fetch only first_name
+          as: "friend2",
+          attributes: ["first_name", "last_name", "email"],
+          where: {
+            user_id: {
+              [Op.ne]: userId,
+            },
+          },
+          required: false,
         },
       ],
     });
+  };
 
   // DB query for fetching friend request
   static getFriendRequest = async (conversation_id) =>

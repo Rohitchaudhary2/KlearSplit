@@ -40,8 +40,9 @@ class FriendController {
   // Controller to accept and reject friend request
   static acceptRejectFriendRequest = async (req, res, next) => {
     try {
-      const { conversation_id, status } = req.body;
+      const { conversation_id } = req.params;
       const { user_id } = req.user;
+      const { status } = req.body;
       const updatedFriendStatus = await FriendService.acceptRejectFriendRequest(
         { user_id, conversation_id, status },
       );
@@ -59,7 +60,7 @@ class FriendController {
   // Controller for withdrawing friend request
   static withdrawFriendRequest = async (req, res, next) => {
     try {
-      const { conversation_id } = req.body;
+      const { conversation_id } = req.params;
       const { user_id } = req.user;
       const deleteFriendRequest = await FriendService.withdrawFriendRequest({
         user_id,
@@ -70,6 +71,28 @@ class FriendController {
         200,
         "Successfully withdrew friend request",
         deleteFriendRequest,
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Controller for archive/block friend
+  static archiveBlockFriend = async (req, res, next) => {
+    try {
+      const { conversation_id } = req.params;
+      const { user_id } = req.user;
+      const { type } = req.body;
+      const updatedFriendStatus = await FriendService.archiveBlockFriend({
+        user_id,
+        conversation_id,
+        type,
+      });
+      responseHandler(
+        res,
+        200,
+        `Successfully ${type} friend`,
+        updatedFriendStatus,
       );
     } catch (error) {
       next(error);

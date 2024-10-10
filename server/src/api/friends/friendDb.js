@@ -78,7 +78,7 @@ class FriendDb {
   };
 
   // DB query for fetching friend request
-  static getFriendRequest = async (conversation_id) =>
+  static getFriend = async (conversation_id) =>
     await Friend.findByPk(conversation_id);
 
   // DB query for accepting or rejecting friend request
@@ -104,6 +104,26 @@ class FriendDb {
       },
     });
     return result > 0;
+  };
+
+  // DB query to update archival_status or block_status
+  static archiveBlockFriend = async (conversation) => {
+    const { conversation_id, newStatus, type } = conversation;
+    let statusField = type === "archived" ? "archival_status" : "block_status";
+
+    // Update the status
+    const updatedStatus = await Friend.update(
+      {
+        [statusField]: newStatus,
+      },
+      {
+        where: {
+          conversation_id,
+        },
+      },
+    );
+
+    return updatedStatus > 0;
   };
 }
 

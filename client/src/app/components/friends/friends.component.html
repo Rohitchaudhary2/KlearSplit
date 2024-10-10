@@ -50,11 +50,13 @@
                       align-content: center;
                     "
                   >
-                    <span><img [src]="request.friend.image_url" alt="Image" /></span>
+                    <span
+                      ><img [src]="request.friend.image_url" alt="Image"
+                    /></span>
                   </td>
                   <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
-                    <span>{{ request.friend.first_name }}</span> 
-                    <span>{{ request.friend.last_name }}</span> 
+                    <span>{{ request.friend.first_name }}</span>
+                    <span>{{ request.friend.last_name }}</span>
                     <div>{{ request.friend.first_name }}99</div>
                   </td>
                   <td
@@ -107,7 +109,9 @@
                       align-content: center;
                     "
                   >
-                    <span><img [src]="friend.friend.image_url" alt="Image" /></span>
+                    <span
+                      ><img [src]="friend.friend.image_url" alt="Image"
+                    /></span>
                   </td>
                   <td class="col-md-5 col-lg-6 col-sm-5" style="flex: 1 1 0">
                     <span>{{ friend.friend.first_name }}</span>
@@ -120,11 +124,13 @@
                   >
                     @if (getBalanceAsNumber(friend.balance_amount) < 0) {
                       <span class="text-danger">{{
-                        -getBalanceAsNumber(friend.balance_amount) | currency: "INR"
+                        -getBalanceAsNumber(friend.balance_amount)
+                          | currency: "INR"
                       }}</span>
                     } @else {
                       <span class="text-success">{{
-                        getBalanceAsNumber(friend.balance_amount) | currency: "INR"
+                        getBalanceAsNumber(friend.balance_amount)
+                          | currency: "INR"
                       }}</span>
                     }
                   </td>

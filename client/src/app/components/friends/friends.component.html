@@ -202,9 +202,9 @@
             <div class="dot"></div>
           </button>
           <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-            <li><button class="dropdown-item">View Expenses</button></li>
-            <li><button class="dropdown-item">Archive</button></li>
-            <li><button class="dropdown-item">Block</button></li>
+            <li><button class="dropdown-item" (click)="viewExpense(selectedUser()!.conversation_id)">View Expenses</button></li>
+            <li><button class="dropdown-item" (click)="archiveBlock(selectedUser()!.conversation_id, 'archived')">Archive</button></li>
+            <li><button class="dropdown-item" (click)="archiveBlock(selectedUser()!.conversation_id, 'blocked')">Block</button></li>
           </ul>
         </div>
         <hr class="m-0" />

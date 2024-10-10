@@ -82,18 +82,28 @@ class FriendDb {
     await Friend.findByPk(conversation_id);
 
   // DB query for accepting or rejecting friend request
-  static acceptRejectFriendRequest = async (requestStatus) => {
+  static acceptRejectFriendRequest = async (friendRequest) => {
     const result = await Friend.update(
       {
-        status: requestStatus.status,
+        status: friendRequest.status,
       },
       {
         where: {
-          conversation_id: requestStatus.conversation_id,
+          conversation_id: friendRequest.conversation_id,
         },
       },
     );
     return result.length > 0;
+  };
+
+  // DB query for withdrawing friend request
+  static withdrawFriendRequest = async (friendRequest) => {
+    const result = await Friend.destroy({
+      where: {
+        conversation_id: friendRequest.conversation_id,
+      },
+    });
+    return result > 0;
   };
 }
 

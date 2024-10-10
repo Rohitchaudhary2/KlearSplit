@@ -30,6 +30,7 @@ class FriendService {
         balance_amount: friend.balance_amount,
         archival_status: friend.archival_status,
         block_status: friend.block_status,
+        friendIdentity: friend.friend1 ? "Sender" : "Receiver",
         friend: {
           user_id: actualFriend.user_id,
           first_name: actualFriend.first_name,
@@ -42,18 +43,36 @@ class FriendService {
   };
 
   // Service to accept and reject friend requests
-  static acceptRejectFriendRequest = async (requestStatus) => {
-    const { conversation_id } = requestStatus;
-    const friendRequest = await FriendDb.getFriendRequest(conversation_id);
-    if (!friendRequest) throw new ErrorHandler(404, "Friend request not found");
+  static acceptRejectFriendRequest = async (friendRequest) => {
+    const { conversation_id } = friendRequest;
+    const friendRequestExist = await FriendDb.getFriendRequest(conversation_id);
+    if (!friendRequestExist)
+      throw new ErrorHandler(404, "Friend request not found");
     if (
-      requestStatus.user_id === friendRequest.dataValues.friend2_id &&
-      (requestStatus.status === "ACCEPTED" ||
-        requestStatus.status === "REJECTED")
+      friendRequest.user_id === friendRequest.dataValues.friend2_id &&
+      (friendRequest.status === "ACCEPTED" ||
+        friendRequest.status === "REJECTED")
     ) {
       const friendRequestUpdate =
-        await FriendDb.acceptRejectFriendRequest(requestStatus);
+        await FriendDb.acceptRejectFriendRequest(friendRequest);
       return friendRequestUpdate;
+    }
+    throw new ErrorHandler(400, "Invalid request");
+  };
+
+  // Service to withdraw friend request
+  static withdrawFriendRequest = async (friendRequest) => {
+    const { conversation_id } = friendRequest;
+    const friendRequestExist = await FriendDb.getFriendRequest(conversation_id);
+    if (!friendRequestExist)
+      throw new ErrorHandler(404, "Friend request not found");
+    if (
+      friendRequest.user_id === friendRequestExist.dataValues.friend1_id &&
+      friendRequestExist.dataValues.status === "PENDING"
+    ) {
+      const friendRequestDelete =
+        await FriendDb.withdrawFriendRequest(friendRequest);
+      return friendRequestDelete;
     }
     throw new ErrorHandler(400, "Invalid request");
   };

@@ -24,4 +24,10 @@ friendRouter.patch(
   FriendController.acceptRejectFriendRequest,
 );
 
+friendRouter.delete(
+  "/withdrawfriendrequest",
+  authenticateToken,
+  FriendController.withdrawFriendRequest,
+);
+
 export default friendRouter;

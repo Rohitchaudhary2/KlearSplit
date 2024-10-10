@@ -51,7 +51,7 @@
                     "
                   >
                     <span
-                      ><img [src]="request.friend.image_url" alt="Image"
+                      ><img class="profile-image" [src]="request.friend.image_url" alt="Image"
                     /></span>
                   </td>
                   <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
@@ -86,7 +86,7 @@
                       </span>
                     } @else {
                       <span
-                        ><button class="btn btn-danger btn-sm">
+                        ><button class="btn btn-danger btn-sm" (click)="onWithdrawRequest(request.conversation_id)">
                           Withdraw Request
                         </button></span
                       >
@@ -117,6 +117,7 @@
               @for (friend of friendList(); track $index) {
                 <tr
                   class="row equal-height-row d-flex justify-content-between m-0"
+                  (click)="setSelectedUser(friend)"
                 >
                   <td
                     class="col-md-3 col-lg-2 col-sm-3"
@@ -127,13 +128,35 @@
                     "
                   >
                     <span
-                      ><img [src]="friend.friend.image_url" alt="Image"
+                      ><img class="profile-image" [src]="friend.friend.image_url" alt="Image"
                     /></span>
                   </td>
-                  <td class="col-md-5 col-lg-6 col-sm-5" style="flex: 1 1 0">
-                    <span>{{ friend.friend.first_name }}</span>
-                    <span>{{ friend.friend.last_name }}</span>
-                    <div>{{ friend.friend.email }}99</div>
+                  <td class="col-md-9 col-lg-10 col-sm-9">
+                    <div class="d-flex justify-content-between"> 
+                      <span>{{ friend.friend.first_name }} {{ friend.friend.last_name }}</span>
+                      <span class="text-end pe-3">
+                        @if (getBalanceAsNumber(friend.balance_amount) < 0) {
+                          <span class="text-danger">{{
+                            -getBalanceAsNumber(friend.balance_amount)
+                              | currency: "INR"
+                          }}</span>
+                        } @else {
+                          <span class="text-success">{{
+                            getBalanceAsNumber(friend.balance_amount)
+                              | currency: "INR"
+                          }}</span>
+                        }
+                      </span>
+                    </div>
+                    <div>{{ friend.friend.email }}</div>
+                  </td>
+                  <!-- <td class="col-md-5 col-lg-6 col-sm-5" style="flex: 1 1 0">
+                    <div> 
+                      <span>{{ friend.friend.first_name }}</span>
+                      <span> {{ friend.friend.last_name }}</span>
+                      <span class="text-end">500</span>
+                    </div>
+                    <div>{{ friend.friend.email }}</div>
                   </td>
                   <td
                     class="text-end col-md-4 col-lg-4 col-sm-3 pt-3 pe-3"
@@ -150,7 +173,7 @@
                           | currency: "INR"
                       }}</span>
                     }
-                  </td>
+                  </td> -->
                 </tr>
               }
             </tbody>
@@ -163,46 +186,60 @@
   <!-- chatbox -->
   <div class="col-md-8 ps-5 d-none d-md-block" style="flex: 1 1 0">
     <div class="chat-box d-flex flex-column subcontainer shadow-lg mx-3">
-      <div class="d-flex justify-content-between p-2">
-        <div>
-          <span
-            ><img
-              src="https://picsum.photos/50"
-              alt="Friend 1"
-              class="img-fluid rounded-circle"
-          /></span>
-          <span class="ms-3 fs-4" style="vertical-align: middle">Friend 7</span>
+      @if(selectedUser()){
+        <div class="d-flex justify-content-between p-2">
+          <div>
+            <span
+              ><img class="profile-image"
+                [src]="selectedUser()?.friend?.image_url"
+                alt="image"
+            /></span>
+            <span class="ms-3 fs-4" style="vertical-align: middle">{{ selectedUser()?.friend?.first_name }} {{selectedUser()?.friend?.last_name}}</span>
+          </div>
+          <button class="vertical-dots d-flex flex-column me-2 btn" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            <li><button class="dropdown-item">View Expenses</button></li>
+            <li><button class="dropdown-item">Archive</button></li>
+            <li><button class="dropdown-item">Block</button></li>
+          </ul>
         </div>
-        <button class="vertical-dots d-flex flex-column me-2 btn">
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-        </button>
-      </div>
-      <hr class="m-0" />
-
-      <div class="message-body flex-grow-1"></div>
-
-      <hr class="m-0" />
-      <div
-        class="d-flex input-container justify-content-around align-items-center mx-3"
-      >
-        <div class="custom-width">
-          <button class="btn btn-success w-100">Add Expense</button>
+        <hr class="m-0" />
+  
+        <div class="message-body flex-grow-1"></div>
+  
+        <hr class="m-0" />
+        <div
+          class="d-flex input-container justify-content-around align-items-center mx-3"
+        >
+          <div class="custom-width">
+            <button class="btn btn-success w-100">Add Expense</button>
+          </div>
+          <div class="input-field ms-3">
+            <input
+              class="message-input"
+              style="width: 100%"
+              type="text"
+              class="form-control"
+              placeholder="Type something..."
+            />
+          </div>
+          <button class="send-message m-3">
+            <i class="fa fa-paper-plane"></i>
+          </button>
         </div>
-        <div class="input-field ms-3">
-          <input
-            class="message-input"
-            style="width: 100%"
-            type="text"
-            class="form-control"
-            placeholder="Type something..."
-          />
+      } @else {
+        <div class="text-center p-2">
+          <h1 class="pt-2" style="color: linear-gradient(to left, #87CEEB, #A0D3E8, #90EE90);">
+            Welcome, <span>{{ user_name }}!</span>
+          </h1>
+          <img class="chat-box-image" src="robot.gif" alt="robot" />
+          <h3 class="pb-2">Please select a chat to start messaging</h3>
         </div>
-        <button class="send-message m-3">
-          <i class="fa fa-paper-plane"></i>
-        </button>
-      </div>
+      }
     </div>
   </div>
 </div>

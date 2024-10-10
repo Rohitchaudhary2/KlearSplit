@@ -36,13 +36,5 @@ export class UserService {
           } else return false;
         }),
       );
-    // .subscribe({
-    //   next: (response) => {
-    //     if (response.body) {
-    //       this.authService.setAuthenticatedUser(response.body?.data);
-    //       this.tokenService.setUserId(response.body?.data?.user_id);
-    //     }
-    //   },
-    // });
   }
 }

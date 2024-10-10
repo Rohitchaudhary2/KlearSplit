@@ -32,10 +32,14 @@
   margin: 3px 0; /* Spacing between dots */
 }
 
-img {
+.profile-image {
   width: 40px !important;
   height: 40px !important;
   border-radius: 50%;
+}
+
+.chat-box-image {
+  height: 59vh;
 }
 
 .send-message {

@@ -15,4 +15,5 @@ export const API_URLS = {
   appFriend: `${environment.apiBaseUrl}/friends/addfriend`,
   getFriends: `${environment.apiBaseUrl}/friends/getallfriends`,
   acceptRejectRequest: `${environment.apiBaseUrl}/friends/acceptrejectfriend`,
+  withdrawRequest: `${environment.apiBaseUrl}/friends/withdrawrequest`,
 };

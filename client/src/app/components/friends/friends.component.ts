@@ -8,6 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { API_URLS } from '../../constants/api-urls';
 import { Friend, FriendData } from './friend.model';
 import { TokenService } from '../auth/token.service';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-friends',
@@ -21,6 +22,8 @@ export class FriendsComponent implements OnInit {
   private httpClient = inject(HttpClient);
   searchTerm = signal('');
   tokenService = inject(TokenService);
+  private authService = inject(AuthService);
+  user_name = `${this.authService.currentUser()?.first_name} ${this.authService.currentUser()?.last_name}`;
 
   private toastr = inject(ToastrService);
 
@@ -31,6 +34,8 @@ export class FriendsComponent implements OnInit {
   private friends = signal<FriendData[]>([]);
 
   friendList = signal(this.friends());
+
+  selectedUser = signal<FriendData | undefined>(undefined);
 
   ngOnInit() {
     let params = new HttpParams().set('status', 'PENDING');
@@ -140,5 +145,37 @@ export class FriendsComponent implements OnInit {
         this.requests().filter((request) => request.conversation_id !== id),
       );
     }
+  }
+
+  onWithdrawRequest(id: string) {
+    this.httpClient.get(`${API_URLS.withdrawRequest}/${id}`).subscribe({
+      next: () => {
+        this.toastr.success(`Request deleted Successfully`, 'Success', {
+          timeOut: 3000,
+        });
+      },
+      error: (err) => {
+        this.toastr.error(
+          err?.error?.message || `Request Deletion Failed!`,
+          'Error',
+          {
+            timeOut: 3000,
+          },
+        );
+      },
+    });
+  }
+
+  setSelectedUser(friend: FriendData) {
+    this.selectedUser.set(friend);
+  }
+
+  viewExpense(id: string) {
+    //send conversation id to backend to get all expenses.
+    return id;
+  }
+
+  archiveBlock(id: string, type: string) {
+    return { id, type };
   }
 }

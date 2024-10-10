@@ -19,9 +19,21 @@ friendRouter.get(
 );
 
 friendRouter.patch(
-  "/acceptrejectfriend",
+  "/acceptrejectfriend/:conversation_id",
   authenticateToken,
   FriendController.acceptRejectFriendRequest,
+);
+
+friendRouter.delete(
+  "/withdrawfriendrequest/:conversation_id",
+  authenticateToken,
+  FriendController.withdrawFriendRequest,
+);
+
+friendRouter.patch(
+  "/archiveblockfriend/:conversation_id",
+  authenticateToken,
+  FriendController.archiveBlockFriend,
 );
 
 export default friendRouter;

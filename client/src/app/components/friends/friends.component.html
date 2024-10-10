@@ -57,7 +57,7 @@
                   <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
                     <span>{{ request.friend.first_name }}</span>
                     <span> {{ request.friend.last_name }}</span>
-                    <div>{{ request.friend.first_name }}</div>
+                    <div>{{ request.friend.email }}</div>
                   </td>
                   <td
                     class="text-end col-md-5 col-lg-6 col-sm-6 pt-3 pe-3"
@@ -68,7 +68,7 @@
                         ><button
                           class="btn btn-success btn-sm"
                           (click)="
-                            onAccept(request.conversation_id, 'ACCEPTED')
+                            onAcceptReject(request.conversation_id, 'ACCEPTED')
                           "
                         >
                           Accept
@@ -78,7 +78,7 @@
                         ><button
                           class="btn btn-danger btn-sm"
                           (click)="
-                            onAccept(request.conversation_id, 'REJECTED')
+                            onAcceptReject(request.conversation_id, 'REJECTED')
                           "
                         >
                           Reject

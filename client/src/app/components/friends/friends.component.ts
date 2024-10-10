@@ -37,8 +37,8 @@ export class FriendsComponent implements OnInit {
 
   selectedUser = signal<FriendData | undefined>(undefined);
 
-  ngOnInit() {
-    let params = new HttpParams().set('status', 'PENDING');
+  fetchFriendRequests() {
+    const params = new HttpParams().set('status', 'PENDING');
 
     this.httpClient
       .get<Friend>(`${API_URLS.getFriends}`, { params, withCredentials: true })
@@ -48,8 +48,12 @@ export class FriendsComponent implements OnInit {
           this.requests.set(this.friendRequests());
         },
       });
+  }
 
-    params = new HttpParams().set('status', 'ACCEPTED');
+  ngOnInit() {
+    this.fetchFriendRequests();
+
+    const params = new HttpParams().set('status', 'ACCEPTED');
     this.httpClient
       .get<Friend>(`${API_URLS.getFriends}`, { params, withCredentials: true })
       .subscribe({
@@ -78,6 +82,7 @@ export class FriendsComponent implements OnInit {
               this.toastr.success('Request Sent Successfully', 'Success', {
                 timeOut: 3000,
               });
+              this.fetchFriendRequests();
             },
             error: (err) => {
               this.toastr.error(
@@ -107,11 +112,11 @@ export class FriendsComponent implements OnInit {
     );
   }
 
-  onAccept(id: string, status: string) {
+  onAcceptReject(id: string, status: string) {
     this.httpClient
       .patch(
-        `${API_URLS.acceptRejectRequest}`,
-        { conversation_id: id, status },
+        `${API_URLS.acceptRejectRequest}/${id}`,
+        { status },
         { withCredentials: true },
       )
       .subscribe({
@@ -119,6 +124,25 @@ export class FriendsComponent implements OnInit {
           this.toastr.success(`Request ${status} Successfully`, 'Success', {
             timeOut: 3000,
           });
+          if (status === 'ACCEPTED') {
+            this.friendList().unshift({
+              ...this.requests().filter(
+                (request) => request.conversation_id === id,
+              )[0],
+              balance_amount: '0',
+            });
+            this.requests.set(
+              this.requests().filter(
+                (request) => request.conversation_id !== id,
+              ),
+            );
+          } else {
+            this.requests.set(
+              this.requests().filter(
+                (request) => request.conversation_id !== id,
+              ),
+            );
+          }
         },
         error: (err) => {
           this.toastr.error(
@@ -130,40 +154,30 @@ export class FriendsComponent implements OnInit {
           );
         },
       });
-    if (status === 'ACCEPTED') {
-      this.friendList().unshift({
-        ...this.requests().filter(
-          (request) => request.conversation_id === id,
-        )[0],
-        balance_amount: '0',
-      });
-      this.requests.set(
-        this.requests().filter((request) => request.conversation_id !== id),
-      );
-    } else {
-      this.requests.set(
-        this.requests().filter((request) => request.conversation_id !== id),
-      );
-    }
   }
 
   onWithdrawRequest(id: string) {
-    this.httpClient.get(`${API_URLS.withdrawRequest}/${id}`).subscribe({
-      next: () => {
-        this.toastr.success(`Request deleted Successfully`, 'Success', {
-          timeOut: 3000,
-        });
-      },
-      error: (err) => {
-        this.toastr.error(
-          err?.error?.message || `Request Deletion Failed!`,
-          'Error',
-          {
+    this.httpClient
+      .delete(`${API_URLS.withdrawRequest}/${id}`, { withCredentials: true })
+      .subscribe({
+        next: () => {
+          this.toastr.success(`Request deleted Successfully`, 'Success', {
             timeOut: 3000,
-          },
-        );
-      },
-    });
+          });
+          this.requests.set(
+            this.requests().filter((request) => request.conversation_id !== id),
+          );
+        },
+        error: (err) => {
+          this.toastr.error(
+            err?.error?.message || `Deletion Request Failed!`,
+            'Error',
+            {
+              timeOut: 3000,
+            },
+          );
+        },
+      });
   }
 
   setSelectedUser(friend: FriendData) {
@@ -176,6 +190,27 @@ export class FriendsComponent implements OnInit {
   }
 
   archiveBlock(id: string, type: string) {
-    return { id, type };
+    this.httpClient
+      .patch(
+        `${API_URLS.archiveBlockRequest}/${id}`,
+        { type },
+        { withCredentials: true },
+      )
+      .subscribe({
+        next: () => {
+          this.toastr.success(`${type} Successfully`, 'Success', {
+            timeOut: 3000,
+          });
+        },
+        error: (err) => {
+          this.toastr.error(
+            err?.error?.message || `Deletion Request Failed!`,
+            'Error',
+            {
+              timeOut: 3000,
+            },
+          );
+        },
+      });
   }
 }

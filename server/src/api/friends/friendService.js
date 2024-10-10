@@ -49,7 +49,7 @@ class FriendService {
     if (!friendRequestExist)
       throw new ErrorHandler(404, "Friend request not found");
     if (
-      friendRequest.user_id === friendRequest.dataValues.friend2_id &&
+      friendRequest.user_id === friendRequestExist.dataValues.friend2_id &&
       (friendRequest.status === "ACCEPTED" ||
         friendRequest.status === "REJECTED")
     ) {

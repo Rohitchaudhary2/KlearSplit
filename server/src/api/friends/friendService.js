@@ -1,21 +1,27 @@
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import UserDb from "../users/userDb.js";
+import { responseHandler } from "../utils/responseHandler.js";
 import FriendDb from "./friendDb.js";
 
 class FriendService {
   // Service to add a friend
-  static addFriend = async (friendData) => {
+  static addFriend = async (res, friendData) => {
     const friendRequestTo = await UserDb.getUserByEmail(friendData.email);
     if (!friendRequestTo) throw new ErrorHandler(404, "User not found");
     const newFriendData = {
       friend1_id: friendData.user_id,
       friend2_id: friendRequestTo.user_id,
     };
-    const friendExist = await FriendDb.checkFriendExist(newFriendData);
-    if (friendExist) throw new ErrorHandler(400, "Friend already exist");
+    const friendExist = await this.checkFriendExist(newFriendData);
+    if (friendExist)
+      responseHandler(res, 409, "Friend already exist", friendExist);
     const friend = await FriendDb.addFriend(newFriendData);
     return friend;
   };
+
+  // Service to check whether friend already exists
+  static checkFriendExist = async (friendData) =>
+    await FriendDb.checkFriendExist(friendData);
 
   // Service to get all friends
   static getAllFriends = async (userId, filters) => {
@@ -49,7 +55,7 @@ class FriendService {
     if (!friendRequestExist)
       throw new ErrorHandler(404, "Friend request not found");
     if (
-      friendRequest.user_id === friendRequest.dataValues.friend2_id &&
+      friendRequest.user_id === friendRequestExist.dataValues.friend2_id &&
       (friendRequest.status === "ACCEPTED" ||
         friendRequest.status === "REJECTED")
     ) {

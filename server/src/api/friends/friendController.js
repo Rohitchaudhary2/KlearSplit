@@ -6,7 +6,7 @@ class FriendController {
   static addFriend = async (req, res, next) => {
     const { user_id } = req.user;
     try {
-      const friendData = await FriendService.addFriend({
+      const friendData = await FriendService.addFriend(res, {
         user_id,
         ...req.validatedUser,
       });

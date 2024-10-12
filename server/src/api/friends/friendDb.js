@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import Friend from "./models/friendModel.js";
 import User from "../users/models/userModel.js";
+import FriendMessage from "./models/friendMessageModel.js";
 
 class FriendDb {
   static addFriend = async (friendData) => await Friend.create(friendData);
@@ -125,6 +126,35 @@ class FriendDb {
 
     return updatedStatus > 0;
   };
+
+  static addMessage = async (messageData, transaction) =>
+    await FriendMessage.create(messageData, { transaction });
+
+  static getMessage = async (message_id, transaction) =>
+    await FriendMessage.findByPk(message_id, {
+      include: [
+        {
+          model: User,
+          as: "sender", // The alias used in the association
+          attributes: ["first_name"], // Only include the sender's name
+        },
+      ],
+      transaction,
+    });
+
+  static getMessages = async (conversation_id) =>
+    await FriendMessage.findAll({
+      where: {
+        conversation_id,
+      },
+      include: [
+        {
+          model: User,
+          as: "sender",
+          attributes: ["first_name"],
+        },
+      ],
+    });
 }
 
 export default FriendDb;

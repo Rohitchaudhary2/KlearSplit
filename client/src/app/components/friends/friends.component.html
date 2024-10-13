@@ -1,6 +1,6 @@
 <div class="d-flex row justify-content-center align-items-center m-5">
   <div class="col-md-4" style="flex: 0 0 auto">
-      <app-search (selectedUser)="onSelectUser($event)"/>
+    <app-search (selectedUser)="onSelectUser($event)" />
   </div>
 
   <!-- chatbox -->
@@ -46,7 +46,7 @@
                   archiveBlock(selectedUser()!.conversation_id, 'archived')
                 "
               >
-                {{getArchiveLabel()}}
+                {{ getArchiveLabel() }}
               </button>
             </li>
             <li>
@@ -56,22 +56,26 @@
                   archiveBlock(selectedUser()!.conversation_id, 'blocked')
                 "
               >
-              {{getBlockLabel()}}
+                {{ getBlockLabel() }}
               </button>
             </li>
           </ul>
         </div>
         <hr class="m-0" />
 
-            <div #messageContainer class="message-body row p-0 m-0" style="max-height: 57vh; overflow-y: auto;">
-              <div class="message-body col-md-12 col-lg-12 col-xl-12" style="height: 100%;" >
-                <ul 
-                  class="list-unstyled text-white m-0"
-                  style="overflow-y: auto;"
-                >
-                @for (message of messages(); track message.message_id) {
-                  @if(message.sender_id !== user?.user_id){
-                    <li class="d-flex justify-content-start mb-1 px-2">
+        <div
+          #messageContainer
+          class="message-body row p-0 m-0"
+          style="max-height: 57vh; overflow-y: auto"
+        >
+          <div
+            class="message-body col-md-12 col-lg-12 col-xl-12"
+            style="height: 100%"
+          >
+            <ul class="list-unstyled text-white m-0" style="overflow-y: auto">
+              @for (message of messages(); track message.message_id) {
+                @if (message.sender_id !== user?.user_id) {
+                  <li class="d-flex justify-content-start mb-1 px-2">
                     <img
                       [src]="selectedUser()?.friend?.image_url"
                       alt="avatar"
@@ -96,97 +100,105 @@
                           background: transparent;
                         "
                       >
-                        <p class="fw-bold mb-0">{{selectedUser()?.friend?.first_name}}</p>
+                        <p class="fw-bold mb-0">
+                          {{ selectedUser()?.friend?.first_name }}
+                        </p>
                       </div>
                       <div class="card-body px-4">
-                        <p class="mb-0">{{message.message}}</p>
+                        <p class="mb-0">{{ message.message }}</p>
                       </div>
                     </div>
-                    </li>
-                  }
-                  @else {
-                    <li class="d-flex justify-content-end mb-1 px-2">
+                  </li>
+                } @else {
+                  <li class="d-flex justify-content-end mb-1 px-2">
+                    <div
+                      class="card w"
+                      style="
+                        background: rgba(24, 24, 16, 0.2);
+                        border-radius: 2em;
+                        backdrop-filter: blur(15px);
+                        border: 2px solid rgba(255, 255, 255, 0.05);
+                        background-clip: padding-box;
+                        box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
+                      "
+                    >
                       <div
-                        class="card w"
+                        class="card-header d-inline-flex justify-content-end px-4"
                         style="
-                          background: rgba(24, 24, 16, 0.2);
-                          border-radius: 2em;
-                          backdrop-filter: blur(15px);
-                          border: 2px solid rgba(255, 255, 255, 0.05);
-                          background-clip: padding-box;
-                          box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
+                          border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+                          background: transparent;
                         "
                       >
-                        <div
-                          class="card-header d-inline-flex justify-content-end px-4"
-                          style="
-                            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-                            background: transparent;
-                          "
-                        >
-                          <p class="fw-bold mb-0">You</p>
-                        </div>
-                        <div class="card-body d-inline-flex justify-content-end px-4">
-                          <p class=" justify-content-end mb-0">{{message.message}}</p>
-                        </div>
+                        <p class="fw-bold mb-0">You</p>
                       </div>
-                      <img
-                        [src]="user?.image_url"
-                        alt="avatar"
-                        class="rounded-circle d-inline-flex align-self-end ms-3 shadow-1-strong"
-                        width="40"
-                      />
-                    </li>
-                  }
+                      <div
+                        class="card-body d-inline-flex justify-content-end px-4"
+                      >
+                        <p class="justify-content-end mb-0">
+                          {{ message.message }}
+                        </p>
+                      </div>
+                    </div>
+                    <img
+                      [src]="user?.image_url"
+                      alt="avatar"
+                      class="rounded-circle d-inline-flex align-self-end ms-3 shadow-1-strong"
+                      width="40"
+                    />
+                  </li>
                 }
-                </ul>
-              </div>
-            </div>
+              }
+            </ul>
+          </div>
+        </div>
 
         <hr class="m-0" />
-        @if(selectedUser()?.block_status==='NONE'){
+        @if (selectedUser()?.block_status === "NONE") {
           <div
-          class="d-flex input-container justify-content-around align-items-center mx-3" style="flex: 1 1 0"
-        >
-          <div class="custom-width">
-            <button class="btn btn-success w-100">Add Expense</button>
+            class="d-flex input-container justify-content-around align-items-center mx-3"
+            style="flex: 1 1 0"
+          >
+            <div class="custom-width">
+              <button class="btn btn-success w-100">Add Expense</button>
+            </div>
+            <div class="input-field ms-3">
+              <input
+                class="message-input"
+                style="width: 100%"
+                type="text"
+                class="form-control"
+                placeholder="Type something..."
+              />
+            </div>
+            <button class="send-message m-3">
+              <i class="fa fa-paper-plane"></i>
+            </button>
           </div>
-          <div class="input-field ms-3">
-            <input
-              class="message-input"
-              style="width: 100%"
-              type="text"
-              class="form-control"
-              placeholder="Type something..."
-            />
-          </div>
-          <button class="send-message m-3">
-            <i class="fa fa-paper-plane"></i>
-          </button>
-        </div>
         } @else {
           <div
-          class="d-flex input-container justify-content-around align-items-center mx-3" style="flex: 1 1 0"
-        >
-          <div class="custom-width disabled-pointer">
-            <button class="btn btn-success w-100 disabled-pointer" disabled>Add Expense</button>
+            class="d-flex input-container justify-content-around align-items-center mx-3"
+            style="flex: 1 1 0"
+          >
+            <div class="custom-width disabled-pointer">
+              <button class="btn btn-success w-100 disabled-pointer" disabled>
+                Add Expense
+              </button>
+            </div>
+            <div class="input-field disabled-pointer ms-3">
+              <input
+                class="message-input disabled-pointer"
+                disabled
+                style="width: 100%; cursor: not-allowed !important"
+                type="text"
+                class="form-control"
+                placeholder="Type something..."
+              />
+            </div>
+            <button class="send-message m-3 disabled-pointer" disabled>
+              <i class="fa fa-paper-plane"></i>
+            </button>
           </div>
-          <div class="input-field disabled-pointer ms-3">
-            <input
-              class="message-input disabled-pointer"
-              disabled
-              style="width: 100%; cursor: not-allowed !important;"
-              type="text"
-              class="form-control"
-              placeholder="Type something..."
-            />
-          </div>
-          <button class="send-message m-3 disabled-pointer" disabled>
-            <i class="fa fa-paper-plane"></i>
-          </button>
-        </div>
         }
-        
       } @else {
         <div class="text-center p-2" style="flex: 1 1 0">
           <h1

@@ -61,6 +61,30 @@ input:focus {
   border: none;
 }
 
+.message-body{
+  ::-webkit-scrollbar {
+    width: 3px; /* Width of the scrollbar */
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(
+      128,
+      128,
+      128,
+      0.854
+    ); /* Background of the scrollbar track */
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #7d0dc3; /* Color of the scrollbar thumb */
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #7d0dc3; /* Color when hovered */
+  }
+  
+}
+
 .search-button {
   border: none;
   background-color: transparent;
@@ -127,6 +151,11 @@ td {
 .message-input:focus {
   border-radius: 5px;
   border: 2px solid black !important;
+}
+
+.disabled-pointer {
+  opacity: 0.6;
+  cursor: not-allowed !important;
 }
 
 ::-webkit-scrollbar {

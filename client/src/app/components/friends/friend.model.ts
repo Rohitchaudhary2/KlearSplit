@@ -30,3 +30,17 @@ export interface AddedFriend {
   email: string;
   image_url: string;
 }
+
+export interface message {
+  success: string;
+  message: string;
+  data: messageData[];
+}
+
+export interface messageData {
+  message_id: string;
+  conversation_id: string;
+  sender_id: string;
+  message: string;
+  is_read: boolean;
+}

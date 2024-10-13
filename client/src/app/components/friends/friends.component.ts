@@ -1,192 +1,143 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { AddFriendComponent } from './add-friend/add-friend.component';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { ToastrService } from 'ngx-toastr';
-import { CurrencyPipe } from '@angular/common';
+import {
+  Component,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+  effect,
+} from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { API_URLS } from '../../constants/api-urls';
-import { Friend, FriendData } from './friend.model';
+import { FriendData, messageData } from './friend.model';
 import { TokenService } from '../auth/token.service';
 import { AuthService } from '../auth/auth.service';
+import { ToastrService } from 'ngx-toastr';
+import { SearchComponent } from './search/search.component';
 
 @Component({
   selector: 'app-friends',
   standalone: true,
-  imports: [CurrencyPipe, FormsModule],
+  imports: [FormsModule, SearchComponent],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })
-export class FriendsComponent implements OnInit {
-  private dialog = inject(MatDialog);
+export class FriendsComponent {
+  messageContainer = viewChild<ElementRef>('messageContainer');
   private httpClient = inject(HttpClient);
-  searchTerm = signal('');
-  tokenService = inject(TokenService);
-  private authService = inject(AuthService);
-  user_name = `${this.authService.currentUser()?.first_name} ${this.authService.currentUser()?.last_name}`;
 
   private toastr = inject(ToastrService);
 
-  private friendRequests = signal<FriendData[]>([]);
-
-  requests = signal(this.friendRequests());
-
-  private friends = signal<FriendData[]>([]);
-
-  friendList = signal(this.friends());
+  tokenService = inject(TokenService);
+  private authService = inject(AuthService);
+  user = this.authService.currentUser();
+  user_name = `${this.authService.currentUser()?.first_name} ${this.authService.currentUser()?.last_name}`;
 
   selectedUser = signal<FriendData | undefined>(undefined);
 
-  fetchFriendRequests() {
-    const params = new HttpParams().set('status', 'PENDING');
+  messages = signal<messageData[]>([
+    {
+      message_id: 'sgdhgs',
+      conversation_id: 'sghsd',
+      sender_id: 'saghdf',
+      message:
+        'lorem jaghkuasgd asgdiuasdgas digaisd iusgds disdsakd guisg dsdiusjdf usdjsbdvasd fa ',
+      is_read: false,
+    },
+    {
+      message_id: 'sgdjjhgs',
+      conversation_id: 'sghsd',
+      sender_id: '62975368-2292-4112-9ca0-07e2581192ff',
+      message:
+        'lorem jaghkuasgd asgdiuasdgas digaisd iusgds disdsakd guisg dsdiusjdf usdjsbdvasd fa ',
+      is_read: false,
+    },
+    {
+      message_id: 'sgdjhgs',
+      conversation_id: 'sghsd',
+      sender_id: 'saghdf',
+      message: 'hello kjhdsiuhj dgauksdj,k',
+      is_read: false,
+    },
+    {
+      message_id: 'sgdjhuhgs',
+      conversation_id: 'sghsd',
+      sender_id: '62975368-2292-4112-9ca0-07e2581192ff',
+      message:
+        'lorem jaghkuasgd asgdiuasdgas digaisd iusgds disdsakd guisg dsdiusjdf usdjsbdvasd fa ',
+      is_read: false,
+    },
+    {
+      message_id: 'sgdmhgjjhgs',
+      conversation_id: 'sghsd',
+      sender_id: 'saghdf',
+      message: 'hello jksadb sabdmn s',
+      is_read: false,
+    },
+  ]);
 
-    this.httpClient
-      .get<Friend>(`${API_URLS.getFriends}`, { params, withCredentials: true })
-      .subscribe({
-        next: (response) => {
-          this.friendRequests.set(response.data);
-          this.requests.set(this.friendRequests());
-        },
-      });
-  }
-
-  ngOnInit() {
-    this.fetchFriendRequests();
-
-    const params = new HttpParams().set('status', 'ACCEPTED');
-    this.httpClient
-      .get<Friend>(`${API_URLS.getFriends}`, { params, withCredentials: true })
-      .subscribe({
-        next: (response) => {
-          this.friends.set(response.data);
-          this.friendList.set(this.friends());
-        },
-      });
-  }
-
-  onAddFriendClick() {
-    const dialogRef = this.dialog.open(AddFriendComponent, {
-      width: '500px',
-      enterAnimationDuration: '500ms',
-      exitAnimationDuration: '500ms',
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.httpClient
-          .post(API_URLS.appFriend, result, {
-            withCredentials: true,
-          })
-          .subscribe({
-            next: () => {
-              this.toastr.success('Request Sent Successfully', 'Success', {
-                timeOut: 3000,
-              });
-              this.fetchFriendRequests();
-            },
-            error: (err) => {
-              this.toastr.error(
-                err?.error?.message || 'Request Failed!',
-                'Error',
-                {
-                  timeOut: 3000,
-                },
-              );
-            },
-          });
-      }
-    });
-  }
-
-  getBalanceAsNumber(balanceAmount: string): number {
-    return parseFloat(balanceAmount);
-  }
-
-  onSearchChange() {
-    const regex = new RegExp(this.searchTerm(), 'i'); // Case-insensitive search
-    this.requests.set(
-      this.friendRequests().filter((user) => regex.test(user.friend.email)),
-    );
-    this.friendList.set(
-      this.friends().filter((user) => regex.test(user.friend.email)),
-    );
-  }
-
-  onAcceptReject(id: string, status: string) {
-    this.httpClient
-      .patch(
-        `${API_URLS.acceptRejectRequest}/${id}`,
-        { status },
-        { withCredentials: true },
-      )
-      .subscribe({
-        next: () => {
-          this.toastr.success(`Request ${status} Successfully`, 'Success', {
-            timeOut: 3000,
-          });
-          if (status === 'ACCEPTED') {
-            this.friendList().unshift({
-              ...this.requests().filter(
-                (request) => request.conversation_id === id,
-              )[0],
-              balance_amount: '0',
-            });
-            this.requests.set(
-              this.requests().filter(
-                (request) => request.conversation_id !== id,
-              ),
-            );
-          } else {
-            this.requests.set(
-              this.requests().filter(
-                (request) => request.conversation_id !== id,
-              ),
-            );
-          }
-        },
-        error: (err) => {
-          this.toastr.error(
-            err?.error?.message || `${status} Request Failed!`,
-            'Error',
-            {
-              timeOut: 3000,
-            },
-          );
-        },
-      });
-  }
-
-  onWithdrawRequest(id: string) {
-    this.httpClient
-      .delete(`${API_URLS.withdrawRequest}/${id}`, { withCredentials: true })
-      .subscribe({
-        next: () => {
-          this.toastr.success(`Request deleted Successfully`, 'Success', {
-            timeOut: 3000,
-          });
-          this.requests.set(
-            this.requests().filter((request) => request.conversation_id !== id),
-          );
-        },
-        error: (err) => {
-          this.toastr.error(
-            err?.error?.message || `Deletion Request Failed!`,
-            'Error',
-            {
-              timeOut: 3000,
-            },
-          );
-        },
-      });
-  }
-
-  setSelectedUser(friend: FriendData) {
+  onSelectUser(friend: FriendData) {
     this.selectedUser.set(friend);
+  }
+
+  temp = effect(() => {
+    if (this.selectedUser()) {
+      this.scrollToBottom();
+    }
+  });
+
+  scrollToBottom() {
+    if (this.messageContainer()) {
+      const container = this.messageContainer()?.nativeElement;
+      container.scrollTop = container.scrollHeight;
+    }
   }
 
   viewExpense(id: string) {
     //send conversation id to backend to get all expenses.
     return id;
+  }
+
+  getArchiveStatus(): string {
+    const user = this.selectedUser();
+    if (
+      user?.archival_status === 'BOTH' ||
+      (user?.status === 'SENDER' && user?.archival_status === 'FRIEND1') ||
+      (user?.status === 'RECEIVER' && user?.archival_status === 'FRIEND2')
+    ) {
+      return 'Unarchived'; // Use 'unblocked' when you want to unblock
+    }
+    return 'Archived'; // Default case
+  }
+
+  getArchiveLabel(): string {
+    const user = this.selectedUser();
+    return user?.archival_status === 'BOTH' ||
+      (user?.status === 'SENDER' && user?.archival_status === 'FRIEND1') ||
+      (user?.status === 'RECEIVER' && user?.archival_status === 'FRIEND2')
+      ? 'Unarchive'
+      : 'Archive';
+  }
+
+  getBlockStatus(): string {
+    const user = this.selectedUser();
+    if (
+      user?.block_status === 'BOTH' ||
+      (user?.status === 'SENDER' && user?.block_status === 'FRIEND1') ||
+      (user?.status === 'RECEIVER' && user?.block_status === 'FRIEND2')
+    ) {
+      return 'Unblocked'; // Use 'unblocked' when you want to unblock
+    }
+    return 'Blocked'; // Default case
+  }
+
+  getBlockLabel(): string {
+    const user = this.selectedUser();
+    return user?.block_status === 'BOTH' ||
+      (user?.status === 'SENDER' && user?.block_status === 'FRIEND1') ||
+      (user?.status === 'RECEIVER' && user?.block_status === 'FRIEND2')
+      ? 'Unblock'
+      : 'Block';
   }
 
   archiveBlock(id: string, type: string) {
@@ -198,9 +149,23 @@ export class FriendsComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          this.toastr.success(`${type} Successfully`, 'Success', {
-            timeOut: 3000,
-          });
+          if (type === 'archived') {
+            this.toastr.success(
+              `${this.getArchiveStatus()} Successfully`,
+              'Success',
+              {
+                timeOut: 3000,
+              },
+            );
+          } else {
+            this.toastr.success(
+              `${this.getBlockStatus()} Successfully`,
+              'Success',
+              {
+                timeOut: 3000,
+              },
+            );
+          }
         },
         error: (err) => {
           this.toastr.error(

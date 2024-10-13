@@ -9,13 +9,13 @@ import { API_URLS } from '../../../constants/api-urls';
 import { CurrencyPipe } from '@angular/common';
 
 @Component({
-  selector: 'app-search',
+  selector: 'app-friends-list',
   standalone: true,
   imports: [FormsModule, CurrencyPipe],
-  templateUrl: './search.component.html',
+  templateUrl: './friends-list.component.html',
   styleUrl: '../friends.component.css',
 })
-export class SearchComponent implements OnInit {
+export class FriendsListComponent implements OnInit {
   private dialog = inject(MatDialog);
   private toastr = inject(ToastrService);
   private httpClient = inject(HttpClient);

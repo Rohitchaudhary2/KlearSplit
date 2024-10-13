@@ -13,12 +13,12 @@ import { FriendData, messageData } from './friend.model';
 import { TokenService } from '../auth/token.service';
 import { AuthService } from '../auth/auth.service';
 import { ToastrService } from 'ngx-toastr';
-import { SearchComponent } from './search/search.component';
+import { FriendsListComponent } from './friends-list/friends-list.component';
 
 @Component({
   selector: 'app-friends',
   standalone: true,
-  imports: [FormsModule, SearchComponent],
+  imports: [FormsModule, FriendsListComponent],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })

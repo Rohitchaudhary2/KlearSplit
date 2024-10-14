@@ -127,20 +127,8 @@ class FriendDb {
     return updatedStatus > 0;
   };
 
-  static addMessage = async (messageData, transaction) =>
-    await FriendMessage.create(messageData, { transaction });
-
-  static getMessage = async (message_id, transaction) =>
-    await FriendMessage.findByPk(message_id, {
-      include: [
-        {
-          model: User,
-          as: "sender", // The alias used in the association
-          attributes: ["first_name"], // Only include the sender's name
-        },
-      ],
-      transaction,
-    });
+  static addMessage = async (messageData) =>
+    await FriendMessage.create(messageData);
 
   static getMessages = async (conversation_id) =>
     await FriendMessage.findAll({

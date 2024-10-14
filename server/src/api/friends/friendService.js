@@ -1,4 +1,3 @@
-import sequelize from "../../config/db.connection.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import UserDb from "../users/userDb.js";
 import { responseHandler } from "../utils/responseHandler.js";
@@ -135,29 +134,9 @@ class FriendService {
     if (friendExist.dataValues.status !== "ACCEPTED")
       throw new ErrorHandler(400, "Not allowed to send message");
 
-    const transaction = await sequelize.transaction();
+    const message = await FriendDb.addMessage(messageData);
 
-    try {
-      const message = await FriendDb.addMessage(messageData, transaction);
-
-      const fullMessage = await FriendDb.getMessage(
-        message.message_id,
-        transaction,
-      );
-      await transaction.commit();
-
-      return {
-        message_id: fullMessage.dataValues.message_id,
-        sender_id: fullMessage.dataValues.sender_id,
-        sender: fullMessage.dataValues.sender.dataValues.first_name,
-        conversation_id: fullMessage.dataValues.conversation_id,
-        message: fullMessage.dataValues.message,
-        is_read: fullMessage.dataValues.is_read,
-      };
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
-    }
+    return message;
   };
 
   static getMessages = async (conversation_id) => {
@@ -171,7 +150,6 @@ class FriendService {
       return {
         message_id: message.dataValues.message_id,
         sender_id: message.dataValues.sender_id,
-        sender: message.dataValues.sender.dataValues.first_name,
         conversation_id: message.dataValues.conversation_id,
         message: message.dataValues.message,
         is_read: message.dataValues.is_read,

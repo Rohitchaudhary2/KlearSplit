@@ -51,11 +51,11 @@ export class FriendsComponent implements OnDestroy {
     if (this.messageInput.trim()) {
       const messageData = {
         conversation_id: this.selectedUser()!.conversation_id,
-        sender_id: this.tokenService.getUserId(), // Replace with actual sender ID
+        sender_id: this.tokenService.getUserId(),
         message: this.messageInput,
       };
-      this.socketService.sendMessage(messageData); // Send the message via the service
-      this.messageInput = ''; // Clear the input field after sending
+      this.socketService.sendMessage(messageData);
+      this.messageInput = '';
     }
   }
 
@@ -116,9 +116,9 @@ export class FriendsComponent implements OnDestroy {
       (user?.status === 'SENDER' && user?.archival_status === 'FRIEND1') ||
       (user?.status === 'RECEIVER' && user?.archival_status === 'FRIEND2')
     ) {
-      return 'Unarchived'; // Use 'unblocked' when you want to unblock
+      return 'Unarchived';
     }
-    return 'Archived'; // Default case
+    return 'Archived';
   }
 
   getArchiveLabel(): string {
@@ -137,9 +137,9 @@ export class FriendsComponent implements OnDestroy {
       (user?.status === 'SENDER' && user?.block_status === 'FRIEND1') ||
       (user?.status === 'RECEIVER' && user?.block_status === 'FRIEND2')
     ) {
-      return 'Unblocked'; // Use 'unblocked' when you want to unblock
+      return 'Unblocked';
     }
-    return 'Blocked'; // Default case
+    return 'Blocked';
   }
 
   getBlockLabel(): string {

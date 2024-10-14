@@ -65,16 +65,17 @@
         </div>
         <hr class="m-0" />
 
-        <div  #messageContainer [scrollTop]="messageContainer.scrollHeight"
+        <div
+          #messageContainer
+          [scrollTop]="messageContainer.scrollHeight"
           class="message-body flex-grow-1 row p-0 m-0"
-          style="max-height: 57vh; overflow-y: auto;"
+          style="max-height: 57vh; overflow-y: auto"
         >
           <div
             class="message-body col-md-12 col-lg-12 col-xl-12"
             style="height: 100%"
           >
-            <ul 
-            class="message-body list-unstyled text-white m-0">
+            <ul class="message-body list-unstyled text-white m-0">
               @for (message of messages(); track message.message_id) {
                 @if (message.sender_id !== user?.user_id) {
                   <li class="d-flex justify-content-start mb-1 px-2">
@@ -160,7 +161,12 @@
             class="d-flex input-container justify-content-around align-items-center mx-3"
           >
             <div class="custom-width">
-              <button class="btn btn-success w-100" (click)="openAddExpenseDialog()">Add Expense</button>
+              <button
+                class="btn btn-success w-100"
+                (click)="openAddExpenseDialog()"
+              >
+                Add Expense
+              </button>
             </div>
             <div class="input-field ms-3">
               <input
@@ -183,7 +189,7 @@
             style="flex: 1 1 0"
           >
             <div class="custom-width disabled-pointer">
-              <button class="btn btn-success w-100 disabled-pointer"  disabled>
+              <button class="btn btn-success w-100 disabled-pointer" disabled>
                 Add Expense
               </button>
             </div>

@@ -63,12 +63,17 @@ input:focus {
 
 .message-body::-webkit-scrollbar {
   width: 4px !important; /* Width of the scrollbar */
-} 
-  
+}
+
 .message-body::-webkit-scrollbar-track {
   margin: 0;
   padding: 0;
-  background: rgba(203, 199, 199, 0.032); /* Background of the scrollbar track */
+  background: rgba(
+    203,
+    199,
+    199,
+    0.032
+  ); /* Background of the scrollbar track */
 }
 
 .search-button {

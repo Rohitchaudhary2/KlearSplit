@@ -58,12 +58,10 @@ class UserDb {
       };
     }
 
-    const users = await User.findAll({
+    return await User.findAll({
       where: whereCondition,
-      attributes: ["email", "first_name", "last_name"],
+      attributes: ["user_id", "email", "first_name", "last_name"],
     });
-
-    return users;
   };
 
   static updateUser = async (user, id, transaction = null) =>

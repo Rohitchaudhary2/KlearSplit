@@ -6,7 +6,7 @@ class FriendController {
   static addFriend = async (req, res, next) => {
     const { user_id } = req.user;
     try {
-      const friendData = await FriendService.addFriend({
+      const friendData = await FriendService.addFriend(res, {
         user_id,
         ...req.validatedUser,
       });
@@ -94,6 +94,16 @@ class FriendController {
         `Successfully ${type} friend`,
         updatedFriendStatus,
       );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static getMessages = async (req, res, next) => {
+    try {
+      const { conversation_id } = req.params;
+      const messages = await FriendService.getMessages(conversation_id);
+      responseHandler(res, 200, "Messages retrieved successfully", messages);
     } catch (error) {
       next(error);
     }

@@ -46,54 +46,53 @@ export class FriendsComponent implements OnDestroy {
 
   messages = signal<messageData[]>([]);
 
-  // Function to send a message
-  sendMessage(): void {
-    if (this.messageInput.trim()) {
-      const messageData = {
-        conversation_id: this.selectedUser()!.conversation_id,
-        sender_id: this.tokenService.getUserId(), // Replace with actual sender ID
-        message: this.messageInput,
-      };
-      this.socketService.sendMessage(messageData); // Send the message via the service
-      this.messageInput = ''; // Clear the input field after sending
-    }
-  }
-
   ngOnDestroy(): void {
     if (this.selectedUser()) {
-      this.socketService.leaveRoom(this.selectedUser()!.conversation_id); // Leave the room on destroy
+      this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
       this.socketService.disconnect();
     }
   }
 
   onSelectUser(friend: FriendData) {
+    if (this.selectedUser()) {
+      // Leave the previous room
+      this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
+      // Remove the existing 'onNewMessage' listener
+      this.socketService.removeNewMessageListener();
+    }
+
     this.selectedUser.set(friend);
+
+    // Fetch messages for the newly selected user
+    this.httpClient
+      .get<message>(
+        `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
+        {
+          withCredentials: true,
+        },
+      )
+      .subscribe({
+        next: (messages) => {
+          this.messages.set(messages.data);
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        },
+      });
+
+    // Join the room for the new conversation
+    this.socketService.joinRoom(this.selectedUser()!.conversation_id);
+
+    // Listen for new messages from the server for the new room
+    this.socketService.onNewMessage((message: messageData) => {
+      this.messages.set([...this.messages(), message]);
+      this.cdr.detectChanges();
+      this.scrollToBottom();
+    });
   }
 
   temp = effect(() => {
     if (this.selectedUser()) {
-      this.httpClient
-        .get<message>(
-          `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
-          {
-            withCredentials: true,
-          },
-        )
-        .subscribe({
-          next: (messages) => {
-            this.messages.set(messages.data);
-            this.cdr.detectChanges();
-            this.scrollToBottom();
-          },
-        });
-      // Join the room for the current conversation
-      this.socketService.joinRoom(this.selectedUser()!.conversation_id);
-      // Listen for new messages from the server
-      this.socketService.onNewMessage((message: messageData) => {
-        this.messages.set([...this.messages(), message]);
-        this.cdr.detectChanges();
-        this.scrollToBottom();
-      });
+      this.scrollToBottom();
     }
   });
 
@@ -104,8 +103,19 @@ export class FriendsComponent implements OnDestroy {
     }
   }
 
+  sendMessage(): void {
+    if (this.messageInput.trim()) {
+      const messageData = {
+        conversation_id: this.selectedUser()!.conversation_id,
+        sender_id: this.tokenService.getUserId(),
+        message: this.messageInput,
+      };
+      this.socketService.sendMessage(messageData);
+      this.messageInput = '';
+    }
+  }
+
   viewExpense(id: string) {
-    //send conversation id to backend to get all expenses.
     return id;
   }
 
@@ -116,9 +126,9 @@ export class FriendsComponent implements OnDestroy {
       (user?.status === 'SENDER' && user?.archival_status === 'FRIEND1') ||
       (user?.status === 'RECEIVER' && user?.archival_status === 'FRIEND2')
     ) {
-      return 'Unarchived'; // Use 'unblocked' when you want to unblock
+      return 'Unarchived';
     }
-    return 'Archived'; // Default case
+    return 'Archived';
   }
 
   getArchiveLabel(): string {
@@ -137,9 +147,9 @@ export class FriendsComponent implements OnDestroy {
       (user?.status === 'SENDER' && user?.block_status === 'FRIEND1') ||
       (user?.status === 'RECEIVER' && user?.block_status === 'FRIEND2')
     ) {
-      return 'Unblocked'; // Use 'unblocked' when you want to unblock
+      return 'Unblocked';
     }
-    return 'Blocked'; // Default case
+    return 'Blocked';
   }
 
   getBlockLabel(): string {

@@ -57,45 +57,46 @@
                 /></span>
               </td>
               <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
-                <span>{{ request.friend.first_name }}</span>
-                <span> {{ request.friend.last_name }}</span>
-                <div>{{ request.friend.email }}</div>
-              </td>
-              <td
-                class="text-end col-md-5 col-lg-6 col-sm-6 pt-3 pe-3"
-                style="flex: 0 0 auto"
-              >
-                @if (request.status === "RECEIVER") {
+                <div class="d-flex justify-content-between">
                   <span
-                    ><button
-                      class="btn btn-success btn-sm"
-                      (click)="
-                        onAcceptReject(request.conversation_id, 'ACCEPTED')
-                      "
-                    >
-                      Accept
-                    </button></span
+                    >{{ request.friend.first_name }}
+                    {{ request.friend.last_name }}</span
                   >
-                  <span class="ps-2"
-                    ><button
-                      class="btn btn-danger btn-sm"
-                      (click)="
-                        onAcceptReject(request.conversation_id, 'REJECTED')
-                      "
-                    >
-                      Reject
-                    </button>
+                  <span class="text-end pe-3">
+                    @if (request.status === "RECEIVER") {
+                      <span
+                        ><button
+                          class="btn btn-success btn-sm"
+                          (click)="
+                            onAcceptReject(request.conversation_id, 'ACCEPTED')
+                          "
+                        >
+                          Accept
+                        </button></span
+                      >
+                      <span class="ps-2"
+                        ><button
+                          class="btn btn-danger btn-sm"
+                          (click)="
+                            onAcceptReject(request.conversation_id, 'REJECTED')
+                          "
+                        >
+                          Reject
+                        </button>
+                      </span>
+                    } @else {
+                      <span
+                        ><button
+                          class="btn btn-danger btn-sm"
+                          (click)="onWithdrawRequest(request.conversation_id)"
+                        >
+                          Withdraw Request
+                        </button></span
+                      >
+                    }
                   </span>
-                } @else {
-                  <span
-                    ><button
-                      class="btn btn-danger btn-sm"
-                      (click)="onWithdrawRequest(request.conversation_id)"
-                    >
-                      Withdraw Request
-                    </button></span
-                  >
-                }
+                </div>
+                <div>{{ request.friend.email }}</div>
               </td>
             </tr>
           } @empty {

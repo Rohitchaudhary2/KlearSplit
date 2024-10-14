@@ -18,4 +18,5 @@ export const API_URLS = {
   withdrawRequest: `${environment.apiBaseUrl}/friends/withdrawfriendrequest`,
   archiveBlockRequest: `${environment.apiBaseUrl}/friends/archiveblockfriend`,
   getMessages: `${environment.apiBaseUrl}/friends/getmessages`,
+  addExpense: `${environment.apiBaseUrl}/friends/addexpense`,
 };

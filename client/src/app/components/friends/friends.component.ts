@@ -6,7 +6,7 @@ import {
   viewChild,
   effect,
   OnDestroy,
-  OnInit,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +17,8 @@ import { AuthService } from '../auth/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { FriendsListComponent } from './friends-list/friends-list.component';
 import { SocketService } from './socket.service';
+import { MatDialog } from '@angular/material/dialog';
+import { FriendsExpenseComponent } from './friends-expense/friends-expense.component';
 
 @Component({
   selector: 'app-friends',
@@ -25,11 +27,12 @@ import { SocketService } from './socket.service';
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })
-export class FriendsComponent implements OnInit, OnDestroy {
+export class FriendsComponent implements OnDestroy {
   messageContainer = viewChild<ElementRef>('messageContainer');
   private httpClient = inject(HttpClient);
-
+  private cdr = inject(ChangeDetectorRef);
   private toastr = inject(ToastrService);
+  private dialog = inject(MatDialog);
 
   tokenService = inject(TokenService);
   private authService = inject(AuthService);
@@ -43,29 +46,6 @@ export class FriendsComponent implements OnInit, OnDestroy {
 
   messages = signal<messageData[]>([]);
 
-  ngOnInit(): void {
-    if (this.selectedUser()) {
-      this.httpClient
-        .get<message>(
-          `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
-          {
-            withCredentials: true,
-          },
-        )
-        .subscribe({
-          next: (messages) => {
-            this.messages.set(messages.data);
-          },
-        });
-      // Join the room for the current conversation
-      this.socketService.joinRoom(this.selectedUser()!.conversation_id);
-      // Listen for new messages from the server
-      this.socketService.onNewMessage((message: messageData) => {
-        this.messages.set([...this.messages(), message]);
-        this.scrollToBottom();
-      });
-    }
-  }
   // Function to send a message
   sendMessage(): void {
     if (this.messageInput.trim()) {
@@ -78,6 +58,7 @@ export class FriendsComponent implements OnInit, OnDestroy {
       this.messageInput = ''; // Clear the input field after sending
     }
   }
+
   ngOnDestroy(): void {
     if (this.selectedUser()) {
       this.socketService.leaveRoom(this.selectedUser()!.conversation_id); // Leave the room on destroy
@@ -91,7 +72,28 @@ export class FriendsComponent implements OnInit, OnDestroy {
 
   temp = effect(() => {
     if (this.selectedUser()) {
-      this.scrollToBottom();
+      this.httpClient
+        .get<message>(
+          `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
+          {
+            withCredentials: true,
+          },
+        )
+        .subscribe({
+          next: (messages) => {
+            this.messages.set(messages.data);
+            this.cdr.detectChanges();
+            this.scrollToBottom();
+          },
+        });
+      // Join the room for the current conversation
+      this.socketService.joinRoom(this.selectedUser()!.conversation_id);
+      // Listen for new messages from the server
+      this.socketService.onNewMessage((message: messageData) => {
+        this.messages.set([...this.messages(), message]);
+        this.cdr.detectChanges();
+        this.scrollToBottom();
+      });
     }
   });
 
@@ -187,5 +189,42 @@ export class FriendsComponent implements OnInit, OnDestroy {
           );
         },
       });
+  }
+
+  openAddExpenseDialog() {
+    const dialogRef = this.dialog.open(FriendsExpenseComponent, {
+      width: '500px',
+      data: [this.user, this.selectedUser()],
+      enterAnimationDuration: '200ms',
+      exitAnimationDuration: '200ms',
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        delete result.participant1_share;
+        delete result.participant2_share;
+        this.httpClient
+          .post(
+            `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,
+            result,
+            {
+              withCredentials: true,
+            },
+          )
+          .subscribe({
+            next: () => {
+              this.toastr.success('Expense Created successfully', 'Success', {
+                timeOut: 3000,
+              });
+            },
+            error: (err) => {
+              this.toastr.error(
+                err?.error?.message || 'Expense Creation failed!',
+                'Error',
+                { timeOut: 3000 },
+              );
+            },
+          });
+      }
+    });
   }
 }

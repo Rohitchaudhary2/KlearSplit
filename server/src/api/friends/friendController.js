@@ -108,6 +108,19 @@ class FriendController {
       next(error);
     }
   };
+
+  static addExpense = async (req, res, next) => {
+    try {
+      const { conversation_id } = req.params;
+      const addedExpense = await FriendService.addExpense(
+        req.body,
+        conversation_id,
+      );
+      responseHandler(res, 200, "Expense added successfully", addedExpense);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default FriendController;

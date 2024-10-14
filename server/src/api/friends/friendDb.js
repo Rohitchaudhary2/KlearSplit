@@ -2,6 +2,7 @@ import { Op } from "sequelize";
 import Friend from "./models/friendModel.js";
 import User from "../users/models/userModel.js";
 import FriendMessage from "./models/friendMessageModel.js";
+import FriendExpense from "./models/friendExpenseModel.js";
 
 class FriendDb {
   static addFriend = async (friendData) => await Friend.create(friendData);
@@ -82,20 +83,19 @@ class FriendDb {
   static getFriend = async (conversation_id) =>
     await Friend.findByPk(conversation_id);
 
-  // DB query for accepting or rejecting friend request
-  static acceptRejectFriendRequest = async (friendRequest) => {
-    const result = await Friend.update(
-      {
-        status: friendRequest.status,
+  // DB query to update friend
+  static updateFriends = async (
+    updatedData,
+    conversation_id,
+    transaction = null,
+  ) =>
+    await Friend.update(updatedData, {
+      where: {
+        conversation_id,
       },
-      {
-        where: {
-          conversation_id: friendRequest.conversation_id,
-        },
-      },
-    );
-    return result.length > 0;
-  };
+      transaction,
+      returning: true,
+    });
 
   // DB query for withdrawing friend request
   static withdrawFriendRequest = async (friendRequest) => {
@@ -107,42 +107,21 @@ class FriendDb {
     return result > 0;
   };
 
-  // DB query to update archival_status or block_status
-  static archiveBlockFriend = async (conversation) => {
-    const { conversation_id, newStatus, type } = conversation;
-    let statusField = type === "archived" ? "archival_status" : "block_status";
-
-    // Update the status
-    const updatedStatus = await Friend.update(
-      {
-        [statusField]: newStatus,
-      },
-      {
-        where: {
-          conversation_id,
-        },
-      },
-    );
-
-    return updatedStatus > 0;
-  };
-
+  // DB query to add messages
   static addMessage = async (messageData) =>
     await FriendMessage.create(messageData);
 
+  // Db query to fetch all the messages of a particular conversation
   static getMessages = async (conversation_id) =>
     await FriendMessage.findAll({
       where: {
         conversation_id,
       },
-      include: [
-        {
-          model: User,
-          as: "sender",
-          attributes: ["first_name"],
-        },
-      ],
     });
+
+  // DB query for add expenses
+  static addExpense = async (expenseData, transaction) =>
+    await FriendExpense.create(expenseData, { transaction });
 }
 
 export default FriendDb;

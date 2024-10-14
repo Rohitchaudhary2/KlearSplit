@@ -42,4 +42,10 @@ friendRouter.get(
   FriendController.getMessages,
 );
 
+friendRouter.post(
+  "/addexpense/:conversation_id",
+  authenticateToken,
+  FriendController.addExpense,
+);
+
 export default friendRouter;

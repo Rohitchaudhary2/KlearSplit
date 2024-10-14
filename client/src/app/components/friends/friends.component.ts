@@ -166,6 +166,7 @@ export class FriendsComponent implements OnDestroy {
               'Success',
               {
                 timeOut: 3000,
+                progressBar: true,
               },
             );
           } else {
@@ -180,7 +181,7 @@ export class FriendsComponent implements OnDestroy {
         },
         error: (err) => {
           this.toastr.error(
-            err?.error?.message || `Deletion Request Failed!`,
+            err?.error?.message || `Settle up before this action!`,
             'Error',
             {
               timeOut: 3000,

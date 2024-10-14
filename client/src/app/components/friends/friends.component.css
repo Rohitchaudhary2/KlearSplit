@@ -32,10 +32,14 @@
   margin: 3px 0; /* Spacing between dots */
 }
 
-img {
+.profile-image {
   width: 40px !important;
   height: 40px !important;
   border-radius: 50%;
+}
+
+.chat-box-image {
+  height: 59vh;
 }
 
 .send-message {
@@ -55,6 +59,29 @@ input:focus {
   width: 80%;
   outline: none;
   border: none;
+}
+
+.message-body {
+  ::-webkit-scrollbar {
+    width: 3px; /* Width of the scrollbar */
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(
+      128,
+      128,
+      128,
+      0.854
+    ); /* Background of the scrollbar track */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #7d0dc3; /* Color of the scrollbar thumb */
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #7d0dc3; /* Color when hovered */
+  }
 }
 
 .search-button {
@@ -123,6 +150,11 @@ td {
 .message-input:focus {
   border-radius: 5px;
   border: 2px solid black !important;
+}
+
+.disabled-pointer {
+  opacity: 0.6;
+  cursor: not-allowed !important;
 }
 
 ::-webkit-scrollbar {

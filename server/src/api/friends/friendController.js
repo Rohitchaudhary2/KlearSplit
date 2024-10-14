@@ -98,6 +98,16 @@ class FriendController {
       next(error);
     }
   };
+
+  static getMessages = async (req, res, next) => {
+    try {
+      const { conversation_id } = req.params;
+      const messages = await FriendService.getMessages(conversation_id);
+      responseHandler(res, 200, "Messages retrieved successfully", messages);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default FriendController;

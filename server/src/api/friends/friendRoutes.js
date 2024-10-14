@@ -36,4 +36,10 @@ friendRouter.patch(
   FriendController.archiveBlockFriend,
 );
 
+friendRouter.get(
+  "/getmessages/:conversation_id",
+  authenticateToken,
+  FriendController.getMessages,
+);
+
 export default friendRouter;

@@ -1,3 +1,4 @@
+import sequelize from "../../config/db.connection.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import UserDb from "../users/userDb.js";
 import { responseHandler } from "../utils/responseHandler.js";
@@ -32,11 +33,10 @@ class FriendService {
       const actualFriend = friend.friend1 || friend.friend2; // Pick the one that's not null
       return {
         conversation_id: friend.conversation_id,
-        status: friend.status,
+        status: friend.friend1 ? "SENDER" : "RECEIVER",
         balance_amount: friend.balance_amount,
         archival_status: friend.archival_status,
         block_status: friend.block_status,
-        friendIdentity: friend.friend1 ? "Sender" : "Receiver",
         friend: {
           user_id: actualFriend.user_id,
           first_name: actualFriend.first_name,
@@ -126,6 +126,57 @@ class FriendService {
       return friendUpdate;
     }
     throw new ErrorHandler(400, "Invalid request");
+  };
+
+  static saveMessage = async (messageData) => {
+    const { conversation_id } = messageData;
+    const friendExist = await FriendDb.getFriend(conversation_id);
+    if (!friendExist) throw new ErrorHandler(404, "Friend doesn't exist");
+    if (friendExist.dataValues.status !== "ACCEPTED")
+      throw new ErrorHandler(400, "Not allowed to send message");
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      const message = await FriendDb.addMessage(messageData, transaction);
+
+      const fullMessage = await FriendDb.getMessage(
+        message.message_id,
+        transaction,
+      );
+      await transaction.commit();
+
+      return {
+        message_id: fullMessage.dataValues.message_id,
+        sender_id: fullMessage.dataValues.sender_id,
+        sender: fullMessage.dataValues.sender.dataValues.first_name,
+        conversation_id: fullMessage.dataValues.conversation_id,
+        message: fullMessage.dataValues.message,
+        is_read: fullMessage.dataValues.is_read,
+      };
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  };
+
+  static getMessages = async (conversation_id) => {
+    const friendExist = await FriendDb.getFriend(conversation_id);
+    if (!friendExist) throw new ErrorHandler(404, "Friend doesn't exist");
+    if (friendExist.dataValues.status !== "ACCEPTED")
+      throw new ErrorHandler(404, "No messages allowed");
+    const messages = await FriendDb.getMessages(conversation_id);
+
+    return messages.map((message) => {
+      return {
+        message_id: message.dataValues.message_id,
+        sender_id: message.dataValues.sender_id,
+        sender: message.dataValues.sender.dataValues.first_name,
+        conversation_id: message.dataValues.conversation_id,
+        message: message.dataValues.message,
+        is_read: message.dataValues.is_read,
+      };
+    });
   };
 }
 

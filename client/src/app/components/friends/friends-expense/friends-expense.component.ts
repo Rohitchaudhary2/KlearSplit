@@ -2,7 +2,6 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
-  FormsModule,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
@@ -16,7 +15,6 @@ import { MatSelectModule } from '@angular/material/select';
   selector: 'app-friends-expense',
   standalone: true,
   imports: [
-    FormsModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatSelectModule,
@@ -31,8 +29,6 @@ export class FriendsExpenseComponent implements OnInit {
   data = inject(MAT_DIALOG_DATA);
   showAdditionalFields = signal<boolean>(false);
   participants = [this.data[0], this.data[1].friend];
-  participant1_share = 0;
-  participant2_share = 0;
 
   form = new FormGroup({
     expense_name: new FormControl('', {
@@ -45,6 +41,12 @@ export class FriendsExpenseComponent implements OnInit {
       validators: [Validators.maxLength(150)],
     }),
     payer_id: new FormControl('', {
+      validators: [Validators.required],
+    }),
+    participant1_share: new FormControl('', {
+      validators: [Validators.required],
+    }),
+    participant2_share: new FormControl('', {
       validators: [Validators.required],
     }),
     split_type: new FormControl<'EQUAL' | 'UNEQUAL' | 'PERCENTAGE'>('EQUAL', {
@@ -78,8 +80,8 @@ export class FriendsExpenseComponent implements OnInit {
       ) {
         debtor_share =
           this.form.value.payer_id === this.participants[0].user_id
-            ? this.participant2_share
-            : this.participant1_share;
+            ? this.form.value.participant2_share
+            : this.form.value.participant1_share;
       }
       const debtor_id =
         this.form.value.payer_id === this.participants[0].user_id

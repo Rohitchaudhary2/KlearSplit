@@ -311,9 +311,9 @@ const calculateDebtorAmount = (expenseData) => {
     case "EQUAL":
       return totalAmount / 2;
     case "UNEQUAL":
-      return parseFloat(expenseData.debtor_amount);
+      return parseFloat(expenseData.debtor_share);
     case "PERCENTAGE":
-      return (totalAmount * parseFloat(expenseData.debtor_percentage)) / 100;
+      return (totalAmount * parseFloat(expenseData.debtor_share)) / 100;
     default:
       throw new ErrorHandler(400, "Split type not recognized");
   }

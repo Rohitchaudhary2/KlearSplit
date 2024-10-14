@@ -87,7 +87,7 @@ export class FriendsComponent implements OnDestroy {
           },
         });
       // Join the room for the current conversation
-      // this.socketService.joinRoom(this.selectedUser()!.conversation_id);
+      this.socketService.joinRoom(this.selectedUser()!.conversation_id);
       // Listen for new messages from the server
       this.socketService.onNewMessage((message: messageData) => {
         this.messages.set([...this.messages(), message]);
@@ -200,6 +200,8 @@ export class FriendsComponent implements OnDestroy {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
+        delete result.participant1_share;
+        delete result.participant2_share;
         this.httpClient
           .post(
             `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,

@@ -4,9 +4,9 @@ import { ErrorHandler } from "../middlewares/errorHandler.js";
 const socketHandler = (io) => {
   io.on("connection", (socket) => {
     // Listen for joining a conversation room
-    // socket.on("joinRoom", (conversationId) => {
-    //   socket.join(conversationId);
-    // });
+    socket.on("joinRoom", (conversationId) => {
+      socket.join(conversationId);
+    });
 
     // Listen for new chat message
     socket.on("sendMessage", async (messageData) => {

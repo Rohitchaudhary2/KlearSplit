@@ -5,7 +5,6 @@ import { LoginComponent } from './components/auth/login/login.component';
 import { HomeComponent } from './components/home/home.component';
 import { AuthGuard } from './components/auth/auth.guard';
 import { FriendsComponent } from './components/friends/friends.component';
-import { ChatComponent } from './components/chat/chat.component';
 
 export const routes: Routes = [
   {
@@ -29,9 +28,5 @@ export const routes: Routes = [
     path: 'friends',
     component: FriendsComponent,
     canActivate: [AuthGuard],
-  },
-  {
-    path: 'chat',
-    component: ChatComponent,
   },
 ];

@@ -32,7 +32,7 @@ class FriendService {
       const actualFriend = friend.friend1 || friend.friend2; // Pick the one that's not null
       return {
         conversation_id: friend.conversation_id,
-        status: friend.friend1 ? "SENDER" : "RECEIVER",
+        status: friend.friend1 ? "RECEIVER" : "SENDER",
         balance_amount: friend.balance_amount,
         archival_status: friend.archival_status,
         block_status: friend.block_status,

@@ -1,42 +1,51 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { debounceTime, Subject, switchMap } from 'rxjs';
-import { Friend } from '../friend.model';
+import { debounceTime, of, Subject, switchMap } from 'rxjs';
+import { SearchedUser, User } from '../friend.model';
+import { API_URLS } from '../../../constants/api-urls';
 
 @Component({
   selector: 'app-add-friend',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-  ],
+  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule],
   templateUrl: './add-friend.component.html',
   styleUrl: './add-friend.component.css',
 })
 export class AddFriendComponent implements OnInit {
   dialogRef = inject(MatDialogRef<AddFriendComponent>);
-  users = signal<Friend[]>([]);
+  users = signal<User[]>([]);
   searchSubject = new Subject<string>();
   loading = signal(false);
   private httpClient = inject(HttpClient);
 
   searchInput = signal('');
+  selectedUser = signal<User | undefined>(undefined);
 
   ngOnInit() {
     this.searchSubject
       .pipe(
         debounceTime(500),
-        switchMap((query) => this.searchUsers(query)),
+        switchMap((query) => {
+          if (query.trim() === '') {
+            this.loading.set(false); // Set loading to false if query is empty
+            return of({
+              success: 'false',
+              message: 'Query is empty',
+              data: [],
+            }); // Return an empty result
+          } else {
+            this.loading.set(true); // Set loading to true for non-empty queries
+            return this.searchUsers(query); // Call the API for valid queries
+          }
+        }),
       )
       .subscribe((users) => {
-        this.users.set(users);
+        this.users.set(users.data);
         this.loading.set(false);
       });
   }
@@ -47,14 +56,15 @@ export class AddFriendComponent implements OnInit {
   }
 
   searchUsers(query: string) {
-    return this.httpClient.get<Friend[]>(
-      `http://localhost:3000/api/users?search=${query}`,
-    );
+    return this.httpClient.get<SearchedUser>(`${API_URLS.getUsers}${query}`, {
+      withCredentials: true,
+    });
   }
 
-  selectUser(user: Friend) {
-    this.searchInput.set(user.data[0].email); // user has a 'email' property
-    this.users.set([]); // Clear the user list
+  selectUser(user: User) {
+    this.searchInput.set(user.email);
+    this.users.set([]);
+    this.selectedUser.set(user);
   }
 
   onAdd(): void {

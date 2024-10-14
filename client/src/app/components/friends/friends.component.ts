@@ -1,155 +1,190 @@
-import { Component, inject, signal } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { AddFriendComponent } from './add-friend/add-friend.component';
+import {
+  Component,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+  effect,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ToastrService } from 'ngx-toastr';
-import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { API_URLS } from '../../constants/api-urls';
+import { FriendData, message, messageData } from './friend.model';
+import { TokenService } from '../auth/token.service';
+import { AuthService } from '../auth/auth.service';
+import { ToastrService } from 'ngx-toastr';
+import { FriendsListComponent } from './friends-list/friends-list.component';
+import { SocketService } from './socket.service';
 
 @Component({
   selector: 'app-friends',
   standalone: true,
-  imports: [CurrencyPipe, FormsModule],
+  imports: [FormsModule, FriendsListComponent],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })
-export class FriendsComponent {
-  private dialog = inject(MatDialog);
+export class FriendsComponent implements OnInit, OnDestroy {
+  messageContainer = viewChild<ElementRef>('messageContainer');
   private httpClient = inject(HttpClient);
-  searchTerm = signal('');
 
   private toastr = inject(ToastrService);
-  private friendRequests = signal([
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Rohit',
-      conversation_id: 'gshksdksd',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Ritik Palial',
-      conversation_id: 'gsjksdksd',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Ranveer Singh',
-      conversation_id: 'gshksdksdsx',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Vikas Choudhary',
-      conversation_id: 'gshksdksd12',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Sachin',
-      conversation_id: 'gshksd5ksd',
-    },
-  ]);
 
-  requests = signal(this.friendRequests());
+  tokenService = inject(TokenService);
+  private authService = inject(AuthService);
+  private socketService = inject(SocketService);
+  private readonly getMessagesUrl = API_URLS.getMessages;
+  user = this.authService.currentUser();
+  user_name = `${this.authService.currentUser()?.first_name} ${this.authService.currentUser()?.last_name}`;
 
-  friends = signal([
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Rohit',
-      balanceAmount: 1000,
-      conversation_id: 'gshksd5k8d',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Ritik Palial',
-      balanceAmount: -1000,
-      conversation_id: 'gshksd5k8d',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Ranveer Singh',
-      balanceAmount: 10000,
-      conversation_id: 'gshksd5k8d',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Vikas Choudhary',
-      balanceAmount: -2000,
-      conversation_id: 'gshksd5k8d',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Sachin',
-      balanceAmount: 1000,
-      conversation_id: 'gshksd5k8d',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Harsh',
-      balanceAmount: 10000,
-      conversation_id: 'gshksd5k8d',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Harman',
-      balanceAmount: -2000,
-      conversation_id: 'gshksd5k8d',
-    },
-    {
-      image: 'https://picsum.photos/50',
-      name: 'Ravneet Singh',
-      balanceAmount: 1000,
-      conversation_id: 'gshksd5k8d',
-    },
-  ]);
+  selectedUser = signal<FriendData | undefined>(undefined);
+  messageInput = '';
 
-  friendList = signal(this.friends());
+  messages = signal<messageData[]>([]);
 
-  onAddFriendClick() {
-    const dialogRef = this.dialog.open(AddFriendComponent, {
-      width: '500px',
-      enterAnimationDuration: '500ms',
-      exitAnimationDuration: '500ms',
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.httpClient
-          .post('http://localhost:3000/api/friends/addfriend', result, {
+  ngOnInit(): void {
+    if (this.selectedUser()) {
+      this.httpClient
+        .get<message>(
+          `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
+          {
             withCredentials: true,
-          })
-          .subscribe({
-            next: () => {
-              this.toastr.success('Request Sent Successfully', 'Success', {
+          },
+        )
+        .subscribe({
+          next: (messages) => {
+            this.messages.set(messages.data);
+          },
+        });
+      // Join the room for the current conversation
+      this.socketService.joinRoom(this.selectedUser()!.conversation_id);
+      // Listen for new messages from the server
+      this.socketService.onNewMessage((message: messageData) => {
+        this.messages.set([...this.messages(), message]);
+        this.scrollToBottom();
+      });
+    }
+  }
+  // Function to send a message
+  sendMessage(): void {
+    if (this.messageInput.trim()) {
+      const messageData = {
+        conversation_id: this.selectedUser()!.conversation_id,
+        sender_id: this.tokenService.getUserId(), // Replace with actual sender ID
+        message: this.messageInput,
+      };
+      this.socketService.sendMessage(messageData); // Send the message via the service
+      this.messageInput = ''; // Clear the input field after sending
+    }
+  }
+  ngOnDestroy(): void {
+    if (this.selectedUser()) {
+      this.socketService.leaveRoom(this.selectedUser()!.conversation_id); // Leave the room on destroy
+      this.socketService.disconnect();
+    }
+  }
+
+  onSelectUser(friend: FriendData) {
+    this.selectedUser.set(friend);
+  }
+
+  temp = effect(() => {
+    if (this.selectedUser()) {
+      this.scrollToBottom();
+    }
+  });
+
+  scrollToBottom() {
+    if (this.messageContainer()) {
+      const container = this.messageContainer()?.nativeElement;
+      container.scrollTop = container.scrollHeight;
+    }
+  }
+
+  viewExpense(id: string) {
+    //send conversation id to backend to get all expenses.
+    return id;
+  }
+
+  getArchiveStatus(): string {
+    const user = this.selectedUser();
+    if (
+      user?.archival_status === 'BOTH' ||
+      (user?.status === 'SENDER' && user?.archival_status === 'FRIEND1') ||
+      (user?.status === 'RECEIVER' && user?.archival_status === 'FRIEND2')
+    ) {
+      return 'Unarchived'; // Use 'unblocked' when you want to unblock
+    }
+    return 'Archived'; // Default case
+  }
+
+  getArchiveLabel(): string {
+    const user = this.selectedUser();
+    return user?.archival_status === 'BOTH' ||
+      (user?.status === 'SENDER' && user?.archival_status === 'FRIEND1') ||
+      (user?.status === 'RECEIVER' && user?.archival_status === 'FRIEND2')
+      ? 'Unarchive'
+      : 'Archive';
+  }
+
+  getBlockStatus(): string {
+    const user = this.selectedUser();
+    if (
+      user?.block_status === 'BOTH' ||
+      (user?.status === 'SENDER' && user?.block_status === 'FRIEND1') ||
+      (user?.status === 'RECEIVER' && user?.block_status === 'FRIEND2')
+    ) {
+      return 'Unblocked'; // Use 'unblocked' when you want to unblock
+    }
+    return 'Blocked'; // Default case
+  }
+
+  getBlockLabel(): string {
+    const user = this.selectedUser();
+    return user?.block_status === 'BOTH' ||
+      (user?.status === 'SENDER' && user?.block_status === 'FRIEND1') ||
+      (user?.status === 'RECEIVER' && user?.block_status === 'FRIEND2')
+      ? 'Unblock'
+      : 'Block';
+  }
+
+  archiveBlock(id: string, type: string) {
+    this.httpClient
+      .patch(
+        `${API_URLS.archiveBlockRequest}/${id}`,
+        { type },
+        { withCredentials: true },
+      )
+      .subscribe({
+        next: () => {
+          if (type === 'archived') {
+            this.toastr.success(
+              `${this.getArchiveStatus()} Successfully`,
+              'Success',
+              {
                 timeOut: 3000,
-              });
+              },
+            );
+          } else {
+            this.toastr.success(
+              `${this.getBlockStatus()} Successfully`,
+              'Success',
+              {
+                timeOut: 3000,
+              },
+            );
+          }
+        },
+        error: (err) => {
+          this.toastr.error(
+            err?.error?.message || `Deletion Request Failed!`,
+            'Error',
+            {
+              timeOut: 3000,
             },
-            error: (err) => {
-              this.toastr.error(
-                err?.error?.message || 'Request Failed!',
-                'Error',
-                {
-                  timeOut: 3000,
-                },
-              );
-            },
-          });
-      }
-    });
-  }
-
-  onSearchChange() {
-    const regex = new RegExp(this.searchTerm(), 'i'); // Case-insensitive search
-    this.requests.set(
-      this.friendRequests().filter((user) => regex.test(user.name)),
-    );
-    this.friendList.set(this.friends().filter((user) => regex.test(user.name)));
-  }
-
-  onAccept(id: string) {
-    this.friendList().unshift({
-      ...this.requests().filter((request) => request.conversation_id === id)[0],
-      balanceAmount: 0,
-    });
-    this.requests.set(
-      this.requests().filter((request) => request.conversation_id !== id),
-    );
+          );
+        },
+      });
   }
 }

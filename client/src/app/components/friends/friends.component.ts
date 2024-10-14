@@ -5,15 +5,18 @@ import {
   signal,
   viewChild,
   effect,
+  OnDestroy,
+  OnInit,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { API_URLS } from '../../constants/api-urls';
-import { FriendData, messageData } from './friend.model';
+import { FriendData, message, messageData } from './friend.model';
 import { TokenService } from '../auth/token.service';
 import { AuthService } from '../auth/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { FriendsListComponent } from './friends-list/friends-list.component';
+import { SocketService } from './socket.service';
 
 @Component({
   selector: 'app-friends',
@@ -22,7 +25,7 @@ import { FriendsListComponent } from './friends-list/friends-list.component';
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })
-export class FriendsComponent {
+export class FriendsComponent implements OnInit, OnDestroy {
   messageContainer = viewChild<ElementRef>('messageContainer');
   private httpClient = inject(HttpClient);
 
@@ -30,51 +33,57 @@ export class FriendsComponent {
 
   tokenService = inject(TokenService);
   private authService = inject(AuthService);
+  private socketService = inject(SocketService);
+  private readonly getMessagesUrl = API_URLS.getMessages;
   user = this.authService.currentUser();
   user_name = `${this.authService.currentUser()?.first_name} ${this.authService.currentUser()?.last_name}`;
 
   selectedUser = signal<FriendData | undefined>(undefined);
+  messageInput = '';
 
-  messages = signal<messageData[]>([
-    {
-      message_id: 'sgdhgs',
-      conversation_id: 'sghsd',
-      sender_id: 'saghdf',
-      message:
-        'lorem jaghkuasgd asgdiuasdgas digaisd iusgds disdsakd guisg dsdiusjdf usdjsbdvasd fa ',
-      is_read: false,
-    },
-    {
-      message_id: 'sgdjjhgs',
-      conversation_id: 'sghsd',
-      sender_id: '62975368-2292-4112-9ca0-07e2581192ff',
-      message:
-        'lorem jaghkuasgd asgdiuasdgas digaisd iusgds disdsakd guisg dsdiusjdf usdjsbdvasd fa ',
-      is_read: false,
-    },
-    {
-      message_id: 'sgdjhgs',
-      conversation_id: 'sghsd',
-      sender_id: 'saghdf',
-      message: 'hello kjhdsiuhj dgauksdj,k',
-      is_read: false,
-    },
-    {
-      message_id: 'sgdjhuhgs',
-      conversation_id: 'sghsd',
-      sender_id: '62975368-2292-4112-9ca0-07e2581192ff',
-      message:
-        'lorem jaghkuasgd asgdiuasdgas digaisd iusgds disdsakd guisg dsdiusjdf usdjsbdvasd fa ',
-      is_read: false,
-    },
-    {
-      message_id: 'sgdmhgjjhgs',
-      conversation_id: 'sghsd',
-      sender_id: 'saghdf',
-      message: 'hello jksadb sabdmn s',
-      is_read: false,
-    },
-  ]);
+  messages = signal<messageData[]>([]);
+
+  ngOnInit(): void {
+    if (this.selectedUser()) {
+      this.httpClient
+        .get<message>(
+          `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
+          {
+            withCredentials: true,
+          },
+        )
+        .subscribe({
+          next: (messages) => {
+            this.messages.set(messages.data);
+          },
+        });
+      // Join the room for the current conversation
+      this.socketService.joinRoom(this.selectedUser()!.conversation_id);
+      // Listen for new messages from the server
+      this.socketService.onNewMessage((message: messageData) => {
+        this.messages.set([...this.messages(), message]);
+        this.scrollToBottom();
+      });
+    }
+  }
+  // Function to send a message
+  sendMessage(): void {
+    if (this.messageInput.trim()) {
+      const messageData = {
+        conversation_id: this.selectedUser()!.conversation_id,
+        sender_id: this.tokenService.getUserId(), // Replace with actual sender ID
+        message: this.messageInput,
+      };
+      this.socketService.sendMessage(messageData); // Send the message via the service
+      this.messageInput = ''; // Clear the input field after sending
+    }
+  }
+  ngOnDestroy(): void {
+    if (this.selectedUser()) {
+      this.socketService.leaveRoom(this.selectedUser()!.conversation_id); // Leave the room on destroy
+      this.socketService.disconnect();
+    }
+  }
 
   onSelectUser(friend: FriendData) {
     this.selectedUser.set(friend);

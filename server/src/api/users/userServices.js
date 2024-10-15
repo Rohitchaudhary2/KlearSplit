@@ -248,7 +248,10 @@ class UserService {
     const password = generatePassword();
     const hashPassword = await hashedPassword(password);
 
-    await UserDb.updateUser({ password: hashPassword }, user.user_id);
+    await UserDb.updateUser(
+      { password: hashPassword, failedAttempts: 0, lockoutUntil: null },
+      user.user_id,
+    );
 
     const options = {
       email: user.email,

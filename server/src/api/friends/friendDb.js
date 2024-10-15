@@ -42,7 +42,13 @@ class FriendDb {
         {
           model: User,
           as: "friend1",
-          attributes: ["first_name", "last_name", "email"],
+          attributes: [
+            "user_id",
+            "first_name",
+            "last_name",
+            "email",
+            "image_url",
+          ],
           where: {
             user_id: {
               [Op.ne]: userId,
@@ -53,7 +59,13 @@ class FriendDb {
         {
           model: User,
           as: "friend2",
-          attributes: ["first_name", "last_name", "email"],
+          attributes: [
+            "user_id",
+            "first_name",
+            "last_name",
+            "email",
+            "image_url",
+          ],
           where: {
             user_id: {
               [Op.ne]: userId,

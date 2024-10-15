@@ -56,28 +56,45 @@
                   </td>
                   <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
                     <span>{{ request.friend.first_name }}</span>
-                    <span>{{ request.friend.last_name }}</span>
-                    <div>{{ request.friend.first_name }}99</div>
+                    <span> {{ request.friend.last_name }}</span>
+                    <div>{{ request.friend.first_name }}</div>
                   </td>
                   <td
                     class="text-end col-md-5 col-lg-6 col-sm-6 pt-3 pe-3"
                     style="flex: 0 0 auto"
                   >
-                    <span
-                      ><button
-                        class="btn btn-success btn-sm"
-                        (click)="onAccept(request.conversation_id)"
+                    @if (request.status === "RECEIVER") {
+                      <span
+                        ><button
+                          class="btn btn-success btn-sm"
+                          (click)="
+                            onAccept(request.conversation_id, 'ACCEPTED')
+                          "
+                        >
+                          Accept
+                        </button></span
                       >
-                        Accept
-                      </button></span
-                    >
-                    <span class="ps-2"
-                      ><button class="btn btn-danger btn-sm">Reject</button>
-                    </span>
+                      <span class="ps-2"
+                        ><button
+                          class="btn btn-danger btn-sm"
+                          (click)="
+                            onAccept(request.conversation_id, 'REJECTED')
+                          "
+                        >
+                          Reject
+                        </button>
+                      </span>
+                    } @else {
+                      <span
+                        ><button class="btn btn-danger btn-sm">
+                          Withdraw Request
+                        </button></span
+                      >
+                    }
                   </td>
                 </tr>
               } @empty {
-                <div class="pt-3">No Friend Requests</div>
+                <div class="pt-3 text-center">No Friend Requests</div>
               }
             </tbody>
           </table>
@@ -112,6 +129,9 @@
                     <span
                       ><img [src]="friend.friend.image_url" alt="Image"
                     /></span>
+                    <span
+                      ><img [src]="friend.friend.image_url" alt="Image"
+                    /></span>
                   </td>
                   <td class="col-md-5 col-lg-6 col-sm-5" style="flex: 1 1 0">
                     <span>{{ friend.friend.first_name }}</span>
@@ -124,8 +144,7 @@
                   >
                     @if (getBalanceAsNumber(friend.balance_amount) < 0) {
                       <span class="text-danger">{{
-                        -getBalanceAsNumber(friend.balance_amount)
-                          | currency: "INR"
+                        -getBalanceAsNumber(friend.balance_amount) | currency: "INR"
                       }}</span>
                     } @else {
                       <span class="text-success">{{

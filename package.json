@@ -15,6 +15,7 @@
     ]
   },
   "scripts": {
+    "install": "npm install --prefix server && npm install --prefix client",
     "prepare": "husky install"
   },
   "devDependencies": {

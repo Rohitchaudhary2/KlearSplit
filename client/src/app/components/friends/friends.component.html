@@ -144,7 +144,8 @@
                   >
                     @if (getBalanceAsNumber(friend.balance_amount) < 0) {
                       <span class="text-danger">{{
-                        -getBalanceAsNumber(friend.balance_amount) | currency: "INR"
+                        -getBalanceAsNumber(friend.balance_amount)
+                          | currency: "INR"
                       }}</span>
                     } @else {
                       <span class="text-success">{{

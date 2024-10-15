@@ -30,13 +30,16 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             tokenService.removeUserId();
             break;
           case 403:
-            errorMessage = 'You do not have permission to perform this action.';
+            errorMessage =
+              error.error.message ||
+              'You do not have permission to perform this action.';
             break;
           case 404:
-            errorMessage = 'The requested resource was not found.';
+            errorMessage =
+              error.error.message || 'The requested resource was not found.';
             break;
           case 500:
-            errorMessage = 'Internal server error. Please try again later.';
+            errorMessage = 'Something went wrong. Please try again later.';
             break;
           default:
             errorMessage =
@@ -46,9 +49,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // Display error message using Toastr
-      toastr.error(errorMessage, 'Error', {
-        timeOut: 3000,
-      });
+      toastr.error(errorMessage, 'Error');
 
       return throwError(() => new Error(errorMessage));
     }),

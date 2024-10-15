@@ -238,6 +238,13 @@ class UserService {
     const user = await UserDb.getUserByEmail(userData.email);
     if (!user) throw new ErrorHandler(400, "Email does not exist");
 
+    const otp = await getOtpDb(user.email, userData.otp);
+
+    if (!otp) throw new ErrorHandler(400, "Invalid Otp.");
+
+    if (new Date() >= otp.otp_expiry_time)
+      throw new ErrorHandler(400, "Otp has been expired.");
+
     const password = generatePassword();
     const hashPassword = await hashedPassword(password);
 

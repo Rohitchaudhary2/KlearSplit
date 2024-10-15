@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormErrorMessageService } from '../../shared/form-error-message.service';
 import { LoginUser } from '../login-types.model';
 import { AuthService } from '../auth.service';
@@ -26,6 +26,7 @@ import { API_URLS } from '../../../constants/api-urls';
 export class LoginComponent {
   private formErrorMessages = inject(FormErrorMessageService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
 
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
@@ -53,15 +54,8 @@ export class LoginComponent {
       const user: LoginUser = this.form.value as LoginUser;
       this.authService.login(user).subscribe({
         next: () => {
-          this.toastr.success('User logged in successfully', 'Success', {
-            timeOut: 3000,
-          });
-        },
-        error: (err) => {
-          // Assuming that the error will have a message
-          this.toastr.error(err?.error?.message || 'Login failed!', 'Error', {
-            timeOut: 3000,
-          });
+          this.toastr.success('User logged in successfully', 'Success');
+          this.router.navigate(['/dashboard']);
         },
       });
     }
@@ -93,15 +87,7 @@ export class LoginComponent {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.authService.forgotPassword(user, result).subscribe({
-          error: (err) => {
-            this.toastr.error(
-              err?.error?.message || 'Unable to send password at the moment!',
-              'Error',
-              { timeOut: 3000 },
-            );
-          },
-        });
+        this.authService.forgotPassword(user, result).subscribe();
       }
     });
   }

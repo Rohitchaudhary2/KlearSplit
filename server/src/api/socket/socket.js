@@ -8,6 +8,11 @@ const socketHandler = (io) => {
       socket.join(conversationId);
     });
 
+    // Listen for leaving a conversation room
+    socket.on("leaveRoom", (conversationId) => {
+      socket.leave(conversationId);
+    });
+
     // Listen for new chat message
     socket.on("sendMessage", async (messageData) => {
       try {

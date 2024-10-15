@@ -4,7 +4,6 @@ import {
   inject,
   signal,
   viewChild,
-  effect,
   OnDestroy,
   ChangeDetectorRef,
 } from '@angular/core';
@@ -89,12 +88,6 @@ export class FriendsComponent implements OnDestroy {
       this.scrollToBottom();
     });
   }
-
-  temp = effect(() => {
-    if (this.selectedUser()) {
-      this.scrollToBottom();
-    }
-  });
 
   scrollToBottom() {
     if (this.messageContainer()) {

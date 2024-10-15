@@ -8,6 +8,7 @@ import sendMail from "../utils/sendMail.js";
 import { createOtpDb, getOtpDb } from "./otpDb.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import { otpGenrator } from "../utils/otpGenerator.js";
+import FriendService from "../friends/friendService.js";
 
 class UserService {
   static verifyUser = async (user) => {
@@ -265,8 +266,27 @@ class UserService {
 
   // Service to get users by a regular expression
   static getUsersByRegex = async (data) => {
-    const users = await UserDb.getUsersByRegex(data);
-    return users;
+    const users = await UserDb.getUsersByRegex(data.regex);
+    const filteredUsers = await Promise.all(
+      users
+        .filter((user) => user.user_id !== data.user_id) // Filter out the current user
+        .map(async (user) => {
+          const newFriendData = {
+            friend1_id: data.user_id, // Assuming logged-in user's ID
+            friend2_id: user.user_id,
+          };
+
+          // Check if the friend relationship exists
+          const friendExist =
+            await FriendService.checkFriendExist(newFriendData);
+
+          // Return user if not a friend, otherwise null
+          return friendExist ? null : user;
+        }),
+    );
+
+    // Remove null values (users who are already friends)
+    return filteredUsers.filter((user) => user !== null);
   };
 
   // Service for updating user in the database

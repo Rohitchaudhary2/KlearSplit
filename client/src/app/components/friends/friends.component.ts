@@ -4,7 +4,6 @@ import {
   inject,
   signal,
   viewChild,
-  effect,
   OnDestroy,
   ChangeDetectorRef,
 } from '@angular/core';
@@ -46,7 +45,57 @@ export class FriendsComponent implements OnDestroy {
 
   messages = signal<messageData[]>([]);
 
-  // Function to send a message
+  ngOnDestroy(): void {
+    if (this.selectedUser()) {
+      this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
+      this.socketService.disconnect();
+    }
+  }
+
+  onSelectUser(friend: FriendData) {
+    if (this.selectedUser()) {
+      // Leave the previous room
+      this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
+      // Remove the existing 'onNewMessage' listener
+      this.socketService.removeNewMessageListener();
+    }
+
+    this.selectedUser.set(friend);
+
+    // Fetch messages for the newly selected user
+    this.httpClient
+      .get<message>(
+        `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
+        {
+          withCredentials: true,
+        },
+      )
+      .subscribe({
+        next: (messages) => {
+          this.messages.set(messages.data);
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        },
+      });
+
+    // Join the room for the new conversation
+    this.socketService.joinRoom(this.selectedUser()!.conversation_id);
+
+    // Listen for new messages from the server for the new room
+    this.socketService.onNewMessage((message: messageData) => {
+      this.messages.set([...this.messages(), message]);
+      this.cdr.detectChanges();
+      this.scrollToBottom();
+    });
+  }
+
+  scrollToBottom() {
+    if (this.messageContainer()) {
+      const container = this.messageContainer()?.nativeElement;
+      container.scrollTop = container.scrollHeight;
+    }
+  }
+
   sendMessage(): void {
     if (this.messageInput.trim()) {
       const messageData = {
@@ -59,53 +108,7 @@ export class FriendsComponent implements OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    if (this.selectedUser()) {
-      this.socketService.leaveRoom(this.selectedUser()!.conversation_id); // Leave the room on destroy
-      this.socketService.disconnect();
-    }
-  }
-
-  onSelectUser(friend: FriendData) {
-    this.selectedUser.set(friend);
-  }
-
-  temp = effect(() => {
-    if (this.selectedUser()) {
-      this.httpClient
-        .get<message>(
-          `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
-          {
-            withCredentials: true,
-          },
-        )
-        .subscribe({
-          next: (messages) => {
-            this.messages.set(messages.data);
-            this.cdr.detectChanges();
-            this.scrollToBottom();
-          },
-        });
-      // Join the room for the current conversation
-      this.socketService.joinRoom(this.selectedUser()!.conversation_id);
-      // Listen for new messages from the server
-      this.socketService.onNewMessage((message: messageData) => {
-        this.messages.set([...this.messages(), message]);
-        this.cdr.detectChanges();
-        this.scrollToBottom();
-      });
-    }
-  });
-
-  scrollToBottom() {
-    if (this.messageContainer()) {
-      const container = this.messageContainer()?.nativeElement;
-      container.scrollTop = container.scrollHeight;
-    }
-  }
-
   viewExpense(id: string) {
-    //send conversation id to backend to get all expenses.
     return id;
   }
 

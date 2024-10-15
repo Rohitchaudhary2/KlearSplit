@@ -60,6 +60,12 @@ const User = sequelize.define(
         group_settlement_notifications: true,
       },
     },
+    failedAttempts: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    lockoutUntil: { type: DataTypes.DATE, allowNull: true, default: null },
     is_admin: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

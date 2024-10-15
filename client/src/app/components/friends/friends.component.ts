@@ -203,8 +203,6 @@ export class FriendsComponent implements OnDestroy {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        delete result.participant1_share;
-        delete result.participant2_share;
         this.httpClient
           .post(
             `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,

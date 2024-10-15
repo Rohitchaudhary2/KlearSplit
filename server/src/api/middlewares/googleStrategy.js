@@ -8,6 +8,7 @@ import sendMail from "../utils/sendMail.js";
 import AuthService from "../auth/authServices.js";
 import sequelize from "../../config/db.connection.js";
 import UserDb from "../users/userDb.js";
+import { ErrorHandler } from "./errorHandler.js";
 
 passport.use(
   new GoogleStrategy(
@@ -44,6 +45,16 @@ passport.use(
             message: "Thank you for registering with us.",
             password,
           });
+        }
+
+        const currentTime = new Date();
+        if (user.lockoutUntil && user.lockoutUntil > currentTime) {
+          return done(
+            new ErrorHandler(
+              403,
+              "Your account is temporarily unavailable. Please follow the instructions sent to your registered email.",
+            ),
+          );
         }
 
         // Generate access and refresh tokens

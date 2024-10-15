@@ -7,6 +7,7 @@ import {
 } from "./tokenDb.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
+import sendMail from "../utils/sendMail.js";
 
 class AuthService {
   // Service for handling login functionality
@@ -15,16 +16,45 @@ class AuthService {
 
     // Checking whether the email is correct
     const user = await UserDb.getUserByEmail(email, false);
-    if (!user) throw new ErrorHandler(404, "Email not found.");
+    if (!user) throw new ErrorHandler(404, "Email or Password is wrong.");
     else if (user && user.dataValues.deletedAt)
       throw new ErrorHandler(400, "Looks like you had an account.");
 
+    const currentTime = new Date();
+    if (user.lockoutUntil && user.lockoutUntil > currentTime) {
+      throw new ErrorHandler(
+        403,
+        "Your account is temporarily unavailable. Please follow the instructions sent to your registered email.",
+      );
+    }
     // checking whether password is valid
     const validPassword = await bcrypt.compare(
       password,
       user.dataValues.password,
     );
-    if (!validPassword) throw new ErrorHandler(404, "Password is wrong.");
+    if (!validPassword) {
+      user.failedAttempts += 1;
+
+      if (user.failedAttempts >= 3) {
+        user.lockoutUntil = new Date(currentTime.getTime() + 15 * 60 * 1000); // lock for 15 minutes
+        const options = {
+          email,
+          subject: "Important: Your Account Has Been Temporarily Locked",
+        };
+        await sendMail(options, "accountBlock", {
+          name: user.dataValues.first_name,
+          email,
+          lockoutDuration: "15 minutes",
+        });
+      }
+
+      await user.save();
+      throw new ErrorHandler(404, "Email or Password is wrong.");
+    } else {
+      user.failedAttempts = 0;
+      user.lockoutUntil = null;
+      await user.save();
+    }
 
     // Generate access and refresh tokens
     const { accessToken, refreshToken } = generateAccessAndRefereshTokens(

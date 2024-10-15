@@ -33,6 +33,14 @@ export class LoginComponent {
 
   private readonly googleAuthUrl = API_URLS.googleAuth;
 
+  loginFailed = false;
+
+  constructor() {
+    this.form.valueChanges.subscribe(() => {
+      this.loginFailed = false;
+    });
+  }
+
   form = new FormGroup({
     email: new FormControl('', {
       validators: [Validators.required, Validators.email],
@@ -56,6 +64,9 @@ export class LoginComponent {
         next: () => {
           this.toastr.success('User logged in successfully', 'Success');
           this.router.navigate(['/dashboard']);
+        },
+        error: () => {
+          this.loginFailed = true;
         },
       });
     }

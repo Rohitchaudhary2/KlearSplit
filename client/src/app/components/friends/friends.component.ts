@@ -167,29 +167,13 @@ export class FriendsComponent implements OnDestroy {
             this.toastr.success(
               `${this.getArchiveStatus()} Successfully`,
               'Success',
-              {
-                timeOut: 3000,
-                progressBar: true,
-              },
             );
           } else {
             this.toastr.success(
               `${this.getBlockStatus()} Successfully`,
               'Success',
-              {
-                timeOut: 3000,
-              },
             );
           }
-        },
-        error: (err) => {
-          this.toastr.error(
-            err?.error?.message || `Settle up before this action!`,
-            'Error',
-            {
-              timeOut: 3000,
-            },
-          );
         },
       });
   }
@@ -215,16 +199,7 @@ export class FriendsComponent implements OnDestroy {
           )
           .subscribe({
             next: () => {
-              this.toastr.success('Expense Created successfully', 'Success', {
-                timeOut: 3000,
-              });
-            },
-            error: (err) => {
-              this.toastr.error(
-                err?.error?.message || 'Expense Creation failed!',
-                'Error',
-                { timeOut: 3000 },
-              );
+              this.toastr.success('Expense Created successfully', 'Success');
             },
           });
       }

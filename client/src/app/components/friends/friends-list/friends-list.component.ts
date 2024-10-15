@@ -94,9 +94,6 @@ export class FriendsListComponent implements OnInit {
               this.toastr.error(
                 err?.error?.message || 'Request Failed!',
                 'Error',
-                {
-                  timeOut: 3000,
-                },
               );
             },
           });
@@ -140,9 +137,6 @@ export class FriendsListComponent implements OnInit {
           this.toastr.error(
             err?.error?.message || `${status} Request Failed!`,
             'Error',
-            {
-              timeOut: 3000,
-            },
           );
         },
       });
@@ -164,9 +158,6 @@ export class FriendsListComponent implements OnInit {
           this.toastr.error(
             err?.error?.message || `Deletion Request Failed!`,
             'Error',
-            {
-              timeOut: 3000,
-            },
           );
         },
       });

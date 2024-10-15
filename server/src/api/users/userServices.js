@@ -153,12 +153,6 @@ class UserService {
     if (new Date() >= otp.otp_expiry_time)
       throw new ErrorHandler(400, "Otp has been expired.");
 
-    //Generating random password
-    const password = generatePassword();
-
-    //Hashing the password
-    user.password = await hashedPassword(password);
-
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
@@ -177,12 +171,6 @@ class UserService {
           token: refreshToken,
           user_id: restoredUser.user_id,
         },
-        transaction,
-      );
-
-      await UserDb.updateUser(
-        { password: user.password },
-        restoredUser.user_id,
         transaction,
       );
 

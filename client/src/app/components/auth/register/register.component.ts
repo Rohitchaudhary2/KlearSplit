@@ -71,13 +71,6 @@ export class RegisterComponent {
         next: () => {
           this.openOtpDialog(userToSend); // Open dialog box for OTP input
         },
-        error: (err) => {
-          this.toastr.error(
-            err?.error?.message || 'OTP verification failed!',
-            'Error',
-            { timeOut: 3000 },
-          );
-        },
       });
     }
   }
@@ -93,17 +86,8 @@ export class RegisterComponent {
       if (result) {
         this.authService.registerUserWithOtp(user, result).subscribe({
           next: () => {
-            this.toastr.success('User registered successfully', 'Success', {
-              timeOut: 3000,
-            });
+            this.toastr.success('User registered successfully', 'Success');
             this.router.navigate(['/dashboard']);
-          },
-          error: (err) => {
-            this.toastr.error(
-              err?.error?.message || 'Registration failed!',
-              'Error',
-              { timeOut: 3000 },
-            );
           },
         });
       }
@@ -136,15 +120,7 @@ export class RegisterComponent {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.authService.restoreAccount(user, result).subscribe({
-          error: (err) => {
-            this.toastr.error(
-              err?.error?.message || 'Unable to restore account at the moment!',
-              'Error',
-              { timeOut: 3000 },
-            );
-          },
-        });
+        this.authService.restoreAccount(user, result).subscribe();
       }
     });
   }

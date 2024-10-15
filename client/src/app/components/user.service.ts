@@ -24,14 +24,13 @@ export class UserService {
     const getUserUrlWithId = `${this.getUserUrl}/${userId}`;
     return this.httpClient
       .get<FetchResponse>(getUserUrlWithId, {
-        observe: 'response',
         withCredentials: true,
       })
       .pipe(
         map((response) => {
-          if (response.body) {
-            this.authService.setAuthenticatedUser(response.body?.data);
-            this.tokenService.setUserId(response.body?.data?.user_id);
+          if (response) {
+            this.authService.setAuthenticatedUser(response.data);
+            this.tokenService.setUserId(response.data?.user_id);
             return true;
           } else return false;
         }),

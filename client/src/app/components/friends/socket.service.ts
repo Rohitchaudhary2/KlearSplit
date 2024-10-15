@@ -35,6 +35,12 @@ export class SocketService {
   }
 
   leaveRoom(conversationId: string): void {
-    this.socket.emit('leaveRoom', conversationId);
+    if (this.socket) {
+      this.socket.emit('leaveRoom', conversationId);
+    }
+  }
+
+  removeNewMessageListener(): void {
+    this.socket.off('newMessage');
   }
 }

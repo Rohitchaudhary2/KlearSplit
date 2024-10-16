@@ -63,6 +63,7 @@ cd KlearSplit
     ```
 
    The backend server will run on `http://localhost:3000` by default.
+   
    The Angular application will run on `http://localhost:4200` by default.
 
 ## Environment Variables

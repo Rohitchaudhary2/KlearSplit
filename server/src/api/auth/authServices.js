@@ -36,6 +36,7 @@ class AuthService {
       user.failedAttempts += 1;
 
       if (user.failedAttempts >= 3) {
+        user.failedAttempts = 0;
         user.lockoutUntil = new Date(currentTime.getTime() + 15 * 60 * 1000); // lock for 15 minutes
         const options = {
           email,

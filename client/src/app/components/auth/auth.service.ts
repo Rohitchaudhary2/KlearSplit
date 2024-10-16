@@ -47,7 +47,7 @@ export class AuthService {
       .pipe(
         map((response) => {
           // Handle OTP verification success response here (if needed)
-          this.toastr.success('OTP sent successfully');
+          this.toastr.success('OTP sent successfully', 'Success');
           return response;
         }),
       );

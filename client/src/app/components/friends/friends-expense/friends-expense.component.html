@@ -1,11 +1,10 @@
-<h2 mat-dialog-title class="text-center bg-success text-white py-2">Add an Expense</h2>
-<div
-  mat-dialog-content
-  class="d-flex flex-column align-items-center px-4 pt-4"
->
+<h2 mat-dialog-title class="text-center bg-success text-white py-2">
+  Add an Expense
+</h2>
+<div mat-dialog-content class="d-flex flex-column align-items-center px-4 pt-4">
   <form [formGroup]="form" class="w-100">
     <div class="mb-3">
-      <mat-form-field appearance="outline" class="w-100 custom-form-field mb-2" >
+      <mat-form-field appearance="outline" class="w-100 custom-form-field mb-2">
         <mat-label>Expense Name</mat-label>
         <input
           matInput
@@ -57,9 +56,21 @@
       </mat-form-field> -->
       <div class="d-flex justify-content-center align-items-center mb-3">
         <mat-label>Paid by</mat-label>
-        <button class="mx-2 text-success" mat-raised-button (click)="openSecondDialog()">{{getPayerName()}}</button>
+        <button
+          class="mx-2 text-success"
+          mat-raised-button
+          (click)="openSecondDialog()"
+        >
+          {{ getPayerName() }}
+        </button>
         <mat-label>and split</mat-label>
-        <button class="mx-2 text-success" mat-raised-button (click)="openSecondDialog()">equally</button>
+        <button
+          class="mx-2 text-success"
+          mat-raised-button
+          (click)="openSecondDialog()"
+        >
+          equally
+        </button>
       </div>
 
       <!-- <mat-form-field appearance="outline" class="w-100 custom-form-field">
@@ -105,8 +116,13 @@
         </mat-form-field>
       }
       <div class="parent-container">
-        <div class="file-upload" style="text-align: center;" >
-          <label for="bill-receipt" class="upload-label px-3" style="color: green;">Upload Bill Receipt</label>
+        <div class="file-upload" style="text-align: center">
+          <label
+            for="bill-receipt"
+            class="upload-label px-3"
+            style="color: green"
+            >Upload Bill Receipt</label
+          >
           <input
             type="file"
             id="bill-receipt"
@@ -116,7 +132,7 @@
           />
         </div>
       </div>
-      
+
       <!-- <div class="file-upload">
         <label for="bill-receipt" style="width: 30%;">Bill Receipt</label>
         <input

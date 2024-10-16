@@ -12,58 +12,62 @@
             <div class="col-lg-6">
               <div class="card-body p-md-3 mx-md-4">
                 <div class="text-center">
-                  <img src="/logo.png" style="width: 185px" alt="logo" />
+                  <img src="/logo.png" style="width: 85px" alt="logo" />
                   <h4 class="mt-1 pb-1">We are The KlearSplit Team</h4>
                 </div>
 
-                <form
-                  class="was-validated"
-                  [formGroup]="form"
-                  (ngSubmit)="onSubmit()"
-                >
+                <form [formGroup]="form" (ngSubmit)="onSubmit()">
                   <p class="mt-4">Please login to your account</p>
-                  <div class="form-floating mt-4">
-                    <input
-                      type="email"
-                      id="email"
-                      class="form-control"
-                      name="email"
-                      placeholder="test@example.com"
-                      formControlName="email"
-                    />
-                    <label class="form-label" for="email">Email address</label>
-                  </div>
 
-                  @if (getFormErrors("email")) {
-                    <p class="text-danger mt-0">{{ getFormErrors("email") }}</p>
-                  }
+                  <mat-form-field
+                    appearance="outline"
+                    class="w-100"
+                    [ngClass]="{ 'mb-2': getFormErrors('email') }"
+                  >
+                    <mat-label>Email</mat-label>
+                    <mat-icon matPrefix>email</mat-icon>
+                    <input matInput formControlName="email" />
+                    @if (getFormErrors("email")) {
+                      <mat-error>{{ getFormErrors("email") }}</mat-error>
+                    }
+                  </mat-form-field>
 
-                  <div class="form-floating mt-4">
+                  <mat-form-field
+                    appearance="outline"
+                    class="w-100"
+                    [ngClass]="{ 'mb-2': getFormErrors('password') }"
+                  >
+                    <mat-label>Password</mat-label>
+                    <mat-icon matPrefix>lock</mat-icon>
                     <input
-                      type="password"
-                      id="password"
-                      class="form-control"
-                      name="password"
-                      placeholder="Password"
+                      matInput
+                      [type]="hidePassword ? 'password' : 'text'"
                       formControlName="password"
                     />
-                    <label class="form-label" for="password">Password</label>
-                  </div>
-
-                  @if (getFormErrors("password")) {
-                    <p class="text-danger mt-0">
-                      {{ getFormErrors("password") }}
-                    </p>
-                  }
+                    <button
+                      mat-icon-button
+                      matSuffix
+                      (click)="hidePassword = !hidePassword"
+                      [attr.aria-label]="'Hide password'"
+                      [attr.aria-pressed]="hidePassword"
+                      type="button"
+                    >
+                      <mat-icon>{{
+                        hidePassword ? "visibility_off" : "visibility"
+                      }}</mat-icon>
+                    </button>
+                    @if (getFormErrors("password")) {
+                      <mat-error>{{ getFormErrors("password") }}</mat-error>
+                    }
+                  </mat-form-field>
 
                   <div class="text-center text-light pt-1 mb-1 pb-1">
                     <button
-                      [disabled]="form.invalid"
+                      [disabled]="form.invalid || loginFailed"
                       mat-button
                       disableRipple
-                      class="custom-mat-button mt-3 w-100"
+                      class="custom-mat-button mt-1 w-100"
                       type="submit"
-                      style="background-color: #1995ad"
                     >
                       Login
                     </button>

@@ -129,7 +129,7 @@ class FriendService {
       );
       return friendUpdate;
     }
-    throw new ErrorHandler(400, "Invalid request");
+    throw new ErrorHandler(400, "Settle up before this action!");
   };
 
   // Service to save messages in db
@@ -164,105 +164,6 @@ class FriendService {
     });
   };
 
-  // Service to add expenses
-  // static addExpense = async (expenseData, conversation_id) => {
-  //   const friendExist = await FriendDb.getFriend(conversation_id);
-  //   if (!friendExist) throw new ErrorHandler(404, "Friend not found");
-  //   const transaction = await sequelize.transaction();
-  //   if (expenseData.payer_id === friendExist.dataValues.friend1_id) {
-  //     if (expenseData.split_type === "EQUAL") {
-  //       const debtor_amount = parseFloat(expenseData.total_amount) / 2;
-  //       expenseData.debtor_amount = debtor_amount;
-  //       try {
-  //         const expense = await FriendDb.addExpense(expenseData, transaction);
-  //         const balance_amount = friendExist.balance_amount + debtor_amount;
-  //         await FriendDb.updateFriends({ balance_amount }, conversation_id, transaction);
-  //         await transaction.commit();
-  //         return expense;
-  //       } catch (error) {
-  //         // Rollback the transaction in case of error
-  //         await transaction.rollback();
-  //         throw error; // Rethrow the error after rollback
-  //       }
-  //     } else if (expenseData.split_type === "UNEQUAL") {
-  //       const debtor_amount = parseFloat(expenseData.debtor_amount);
-  //       expenseData.debtor_amount = debtor_amount;
-  //       try {
-  //         const expense = await FriendDb.addExpense(expenseData, transaction);
-  //         const balance_amount = friendExist.balance_amount + debtor_amount;
-  //         await FriendDb.updateFriends({ balance_amount }, conversation_id, transaction);
-  //         await transaction.commit();
-  //         return expense;
-  //       } catch (error) {
-  //         // Rollback the transaction in case of error
-  //         await transaction.rollback();
-  //         throw error; // Rethrow the error after rollback
-  //       }
-  //     } else if (expenseData.split_type === "PERCENTAGE") {
-  //       const debtor_amount = parseFloat(expenseData.total_amount) * parseFloat(expenseData.debtor_percentage) / 100;
-  //       expenseData.debtor_amount = debtor_amount;
-  //       try {
-  //         const expense = await FriendDb.addExpense(expenseData, transaction);
-  //         const balance_amount = friendExist.balance_amount + debtor_amount;
-  //         await FriendDb.updateFriends({ balance_amount }, conversation_id, transaction);
-  //         await transaction.commit();
-  //         return expense;
-  //       } catch (error) {
-  //         // Rollback the transaction in case of error
-  //         await transaction.rollback();
-  //         throw error; // Rethrow the error after rollback
-  //       }
-  //     } else {
-  //       throw new ErrorHandler(400, "Split type not recognized");
-  //     }
-  //   } else {
-  //     if (expenseData.split_type === "EQUAL") {
-  //       const debtor_amount = parseFloat(expenseData.total_amount) / 2;
-  //       expenseData.debtor_amount = debtor_amount;
-  //       try {
-  //         const expense = await FriendDb.addExpense(expenseData, transaction);
-  //         const balance_amount = friendExist.balance_amount - debtor_amount;
-  //         await FriendDb.updateFriends({ balance_amount }, conversation_id, transaction);
-  //         await transaction.commit();
-  //         return expense;
-  //       } catch (error) {
-  //         // Rollback the transaction in case of error
-  //         await transaction.rollback();
-  //         throw error; // Rethrow the error after rollback
-  //       }
-  //     } else if (expenseData.split_type === "UNEQUAL") {
-  //       const debtor_amount = parseFloat(expenseData.debtor_amount);
-  //       expenseData.debtor_amount = debtor_amount;
-  //       try {
-  //         const expense = await FriendDb.addExpense(expenseData, transaction);
-  //         const balance_amount = friendExist.balance_amount - debtor_amount;
-  //         await FriendDb.updateFriends({ balance_amount }, conversation_id, transaction);
-  //         await transaction.commit();
-  //         return expense;
-  //       } catch (error) {
-  //         // Rollback the transaction in case of error
-  //         await transaction.rollback();
-  //         throw error; // Rethrow the error after rollback
-  //       }
-  //     } else if (expenseData.split_type === "PERCENTAGE") {
-  //       const debtor_amount = parseFloat(expenseData.total_amount) * parseFloat(expenseData.debtor_percentage) / 100;
-  //       expenseData.debtor_amount = debtor_amount;
-  //       try {
-  //         const expense = await FriendDb.addExpense(expenseData, transaction);
-  //         const balance_amount = friendExist.balance_amount - debtor_amount;
-  //         await FriendDb.updateFriends({ balance_amount }, conversation_id, transaction);
-  //         await transaction.commit();
-  //         return expense;
-  //       } catch (error) {
-  //         // Rollback the transaction in case of error
-  //         await transaction.rollback();
-  //         throw error; // Rethrow the error after rollback
-  //       }
-  //     } else {
-  //       throw new ErrorHandler(400, "Split type not recognized");
-  //     }
-  //   }
-  // }
   static addExpense = async (expenseData, conversation_id) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");

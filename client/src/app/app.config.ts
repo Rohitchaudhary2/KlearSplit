@@ -33,7 +33,6 @@ export const appConfig: ApplicationConfig = {
     provideToastr(),
     importProvidersFrom(
       ToastrModule.forRoot({
-        // maxOpened: 1, // Limit to one toast
         preventDuplicates: true,
         timeOut: 3000,
         progressBar: true,

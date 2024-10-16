@@ -1,13 +1,12 @@
-<h2 mat-dialog-title class="text-center">Verify OTP</h2>
-<div mat-dialog-content class="d-flex flex-column align-items-center p-4">
+<h2 mat-dialog-title class="text-center py-2">Verify OTP</h2>
+<div mat-dialog-content class="d-flex flex-column align-items-center p-2">
   <form [formGroup]="otpForm" class="w-100">
     <div class="mb-3">
-      <mat-form-field appearance="outline" class="w-100">
+      <mat-form-field appearance="outline" class="w-100 px-2">
         <mat-label>Enter OTP</mat-label>
         <input
           matInput
           formControlName="otp"
-          style="background-color: transparent"
         />
         @if (otpForm.controls["otp"].invalid) {
           <mat-error>OTP is required and should be 6 digits.</mat-error>
@@ -20,7 +19,6 @@
   <button
     mat-button
     disableRipple
-    class="custom-mat-button"
     (click)="onCancel()"
   >
     Cancel
@@ -28,7 +26,6 @@
   <button
     mat-button
     disableRipple
-    class="custom-mat-button"
     (click)="onVerify()"
     [disabled]="otpForm.invalid"
   >

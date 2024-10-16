@@ -15,11 +15,23 @@ import { ForgotPasswordComponent } from '../forgot-password/forgot-password.comp
 import { MatDialog } from '@angular/material/dialog';
 import { OtpDialogComponent } from '../otp-dialog/otp-dialog.component';
 import { API_URLS } from '../../../constants/api-urls';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, MatButtonModule],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    NgClass,
+  ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
@@ -35,6 +47,7 @@ export class LoginComponent {
   private readonly googleAuthUrl = API_URLS.googleAuth;
 
   loginFailed = false;
+  hidePassword = true;
 
   constructor() {
     this.form.valueChanges.subscribe(() => {
@@ -86,7 +99,6 @@ export class LoginComponent {
 
   openForgotPasswordDialog() {
     const dialogRef = this.dialog.open(ForgotPasswordComponent, {
-      width: '500px',
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
     });
@@ -99,11 +111,11 @@ export class LoginComponent {
         });
       }
     });
+    dialogRef.updateSize('25%');
   }
 
   openOtpDialog(user: { email: string }) {
     const dialogRef = this.dialog.open(OtpDialogComponent, {
-      width: '500px',
       data: user,
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
@@ -113,6 +125,7 @@ export class LoginComponent {
         this.authService.forgotPassword(user, result).subscribe();
       }
     });
+    dialogRef.updateSize('25%');
   }
 
   onGoogleSignIn() {

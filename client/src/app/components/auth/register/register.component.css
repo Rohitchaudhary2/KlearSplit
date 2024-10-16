@@ -1,7 +1,7 @@
 /* Custom styling for mat-button*/
 .custom-mat-button {
   background-color: #1995ad; /* Primary button color */
-  color: white !important; /* Button text color */
+  color: white; /* Button text color */
   font-size: 1.1rem; /* Slightly larger font size for better readability */
   font-weight: 500; /* Make text slightly bold */
   padding: 12px 0; /* Padding for a comfortable button height */
@@ -23,11 +23,10 @@
 
 /* Disabled button styles */
 .custom-mat-button[disabled] {
-  background-color: #6c757d !important; /* Grey color when disabled */
-  color: white !important; /* Force text color to stay white even when disabled */
-  cursor: not-allowed !important; /* Disable pointer events */
+  color: white; /* Force text color to stay white even when disabled */
+  cursor: not-allowed; /* Disable pointer events */
   opacity: 0.65; /* Slightly faded look for disabled state */
-  pointer-events: none; /* Ensure no interactions when disabled */
+  pointer-events: auto; /* Ensure no interactions when disabled */
 }
 .custom-google-btn {
   background-color: #4285f4; /* Google's blue */

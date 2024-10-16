@@ -13,11 +13,24 @@ import { ToastrService } from 'ngx-toastr';
 import { MatDialog } from '@angular/material/dialog';
 import { OtpDialogComponent } from '../otp-dialog/otp-dialog.component';
 import { RestoreAccountComponent } from '../restore-account/restore-account.component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    NgClass,
+  ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css'], // Fix: styleUrl -> styleUrls
 })
@@ -77,7 +90,6 @@ export class RegisterComponent {
 
   openOtpDialog(user: Partial<RegisterUser>) {
     const dialogRef = this.dialog.open(OtpDialogComponent, {
-      width: '500px',
       data: user,
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
@@ -92,11 +104,11 @@ export class RegisterComponent {
         });
       }
     });
+    dialogRef.updateSize('25%');
   }
 
   openRestoreAccountDialog() {
     const dialogRef = this.dialog.open(RestoreAccountComponent, {
-      width: '500px',
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
     });
@@ -109,11 +121,11 @@ export class RegisterComponent {
         });
       }
     });
+    dialogRef.updateSize('25%');
   }
 
   openOtpDialogRestoreAccount(user: { email: string }) {
     const dialogRef = this.dialog.open(OtpDialogComponent, {
-      width: '500px',
       data: user,
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
@@ -123,6 +135,7 @@ export class RegisterComponent {
         this.authService.restoreAccount(user, result).subscribe();
       }
     });
+    dialogRef.updateSize('25%');
   }
 
   onGoogleSignUp() {

@@ -4,12 +4,12 @@ import { ToastrService } from 'ngx-toastr';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
-// import { TokenService } from '../auth/token.service';
+import { TokenService } from '../auth/token.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toastr = inject(ToastrService);
   const router = inject(Router);
-  // const tokenService = inject(TokenService);
+  const tokenService = inject(TokenService);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -27,7 +27,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           case 401:
             errorMessage = 'Unauthorized. Please log in.';
             router.navigate(['/login']);
-            // tokenService.removeUserId();
+            tokenService.removeUserId();
             break;
           case 403:
             errorMessage =

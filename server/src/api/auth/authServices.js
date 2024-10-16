@@ -18,7 +18,10 @@ class AuthService {
     const user = await UserDb.getUserByEmail(email, false);
     if (!user) throw new ErrorHandler(404, "Email or Password is wrong.");
     else if (user && user.dataValues.deletedAt)
-      throw new ErrorHandler(400, "Looks like you had an account.");
+      throw new ErrorHandler(
+        400,
+        "Looks like you had an account. Please restore it.",
+      );
 
     const currentTime = new Date();
     if (user.lockoutUntil && user.lockoutUntil > currentTime) {
@@ -119,7 +122,7 @@ class AuthService {
   static deleteRefreshToken = async (req) => {
     const isDeleted = await deleteRefreshTokenDb(req);
     if (!isDeleted)
-      throw new ErrorHandler(404, "Error while deleting refresh token");
+      throw new ErrorHandler(503, "Error while deleting refresh token");
   };
 }
 

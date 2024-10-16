@@ -1,4 +1,53 @@
-.dialog-content {
-  max-height: 70vh; /* Limit height to 70% of the viewport height */
-  overflow-y: auto; /* Enable vertical scrolling */
+.custom-form-field {
+  width: 100%; /* Ensure full width */
+}
+
+.custom-form-field .mat-form-field-wrapper {
+  height: 34px !important; /* Set the height you want */
+}
+
+.custom-form-field .mat-form-field-flex {
+  height: 100%; /* Ensure the flex container takes full height */
+}
+
+.custom-form-field .mat-input-element {
+  height: 100%; /* Ensure the input takes full height */
+  padding: 0 12px; /* Adjust horizontal padding */
+  line-height: 1.5; /* Adjust line height for better alignment */
+  box-sizing: border-box; /* Ensure padding doesn't affect height */
+}
+
+.cdk-overlay-container .mat-dialog-container {
+  width: 400px !important; /* Desired width */
+  max-width: none !important; /* Prevent default max-width */
+}
+
+.cdk-overlay-pane.mat-mdc-dialog-panel {
+  max-width: 100% !important;
+}
+
+.file-upload {
+  display: flex;
+  align-items: center; /* Align label and input vertically */
+}
+
+
+.file-input {
+  display: none; /* Hide the default file input */
+}
+
+.file-upload {
+  width: fit-content;
+  display: flex;
+  flex-direction: column; /* Stack label and upload text */
+  align-items: center; /* Center the contents */
+  border: 1px solid green; /* Black border */
+  border-radius: 8px; /* Optional: rounded corners */
+  text-align: center; /* Center text inside the div */
+}
+
+.parent-container {
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
 }

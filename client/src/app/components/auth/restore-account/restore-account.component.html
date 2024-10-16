@@ -4,10 +4,7 @@
     <div class="mb-3">
       <mat-form-field appearance="outline" class="w-100 px-2">
         <mat-label>Enter Email</mat-label>
-        <input
-          matInput
-          formControlName="email"
-        />
+        <input matInput formControlName="email" />
         @if (restoreAccountForm.controls["email"].invalid) {
           <mat-error>Email is required and must be of valid format.</mat-error>
         }
@@ -16,13 +13,7 @@
   </form>
 </div>
 <div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3">
-  <button
-    mat-button
-    disableRipple
-    (click)="onCancel()"
-  >
-    Cancel
-  </button>
+  <button mat-button disableRipple (click)="onCancel()">Cancel</button>
   <button
     mat-button
     disableRipple

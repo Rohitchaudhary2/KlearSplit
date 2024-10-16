@@ -4,10 +4,7 @@
     <div class="mb-3">
       <mat-form-field appearance="outline" class="w-100 px-2">
         <mat-label>Enter OTP</mat-label>
-        <input
-          matInput
-          formControlName="otp"
-        />
+        <input matInput formControlName="otp" />
         @if (otpForm.controls["otp"].invalid) {
           <mat-error>OTP is required and should be 6 digits.</mat-error>
         }
@@ -16,13 +13,7 @@
   </form>
 </div>
 <div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3">
-  <button
-    mat-button
-    disableRipple
-    (click)="onCancel()"
-  >
-    Cancel
-  </button>
+  <button mat-button disableRipple (click)="onCancel()">Cancel</button>
   <button
     mat-button
     disableRipple

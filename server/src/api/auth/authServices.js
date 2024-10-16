@@ -48,14 +48,16 @@ class AuthService {
           lockoutDuration: "15 minutes",
         });
       }
-
-      await user.save();
       throw new ErrorHandler(404, "Email or Password is wrong.");
     } else {
       user.failedAttempts = 0;
       user.lockoutUntil = null;
-      await user.save();
     }
+
+    await UserDb.updateUser(
+      { failedAttempts: user.failedAttempts, lockoutUntil: user.lockoutUntil },
+      user.user_id,
+    );
 
     // Generate access and refresh tokens
     const { accessToken, refreshToken } = generateAccessAndRefereshTokens(

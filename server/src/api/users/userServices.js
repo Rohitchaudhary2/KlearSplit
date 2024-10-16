@@ -189,10 +189,7 @@ class UserService {
     const isEmailExists = await UserDb.getUserByEmail(user.email, false);
 
     if (!isEmailExists) {
-      throw new ErrorHandler(
-        400,
-        "No Record found. Please Create new account.",
-      );
+      throw new ErrorHandler(400, "No Record found.");
     } else if (isEmailExists.dataValues && isEmailExists.dataValues.deletedAt) {
       throw new ErrorHandler(
         400,

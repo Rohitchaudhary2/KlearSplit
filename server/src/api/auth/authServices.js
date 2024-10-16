@@ -119,7 +119,7 @@ class AuthService {
   static deleteRefreshToken = async (req) => {
     const isDeleted = await deleteRefreshTokenDb(req);
     if (!isDeleted)
-      throw new ErrorHandler(404, "Error while deleting refresh token");
+      throw new ErrorHandler(503, "Error while deleting refresh token");
   };
 }
 

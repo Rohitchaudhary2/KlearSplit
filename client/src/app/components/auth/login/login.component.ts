@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormErrorMessageService } from '../../shared/form-error-message.service';
 import { LoginUser } from '../login-types.model';
 import { AuthService } from '../auth.service';
@@ -27,6 +27,7 @@ export class LoginComponent {
   private formErrorMessages = inject(FormErrorMessageService);
   private dialog = inject(MatDialog);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
@@ -39,6 +40,17 @@ export class LoginComponent {
     this.form.valueChanges.subscribe(() => {
       this.loginFailed = false;
     });
+
+    if (Object.keys(this.route.snapshot.queryParams).length > 0) {
+      const { error } = this.route.snapshot.queryParams;
+      const errorMessage = decodeURIComponent(error);
+      this.toastr.error(errorMessage, 'Error');
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+    }
   }
 
   form = new FormGroup({

@@ -39,7 +39,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
               error.error.message || 'The requested resource was not found.';
             break;
           case 500:
-            errorMessage = 'Internal server error. Please try again later.';
+            errorMessage = 'Something went wrong. Please try again later.';
             break;
           default:
             errorMessage =
@@ -49,9 +49,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // Display error message using Toastr
-      toastr.error(errorMessage, 'Error', {
-        timeOut: 3000,
-      });
+      toastr.error(errorMessage, 'Error');
 
       return throwError(() => new Error(errorMessage));
     }),

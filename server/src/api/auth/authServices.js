@@ -15,8 +15,10 @@ class AuthService {
     const { email, password } = req.body;
 
     // Checking whether the email is correct
-    const user = await UserDb.getUserByEmail(email);
+    const user = await UserDb.getUserByEmail(email, false);
     if (!user) throw new ErrorHandler(404, "Email or Password is wrong.");
+    else if (user && user.dataValues.deletedAt)
+      throw new ErrorHandler(400, "Looks like you had an account.");
 
     const currentTime = new Date();
     if (user.lockoutUntil && user.lockoutUntil > currentTime) {

@@ -37,7 +37,7 @@ class AuthService {
 
       if (user.failedAttempts >= 3) {
         user.failedAttempts = 0;
-        user.lockoutUntil = new Date(currentTime.getTime() + 15 * 60 * 1000); // lock for 15 minutes
+        user.lockoutUntil = new Date(Date.now() + 900000); // lock for 15 minutes
         const options = {
           email,
           subject: "Important: Your Account Has Been Temporarily Locked",
@@ -47,15 +47,35 @@ class AuthService {
           email,
           lockoutDuration: "15 minutes",
         });
+        await UserDb.updateUser(
+          {
+            failedAttempts: user.failedAttempts,
+            lockoutUntil: user.lockoutUntil,
+          },
+          user.user_id,
+        );
+        throw new ErrorHandler(
+          404,
+          "Your account has been temporarily blocked due to multiple unsuccessful login attempts.",
+        );
       }
-
-      await user.save();
+      await UserDb.updateUser(
+        {
+          failedAttempts: user.failedAttempts,
+          lockoutUntil: user.lockoutUntil,
+        },
+        user.user_id,
+      );
       throw new ErrorHandler(404, "Email or Password is wrong.");
     } else {
       user.failedAttempts = 0;
       user.lockoutUntil = null;
-      await user.save();
     }
+
+    await UserDb.updateUser(
+      { failedAttempts: user.failedAttempts, lockoutUntil: user.lockoutUntil },
+      user.user_id,
+    );
 
     // Generate access and refresh tokens
     const { accessToken, refreshToken } = generateAccessAndRefereshTokens(

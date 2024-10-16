@@ -180,8 +180,8 @@ export class FriendsComponent implements OnDestroy {
 
   openAddExpenseDialog() {
     const dialogRef = this.dialog.open(FriendsExpenseComponent, {
-      width: '500px',
       data: [this.user, this.selectedUser()],
+      width: window.innerWidth > 600 ? '100px' : '90%',
       enterAnimationDuration: '200ms',
       exitAnimationDuration: '200ms',
     });

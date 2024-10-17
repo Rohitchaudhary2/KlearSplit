@@ -17,7 +17,7 @@ class UserService {
     // If email or phone already exists in database then checking whether user has deleted account
     if (isUserExists && isUserExists.dataValues.deletedAt)
       throw new ErrorHandler(
-        400,
+        410,
         "Looks like you had an account. Please restore it.",
       );
     else if (isUserExists) throw new ErrorHandler(400, "Email already exists.");

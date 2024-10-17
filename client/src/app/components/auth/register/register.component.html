@@ -20,7 +20,8 @@
                 </div>
 
                 <form [formGroup]="form" (ngSubmit)="onClickVerify()">
-                  <p class="mt-4">Please enter your details below.</p>
+                  @if (!isRestoreMode()) {
+                    <p class="mt-4">Please enter your details below.</p>
 
                   <mat-form-field
                     appearance="outline"
@@ -67,6 +68,21 @@
                     }
                   </mat-form-field>
 
+                  @if (isOtpMode()) {
+                    <mat-form-field
+                    appearance="outline"
+                    class="w-100"
+                    [ngClass]="{ 'mb-2': getFormErrors('otp') }"
+                  >
+                    <mat-label>OTP</mat-label>
+                    <mat-icon matPrefix>key</mat-icon>
+                    <input matInput formControlName="otp" />
+                    @if (getFormErrors("otp")) {
+                      <mat-error>{{ getFormErrors("otp") }}</mat-error>
+                    }
+                  </mat-form-field>
+                  }
+
                   <div class="text-center text-light pt-1 mt-2 mb-1 pb-1">
                     <button
                       [disabled]="form.invalid"
@@ -75,7 +91,7 @@
                       class="custom-mat-button w-100"
                       type="submit"
                     >
-                      Verify
+                      Send OTP
                     </button>
                   </div>
 
@@ -83,7 +99,7 @@
                     <button
                       class="text-muted"
                       type="button"
-                      (click)="openRestoreAccountDialog()"
+                      (click)="onRestoreAccount()"
                       style="border: none; text-decoration: underline"
                     >
                       Restore Account.
@@ -103,6 +119,66 @@
                       <span class="ms-2">Continue with Google</span>
                     </button>
                   </div>
+                } @else {
+                  <p class="mt-4">Please enter email to restore your account.</p>
+
+                  <mat-form-field
+                    appearance="outline"
+                    class="w-100"
+                    [ngClass]="{ 'mb-2': getFormErrors('restoreAccountEmail') }"
+                  >
+                    <mat-label>Email</mat-label>
+                    <mat-icon matPrefix>email</mat-icon>
+                    <input matInput formControlName="restoreAccountEmail" />
+                    @if (getFormErrors("restoreAccountEmail")) {
+                      <mat-error>{{ getFormErrors("restoreAccountEmail") }}</mat-error>
+                    }
+                  </mat-form-field>
+
+                  @if (isOtpMode()) {
+                    <mat-form-field
+                    appearance="outline"
+                    class="w-100"
+                    [ngClass]="{ 'mb-2': getFormErrors('otp') }"
+                  >
+                    <mat-label>OTP</mat-label>
+                    <mat-icon matPrefix>key</mat-icon>
+                    <input matInput formControlName="otp" />
+                    @if (getFormErrors("otp")) {
+                      <mat-error>{{ getFormErrors("otp") }}</mat-error>
+                    }
+                  </mat-form-field>
+                  }
+
+                  <div class="text-center text-light pt-1 mb-1 pb-1">
+                    <button
+                      [disabled]="form.invalid"
+                      mat-button
+                      disableRipple
+                      class="custom-mat-button mt-1 w-100"
+                      type="button"
+                      (click)="isOtpMode() ? onSubmitOtp() : onSendOtp()"
+                    >
+                      {{ isOtpMode() ? 'Verify' : 'Send OTP' }}
+                    </button>
+                  </div>
+
+                  <div class="d-flex align-items-center my-3">
+                    <hr class="flex-grow-1" />
+                    <span class="mx-2">OR</span>
+                    <hr class="flex-grow-1" />
+                  </div>                  
+
+                  <div class="text-center pt-1 mb-1 pb-1">
+                    <button
+                      mat-button
+                      (click)="onBackToRegister()"
+                      type="button"
+                    >
+                      Back to Register
+                    </button>
+                  </div>
+                }
 
                   <div
                     class="d-flex align-items-center justify-content-center pb-4 mt-3"

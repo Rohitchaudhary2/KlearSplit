@@ -17,6 +17,7 @@
                 </div>
 
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                  @if (!isForgotPasswordMode()) {
                   <p class="mt-4">Please login to your account</p>
 
                   <mat-form-field
@@ -41,19 +42,19 @@
                     <mat-icon matPrefix>key</mat-icon>
                     <input
                       matInput
-                      [type]="hidePassword ? 'password' : 'text'"
+                      [type]="hidePassword() ? 'password' : 'text'"
                       formControlName="password"
                     />
                     <button
                       mat-icon-button
                       matSuffix
-                      (click)="hidePassword = !hidePassword"
+                      (click)="hidePassword.set(!hidePassword())"
                       [attr.aria-label]="'Hide password'"
-                      [attr.aria-pressed]="hidePassword"
+                      [attr.aria-pressed]="hidePassword()"
                       type="button"
                     >
                       <mat-icon>{{
-                        hidePassword ? "visibility_off" : "visibility"
+                        hidePassword() ? "visibility_off" : "visibility"
                       }}</mat-icon>
                     </button>
                     @if (getFormErrors("password")) {
@@ -75,7 +76,7 @@
                   <div class="text-center pt-1 mb-3 pb-1">
                     <button
                       class="text-muted"
-                      (click)="openForgotPasswordDialog()"
+                      (click)="onForgotPassword()"
                       type="button"
                       style="border: none; text-decoration: underline"
                     >
@@ -97,6 +98,66 @@
                       <span class="ms-2">Continue with Google</span>
                     </button>
                   </div>
+                } @else {
+                  <p class="mt-4">Please enter email to reset password.</p>
+
+                  <mat-form-field
+                    appearance="outline"
+                    class="w-100"
+                    [ngClass]="{ 'mb-2': getFormErrors('forgotPasswordEmail') }"
+                  >
+                    <mat-label>Email</mat-label>
+                    <mat-icon matPrefix>email</mat-icon>
+                    <input matInput formControlName="forgotPasswordEmail" />
+                    @if (getFormErrors("forgotPasswordEmail")) {
+                      <mat-error>{{ getFormErrors("forgotPasswordEmail") }}</mat-error>
+                    }
+                  </mat-form-field>
+
+                  @if (isOtpMode()) {
+                    <mat-form-field
+                    appearance="outline"
+                    class="w-100"
+                    [ngClass]="{ 'mb-2': getFormErrors('otp') }"
+                  >
+                    <mat-label>OTP</mat-label>
+                    <mat-icon matPrefix>key</mat-icon>
+                    <input matInput formControlName="otp" />
+                    @if (getFormErrors("otp")) {
+                      <mat-error>{{ getFormErrors("otp") }}</mat-error>
+                    }
+                  </mat-form-field>
+                  }
+
+                  <div class="text-center text-light pt-1 mb-1 pb-1">
+                    <button
+                      [disabled]="form.invalid"
+                      mat-button
+                      disableRipple
+                      class="custom-mat-button mt-1 w-100"
+                      type="button"
+                      (click)="isOtpMode() ? onSubmitOtp() : onSendOtp()"
+                    >
+                      {{ isOtpMode() ? 'Submit' : 'Send OTP' }}
+                    </button>
+                  </div>
+
+                  <div class="d-flex align-items-center my-3">
+                    <hr class="flex-grow-1" />
+                    <span class="mx-2">OR</span>
+                    <hr class="flex-grow-1" />
+                  </div>                  
+
+                  <div class="text-center pt-1 mb-1 pb-1">
+                    <button
+                      mat-button
+                      (click)="onBackToLogin()"
+                      type="button"
+                    >
+                      Back to Login
+                    </button>
+                  </div>
+                }
 
                   <div
                     class="d-flex align-items-center justify-content-center py-4"

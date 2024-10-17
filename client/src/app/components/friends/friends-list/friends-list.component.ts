@@ -90,12 +90,6 @@ export class FriendsListComponent implements OnInit {
               });
               this.fetchFriendRequests();
             },
-            error: (err) => {
-              this.toastr.error(
-                err?.error?.message || 'Request Failed!',
-                'Error',
-              );
-            },
           });
       }
     });

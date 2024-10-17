@@ -85,13 +85,13 @@
 
                     <div class="text-center text-light pt-1 mt-2 mb-1 pb-1">
                       <button
-                        [disabled]="form.invalid"
+                        [disabled]="form.invalid || registerFailed()"
                         mat-button
                         disableRipple
                         class="custom-mat-button w-100"
                         type="submit"
                       >
-                        Send OTP
+                        {{ isOtpMode() ? 'Register' : 'Send OTP'}}
                       </button>
                     </div>
 

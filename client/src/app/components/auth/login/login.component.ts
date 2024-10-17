@@ -92,7 +92,7 @@ export class LoginComponent {
       this.authService.login(user).subscribe({
         next: () => {
           this.toastr.success('User logged in successfully', 'Success');
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/friends']);
         },
         error: () => {
           this.loginFailed.set(true);

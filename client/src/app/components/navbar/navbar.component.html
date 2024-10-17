@@ -25,7 +25,9 @@
               <a
                 class="nav-link fs-5"
                 style="color: black"
-                [routerLink]="['/dashboard']" routerLinkActive="active" aria-current="page"
+                [routerLink]="['/dashboard']"
+                routerLinkActive="active"
+                aria-current="page"
                 >Dashboard</a
               >
             </li>
@@ -33,7 +35,9 @@
               <a
                 class="nav-link fs-5"
                 style="color: black"
-                [routerLink]="['/friends']" routerLinkActive="active" aria-current="page"
+                [routerLink]="['/friends']"
+                routerLinkActive="active"
+                aria-current="page"
                 >Friends</a
               >
             </li>
@@ -71,10 +75,20 @@
             </li>
           </ul>
         } @else {
-          <a class="nav-link fs-5 me-2" [routerLink]="['/login']" routerLinkActive="active" aria-current="page" style="color: black"
+          <a
+            class="nav-link fs-5 me-2"
+            [routerLink]="['/login']"
+            routerLinkActive="active"
+            aria-current="page"
+            style="color: black"
             >Login</a
           >
-          <a class="nav-link fs-5" [routerLink]="['/register']" routerLinkActive="active" aria-current="page" style="color: black"
+          <a
+            class="nav-link fs-5"
+            [routerLink]="['/register']"
+            routerLinkActive="active"
+            aria-current="page"
+            style="color: black"
             >Register</a
           >
         }

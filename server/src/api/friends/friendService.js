@@ -13,9 +13,11 @@ class FriendService {
       friend1_id: friendData.user_id,
       friend2_id: friendRequestTo.user_id,
     };
+    if (newFriendData.friend1_id === newFriendData.friend2_id)
+      throw new ErrorHandler(400, "You cannot add yourself as a friend.");
     const friendExist = await this.checkFriendExist(newFriendData);
     if (friendExist)
-      responseHandler(res, 409, "Friend already exist", friendExist);
+      return responseHandler(res, 409, "Friend already exist", friendExist);
     const friend = await FriendDb.addFriend(newFriendData);
     return friend;
   };

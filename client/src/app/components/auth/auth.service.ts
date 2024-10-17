@@ -106,9 +106,11 @@ export class AuthService {
   }
 
   // Verify a user who already exists to resend them a password
-  verifyForgotPasswordUser(user: { email: string }): Observable<object> {
+  verifyForgotPasswordUser(
+    email: string | null | undefined,
+  ): Observable<object> {
     return this.httpClient
-      .post(`${this.forgotPasswordVerifyUrl}`, user, { withCredentials: true })
+      .post(`${this.forgotPasswordVerifyUrl}`, email, { withCredentials: true })
       .pipe(
         map((response) => {
           this.toastr.success('OTP sent successfully', 'Success');
@@ -118,11 +120,14 @@ export class AuthService {
   }
 
   // Get a new password if you forgot your current one
-  forgotPassword(user: { email: string }, otp: { otp: string }) {
+  forgotPassword(
+    email: string | null | undefined,
+    otp: string | null | undefined,
+  ) {
     return this.httpClient
       .post(
         `${this.forgotPasswordUrl}`,
-        { ...user, ...otp },
+        { email, otp },
         { withCredentials: true },
       )
       .pipe(
@@ -136,9 +141,9 @@ export class AuthService {
   }
 
   // Verify a user who already exists to restore their account
-  verifyExistingUser(user: { email: string }): Observable<object> {
+  verifyExistingUser(email: string | null | undefined): Observable<object> {
     return this.httpClient
-      .post(`${this.restoreAccountVerifyUrl}`, user, { withCredentials: true })
+      .post(`${this.restoreAccountVerifyUrl}`, email, { withCredentials: true })
       .pipe(
         map((response) => {
           this.toastr.success('OTP sent successfully', 'Success');
@@ -149,13 +154,13 @@ export class AuthService {
 
   // Restore a deleted account
   restoreAccount(
-    user: { email: string },
-    otp: { otp: string },
+    email: string | null | undefined,
+    otp: string | null | undefined,
   ): Observable<RegisterResponse> {
     return this.httpClient
       .post<RegisterResponse>(
         `${this.restoreAccountUrl}`,
-        { ...user, ...otp },
+        { email, otp },
         { withCredentials: true },
       )
       .pipe(

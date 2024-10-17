@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -6,19 +6,17 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormErrorMessageService } from '../../shared/form-error-message.service';
-import { LoginUser } from '../login-types.model';
-import { AuthService } from '../auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { MatButtonModule } from '@angular/material/button';
-import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
-import { MatDialog } from '@angular/material/dialog';
-import { OtpDialogComponent } from '../otp-dialog/otp-dialog.component';
-import { API_URLS } from '../../../constants/api-urls';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { NgClass } from '@angular/common';
+
+import { FormErrorMessageService } from '../../shared/form-error-message.service';
+import { LoginUser } from '../login-types.model';
+import { AuthService } from '../auth.service';
+import { API_URLS } from '../../../constants/api-urls';
 
 @Component({
   selector: 'app-login',
@@ -37,7 +35,6 @@ import { NgClass } from '@angular/common';
 })
 export class LoginComponent {
   private formErrorMessages = inject(FormErrorMessageService);
-  private dialog = inject(MatDialog);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -46,12 +43,14 @@ export class LoginComponent {
 
   private readonly googleAuthUrl = API_URLS.googleAuth;
 
-  loginFailed = false;
-  hidePassword = true;
+  loginFailed = signal(false);
+  hidePassword = signal(true);
+  isForgotPasswordMode = signal(false);
+  isOtpMode = signal(false);
 
   constructor() {
     this.form.valueChanges.subscribe(() => {
-      this.loginFailed = false;
+      this.loginFailed.set(false);
     });
 
     if (Object.keys(this.route.snapshot.queryParams).length > 0) {
@@ -66,7 +65,12 @@ export class LoginComponent {
     }
   }
 
-  form = new FormGroup({
+  form = new FormGroup<{
+    email?: FormControl<string | null>;
+    password?: FormControl<string | null>;
+    forgotPasswordEmail?: FormControl<string | null | undefined>;
+    otp?: FormControl<string | null>;
+  }>({
     email: new FormControl('', {
       validators: [Validators.required, Validators.email],
     }),
@@ -91,41 +95,78 @@ export class LoginComponent {
           this.router.navigate(['/dashboard']);
         },
         error: () => {
-          this.loginFailed = true;
+          this.loginFailed.set(true);
         },
       });
     }
   }
 
-  openForgotPasswordDialog() {
-    const dialogRef = this.dialog.open(ForgotPasswordComponent, {
-      enterAnimationDuration: '500ms',
-      exitAnimationDuration: '500ms',
-    });
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.authService.verifyForgotPasswordUser(result).subscribe({
-          next: () => {
-            this.openOtpDialog(result);
-          },
-        });
-      }
-    });
-    dialogRef.updateSize('25%');
+  // Method to handle "Forgot Password" click
+  onForgotPassword(): void {
+    this.isForgotPasswordMode.set(true);
+    this.isOtpMode.set(false);
+    this.form.removeControl('password');
+    this.form.addControl(
+      'forgotPasswordEmail',
+      new FormControl(this.form.get('email')?.value, [
+        Validators.required,
+        Validators.email,
+      ]),
+    );
   }
 
-  openOtpDialog(user: { email: string }) {
-    const dialogRef = this.dialog.open(OtpDialogComponent, {
-      data: user,
-      enterAnimationDuration: '500ms',
-      exitAnimationDuration: '500ms',
-    });
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.authService.forgotPassword(user, result).subscribe();
-      }
-    });
-    dialogRef.updateSize('25%');
+  // Method to handle OTP field display after submit
+  onSendOtp(): void {
+    this.isOtpMode.set(true);
+    if (this.form.valid) {
+      const email = this.form.get('forgotPasswordEmail')?.value;
+      this.authService.verifyForgotPasswordUser(email).subscribe();
+    }
+    this.form.addControl(
+      'otp',
+      new FormControl('', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.maxLength(6),
+        Validators.pattern(/^[0-9]{6}$/),
+      ]),
+    );
+  }
+
+  onSubmitOtp(): void {
+    if (this.form.valid) {
+      const email = this.form.get('forgotPasswordEmail')?.value;
+      const otp = this.form.get('otp')?.value;
+
+      this.authService.forgotPassword(email, otp).subscribe({
+        next: () => {
+          this.onBackToLogin();
+        },
+      });
+    } else {
+      this.toastr.warning(
+        'Please fill in all required fields correctly.',
+        'Warning',
+      );
+    }
+  }
+
+  onBackToLogin(): void {
+    this.isForgotPasswordMode.set(false);
+    this.isOtpMode.set(false);
+    this.form.removeControl('forgotPasswordEmail');
+    this.form.removeControl('otp');
+    this.form.addControl(
+      'email',
+      new FormControl('', [Validators.required, Validators.email]),
+    );
+    this.form.addControl(
+      'password',
+      new FormControl('', [
+        Validators.required,
+        Validators.pattern(new RegExp('^(?=.*[a-z])(?=.*[0-9]).{8,20}$')),
+      ]),
+    );
   }
 
   onGoogleSignIn() {

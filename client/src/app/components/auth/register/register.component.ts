@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -12,7 +12,6 @@ import { FormErrorMessageService } from '../../shared/form-error-message.service
 import { ToastrService } from 'ngx-toastr';
 import { MatDialog } from '@angular/material/dialog';
 import { OtpDialogComponent } from '../otp-dialog/otp-dialog.component';
-import { RestoreAccountComponent } from '../restore-account/restore-account.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -41,7 +40,24 @@ export class RegisterComponent {
   private toastr = inject(ToastrService);
   private dialog = inject(MatDialog); // Inject MatDialog service
 
-  form = new FormGroup({
+  registerFailed = signal(false);
+  isRestoreMode = signal(false);
+  isOtpMode = signal(false);
+
+  constructor() {
+    this.form.valueChanges.subscribe(() => {
+      this.registerFailed.set(false);
+    });
+  }
+
+  form = new FormGroup<{
+    first_name?: FormControl<string | null>;
+    last_name?: FormControl<string | null>;
+    email?: FormControl<string | null>;
+    phone?: FormControl<string | null>;
+    restoreAccountEmail?: FormControl<string | null | undefined>;
+    otp?: FormControl<string | null>;
+  }>({
     first_name: new FormControl('', {
       validators: [
         Validators.required,
@@ -82,10 +98,104 @@ export class RegisterComponent {
       });
       this.authService.verifyUser(userToSend).subscribe({
         next: () => {
-          this.openOtpDialog(userToSend); // Open dialog box for OTP input
+          this.isOtpMode.set(true);
+          this.form.addControl(
+            'otp',
+            new FormControl('', [
+              Validators.required,
+              Validators.minLength(6),
+              Validators.maxLength(6),
+              Validators.pattern(/^[0-9]{6}$/),
+            ]),
+          );
+        },
+        error: () => {
+          this.registerFailed.set(true);
         },
       });
     }
+  }
+
+  // Method to handle "Forgot Password" click
+  onRestoreAccount(): void {
+    this.isRestoreMode.set(true);
+    this.isOtpMode.set(false);
+    this.form.removeControl('password');
+    this.form.addControl(
+      'restoreAccountEmail',
+      new FormControl(this.form.get('email')?.value, [
+        Validators.required,
+        Validators.email,
+      ]),
+    );
+  }
+
+  // Method to handle OTP field display after submit
+  onSendOtp(): void {
+    this.isOtpMode.set(true);
+    if (this.form.valid) {
+      const email = this.form.get('restoreAccountEmail')?.value;
+      this.authService.verifyExistingUser(email).subscribe();
+    }
+    this.form.addControl(
+      'otp',
+      new FormControl('', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.maxLength(6),
+        Validators.pattern(/^[0-9]{6}$/),
+      ]),
+    );
+  }
+
+  onSubmitOtp(): void {
+    if (this.form.valid) {
+      const email = this.form.get('restoreAccountEmail')?.value;
+      const otp = this.form.get('otp')?.value;
+
+      this.authService.restoreAccount(email, otp).subscribe({
+        next: () => {
+          this.toastr.success('Account restored successfully', 'Success');
+          this.router.navigate(['/dashboard']);
+        },
+      });
+    } else {
+      this.toastr.warning(
+        'Please fill in all required fields correctly.',
+        'Warning',
+      );
+    }
+  }
+
+  onBackToRegister(): void {
+    this.isRestoreMode.set(false);
+    this.isOtpMode.set(false);
+    this.form.removeControl('restoreAccountEmail');
+    this.form.removeControl('otp');
+    this.form.addControl(
+      'first_name',
+      new FormControl('', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50),
+      ]),
+    );
+    this.form.addControl(
+      'last_name',
+      new FormControl('', [Validators.maxLength(50)]),
+    );
+    this.form.addControl(
+      'email',
+      new FormControl('', [Validators.required, Validators.email]),
+    );
+    this.form.addControl(
+      'phone',
+      new FormControl('', [
+        Validators.minLength(10),
+        Validators.maxLength(10),
+        Validators.pattern(/^[0-9]{10}$/),
+      ]),
+    );
   }
 
   openOtpDialog(user: Partial<RegisterUser>) {
@@ -99,42 +209,6 @@ export class RegisterComponent {
         this.authService.registerUserWithOtp(user, result).subscribe({
           next: () => {
             this.toastr.success('User registered successfully', 'Success');
-            this.router.navigate(['/dashboard']);
-          },
-        });
-      }
-    });
-    dialogRef.updateSize('25%');
-  }
-
-  openRestoreAccountDialog() {
-    const dialogRef = this.dialog.open(RestoreAccountComponent, {
-      enterAnimationDuration: '500ms',
-      exitAnimationDuration: '500ms',
-    });
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.authService.verifyExistingUser(result).subscribe({
-          next: () => {
-            this.openOtpDialogRestoreAccount(result);
-          },
-        });
-      }
-    });
-    dialogRef.updateSize('25%');
-  }
-
-  openOtpDialogRestoreAccount(user: { email: string }) {
-    const dialogRef = this.dialog.open(OtpDialogComponent, {
-      data: user,
-      enterAnimationDuration: '500ms',
-      exitAnimationDuration: '500ms',
-    });
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.authService.restoreAccount(user, result).subscribe({
-          next: () => {
-            this.toastr.success('Account restored successfully', 'Success');
             this.router.navigate(['/dashboard']);
           },
         });

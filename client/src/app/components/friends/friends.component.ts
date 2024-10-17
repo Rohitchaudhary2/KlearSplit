@@ -22,7 +22,7 @@ import { FriendsExpenseComponent } from './friends-expense/friends-expense.compo
 @Component({
   selector: 'app-friends',
   standalone: true,
-  imports: [FormsModule, FriendsListComponent],
+  imports: [FormsModule, FriendsListComponent, FriendsExpenseComponent],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })

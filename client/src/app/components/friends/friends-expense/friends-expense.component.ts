@@ -6,10 +6,16 @@ import {
   Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialog,
+  MatDialogRef,
+} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { NgClass } from '@angular/common';
+import { PayerComponent } from './payer/payer.component';
 
 @Component({
   selector: 'app-friends-expense',
@@ -20,6 +26,7 @@ import { MatSelectModule } from '@angular/material/select';
     MatSelectModule,
     MatInputModule,
     MatButtonModule,
+    NgClass,
   ],
   templateUrl: './friends-expense.component.html',
   styleUrl: './friends-expense.component.css',
@@ -29,6 +36,7 @@ export class FriendsExpenseComponent implements OnInit {
   data = inject(MAT_DIALOG_DATA);
   showAdditionalFields = signal<boolean>(false);
   participants = [this.data[0], this.data[1].friend];
+  private dialog = inject(MatDialog);
 
   form = new FormGroup({
     expense_name: new FormControl('', {
@@ -40,15 +48,11 @@ export class FriendsExpenseComponent implements OnInit {
     description: new FormControl('', {
       validators: [Validators.maxLength(150)],
     }),
-    payer_id: new FormControl('', {
+    payer_id: new FormControl(`${this.participants[0].user_id}`, {
       validators: [Validators.required],
     }),
-    participant1_share: new FormControl('', {
-      validators: [Validators.required],
-    }),
-    participant2_share: new FormControl('', {
-      validators: [Validators.required],
-    }),
+    participant1_share: new FormControl(''),
+    participant2_share: new FormControl(''),
     split_type: new FormControl<'EQUAL' | 'UNEQUAL' | 'PERCENTAGE'>('EQUAL', {
       validators: [Validators.required],
     }),
@@ -60,7 +64,22 @@ export class FriendsExpenseComponent implements OnInit {
       this.showAdditionalFields.set(
         value === 'UNEQUAL' || value === 'PERCENTAGE',
       );
+      if (this.showAdditionalFields()) {
+        this.form
+          .get('participant1_share')
+          ?.setValidators([Validators.required]);
+        this.form
+          .get('participant2_share')
+          ?.setValidators([Validators.required]);
+      } else {
+        this.form.get('participant1_share')?.clearValidators();
+        this.form.get('participant2_share')?.clearValidators();
+      }
+      this.form.get('participant1_share')?.updateValueAndValidity();
+      this.form.get('participant2_share')?.updateValueAndValidity();
     });
+
+    this.dialogRef.updateSize('30%', '65%');
   }
 
   selectImage(event: Event): void {
@@ -89,6 +108,30 @@ export class FriendsExpenseComponent implements OnInit {
           : this.participants[0].user_id;
       this.dialogRef.close({ ...this.form.value, debtor_share, debtor_id });
     }
+  }
+
+  getPayerName() {
+    const id = this.form.value.payer_id;
+    if (id === this.participants[0].user_id) return 'you';
+    else
+      return `${this.participants[1].first_name} ${this.participants[1].last_name[0]}.`;
+  }
+
+  openSecondDialog(): void {
+    const dialogRef = this.dialog.open(PayerComponent, {
+      panelClass: 'second-dialog',
+      width: '30%',
+      data: this.participants,
+      position: {
+        right: '7%', // Adjust as needed
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.form.value.payer_id = result.id;
+      }
+    });
   }
 
   onCancel(): void {

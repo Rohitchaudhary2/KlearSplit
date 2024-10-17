@@ -38,6 +38,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             errorMessage =
               error.error.message || 'The requested resource was not found.';
             break;
+          case 503:
           case 500:
             errorMessage = 'Something went wrong. Please try again later.';
             break;

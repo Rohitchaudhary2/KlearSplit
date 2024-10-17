@@ -70,6 +70,11 @@ passport.use(
           transaction,
         );
 
+        await UserDb.updateUser({ failedAttempts: 0 }, user.user_id);
+
+        user.failedAttempts = 0;
+        await user.save();
+
         // Commit the transaction
         await transaction.commit();
 

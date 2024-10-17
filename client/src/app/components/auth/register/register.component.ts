@@ -132,7 +132,12 @@ export class RegisterComponent {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.authService.restoreAccount(user, result).subscribe();
+        this.authService.restoreAccount(user, result).subscribe({
+          next: () => {
+            this.toastr.success('Account restored successfully', 'Success');
+            this.router.navigate(['/dashboard']);
+          },
+        });
       }
     });
     dialogRef.updateSize('25%');

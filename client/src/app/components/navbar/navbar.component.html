@@ -1,6 +1,5 @@
 <nav
-  class="navbar navbar-expand-md navbar-light bg-light sticky-top m-0 p-0 pb-1"
-  style="box-shadow: 0 4px 10px rgba(0, 0, 255, 0.5) !important"
+  class="navbar navbar-expand-md navbar-light shadow-lg bg-light sticky-top m-0 p-0 pb-1"
 >
   <div class="container-fluid m-0 p-0 px-3">
     <a class="navbar-brand fs-2" routerLink=""> KlearSplit</a>
@@ -53,7 +52,7 @@
                 aria-expanded="false"
                 >Profile</a
               >
-              <ul class="dropdown-menu">
+              <ul class="dropdown-menu dropdown-menu-end">
                 <li>
                   <a class="dropdown-item" style="color: black" href="#"
                     >Profile</a
@@ -72,8 +71,8 @@
             </li>
           </ul>
         } @else {
-          <a class="nav-link fs-5 me-2" routerLink="/login">Login</a>
-          <a class="nav-link fs-5" routerLink="/register">Register</a>
+          <a class="nav-link fs-5 me-2" routerLink="/login" style="color: black">Login</a>
+          <a class="nav-link fs-5" routerLink="/register" style="color: black">Register</a>
         }
       </div>
     </div>

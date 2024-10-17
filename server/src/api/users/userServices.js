@@ -5,10 +5,12 @@ import AuthService from "../auth/authServices.js";
 import sequelize from "../../config/db.connection.js";
 import { hashedPassword } from "../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
-import { createOtpDb, getOtpDb } from "./otpDb.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import { otpGenrator } from "../utils/otpGenerator.js";
 import FriendService from "../friends/friendService.js";
+import Redis from "ioredis";
+
+const redis = new Redis();
 
 class UserService {
   static verifyUser = async (user) => {
@@ -20,16 +22,13 @@ class UserService {
         400,
         "Looks like you had an account. Please restore it.",
       );
-    else if (isUserExists) throw new ErrorHandler(400, "Email already exists.");
+    else if (isUserExists)
+      throw new ErrorHandler(400, "Account already exist for provided Email.");
 
     // send otp
-    const { otp, otpExpiresAt } = otpGenrator();
+    const otp = otpGenrator();
 
-    await createOtpDb({
-      email: user.email,
-      otp,
-      otp_expiry_time: otpExpiresAt,
-    });
+    await redis.setex(`otp:${user.email}`, 300, otp);
 
     await sendMail(
       {
@@ -49,12 +48,12 @@ class UserService {
     const userOtp = user.otp;
     delete user.otp;
 
-    const otp = await getOtpDb(user.email, userOtp);
-
-    if (!otp) throw new ErrorHandler(400, "Invalid Otp.");
-
-    if (new Date() >= otp.otp_expiry_time)
-      throw new ErrorHandler(400, "Otp has been expired.");
+    const otp = await redis.get(`otp:${user.email}`);
+    if (otp === userOtp) {
+      await redis.del(`otp:${user.email}`);
+    } else {
+      throw new ErrorHandler(400, "Invalid or Expired Otp.");
+    }
 
     //Generating random password
     const password = generatePassword();
@@ -118,16 +117,12 @@ class UserService {
       isEmailExists.dataValues &&
       !isEmailExists.dataValues.deletedAt
     ) {
-      throw new ErrorHandler(400, "Account already exists for this Email.");
+      throw new ErrorHandler(400, "Account for this Email is active.");
     }
 
-    const { otp, otpExpiresAt } = otpGenrator();
+    const otp = otpGenrator();
 
-    await createOtpDb({
-      email: user.email,
-      otp,
-      otp_expiry_time: otpExpiresAt,
-    });
+    await redis.setex(`otp:${user.email}`, 300, otp);
 
     await sendMail(
       {
@@ -147,14 +142,14 @@ class UserService {
     const isEmailExists = await UserDb.getUserByEmail(user.email, false);
     if (!isEmailExists) throw new ErrorHandler(400, "User not found");
     if (!isEmailExists.dataValues.deletedAt)
-      throw new ErrorHandler(400, "Account for this Email is active.");
+      throw new ErrorHandler(400, "Account for this Email is already active.");
 
-    const otp = await getOtpDb(user.email, user.otp);
-
-    if (!otp) throw new ErrorHandler(400, "Invalid Otp.");
-
-    if (new Date() >= otp.otp_expiry_time)
-      throw new ErrorHandler(400, "Otp has been expired.");
+    const otp = await redis.get(`otp:${user.email}`);
+    if (otp === user.otp) {
+      await redis.del(`otp:${user.email}`);
+    } else {
+      throw new ErrorHandler(400, "Invalid or Expired Otp.");
+    }
 
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
@@ -203,13 +198,9 @@ class UserService {
       );
     }
 
-    const { otp, otpExpiresAt } = otpGenrator();
+    const otp = otpGenrator();
 
-    await createOtpDb({
-      email: user.email,
-      otp,
-      otp_expiry_time: otpExpiresAt,
-    });
+    await redis.setex(`otp:${user.email}`, 300, otp);
 
     await sendMail(
       {
@@ -229,12 +220,13 @@ class UserService {
     const user = await UserDb.getUserByEmail(userData.email);
     if (!user) throw new ErrorHandler(400, "Email does not exist");
 
-    const otp = await getOtpDb(user.email, userData.otp);
-
-    if (!otp) throw new ErrorHandler(400, "Invalid Otp.");
-
-    if (new Date() >= otp.otp_expiry_time)
-      throw new ErrorHandler(400, "Otp has been expired.");
+    const otp = await redis.get(`otp:${user.email}`);
+    if (otp === userData.otp) {
+      await redis.del(`otp:${user.email}`);
+      await redis.del(`failedAttempts:${user.email}`);
+    } else {
+      throw new ErrorHandler(400, "Invalid or Expired Otp.");
+    }
 
     const password = generatePassword();
     const hashPassword = await hashedPassword(password);

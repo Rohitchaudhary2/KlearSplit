@@ -9,6 +9,9 @@ import AuthService from "../auth/authServices.js";
 import sequelize from "../../config/db.connection.js";
 import UserDb from "../users/userDb.js";
 import { ErrorHandler } from "./errorHandler.js";
+import Redis from "ioredis";
+
+const redis = new Redis();
 
 passport.use(
   new GoogleStrategy(
@@ -47,8 +50,10 @@ passport.use(
           });
         }
 
-        const currentTime = new Date();
-        if (user.lockoutUntil && user.lockoutUntil > currentTime) {
+        const failedAttemptsKey = `failedAttempts:${user.email}`;
+        let failedAttempts = (await redis.get(failedAttemptsKey)) || 0;
+        failedAttempts = parseInt(failedAttempts);
+        if (failedAttempts >= 3) {
           return done(
             new ErrorHandler(
               403,

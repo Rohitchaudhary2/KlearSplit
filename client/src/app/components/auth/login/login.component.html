@@ -18,146 +18,150 @@
 
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                   @if (!isForgotPasswordMode()) {
-                  <p class="mt-4">Please login to your account</p>
+                    <p class="mt-4">Please login to your account</p>
 
-                  <mat-form-field
-                    appearance="outline"
-                    class="w-100"
-                    [ngClass]="{ 'mb-2': getFormErrors('email') }"
-                  >
-                    <mat-label>Email</mat-label>
-                    <mat-icon matPrefix>email</mat-icon>
-                    <input matInput formControlName="email" />
-                    @if (getFormErrors("email")) {
-                      <mat-error>{{ getFormErrors("email") }}</mat-error>
-                    }
-                  </mat-form-field>
-
-                  <mat-form-field
-                    appearance="outline"
-                    class="w-100"
-                    [ngClass]="{ 'mb-2': getFormErrors('password') }"
-                  >
-                    <mat-label>Password</mat-label>
-                    <mat-icon matPrefix>key</mat-icon>
-                    <input
-                      matInput
-                      [type]="hidePassword() ? 'password' : 'text'"
-                      formControlName="password"
-                    />
-                    <button
-                      mat-icon-button
-                      matSuffix
-                      (click)="hidePassword.set(!hidePassword())"
-                      [attr.aria-label]="'Hide password'"
-                      [attr.aria-pressed]="hidePassword()"
-                      type="button"
-                    >
-                      <mat-icon>{{
-                        hidePassword() ? "visibility_off" : "visibility"
-                      }}</mat-icon>
-                    </button>
-                    @if (getFormErrors("password")) {
-                      <mat-error>{{ getFormErrors("password") }}</mat-error>
-                    }
-                  </mat-form-field>
-
-                  <div class="text-center text-light pt-1 mb-1 pb-1">
-                    <button
-                      [disabled]="form.invalid || loginFailed"
-                      mat-button
-                      disableRipple
-                      class="custom-mat-button mt-1 w-100"
-                      type="submit"
-                    >
-                      Login
-                    </button>
-                  </div>
-                  <div class="text-center pt-1 mb-3 pb-1">
-                    <button
-                      class="text-muted"
-                      (click)="onForgotPassword()"
-                      type="button"
-                      style="border: none; text-decoration: underline"
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-
-                  <div class="text-center mt-4">
-                    <button
-                      class="google-signup-btn custom-google-btn w-100 d-flex align-items-center justify-content-center"
-                      type="button"
-                      (click)="onGoogleSignIn()"
-                    >
-                      <img
-                        src="https://w7.pngwing.com/pngs/326/85/png-transparent-google-logo-google-text-trademark-logo-thumbnail.png"
-                        alt="Google"
-                        class="google-logo"
-                      />
-                      <span class="ms-2">Continue with Google</span>
-                    </button>
-                  </div>
-                } @else {
-                  <p class="mt-4">Please enter email to reset password.</p>
-
-                  <mat-form-field
-                    appearance="outline"
-                    class="w-100"
-                    [ngClass]="{ 'mb-2': getFormErrors('forgotPasswordEmail') }"
-                  >
-                    <mat-label>Email</mat-label>
-                    <mat-icon matPrefix>email</mat-icon>
-                    <input matInput formControlName="forgotPasswordEmail" />
-                    @if (getFormErrors("forgotPasswordEmail")) {
-                      <mat-error>{{ getFormErrors("forgotPasswordEmail") }}</mat-error>
-                    }
-                  </mat-form-field>
-
-                  @if (isOtpMode()) {
                     <mat-form-field
-                    appearance="outline"
-                    class="w-100"
-                    [ngClass]="{ 'mb-2': getFormErrors('otp') }"
-                  >
-                    <mat-label>OTP</mat-label>
-                    <mat-icon matPrefix>key</mat-icon>
-                    <input matInput formControlName="otp" />
-                    @if (getFormErrors("otp")) {
-                      <mat-error>{{ getFormErrors("otp") }}</mat-error>
+                      appearance="outline"
+                      class="w-100"
+                      [ngClass]="{ 'mb-2': getFormErrors('email') }"
+                    >
+                      <mat-label>Email</mat-label>
+                      <mat-icon matPrefix>email</mat-icon>
+                      <input matInput formControlName="email" />
+                      @if (getFormErrors("email")) {
+                        <mat-error>{{ getFormErrors("email") }}</mat-error>
+                      }
+                    </mat-form-field>
+
+                    <mat-form-field
+                      appearance="outline"
+                      class="w-100"
+                      [ngClass]="{ 'mb-2': getFormErrors('password') }"
+                    >
+                      <mat-label>Password</mat-label>
+                      <mat-icon matPrefix>key</mat-icon>
+                      <input
+                        matInput
+                        [type]="hidePassword() ? 'password' : 'text'"
+                        formControlName="password"
+                      />
+                      <button
+                        mat-icon-button
+                        matSuffix
+                        (click)="hidePassword.set(!hidePassword())"
+                        [attr.aria-label]="'Hide password'"
+                        [attr.aria-pressed]="hidePassword()"
+                        type="button"
+                      >
+                        <mat-icon>{{
+                          hidePassword() ? "visibility_off" : "visibility"
+                        }}</mat-icon>
+                      </button>
+                      @if (getFormErrors("password")) {
+                        <mat-error>{{ getFormErrors("password") }}</mat-error>
+                      }
+                    </mat-form-field>
+
+                    <div class="text-center text-light pt-1 mb-1 pb-1">
+                      <button
+                        [disabled]="form.invalid || loginFailed"
+                        mat-button
+                        disableRipple
+                        class="custom-mat-button mt-1 w-100"
+                        type="submit"
+                      >
+                        Login
+                      </button>
+                    </div>
+                    <div class="text-center pt-1 mb-3 pb-1">
+                      <button
+                        class="text-muted"
+                        (click)="onForgotPassword()"
+                        type="button"
+                        style="border: none; text-decoration: underline"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+
+                    <div class="text-center mt-4">
+                      <button
+                        class="google-signup-btn custom-google-btn w-100 d-flex align-items-center justify-content-center"
+                        type="button"
+                        (click)="onGoogleSignIn()"
+                      >
+                        <img
+                          src="https://w7.pngwing.com/pngs/326/85/png-transparent-google-logo-google-text-trademark-logo-thumbnail.png"
+                          alt="Google"
+                          class="google-logo"
+                        />
+                        <span class="ms-2">Continue with Google</span>
+                      </button>
+                    </div>
+                  } @else {
+                    <p class="mt-4">Please enter email to reset password.</p>
+
+                    <mat-form-field
+                      appearance="outline"
+                      class="w-100"
+                      [ngClass]="{
+                        'mb-2': getFormErrors('forgotPasswordEmail'),
+                      }"
+                    >
+                      <mat-label>Email</mat-label>
+                      <mat-icon matPrefix>email</mat-icon>
+                      <input matInput formControlName="forgotPasswordEmail" />
+                      @if (getFormErrors("forgotPasswordEmail")) {
+                        <mat-error>{{
+                          getFormErrors("forgotPasswordEmail")
+                        }}</mat-error>
+                      }
+                    </mat-form-field>
+
+                    @if (isOtpMode()) {
+                      <mat-form-field
+                        appearance="outline"
+                        class="w-100"
+                        [ngClass]="{ 'mb-2': getFormErrors('otp') }"
+                      >
+                        <mat-label>OTP</mat-label>
+                        <mat-icon matPrefix>key</mat-icon>
+                        <input matInput formControlName="otp" />
+                        @if (getFormErrors("otp")) {
+                          <mat-error>{{ getFormErrors("otp") }}</mat-error>
+                        }
+                      </mat-form-field>
                     }
-                  </mat-form-field>
+
+                    <div class="text-center text-light pt-1 mb-1 pb-1">
+                      <button
+                        [disabled]="form.invalid"
+                        mat-button
+                        disableRipple
+                        class="custom-mat-button mt-1 w-100"
+                        type="button"
+                        (click)="isOtpMode() ? onSubmitOtp() : onSendOtp()"
+                      >
+                        {{ isOtpMode() ? "Submit" : "Send OTP" }}
+                      </button>
+                    </div>
+
+                    <div class="d-flex align-items-center my-3">
+                      <hr class="flex-grow-1" />
+                      <span class="mx-2">OR</span>
+                      <hr class="flex-grow-1" />
+                    </div>
+
+                    <div class="text-center pt-1 mb-1 pb-1">
+                      <button
+                        mat-button
+                        (click)="onBackToLogin()"
+                        type="button"
+                      >
+                        Back to Login
+                      </button>
+                    </div>
                   }
-
-                  <div class="text-center text-light pt-1 mb-1 pb-1">
-                    <button
-                      [disabled]="form.invalid"
-                      mat-button
-                      disableRipple
-                      class="custom-mat-button mt-1 w-100"
-                      type="button"
-                      (click)="isOtpMode() ? onSubmitOtp() : onSendOtp()"
-                    >
-                      {{ isOtpMode() ? 'Submit' : 'Send OTP' }}
-                    </button>
-                  </div>
-
-                  <div class="d-flex align-items-center my-3">
-                    <hr class="flex-grow-1" />
-                    <span class="mx-2">OR</span>
-                    <hr class="flex-grow-1" />
-                  </div>                  
-
-                  <div class="text-center pt-1 mb-1 pb-1">
-                    <button
-                      mat-button
-                      (click)="onBackToLogin()"
-                      type="button"
-                    >
-                      Back to Login
-                    </button>
-                  </div>
-                }
 
                   <div
                     class="d-flex align-items-center justify-content-center py-4"

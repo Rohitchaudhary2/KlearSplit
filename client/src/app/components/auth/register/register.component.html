@@ -23,162 +23,168 @@
                   @if (!isRestoreMode()) {
                     <p class="mt-4">Please enter your details below.</p>
 
-                  <mat-form-field
-                    appearance="outline"
-                    class="w-100"
-                    [ngClass]="{ 'mb-2': getFormErrors('first_name') }"
-                  >
-                    <mat-label>First Name</mat-label>
-                    <mat-icon matPrefix>person</mat-icon>
-                    <input matInput formControlName="first_name" />
-                    @if (getFormErrors("first_name")) {
-                      <mat-error>{{ getFormErrors("first_name") }}</mat-error>
-                    }
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="w-100">
-                    <mat-label>Last Name</mat-label>
-                    <mat-icon matPrefix>person</mat-icon>
-                    <input matInput formControlName="last_name" />
-                  </mat-form-field>
-
-                  <mat-form-field
-                    appearance="outline"
-                    class="w-100"
-                    [ngClass]="{ 'mb-2': getFormErrors('email') }"
-                  >
-                    <mat-label>Email</mat-label>
-                    <mat-icon matPrefix>email</mat-icon>
-                    <input matInput formControlName="email" />
-                    @if (getFormErrors("email")) {
-                      <mat-error>{{ getFormErrors("email") }}</mat-error>
-                    }
-                  </mat-form-field>
-
-                  <mat-form-field
-                    appearance="outline"
-                    class="w-100"
-                    [ngClass]="{ 'mb-2': getFormErrors('phone') }"
-                  >
-                    <mat-label>Phone Number</mat-label>
-                    <mat-icon matPrefix>phone</mat-icon>
-                    <input matInput formControlName="phone" />
-                    @if (getFormErrors("phone")) {
-                      <mat-error>{{ getFormErrors("phone") }}</mat-error>
-                    }
-                  </mat-form-field>
-
-                  @if (isOtpMode()) {
                     <mat-form-field
-                    appearance="outline"
-                    class="w-100"
-                    [ngClass]="{ 'mb-2': getFormErrors('otp') }"
-                  >
-                    <mat-label>OTP</mat-label>
-                    <mat-icon matPrefix>key</mat-icon>
-                    <input matInput formControlName="otp" />
-                    @if (getFormErrors("otp")) {
-                      <mat-error>{{ getFormErrors("otp") }}</mat-error>
-                    }
-                  </mat-form-field>
-                  }
-
-                  <div class="text-center text-light pt-1 mt-2 mb-1 pb-1">
-                    <button
-                      [disabled]="form.invalid"
-                      mat-button
-                      disableRipple
-                      class="custom-mat-button w-100"
-                      type="submit"
+                      appearance="outline"
+                      class="w-100"
+                      [ngClass]="{ 'mb-2': getFormErrors('first_name') }"
                     >
-                      Send OTP
-                    </button>
-                  </div>
+                      <mat-label>First Name</mat-label>
+                      <mat-icon matPrefix>person</mat-icon>
+                      <input matInput formControlName="first_name" />
+                      @if (getFormErrors("first_name")) {
+                        <mat-error>{{ getFormErrors("first_name") }}</mat-error>
+                      }
+                    </mat-form-field>
 
-                  <div class="text-center pt-1 mb-3 pb-1">
-                    <button
-                      class="text-muted"
-                      type="button"
-                      (click)="onRestoreAccount()"
-                      style="border: none; text-decoration: underline"
-                    >
-                      Restore Account.
-                    </button>
-                  </div>
+                    <mat-form-field appearance="outline" class="w-100">
+                      <mat-label>Last Name</mat-label>
+                      <mat-icon matPrefix>person</mat-icon>
+                      <input matInput formControlName="last_name" />
+                    </mat-form-field>
 
-                  <div class="text-center mt-4">
-                    <button
-                      class="google-signup-btn custom-google-btn w-100 d-flex align-items-center justify-content-center"
-                      (click)="onGoogleSignUp()"
-                    >
-                      <img
-                        src="https://w7.pngwing.com/pngs/326/85/png-transparent-google-logo-google-text-trademark-logo-thumbnail.png"
-                        alt="Google"
-                        class="google-logo"
-                      />
-                      <span class="ms-2">Continue with Google</span>
-                    </button>
-                  </div>
-                } @else {
-                  <p class="mt-4">Please enter email to restore your account.</p>
-
-                  <mat-form-field
-                    appearance="outline"
-                    class="w-100"
-                    [ngClass]="{ 'mb-2': getFormErrors('restoreAccountEmail') }"
-                  >
-                    <mat-label>Email</mat-label>
-                    <mat-icon matPrefix>email</mat-icon>
-                    <input matInput formControlName="restoreAccountEmail" />
-                    @if (getFormErrors("restoreAccountEmail")) {
-                      <mat-error>{{ getFormErrors("restoreAccountEmail") }}</mat-error>
-                    }
-                  </mat-form-field>
-
-                  @if (isOtpMode()) {
                     <mat-form-field
-                    appearance="outline"
-                    class="w-100"
-                    [ngClass]="{ 'mb-2': getFormErrors('otp') }"
-                  >
-                    <mat-label>OTP</mat-label>
-                    <mat-icon matPrefix>key</mat-icon>
-                    <input matInput formControlName="otp" />
-                    @if (getFormErrors("otp")) {
-                      <mat-error>{{ getFormErrors("otp") }}</mat-error>
+                      appearance="outline"
+                      class="w-100"
+                      [ngClass]="{ 'mb-2': getFormErrors('email') }"
+                    >
+                      <mat-label>Email</mat-label>
+                      <mat-icon matPrefix>email</mat-icon>
+                      <input matInput formControlName="email" />
+                      @if (getFormErrors("email")) {
+                        <mat-error>{{ getFormErrors("email") }}</mat-error>
+                      }
+                    </mat-form-field>
+
+                    <mat-form-field
+                      appearance="outline"
+                      class="w-100"
+                      [ngClass]="{ 'mb-2': getFormErrors('phone') }"
+                    >
+                      <mat-label>Phone Number</mat-label>
+                      <mat-icon matPrefix>phone</mat-icon>
+                      <input matInput formControlName="phone" />
+                      @if (getFormErrors("phone")) {
+                        <mat-error>{{ getFormErrors("phone") }}</mat-error>
+                      }
+                    </mat-form-field>
+
+                    @if (isOtpMode()) {
+                      <mat-form-field
+                        appearance="outline"
+                        class="w-100"
+                        [ngClass]="{ 'mb-2': getFormErrors('otp') }"
+                      >
+                        <mat-label>OTP</mat-label>
+                        <mat-icon matPrefix>key</mat-icon>
+                        <input matInput formControlName="otp" />
+                        @if (getFormErrors("otp")) {
+                          <mat-error>{{ getFormErrors("otp") }}</mat-error>
+                        }
+                      </mat-form-field>
                     }
-                  </mat-form-field>
+
+                    <div class="text-center text-light pt-1 mt-2 mb-1 pb-1">
+                      <button
+                        [disabled]="form.invalid"
+                        mat-button
+                        disableRipple
+                        class="custom-mat-button w-100"
+                        type="submit"
+                      >
+                        Send OTP
+                      </button>
+                    </div>
+
+                    <div class="text-center pt-1 mb-3 pb-1">
+                      <button
+                        class="text-muted"
+                        type="button"
+                        (click)="onRestoreAccount()"
+                        style="border: none; text-decoration: underline"
+                      >
+                        Restore Account.
+                      </button>
+                    </div>
+
+                    <div class="text-center mt-4">
+                      <button
+                        class="google-signup-btn custom-google-btn w-100 d-flex align-items-center justify-content-center"
+                        (click)="onGoogleSignUp()"
+                      >
+                        <img
+                          src="https://w7.pngwing.com/pngs/326/85/png-transparent-google-logo-google-text-trademark-logo-thumbnail.png"
+                          alt="Google"
+                          class="google-logo"
+                        />
+                        <span class="ms-2">Continue with Google</span>
+                      </button>
+                    </div>
+                  } @else {
+                    <p class="mt-4">
+                      Please enter email to restore your account.
+                    </p>
+
+                    <mat-form-field
+                      appearance="outline"
+                      class="w-100"
+                      [ngClass]="{
+                        'mb-2': getFormErrors('restoreAccountEmail'),
+                      }"
+                    >
+                      <mat-label>Email</mat-label>
+                      <mat-icon matPrefix>email</mat-icon>
+                      <input matInput formControlName="restoreAccountEmail" />
+                      @if (getFormErrors("restoreAccountEmail")) {
+                        <mat-error>{{
+                          getFormErrors("restoreAccountEmail")
+                        }}</mat-error>
+                      }
+                    </mat-form-field>
+
+                    @if (isOtpMode()) {
+                      <mat-form-field
+                        appearance="outline"
+                        class="w-100"
+                        [ngClass]="{ 'mb-2': getFormErrors('otp') }"
+                      >
+                        <mat-label>OTP</mat-label>
+                        <mat-icon matPrefix>key</mat-icon>
+                        <input matInput formControlName="otp" />
+                        @if (getFormErrors("otp")) {
+                          <mat-error>{{ getFormErrors("otp") }}</mat-error>
+                        }
+                      </mat-form-field>
+                    }
+
+                    <div class="text-center text-light pt-1 mb-1 pb-1">
+                      <button
+                        [disabled]="form.invalid"
+                        mat-button
+                        disableRipple
+                        class="custom-mat-button mt-1 w-100"
+                        type="button"
+                        (click)="isOtpMode() ? onSubmitOtp() : onSendOtp()"
+                      >
+                        {{ isOtpMode() ? "Verify" : "Send OTP" }}
+                      </button>
+                    </div>
+
+                    <div class="d-flex align-items-center my-3">
+                      <hr class="flex-grow-1" />
+                      <span class="mx-2">OR</span>
+                      <hr class="flex-grow-1" />
+                    </div>
+
+                    <div class="text-center pt-1 mb-1 pb-1">
+                      <button
+                        mat-button
+                        (click)="onBackToRegister()"
+                        type="button"
+                      >
+                        Back to Register
+                      </button>
+                    </div>
                   }
-
-                  <div class="text-center text-light pt-1 mb-1 pb-1">
-                    <button
-                      [disabled]="form.invalid"
-                      mat-button
-                      disableRipple
-                      class="custom-mat-button mt-1 w-100"
-                      type="button"
-                      (click)="isOtpMode() ? onSubmitOtp() : onSendOtp()"
-                    >
-                      {{ isOtpMode() ? 'Verify' : 'Send OTP' }}
-                    </button>
-                  </div>
-
-                  <div class="d-flex align-items-center my-3">
-                    <hr class="flex-grow-1" />
-                    <span class="mx-2">OR</span>
-                    <hr class="flex-grow-1" />
-                  </div>                  
-
-                  <div class="text-center pt-1 mb-1 pb-1">
-                    <button
-                      mat-button
-                      (click)="onBackToRegister()"
-                      type="button"
-                    >
-                      Back to Register
-                    </button>
-                  </div>
-                }
 
                   <div
                     class="d-flex align-items-center justify-content-center pb-4 mt-3"

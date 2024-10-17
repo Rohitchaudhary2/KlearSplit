@@ -15,7 +15,7 @@ class FriendService {
     };
     const friendExist = await this.checkFriendExist(newFriendData);
     if (friendExist)
-      responseHandler(res, 409, "Friend already exist", friendExist);
+      return responseHandler(res, 409, "Friend already exist", friendExist);
     const friend = await FriendDb.addFriend(newFriendData);
     return friend;
   };

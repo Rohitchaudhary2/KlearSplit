@@ -44,7 +44,7 @@ export class FriendsComponent implements OnDestroy {
   private socketService = inject(SocketService);
   private readonly getMessagesUrl = API_URLS.getMessages;
   user = this.authService.currentUser();
-  user_name = `${this.authService.currentUser()?.first_name} ${this.authService.currentUser()?.last_name}`;
+  user_name = `${this.authService.currentUser()?.first_name} ${this.authService.currentUser()?.last_name ? this.authService.currentUser()?.last_name : ''}`;
 
   selectedUser = signal<FriendData | undefined>(undefined);
   messageInput = '';

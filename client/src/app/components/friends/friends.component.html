@@ -88,7 +88,7 @@
                     <div
                       class="card"
                       style="
-                        max-width: 80%;
+                        max-width: 28vw;
                         background: rgba(24, 24, 16, 0.2);
                         border-radius: 2em;
                         backdrop-filter: blur(15px);
@@ -108,7 +108,7 @@
                           {{ selectedUser()?.friend?.first_name }}
                         </p>
                       </div>
-                      <div class="card-body px-4">
+                      <div class="card-body px-4" style="max-width: 28vw">
                         <p class="mb-0">{{ message.message }}</p>
                       </div>
                     </div>
@@ -116,9 +116,9 @@
                 } @else {
                   <li class="d-flex justify-content-end mb-1 px-2">
                     <div
-                      class="card w"
+                      class="card"
                       style="
-                        max-width: 80%;
+                        max-width: 28vw;
                         background: rgba(24, 24, 16, 0.2);
                         border-radius: 2em;
                         backdrop-filter: blur(15px);
@@ -136,10 +136,8 @@
                       >
                         <p class="fw-bold mb-0">You</p>
                       </div>
-                      <div
-                        class="card-body d-inline-flex justify-content-end px-4"
-                      >
-                        <p class="justify-content-end mb-0">
+                      <div class="card-body px-4" style="max-width: 28vw">
+                        <p class="mb-0">
                           {{ message.message }}
                         </p>
                       </div>

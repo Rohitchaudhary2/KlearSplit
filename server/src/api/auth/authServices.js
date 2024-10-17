@@ -8,6 +8,9 @@ import {
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import sendMail from "../utils/sendMail.js";
+import Redis from "ioredis";
+
+const redis = new Redis();
 
 class AuthService {
   // Service for handling login functionality
@@ -23,24 +26,26 @@ class AuthService {
         "Looks like you had an account. Please restore it.",
       );
 
-    const currentTime = new Date();
-    if (user.lockoutUntil && user.lockoutUntil > currentTime) {
+    const failedAttemptsKey = `failedAttempts:${email}`;
+
+    let failedAttempts = (await redis.get(failedAttemptsKey)) || 0;
+    failedAttempts = parseInt(failedAttempts);
+    if (failedAttempts >= 3) {
       throw new ErrorHandler(
         403,
         "Your account is temporarily unavailable. Please follow the instructions sent to your registered email.",
       );
     }
+
     // checking whether password is valid
     const validPassword = await bcrypt.compare(
       password,
       user.dataValues.password,
     );
     if (!validPassword) {
-      user.failedAttempts += 1;
+      failedAttempts += 1;
 
-      if (user.failedAttempts >= 3) {
-        user.failedAttempts = 0;
-        user.lockoutUntil = new Date(Date.now() + 900000); // lock for 15 minutes
+      if (failedAttempts >= 3) {
         const options = {
           email,
           subject: "Important: Your Account Has Been Temporarily Locked",
@@ -50,35 +55,17 @@ class AuthService {
           email,
           lockoutDuration: "15 minutes",
         });
-        await UserDb.updateUser(
-          {
-            failedAttempts: user.failedAttempts,
-            lockoutUntil: user.lockoutUntil,
-          },
-          user.user_id,
-        );
+        await redis.setex(failedAttemptsKey, 900, failedAttempts);
         throw new ErrorHandler(
           404,
           "Your account has been temporarily blocked due to multiple unsuccessful login attempts.",
         );
       }
-      await UserDb.updateUser(
-        {
-          failedAttempts: user.failedAttempts,
-          lockoutUntil: user.lockoutUntil,
-        },
-        user.user_id,
-      );
+      await redis.setex(failedAttemptsKey, 900, failedAttempts);
       throw new ErrorHandler(404, "Email or Password is wrong.");
     } else {
-      user.failedAttempts = 0;
-      user.lockoutUntil = null;
+      await redis.del(failedAttemptsKey);
     }
-
-    await UserDb.updateUser(
-      { failedAttempts: user.failedAttempts, lockoutUntil: user.lockoutUntil },
-      user.user_id,
-    );
 
     // Generate access and refresh tokens
     const { accessToken, refreshToken } = generateAccessAndRefereshTokens(

@@ -171,3 +171,12 @@ td {
 ::-webkit-scrollbar-thumb:hover {
   background: #7d0dc3; /* Color when hovered */
 }
+
+.char-count {
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.error {
+  color: red; /* Highlight in red if exceeded */
+}

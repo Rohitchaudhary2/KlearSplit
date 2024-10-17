@@ -18,11 +18,17 @@ import { FriendsListComponent } from './friends-list/friends-list.component';
 import { SocketService } from './socket.service';
 import { MatDialog } from '@angular/material/dialog';
 import { FriendsExpenseComponent } from './friends-expense/friends-expense.component';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-friends',
   standalone: true,
-  imports: [FormsModule, FriendsListComponent, FriendsExpenseComponent],
+  imports: [
+    FormsModule,
+    FriendsListComponent,
+    FriendsExpenseComponent,
+    NgClass,
+  ],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })
@@ -44,6 +50,9 @@ export class FriendsComponent implements OnDestroy {
   messageInput = '';
 
   messages = signal<messageData[]>([]);
+
+  charCount = 0;
+  charCountExceeded = false;
 
   ngOnDestroy(): void {
     if (this.selectedUser()) {
@@ -87,6 +96,12 @@ export class FriendsComponent implements OnDestroy {
       this.cdr.detectChanges();
       this.scrollToBottom();
     });
+  }
+
+  onInputChange(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    this.charCount = textarea.value.length;
+    this.charCountExceeded = this.charCount === 512;
   }
 
   scrollToBottom() {

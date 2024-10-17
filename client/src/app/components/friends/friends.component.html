@@ -175,10 +175,17 @@
                 (keyup.enter)="sendMessage()"
                 style="width: 100%"
                 type="text"
+                maxlength="512"
+                (input)="onInputChange($event)"
                 class="form-control"
                 placeholder="Type something..."
               />
             </div>
+            @if (charCountExceeded) {
+              <div class="char-count error">
+                Max Characters Limit Reached {{ charCount }} / 512
+              </div>
+            }
             <button (click)="sendMessage()" class="send-message m-3">
               <i class="fa fa-paper-plane"></i>
             </button>

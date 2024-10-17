@@ -29,7 +29,7 @@ export class AddFriendComponent implements OnInit {
   ngOnInit() {
     this.searchSubject
       .pipe(
-        debounceTime(500),
+        debounceTime(1000),
         switchMap((query) => {
           if (query.trim() === '') {
             this.loading.set(false); // Set loading to false if query is empty
@@ -56,7 +56,7 @@ export class AddFriendComponent implements OnInit {
   }
 
   searchUsers(query: string) {
-    return this.httpClient.get<SearchedUser>(`${API_URLS.getUsers}${query}`, {
+    return this.httpClient.get<SearchedUser>(`${API_URLS.getUsers}/${query}`, {
       withCredentials: true,
     });
   }

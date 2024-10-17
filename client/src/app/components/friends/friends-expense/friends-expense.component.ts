@@ -37,6 +37,7 @@ export class FriendsExpenseComponent implements OnInit {
   showAdditionalFields = signal<boolean>(false);
   participants = [this.data[0], this.data[1].friend];
   private dialog = inject(MatDialog);
+  imageName = signal<string>('Upload Bill Receipt');
 
   form = new FormGroup({
     expense_name: new FormControl('', {
@@ -87,6 +88,7 @@ export class FriendsExpenseComponent implements OnInit {
     if (target.files && target.files.length > 0) {
       const file = target.files[0];
       this.form.value.receipt = file;
+      this.imageName.set(file.name);
     }
   }
 

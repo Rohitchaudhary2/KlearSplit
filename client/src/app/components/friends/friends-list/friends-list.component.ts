@@ -80,7 +80,7 @@ export class FriendsListComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.httpClient
-          .post(API_URLS.appFriend, result, {
+          .post(API_URLS.addFriend, result, {
             withCredentials: true,
           })
           .subscribe({

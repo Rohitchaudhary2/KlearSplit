@@ -13,11 +13,24 @@ import { ToastrService } from 'ngx-toastr';
 import { MatDialog } from '@angular/material/dialog';
 import { OtpDialogComponent } from '../otp-dialog/otp-dialog.component';
 import { RestoreAccountComponent } from '../restore-account/restore-account.component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    NgClass,
+  ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css'], // Fix: styleUrl -> styleUrls
 })
@@ -71,20 +84,12 @@ export class RegisterComponent {
         next: () => {
           this.openOtpDialog(userToSend); // Open dialog box for OTP input
         },
-        error: (err) => {
-          this.toastr.error(
-            err?.error?.message || 'OTP verification failed!',
-            'Error',
-            { timeOut: 3000 },
-          );
-        },
       });
     }
   }
 
   openOtpDialog(user: Partial<RegisterUser>) {
     const dialogRef = this.dialog.open(OtpDialogComponent, {
-      width: '500px',
       data: user,
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
@@ -93,26 +98,17 @@ export class RegisterComponent {
       if (result) {
         this.authService.registerUserWithOtp(user, result).subscribe({
           next: () => {
-            this.toastr.success('User registered successfully', 'Success', {
-              timeOut: 3000,
-            });
+            this.toastr.success('User registered successfully', 'Success');
             this.router.navigate(['/dashboard']);
-          },
-          error: (err) => {
-            this.toastr.error(
-              err?.error?.message || 'Registration failed!',
-              'Error',
-              { timeOut: 3000 },
-            );
           },
         });
       }
     });
+    dialogRef.updateSize('25%');
   }
 
   openRestoreAccountDialog() {
     const dialogRef = this.dialog.open(RestoreAccountComponent, {
-      width: '500px',
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
     });
@@ -125,11 +121,11 @@ export class RegisterComponent {
         });
       }
     });
+    dialogRef.updateSize('25%');
   }
 
   openOtpDialogRestoreAccount(user: { email: string }) {
     const dialogRef = this.dialog.open(OtpDialogComponent, {
-      width: '500px',
       data: user,
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
@@ -137,16 +133,14 @@ export class RegisterComponent {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.authService.restoreAccount(user, result).subscribe({
-          error: (err) => {
-            this.toastr.error(
-              err?.error?.message || 'Unable to restore account at the moment!',
-              'Error',
-              { timeOut: 3000 },
-            );
+          next: () => {
+            this.toastr.success('Account restored successfully', 'Success');
+            this.router.navigate(['/dashboard']);
           },
         });
       }
     });
+    dialogRef.updateSize('25%');
   }
 
   onGoogleSignUp() {

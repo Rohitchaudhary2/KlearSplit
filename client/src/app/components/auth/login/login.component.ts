@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormErrorMessageService } from '../../shared/form-error-message.service';
 import { LoginUser } from '../login-types.model';
 import { AuthService } from '../auth.service';
@@ -14,20 +14,57 @@ import { MatButtonModule } from '@angular/material/button';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
 import { MatDialog } from '@angular/material/dialog';
 import { OtpDialogComponent } from '../otp-dialog/otp-dialog.component';
+import { API_URLS } from '../../../constants/api-urls';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, MatButtonModule],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    NgClass,
+  ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
 export class LoginComponent {
   private formErrorMessages = inject(FormErrorMessageService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
+
+  private readonly googleAuthUrl = API_URLS.googleAuth;
+
+  loginFailed = false;
+  hidePassword = true;
+
+  constructor() {
+    this.form.valueChanges.subscribe(() => {
+      this.loginFailed = false;
+    });
+
+    if (Object.keys(this.route.snapshot.queryParams).length > 0) {
+      const { error } = this.route.snapshot.queryParams;
+      const errorMessage = decodeURIComponent(error);
+      this.toastr.error(errorMessage, 'Error');
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+    }
+  }
 
   form = new FormGroup({
     email: new FormControl('', {
@@ -50,15 +87,11 @@ export class LoginComponent {
       const user: LoginUser = this.form.value as LoginUser;
       this.authService.login(user).subscribe({
         next: () => {
-          this.toastr.success('User logged in successfully', 'Success', {
-            timeOut: 3000,
-          });
+          this.toastr.success('User logged in successfully', 'Success');
+          this.router.navigate(['/dashboard']);
         },
-        error: (err) => {
-          // Assuming that the error will have a message
-          this.toastr.error(err?.error?.message || 'Login failed!', 'Error', {
-            timeOut: 3000,
-          });
+        error: () => {
+          this.loginFailed = true;
         },
       });
     }
@@ -66,7 +99,6 @@ export class LoginComponent {
 
   openForgotPasswordDialog() {
     const dialogRef = this.dialog.open(ForgotPasswordComponent, {
-      width: '500px',
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
     });
@@ -79,31 +111,24 @@ export class LoginComponent {
         });
       }
     });
+    dialogRef.updateSize('25%');
   }
 
   openOtpDialog(user: { email: string }) {
     const dialogRef = this.dialog.open(OtpDialogComponent, {
-      width: '500px',
       data: user,
       enterAnimationDuration: '500ms',
       exitAnimationDuration: '500ms',
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.authService.forgotPassword(user, result).subscribe({
-          error: (err) => {
-            this.toastr.error(
-              err?.error?.message || 'Unable to send password at the moment!',
-              'Error',
-              { timeOut: 3000 },
-            );
-          },
-        });
+        this.authService.forgotPassword(user, result).subscribe();
       }
     });
+    dialogRef.updateSize('25%');
   }
 
   onGoogleSignIn() {
-    window.open('http://localhost:3000/api/auth/google', '_self');
+    window.open(this.googleAuthUrl, '_self');
   }
 }

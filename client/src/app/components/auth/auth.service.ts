@@ -1,4 +1,4 @@
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { CurrentUser } from '../shared/types.model';
 import { Observable, map } from 'rxjs';
@@ -47,7 +47,7 @@ export class AuthService {
       .pipe(
         map((response) => {
           // Handle OTP verification success response here (if needed)
-          this.toastr.success('OTP sent successfully');
+          this.toastr.success('OTP sent successfully', 'Success');
           return response;
         }),
       );
@@ -57,55 +57,36 @@ export class AuthService {
   registerUserWithOtp(
     user: Partial<RegisterUser>,
     otp: { otp: string },
-  ): Observable<HttpResponse<RegisterResponse>> {
+  ): Observable<RegisterResponse> {
     return this.httpClient
       .post<RegisterResponse>(
         this.registerUrl,
         { ...user, ...otp }, // Pass OTP along with user data
-        { observe: 'response', withCredentials: true },
+        { withCredentials: true },
       )
       .pipe(
-        map((response: HttpResponse<RegisterResponse>) => {
-          if (response.body) {
-            this.setAuthenticatedUser(response.body?.data);
-            this.tokenService.setUserId(response.body?.data?.user_id);
+        map((response: RegisterResponse) => {
+          if (response) {
+            this.setAuthenticatedUser(response.data);
+            this.tokenService.setUserId(response.data?.user_id);
           }
 
-          if (this.isAuthenticated()) {
-            // Reroute the user after successful registration
-            this.router.navigate(['/dashboard']);
-          } else {
-            this.toastr.error('Please try again.', 'Error', {
-              timeOut: 3000,
-            });
-          }
           return response;
         }),
       );
   }
 
   // Login User
-  login(user: LoginUser): Observable<HttpResponse<LoginResponse>> {
+  login(user: LoginUser): Observable<LoginResponse> {
     return this.httpClient
-      .post<LoginResponse>(this.loginUrl, user, {
-        observe: 'response',
-        withCredentials: true,
-      })
+      .post<LoginResponse>(this.loginUrl, user, { withCredentials: true })
       .pipe(
-        map((response: HttpResponse<LoginResponse>) => {
-          if (response.body) {
-            this.setAuthenticatedUser(response.body?.data);
-            this.tokenService.setUserId(response.body?.data?.user_id);
+        map((response: LoginResponse) => {
+          if (response) {
+            this.setAuthenticatedUser(response.data);
+            this.tokenService.setUserId(response.data?.user_id);
           }
 
-          if (this.isAuthenticated()) {
-            // Reroute the user after successful login
-            this.router.navigate(['/dashboard']);
-          } else {
-            this.toastr.error('Please try again.', 'Error', {
-              timeOut: 3000,
-            });
-          }
           return response;
         }),
       );
@@ -118,15 +99,8 @@ export class AuthService {
         // Remove the access of user from protected routes
         this.currentUser.set(null);
         this.tokenService.removeUserId();
-        this.toastr.success('You have logged out successfully.', 'Logout', {
-          timeOut: 3000,
-        });
+        this.toastr.success('You have logged out successfully.', 'Success');
         this.router.navigate(['/login']);
-      },
-      error: () => {
-        this.toastr.error('Logout failed. Please try again.', 'Error', {
-          timeOut: 3000,
-        });
       },
     });
   }
@@ -137,9 +111,7 @@ export class AuthService {
       .post(`${this.forgotPasswordVerifyUrl}`, user, { withCredentials: true })
       .pipe(
         map((response) => {
-          this.toastr.success('OTP sent successfully', 'Success', {
-            timeOut: 3000,
-          });
+          this.toastr.success('OTP sent successfully', 'Success');
           return response;
         }),
       );
@@ -155,9 +127,7 @@ export class AuthService {
       )
       .pipe(
         map((response) => {
-          this.toastr.success('New Password sent successfully', 'Success', {
-            timeOut: 3000,
-          });
+          this.toastr.success('New Password sent successfully', 'Success');
           // Reroute to login
           this.router.navigate(['/login']);
           return response;
@@ -171,9 +141,7 @@ export class AuthService {
       .post(`${this.restoreAccountVerifyUrl}`, user, { withCredentials: true })
       .pipe(
         map((response) => {
-          this.toastr.success('OTP sent successfully', 'Success', {
-            timeOut: 3000,
-          });
+          this.toastr.success('OTP sent successfully', 'Success');
           return response;
         }),
       );
@@ -183,28 +151,20 @@ export class AuthService {
   restoreAccount(
     user: { email: string },
     otp: { otp: string },
-  ): Observable<HttpResponse<RegisterResponse>> {
+  ): Observable<RegisterResponse> {
     return this.httpClient
       .post<RegisterResponse>(
         `${this.restoreAccountUrl}`,
         { ...user, ...otp },
-        { observe: 'response', withCredentials: true },
+        { withCredentials: true },
       )
       .pipe(
         map((response) => {
-          if (response.body) {
-            this.setAuthenticatedUser(response.body?.data);
-            this.tokenService.setUserId(response.body?.data?.user_id);
+          if (response) {
+            this.setAuthenticatedUser(response.data);
+            this.tokenService.setUserId(response.data?.user_id);
           }
 
-          if (this.isAuthenticated()) {
-            // Reroute the user after successful registration
-            this.router.navigate(['/dashboard']);
-          } else {
-            this.toastr.error('Please try again.', 'Error', {
-              timeOut: 3000,
-            });
-          }
           return response;
         }),
       );

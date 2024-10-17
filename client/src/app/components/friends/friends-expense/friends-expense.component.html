@@ -1,0 +1,175 @@
+<h2 mat-dialog-title class="text-center bg-success text-white py-2">
+  Add an Expense
+</h2>
+<div mat-dialog-content class="d-flex flex-column align-items-center px-4 pt-4">
+  <form [formGroup]="form" class="w-100">
+    <div class="mb-3">
+      <mat-form-field appearance="outline" class="w-100 custom-form-field mb-2">
+        <mat-label>Expense Name</mat-label>
+        <input
+          matInput
+          formControlName="expense_name"
+          style="background-color: transparent"
+        />
+        @if (form.controls["expense_name"].invalid) {
+          <mat-error>Expense Name is required.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-100 custom-form-field mb-2">
+        <mat-label>Total Amount</mat-label>
+        <input
+          matInput
+          type="number"
+          formControlName="total_amount"
+          style="background-color: transparent"
+          step="0.01"
+          min="0"
+          max="999999999999.99"
+        />
+        @if (form.controls["total_amount"].invalid) {
+          <mat-error>Amount is required.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-100 custom-form-field">
+        <mat-label>Description</mat-label>
+        <input
+          matInput
+          formControlName="description"
+          style="background-color: transparent"
+        />
+        @if (form.controls["description"].invalid) {
+          <mat-error>Description can have at max 150 characters.</mat-error>
+        }
+      </mat-form-field>
+      <!-- <mat-form-field appearance="fill" class="w-10"  (click)="openSecondDialog()">
+        <mat-label>Payer</mat-label>
+        <mat-select formControlName="payer_id">
+          <mat-option [value]="participants[0].user_id"
+            >{{ participants[0].first_name }}
+            {{ participants[0].last_name }}</mat-option
+          >
+          <mat-option [value]="participants[1].user_id"
+            >{{ participants[1].first_name }}
+            {{ participants[1].last_name }}</mat-option
+          >
+        </mat-select>
+      </mat-form-field> -->
+      <div class="d-flex justify-content-center align-items-center mb-3">
+        <mat-label>Paid by</mat-label>
+        <button
+          class="mx-2 text-success"
+          mat-raised-button
+          (click)="openSecondDialog()"
+        >
+          {{ getPayerName() }}
+        </button>
+        <mat-label>and split</mat-label>
+        <button
+          class="mx-2 text-success"
+          mat-raised-button
+        >
+          equally
+        </button>
+      </div>
+
+      <!-- <mat-form-field appearance="outline" class="w-100 custom-form-field">
+        <mat-label>Split Type</mat-label>
+        <mat-select formControlName="split_type">
+          <mat-option value="EQUAL">EQUAL</mat-option>
+          <mat-option value="UNEQUAL">UNEQUAL</mat-option>
+          <mat-option value="PERCENTAGE">PERCENTAGE</mat-option>
+        </mat-select>
+      </mat-form-field> -->
+      @if (showAdditionalFields()) {
+        <mat-form-field appearance="fill" class="w-100">
+          <mat-label
+            >{{ participants[0].first_name }} {{ participants[0].last_name }}'s
+            share</mat-label
+          >
+          <input
+            matInput
+            type="number"
+            name="participant1_share"
+            formControlName="participant1_share"
+            style="background-color: transparent"
+            step="0.01"
+            min="0"
+            max="999999999999.99"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="fill" class="w-100">
+          <mat-label
+            >{{ participants[1].first_name }} {{ participants[1].last_name }}'s
+            share</mat-label
+          >
+          <input
+            matInput
+            type="number"
+            name="participant2_share"
+            formControlName="participant2_share"
+            style="background-color: transparent"
+            step="0.01"
+            min="0"
+            max="999999999999.99"
+          />
+        </mat-form-field>
+      }
+      <div class="parent-container">
+        <div class="file-upload" style="text-align: center">
+          <label
+            for="bill-receipt"
+            class="upload-label px-3"
+            style="color: green"
+            >Upload Bill Receipt</label
+          >
+          <input
+            type="file"
+            id="bill-receipt"
+            accept="image/*"
+            (change)="selectImage($event)"
+            class="file-input"
+          />
+        </div>
+      </div>
+
+      <!-- <div class="file-upload">
+        <label for="bill-receipt" style="width: 30%;">Bill Receipt</label>
+        <input
+        style="width: 70%;"
+          type="file"
+          id="bill-receipt"
+          accept="image/*"
+          (change)="selectImage($event)"
+        />
+      </div> -->
+      <!-- <div class="input-group mb-3">
+        <span><label for="bill-receipt">Bill Receipt</label></span>
+        <span><input
+          type="file"
+          name="image"
+          (change)="selectImage($event)"
+          id="inputGroupFile02"
+        /></span>
+      </div> -->
+    </div>
+  </form>
+</div>
+<div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3">
+  <button
+    mat-button
+    disableRipple
+    class="custom-mat-button"
+    (click)="onCancel()"
+  >
+    Cancel
+  </button>
+  <button
+    mat-button
+    disableRipple
+    class="custom-mat-button"
+    (click)="onAdd()"
+    [disabled]="form.invalid"
+  >
+    Add
+  </button>
+</div>

@@ -8,97 +8,72 @@
     >
       <div class="col-xl-10">
         <div
-          class="card rounded-3 text-black"
+          class="card rounded-3 text-black shadow-lg"
           style="background-color: #f1f1f2"
         >
           <div class="row g-0">
             <div class="col-lg-6">
               <div class="card-body p-md-3 mx-md-4">
                 <div class="text-center">
-                  <img src="/logo.png" style="width: 185px" alt="logo" />
+                  <img src="/logo.png" style="width: 85px" alt="logo" />
                   <h4 class="mt-1 pb-1">We are The KlearSplit Team</h4>
                 </div>
 
-                <form
-                  class="was-validated"
-                  [formGroup]="form"
-                  (ngSubmit)="onClickVerify()"
-                >
+                <form [formGroup]="form" (ngSubmit)="onClickVerify()">
                   <p class="mt-4">Please enter your details below.</p>
-                  <div class="form-floating mt-4">
-                    <input
-                      type="name"
-                      class="form-control"
-                      id="formInput"
-                      name="first_name"
-                      placeholder="John"
-                      formControlName="first_name"
-                    />
-                    <label for="formInput">First Name</label>
-                  </div>
 
-                  @if (getFormErrors("first_name")) {
-                    <p class="text-danger mt-0 small">
-                      {{ getFormErrors("first_name") }}
-                    </p>
-                  }
+                  <mat-form-field
+                    appearance="outline"
+                    class="w-100"
+                    [ngClass]="{ 'mb-2': getFormErrors('first_name') }"
+                  >
+                    <mat-label>First Name</mat-label>
+                    <mat-icon matPrefix>person</mat-icon>
+                    <input matInput formControlName="first_name" />
+                    @if (getFormErrors("first_name")) {
+                      <mat-error>{{ getFormErrors("first_name") }}</mat-error>
+                    }
+                  </mat-form-field>
 
-                  <div class="form-floating mt-4">
-                    <input
-                      type="name"
-                      class="form-control"
-                      id="formInput"
-                      name="last_name"
-                      placeholder="Doe"
-                      formControlName="last_name"
-                    />
-                    <label for="formInput">Last Name</label>
-                  </div>
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Last Name</mat-label>
+                    <mat-icon matPrefix>person</mat-icon>
+                    <input matInput formControlName="last_name" />
+                  </mat-form-field>
 
-                  <div class="form-floating mt-4">
-                    <input
-                      type="email"
-                      class="form-control"
-                      id="formInput"
-                      name="email"
-                      placeholder="john@example.com"
-                      formControlName="email"
-                    />
-                    <label for="formInput">Email</label>
-                  </div>
+                  <mat-form-field
+                    appearance="outline"
+                    class="w-100"
+                    [ngClass]="{ 'mb-2': getFormErrors('email') }"
+                  >
+                    <mat-label>Email</mat-label>
+                    <mat-icon matPrefix>email</mat-icon>
+                    <input matInput formControlName="email" />
+                    @if (getFormErrors("email")) {
+                      <mat-error>{{ getFormErrors("email") }}</mat-error>
+                    }
+                  </mat-form-field>
 
-                  @if (getFormErrors("email")) {
-                    <p class="text-danger mt-0 small">
-                      {{ getFormErrors("email") }}
-                    </p>
-                  }
+                  <mat-form-field
+                    appearance="outline"
+                    class="w-100"
+                    [ngClass]="{ 'mb-2': getFormErrors('phone') }"
+                  >
+                    <mat-label>Phone Number</mat-label>
+                    <mat-icon matPrefix>phone</mat-icon>
+                    <input matInput formControlName="phone" />
+                    @if (getFormErrors("phone")) {
+                      <mat-error>{{ getFormErrors("phone") }}</mat-error>
+                    }
+                  </mat-form-field>
 
-                  <div class="form-floating mt-4">
-                    <input
-                      type="phone"
-                      class="form-control"
-                      id="formInput"
-                      name="phone"
-                      placeholder="9876543210"
-                      formControlName="phone"
-                    />
-                    <label for="formInput">Phone Number</label>
-                  </div>
-
-                  @if (getFormErrors("phone")) {
-                    <p class="text-danger mt-0 small">
-                      {{ getFormErrors("phone") }}
-                    </p>
-                  }
-
-                  <div class="text-center text-light pt-1 mt-4 mb-1 pb-1">
+                  <div class="text-center text-light pt-1 mt-2 mb-1 pb-1">
                     <button
                       [disabled]="form.invalid"
                       mat-button
                       disableRipple
                       class="custom-mat-button w-100"
                       type="submit"
-                      style="background-color: #1995ad"
                     >
                       Verify
                     </button>
@@ -107,6 +82,7 @@
                   <div class="text-center pt-1 mb-3 pb-1">
                     <button
                       class="text-muted"
+                      type="button"
                       (click)="openRestoreAccountDialog()"
                       style="border: none; text-decoration: underline"
                     >
@@ -138,7 +114,7 @@
               </div>
             </div>
             <div
-              class="col-lg-6 d-flex align-items-center d-none d-lg-flex d-xl-flex"
+              class="col-lg-6 d-flex align-items-center d-none d-lg-flex d-xl-flex shadow-lg"
               style="background-color: #1995ad"
             >
               <div class="text-white px-3 py-4 p-md-5 mx-md-4">

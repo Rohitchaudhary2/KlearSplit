@@ -23,11 +23,10 @@
 
 /* Disabled button styles */
 .custom-mat-button[disabled] {
-  background-color: #6c757d !important; /* Grey color when disabled */
-  color: white !important; /* Force text color to stay white even when disabled */
-  cursor: not-allowed !important; /* Disable pointer events */
+  cursor: not-allowed; /* Disable pointer events */
+  pointer-events: auto;
+  color: white; /* Force text color to stay white even when disabled */
   opacity: 0.65; /* Slightly faded look for disabled state */
-  pointer-events: none; /* Ensure no interactions when disabled */
 }
 
 .custom-google-btn {

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Lockout Notification</title>
+    <%- await include('styles.ejs') %>
+</head>
+<body>
+    <div class="container">
+        <h1>Important: Your Account Has Been Temporarily Locked</h1>
+        <p>Dear <%= name %>,</p>
+        <p>We want to inform you that your account associated with the email address <strong><%= email %></strong> on KlearSplit has been temporarily locked due to multiple unsuccessful login attempts. This measure is in place to protect your account from unauthorized access.</p>
+        
+        <h2>Details:</h2>
+        <ul>
+            <li><strong>Reason for Lockout:</strong> Three consecutive failed login attempts</li>
+            <li><strong>Lockout Duration:</strong> <%= lockoutDuration %></li>
+        </ul>
+        
+        <h2>What to Do Next:</h2>
+        <p>Wait for the lockout period. Your account will be automatically unlocked after the specified duration.</p>
+        <p>If you believe your password may have been compromised or if you’ve forgotten it, you can reset it.</p>
+
+        <p>If you did not attempt to log in, we recommend that you change your password immediately to ensure your account’s security.</p>
+
+        <h2>For Further Assistance:</h2>
+        <p>If you need further assistance or have any questions, please feel free to contact our support team.</p>
+
+        <p>Thank you for your understanding and for helping us keep your account secure!</p>
+
+        <footer>
+            <p>Best Regards,<br>KlearSplit</p>
+        </footer>
+    </div>
+</body>
+</html>

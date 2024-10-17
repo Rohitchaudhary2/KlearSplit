@@ -8,6 +8,7 @@ import sendMail from "../utils/sendMail.js";
 import { createOtpDb, getOtpDb } from "./otpDb.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import { otpGenrator } from "../utils/otpGenerator.js";
+import FriendService from "../friends/friendService.js";
 
 class UserService {
   static verifyUser = async (user) => {
@@ -15,7 +16,10 @@ class UserService {
 
     // If email or phone already exists in database then checking whether user has deleted account
     if (isUserExists && isUserExists.dataValues.deletedAt)
-      throw new ErrorHandler(400, "Looks like you had an account.");
+      throw new ErrorHandler(
+        400,
+        "Looks like you had an account. Please restore it.",
+      );
     else if (isUserExists) throw new ErrorHandler(400, "Email already exists.");
 
     // send otp
@@ -152,12 +156,6 @@ class UserService {
     if (new Date() >= otp.otp_expiry_time)
       throw new ErrorHandler(400, "Otp has been expired.");
 
-    //Generating random password
-    const password = generatePassword();
-
-    //Hashing the password
-    user.password = await hashedPassword(password);
-
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
@@ -179,12 +177,6 @@ class UserService {
         transaction,
       );
 
-      await UserDb.updateUser(
-        { password: user.password },
-        restoredUser.user_id,
-        transaction,
-      );
-
       // Commit the transaction
       await transaction.commit();
 
@@ -200,10 +192,7 @@ class UserService {
     const isEmailExists = await UserDb.getUserByEmail(user.email, false);
 
     if (!isEmailExists) {
-      throw new ErrorHandler(
-        400,
-        "No Record found. Please Create new account.",
-      );
+      throw new ErrorHandler(400, "No Record found.");
     } else if (isEmailExists.dataValues && isEmailExists.dataValues.deletedAt) {
       throw new ErrorHandler(
         400,
@@ -237,10 +226,20 @@ class UserService {
     const user = await UserDb.getUserByEmail(userData.email);
     if (!user) throw new ErrorHandler(400, "Email does not exist");
 
+    const otp = await getOtpDb(user.email, userData.otp);
+
+    if (!otp) throw new ErrorHandler(400, "Invalid Otp.");
+
+    if (new Date() >= otp.otp_expiry_time)
+      throw new ErrorHandler(400, "Otp has been expired.");
+
     const password = generatePassword();
     const hashPassword = await hashedPassword(password);
 
-    await UserDb.updateUser({ password: hashPassword }, user.user_id);
+    await UserDb.updateUser(
+      { password: hashPassword, failedAttempts: 0, lockoutUntil: null },
+      user.user_id,
+    );
 
     const options = {
       email: user.email,
@@ -261,6 +260,31 @@ class UserService {
     const user = await UserDb.getUserById(id);
     if (!user) throw new ErrorHandler(404, "User not found.");
     return user;
+  };
+
+  // Service to get users by a regular expression
+  static getUsersByRegex = async (data) => {
+    const users = await UserDb.getUsersByRegex(data.regex);
+    const filteredUsers = await Promise.all(
+      users
+        .filter((user) => user.user_id !== data.user_id) // Filter out the current user
+        .map(async (user) => {
+          const newFriendData = {
+            friend1_id: data.user_id, // Assuming logged-in user's ID
+            friend2_id: user.user_id,
+          };
+
+          // Check if the friend relationship exists
+          const friendExist =
+            await FriendService.checkFriendExist(newFriendData);
+
+          // Return user if not a friend, otherwise null
+          return friendExist ? null : user;
+        }),
+    );
+
+    // Remove null values (users who are already friends)
+    return filteredUsers.filter((user) => user !== null);
   };
 
   // Service for updating user in the database

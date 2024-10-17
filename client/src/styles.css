@@ -2,7 +2,7 @@
 
 body {
   box-sizing: border-box;
-  background-color: #a1d6e2 !important;
+  background: rgb(205, 243, 205) !important;
   background-attachment: fixed !important;
   margin: 0;
   padding: 0;
@@ -11,5 +11,5 @@ body {
 
 .mat-mdc-dialog-surface {
   overflow-y: hidden !important; /* Ensure no scrollbars appear */
-  max-height: 90vh; /* Adjust dialog max height within the viewport */
+  /* max-height: 90vh; Adjust dialog max height within the viewport */
 }

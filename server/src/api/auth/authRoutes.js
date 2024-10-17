@@ -3,6 +3,7 @@ import { Router } from "express";
 import passport from "../middlewares/googleStrategy.js";
 import { login, logout } from "./authController.js";
 import { authenticateToken } from "../middlewares/auth.js";
+import logger from "../utils/logger.js";
 
 const authRouter = Router();
 
@@ -13,33 +14,48 @@ authRouter.get(
   passport.authenticate("google", {
     session: false,
     scope: ["profile", "email"],
+    prompt: "select_account",
   }),
 );
 
-authRouter.get(
-  "/google/callback",
-  passport.authenticate("google", {
-    session: false,
-    failureRedirect: "http://localhost:4200/login",
-  }),
-  (req, res) => {
+authRouter.get("/google/callback", (req, res, next) => {
+  passport.authenticate("google", { session: false }, (err, user) => {
+    if (err) {
+      logger.log({
+        level: "error",
+        statusCode: err.statusCode,
+        message: err.message,
+      });
+      return res.redirect(
+        `http://localhost:4200/login?error=${encodeURIComponent(err.message)}`,
+      );
+    }
+
+    if (!user) {
+      return res.redirect("http://localhost:4200/login?error=User not found");
+    }
+
+    // If authentication is successful
     const userData = {
-      user: req.user.user.dataValues,
-      accessToken: req.user.accessToken,
-      refreshToken: req.user.refreshToken,
+      user: user.user.dataValues,
+      accessToken: user.accessToken,
+      refreshToken: user.refreshToken,
     };
+
     res
       .cookie("accessToken", userData.accessToken, {
         httpOnly: true,
         sameSite: "strict",
+        maxAge: 10 * 24 * 60 * 60 * 1000,
       })
       .cookie("refreshToken", userData.refreshToken, {
         httpOnly: true,
         sameSite: "strict",
+        maxAge: 10 * 24 * 60 * 60 * 1000,
       })
       .redirect(`http://localhost:4200/dashboard?id=${userData.user.user_id}`);
-  },
-);
+  })(req, res, next);
+});
 
 authRouter.get("/logout", authenticateToken, logout);
 

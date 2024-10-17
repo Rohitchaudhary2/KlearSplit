@@ -1,0 +1,170 @@
+<div class="transparent subcontainer d-flex flex-column">
+  <!-- search container -->
+  <div class="d-flex justify-content-evenly align-items-center gap-3 mx-3">
+    <div
+      class="d-flex justify-content-between search-container shadow col-md-10 ps-3"
+    >
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+        placeholder="Search"
+      />
+      <button type="submit" class="search-button">
+        <i class="fa fa-search"></i>
+      </button>
+    </div>
+    <div class="col-md-1">
+      <button
+        class="material-icons shadow user-add"
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Add Friend"
+        (click)="onAddFriendClick()"
+      >
+        person_add
+      </button>
+    </div>
+  </div>
+
+  <!-- pending friend requests -->
+  <div class="pending-request shadow-lg mt-3 mx-3">
+    <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">
+      Friend Requests
+    </h6>
+    <hr class="m-0 mt-1" />
+    <div class="requests">
+      <table class="table table-hover">
+        <tbody>
+          @for (request of requests(); track $index) {
+            <tr
+              class="row equal-height-row d-flex justify-content-between m-0"
+              style="cursor: pointer"
+            >
+              <td
+                class="col-md-3 col-lg-2 col-sm-3"
+                style="
+                  flex: 0 0 auto;
+                  text-align: center;
+                  align-content: center;
+                "
+              >
+                <span
+                  ><img
+                    class="profile-image"
+                    [src]="request.friend.image_url"
+                    alt="Image"
+                /></span>
+              </td>
+              <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
+                <div class="d-flex justify-content-between">
+                  <span
+                    >{{ request.friend.first_name }}
+                    {{ request.friend.last_name }}</span
+                  >
+                  <span class="text-end pe-3">
+                    @if (request.status === "RECEIVER") {
+                      <span
+                        ><button
+                          class="btn btn-success btn-sm"
+                          (click)="
+                            onAcceptReject(request.conversation_id, 'ACCEPTED')
+                          "
+                        >
+                          Accept
+                        </button></span
+                      >
+                      <span class="ps-2"
+                        ><button
+                          class="btn btn-danger btn-sm"
+                          (click)="
+                            onAcceptReject(request.conversation_id, 'REJECTED')
+                          "
+                        >
+                          Reject
+                        </button>
+                      </span>
+                    } @else {
+                      <span
+                        ><button
+                          class="btn btn-danger btn-sm"
+                          (click)="onWithdrawRequest(request.conversation_id)"
+                        >
+                          Withdraw Request
+                        </button></span
+                      >
+                    }
+                  </span>
+                </div>
+                <div>{{ request.friend.email }}</div>
+              </td>
+            </tr>
+          } @empty {
+            <div class="pt-3 text-center">No Friend Requests</div>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Friends List -->
+  <div class="friend-list d-flex flex-column shadow-lg mt-3 mx-3 flex-grow-1">
+    <div class="friend-request-heading">
+      <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">
+        Friend List
+      </h6>
+      <hr class="m-0 mt-1" />
+    </div>
+    <div class="friends">
+      <table class="table table-hover">
+        <tbody>
+          @for (friend of friendList(); track $index) {
+            <tr
+              class="row equal-height-row d-flex justify-content-between m-0"
+              style="cursor: pointer"
+              (click)="onSelectUser(friend)"
+            >
+              <td
+                class="col-md-3 col-lg-2 col-sm-3"
+                style="
+                  flex: 0 0 auto;
+                  text-align: center;
+                  align-content: center;
+                "
+              >
+                <span
+                  ><img
+                    class="profile-image"
+                    [src]="friend.friend.image_url"
+                    alt="Image"
+                /></span>
+              </td>
+              <td class="col-md-9 col-lg-10 col-sm-9">
+                <div class="d-flex justify-content-between">
+                  <span
+                    >{{ friend.friend.first_name }}
+                    {{ friend.friend.last_name }}</span
+                  >
+                  <span class="text-end pe-3">
+                    @if (getBalanceAsNumber(friend.balance_amount) < 0) {
+                      <span class="text-danger">{{
+                        -getBalanceAsNumber(friend.balance_amount)
+                          | currency: "INR"
+                      }}</span>
+                    } @else {
+                      <span class="text-success">{{
+                        getBalanceAsNumber(friend.balance_amount)
+                          | currency: "INR"
+                      }}</span>
+                    }
+                  </span>
+                </div>
+                <div>{{ friend.friend.email }}</div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

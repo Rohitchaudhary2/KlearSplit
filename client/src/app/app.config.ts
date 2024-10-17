@@ -1,4 +1,8 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import {
+  ApplicationConfig,
+  importProvidersFrom,
+  provideZoneChangeDetection,
+} from '@angular/core';
 import {
   provideRouter,
   withComponentInputBinding,
@@ -7,7 +11,7 @@ import {
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
-import { provideToastr } from 'ngx-toastr';
+import { provideToastr, ToastrModule } from 'ngx-toastr';
 
 import { routes } from './app.routes';
 // import { authInterceptor } from './components/auth/auth.interceptor';
@@ -27,6 +31,13 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([errorInterceptor])),
     provideAnimations(), // required animations providers
     provideToastr(),
+    importProvidersFrom(
+      ToastrModule.forRoot({
+        preventDuplicates: true,
+        timeOut: 3000,
+        progressBar: true,
+      }),
+    ),
     provideAnimationsAsync(),
   ],
 };

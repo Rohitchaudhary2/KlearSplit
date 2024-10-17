@@ -43,9 +43,6 @@ export class FormErrorMessageService {
       const value = control.value;
 
       // Check for multiple password patterns
-      if (!/[A-Z]/.test(value)) {
-        return 'Password must contain at least one uppercase letter.';
-      }
       if (!/[a-z]/.test(value)) {
         return 'Password must contain at least one lowercase letter.';
       }

@@ -19,7 +19,7 @@ class UserService {
     // If email or phone already exists in database then checking whether user has deleted account
     if (isUserExists && isUserExists.dataValues.deletedAt)
       throw new ErrorHandler(
-        400,
+        410,
         "Looks like you had an account. Please restore it.",
       );
     else if (isUserExists)
@@ -187,10 +187,7 @@ class UserService {
     const isEmailExists = await UserDb.getUserByEmail(user.email, false);
 
     if (!isEmailExists) {
-      throw new ErrorHandler(
-        400,
-        "No Record found. Please Create new account.",
-      );
+      throw new ErrorHandler(400, "No Record found.");
     } else if (isEmailExists.dataValues && isEmailExists.dataValues.deletedAt) {
       throw new ErrorHandler(
         400,

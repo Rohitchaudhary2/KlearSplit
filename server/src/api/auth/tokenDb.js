@@ -1,4 +1,4 @@
-import RefreshToken from "./refreshTokenModel.js";
+import { RefreshToken } from "../../config/db.connection.js";
 
 export const createRefreshTokenDb = async (token, transaction) =>
   RefreshToken.create(token, { transaction });

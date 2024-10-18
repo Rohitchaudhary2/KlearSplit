@@ -3,7 +3,7 @@ import AuthService from "../auth/authServices.js";
 import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import { ErrorHandler } from "./errorHandler.js";
 import UserService from "../users/userServices.js";
-import sequelize from "../../config/db.connection.js";
+import { sequelize } from "../../config/db.connection.js";
 
 const handleAccessToken = (req) => {
   if (!req.cookies["accessToken"]) {

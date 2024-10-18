@@ -1,8 +1,10 @@
 import { Op } from "sequelize";
-import Friend from "./models/friendModel.js";
-import User from "../users/models/userModel.js";
-import FriendMessage from "./models/friendMessageModel.js";
-import FriendExpense from "./models/friendExpenseModel.js";
+import {
+  User,
+  Friend,
+  FriendMessage,
+  FriendExpense,
+} from "../../config/db.connection.js";
 
 class FriendDb {
   static addFriend = async (friendData) => await Friend.create(friendData);

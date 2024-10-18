@@ -5,11 +5,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { TokenService } from '../auth/token.service';
+import { StateService } from './state.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toastr = inject(ToastrService);
   const router = inject(Router);
   const tokenService = inject(TokenService);
+  const stateService = inject(StateService);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -41,6 +43,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           case 410:
             errorMessage =
               error.error.message || 'Account deleted please restore it.';
+            stateService.setAccountDeleted(true);
             break;
           case 503:
           case 500:

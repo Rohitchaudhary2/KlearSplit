@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import User from "./models/userModel.js";
+import { User } from "../../config/db.connection.js";
 
 class UserDb {
   static createUser = async (user, transaction) =>

@@ -1,4 +1,4 @@
-import sequelize from "../../config/db.connection.js";
+import { sequelize } from "../../config/db.connection.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import UserDb from "../users/userDb.js";
 import { responseHandler } from "../utils/responseHandler.js";

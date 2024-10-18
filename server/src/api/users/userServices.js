@@ -2,7 +2,7 @@ import { generatePassword } from "../utils/passwordGenerator.js";
 import UserDb from "./userDb.js";
 import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import AuthService from "../auth/authServices.js";
-import sequelize from "../../config/db.connection.js";
+import { sequelize } from "../../config/db.connection.js";
 import { hashedPassword } from "../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";

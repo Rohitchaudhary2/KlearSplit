@@ -6,7 +6,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 
 import socketHandler from "./api/socket/socket.js";
-import sequelize from "./config/db.connection.js";
+import { sequelize } from "./config/db.connection.js";
 import passport from "./api/middlewares/googleStrategy.js";
 import userRouter from "./api/users/userRoutes.js";
 import authRouter from "./api/auth/authRoutes.js";

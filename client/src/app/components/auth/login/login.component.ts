@@ -113,6 +113,7 @@ export class LoginComponent {
         Validators.email,
       ]),
     );
+    this.form.removeControl('email');
   }
 
   // Method to handle OTP field display after submit

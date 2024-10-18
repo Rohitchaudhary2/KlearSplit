@@ -64,7 +64,7 @@
 
                     <div class="text-center text-light pt-1 mb-1 pb-1">
                       <button
-                        [disabled]="form.invalid || loginFailed"
+                        [disabled]="form.invalid || loginFailed()"
                         mat-button
                         disableRipple
                         class="custom-mat-button mt-1 w-100"

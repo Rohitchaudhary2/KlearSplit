@@ -56,7 +56,7 @@ export class AuthService {
   // Register User with OTP Verification
   registerUserWithOtp(
     user: Partial<RegisterUser>,
-    otp: { otp: string },
+    otp: { otp: string | null | undefined },
   ): Observable<RegisterResponse> {
     return this.httpClient
       .post<RegisterResponse>(
@@ -110,7 +110,11 @@ export class AuthService {
     email: string | null | undefined,
   ): Observable<object> {
     return this.httpClient
-      .post(`${this.forgotPasswordVerifyUrl}`, email, { withCredentials: true })
+      .post(
+        `${this.forgotPasswordVerifyUrl}`,
+        { email },
+        { withCredentials: true },
+      )
       .pipe(
         map((response) => {
           this.toastr.success('OTP sent successfully', 'Success');
@@ -143,7 +147,11 @@ export class AuthService {
   // Verify a user who already exists to restore their account
   verifyExistingUser(email: string | null | undefined): Observable<object> {
     return this.httpClient
-      .post(`${this.restoreAccountVerifyUrl}`, email, { withCredentials: true })
+      .post(
+        `${this.restoreAccountVerifyUrl}`,
+        { email },
+        { withCredentials: true },
+      )
       .pipe(
         map((response) => {
           this.toastr.success('OTP sent successfully', 'Success');

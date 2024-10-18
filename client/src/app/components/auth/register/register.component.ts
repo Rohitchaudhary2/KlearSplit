@@ -96,23 +96,33 @@ export class RegisterComponent {
           userToSend[typedKey] = user[typedKey];
         }
       });
-      this.authService.verifyUser(userToSend).subscribe({
-        next: () => {
-          this.isOtpMode.set(true);
-          this.form.addControl(
-            'otp',
-            new FormControl('', [
-              Validators.required,
-              Validators.minLength(6),
-              Validators.maxLength(6),
-              Validators.pattern(/^[0-9]{6}$/),
-            ]),
-          );
-        },
-        error: () => {
-          this.registerFailed.set(true);
-        },
-      });
+      if (!this.isOtpMode()) {
+        this.authService.verifyUser(userToSend).subscribe({
+          next: () => {
+            this.isOtpMode.set(true);
+            this.form.addControl(
+              'otp',
+              new FormControl('', [
+                Validators.required,
+                Validators.minLength(6),
+                Validators.maxLength(6),
+                Validators.pattern(/^[0-9]{6}$/),
+              ]),
+            );
+          },
+          error: () => {
+            this.registerFailed.set(true);
+          },
+        });
+      } else {
+        const otp = this.form.get('otp')?.value;
+        this.authService.registerUserWithOtp(userToSend, { otp }).subscribe({
+          next: () => {
+            this.toastr.success('User registered successfully', 'Success');
+            this.router.navigate(['/friends']);
+          },
+        });
+      }
     }
   }
 
@@ -209,7 +219,7 @@ export class RegisterComponent {
         this.authService.registerUserWithOtp(user, result).subscribe({
           next: () => {
             this.toastr.success('User registered successfully', 'Success');
-            this.router.navigate(['/dashboard']);
+            this.router.navigate(['/friends']);
           },
         });
       }

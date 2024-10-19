@@ -67,7 +67,6 @@
 
         <div
           #messageContainer
-          [scrollTop]="messageContainer.scrollHeight"
           class="message-body flex-grow-1 row p-0 m-0"
           style="max-height: 57vh; overflow-y: auto"
         >
@@ -215,15 +214,37 @@
           </div>
         }
       } @else {
-        <div class="text-center p-2" style="flex: 1 1 0">
+        <div
+          class="text-center p-2 d-flex flex-column justify-content-between"
+          style="position: relative; flex: 1 1 0"
+        >
           <h1
             class="pt-2"
-            style="color: linear-gradient(to left, #87ceeb, #a0d3e8, #90ee90)"
+            style="
+              text-shadow:
+                0 0 20px #00fffb,
+                0 0 40px #0081bc;
+            "
           >
             Welcome, <span>{{ user_name }}!</span>
           </h1>
-          <img class="chat-box-image" src="robot.gif" alt="robot" />
-          <h3 class="pb-2">Please select a chat to start messaging</h3>
+          <img
+            class="chat-box-image"
+            (load)="onLoad()"
+            [class.visible]="isLoaded"
+            src="robot.gif"
+            alt="robot"
+          />
+          <h3
+            class="pb-2"
+            style="
+              text-shadow:
+                0 0 20px #00fffb,
+                0 0 40px #0081bc;
+            "
+          >
+            Please select a chat to start messaging
+          </h3>
         </div>
       }
     </div>

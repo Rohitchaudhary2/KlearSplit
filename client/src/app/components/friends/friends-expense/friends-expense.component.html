@@ -46,47 +46,21 @@
         <button
           class="mx-2 text-success"
           mat-raised-button
-          (click)="openSecondDialog()"
+          (click)="openPayerDialog()"
+          [disabled]="form.invalid"
         >
           {{ getPayerName() }}
         </button>
         <mat-label>and split</mat-label>
-        <button class="mx-2 text-success" mat-raised-button>equally</button>
+        <button
+          class="mx-2 text-success"
+          mat-raised-button
+          (click)="openSplitTypeDialog()"
+          [disabled]="form.invalid"
+        >
+          {{ splitType }}
+        </button>
       </div>
-      @if (showAdditionalFields()) {
-        <mat-form-field appearance="fill" class="w-100">
-          <mat-label
-            >{{ participants[0].first_name }} {{ participants[0].last_name }}'s
-            share</mat-label
-          >
-          <input
-            matInput
-            type="number"
-            name="participant1_share"
-            formControlName="participant1_share"
-            style="background-color: transparent"
-            step="0.01"
-            min="0"
-            max="999999999999.99"
-          />
-        </mat-form-field>
-        <mat-form-field appearance="fill" class="w-100">
-          <mat-label
-            >{{ participants[1].first_name }} {{ participants[1].last_name }}'s
-            share</mat-label
-          >
-          <input
-            matInput
-            type="number"
-            name="participant2_share"
-            formControlName="participant2_share"
-            style="background-color: transparent"
-            step="0.01"
-            min="0"
-            max="999999999999.99"
-          />
-        </mat-form-field>
-      }
       <div class="parent-container">
         <div class="file-upload" style="text-align: center">
           <label

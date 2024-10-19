@@ -16,6 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { NgClass } from '@angular/common';
 import { PayerComponent } from './payer/payer.component';
+import { SplitTypeComponent } from './split-type/split-type.component';
 
 @Component({
   selector: 'app-friends-expense',
@@ -38,6 +39,7 @@ export class FriendsExpenseComponent implements OnInit {
   participants = [this.data[0], this.data[1].friend];
   private dialog = inject(MatDialog);
   imageName = signal<string>('Upload Bill Receipt');
+  splitType = 'EQUAL';
 
   form = new FormGroup({
     expense_name: new FormControl('', {
@@ -80,7 +82,7 @@ export class FriendsExpenseComponent implements OnInit {
       this.form.get('participant2_share')?.updateValueAndValidity();
     });
 
-    this.dialogRef.updateSize('30%', '65%');
+    this.dialogRef.updateSize('30%');
   }
 
   selectImage(event: Event): void {
@@ -119,7 +121,7 @@ export class FriendsExpenseComponent implements OnInit {
       return `${this.participants[1].first_name} ${this.participants[1].last_name[0]}.`;
   }
 
-  openSecondDialog(): void {
+  openPayerDialog(): void {
     const dialogRef = this.dialog.open(PayerComponent, {
       panelClass: 'second-dialog',
       width: '30%',
@@ -131,12 +133,37 @@ export class FriendsExpenseComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.form.value.payer_id = result.id;
+        this.form.get('payer_id')?.setValue(result.id);
       }
     });
   }
 
   onCancel(): void {
     this.dialogRef.close(null);
+  }
+
+  openSplitTypeDialog(): void {
+    const dialogRef = this.dialog.open(SplitTypeComponent, {
+      panelClass: 'second-dialog',
+      width: '30%',
+      data: [this.participants, this.form.value.total_amount],
+      position: {
+        right: '7%', // Adjust as needed
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.splitType =
+          result.split_type !== 'PERCENTAGE' ? result.split_type : 'PERCENT';
+        this.form.get('split_type')?.setValue(result.split_type);
+        this.form
+          .get('participant1_share')
+          ?.setValue(result.participant1_share);
+        this.form
+          .get('participant2_share')
+          ?.setValue(result.participant2_share);
+      }
+    });
   }
 }

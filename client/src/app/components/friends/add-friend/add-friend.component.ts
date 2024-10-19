@@ -67,8 +67,8 @@ export class AddFriendComponent implements OnInit {
   }
 
   onSearchInputChange() {
+    this.selectedUser.set(undefined);
     this.loading.set(true);
-
     this.inputError.set(undefined);
     this.searchInput.set(this.searchInputControl.value);
     this.searchSubject.next(this.searchInput());
@@ -82,6 +82,7 @@ export class AddFriendComponent implements OnInit {
 
   selectUser(user: User) {
     this.searchInput.set(user.email);
+    this.searchInputControl.setValue(user.email);
     this.users.set([]);
     this.selectedUser.set(user);
   }

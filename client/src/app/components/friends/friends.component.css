@@ -40,6 +40,14 @@
 
 .chat-box-image {
   height: 59vh;
+  object-fit: contain;
+  visibility: hidden; /* Start hidden */
+  transition: visibility 0s linear 0.2s; /* Delay visibility change */
+}
+
+.visible {
+  visibility: visible; /* Make visible when loaded */
+  transition-delay: 0s; /* Reset delay */
 }
 
 .send-message {

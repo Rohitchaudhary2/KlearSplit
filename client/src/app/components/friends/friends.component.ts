@@ -6,6 +6,7 @@ import {
   viewChild,
   OnDestroy,
   ChangeDetectorRef,
+  AfterViewInit,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -32,7 +33,7 @@ import { NgClass } from '@angular/common';
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })
-export class FriendsComponent implements OnDestroy {
+export class FriendsComponent implements OnDestroy, AfterViewInit {
   messageContainer = viewChild<ElementRef>('messageContainer');
   private httpClient = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
@@ -44,7 +45,7 @@ export class FriendsComponent implements OnDestroy {
   private socketService = inject(SocketService);
   private readonly getMessagesUrl = API_URLS.getMessages;
   user = this.authService.currentUser();
-  user_name = `${this.authService.currentUser()?.first_name} ${this.authService.currentUser()?.last_name ? this.authService.currentUser()?.last_name : ''}`;
+  user_name = `${this.authService.currentUser()?.first_name}${this.authService.currentUser()?.last_name ? ` ${this.authService.currentUser()?.last_name}` : ''}`;
 
   selectedUser = signal<FriendData | undefined>(undefined);
   messageInput = '';
@@ -54,11 +55,21 @@ export class FriendsComponent implements OnDestroy {
   charCount = 0;
   charCountExceeded = false;
 
+  isLoaded = false;
+
+  onLoad() {
+    this.isLoaded = true; // Set loaded state to true
+  }
+
   ngOnDestroy(): void {
     if (this.selectedUser()) {
       this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
       this.socketService.disconnect();
     }
+  }
+
+  ngAfterViewInit() {
+    this.scrollToBottom();
   }
 
   onSelectUser(friend: FriendData) {

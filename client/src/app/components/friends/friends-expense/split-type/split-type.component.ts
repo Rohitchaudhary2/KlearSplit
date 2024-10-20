@@ -94,7 +94,8 @@ export class SplitTypeComponent implements OnInit {
       this.form
         .get('participant1_share')
         ?.setValue(this.total_amount - participant2Share);
-    else this.form.get('participant1_share')?.setValue(100 - participant2Share);
+    else if (this.activeItem === 'PERCENTAGE')
+      this.form.get('participant1_share')?.setValue(100 - participant2Share);
     this.updating = false;
   }
 
@@ -106,7 +107,8 @@ export class SplitTypeComponent implements OnInit {
       this.form
         .get('participant2_share')
         ?.setValue(this.total_amount - participant1Share);
-    else this.form.get('participant2_share')?.setValue(100 - participant1Share);
+    else if (this.activeItem === 'PERCENTAGE')
+      this.form.get('participant2_share')?.setValue(100 - participant1Share);
     this.updating = false;
   }
 

@@ -116,7 +116,11 @@ class FriendController {
         req.body,
         conversation_id,
       );
-      responseHandler(res, 200, "Expense added successfully", addedExpense);
+      if (addedExpense && addedExpense.message === "You are all settled up.") {
+        responseHandler(res, 200, "You are all settled up.", addedExpense);
+      } else {
+        responseHandler(res, 200, "Expense added successfully", addedExpense);
+      }
     } catch (error) {
       next(error);
     }

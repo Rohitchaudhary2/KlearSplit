@@ -1,7 +1,6 @@
 import { DataTypes, Op } from "sequelize";
 
-import Friend from "../../friends/models/friendModel.js";
-import FriendExpense from "../../friends/models/friendExpenseModel.js";
+import { Friend, FriendExpense } from "../../../config/db.connection.js";
 
 export default (sequelize) => {
   const User = sequelize.define(
@@ -92,40 +91,60 @@ export default (sequelize) => {
     },
   );
 
-  User.addHook("beforeDestroy", async (user) => {
+  User.beforeDestroy(async (user, options) => {
+    const transaction = options.transaction;
+    const userId = user.user_id;
+
+    // Soft delete friends where the user is either friend1 or friend2
     await Friend.update(
       { deletedAt: new Date() },
       {
         where: {
-          [Op.or]: [{ friend1_id: user.user_id }, { friend2_id: user.user_id }],
+          [Op.and]: [
+            { status: "ACCEPTED" },
+            { [Op.or]: [{ friend1_id: userId }, { friend2_id: userId }] },
+          ],
         },
+        transaction,
       },
     );
     await FriendExpense.update(
       { deletedAt: new Date() },
       {
         where: {
-          [Op.or]: [{ payer_id: user.user_id }, { debtor_id: user.user_id }],
+          [Op.or]: [{ payer_id: userId }, { debtor_id: userId }],
         },
+        transaction,
       },
     );
   });
 
-  User.addHook("afterRestore", async (user) => {
+  User.afterRestore(async (user, options) => {
+    const transaction = options.transaction;
+    const userId = user.user_id;
+
+    // Soft delete friends where the user is either friend1 or friend2
     await Friend.update(
-      { deletedAt: new Date() },
+      { deletedAt: null },
       {
         where: {
-          [Op.or]: [{ friend1_id: user.user_id }, { friend2_id: user.user_id }],
+          [Op.and]: [
+            { status: "ACCEPTED" },
+            { [Op.or]: [{ friend1_id: userId }, { friend2_id: userId }] },
+          ],
         },
+        transaction,
+        paranoid: false,
       },
     );
     await FriendExpense.update(
       { deletedAt: null },
       {
         where: {
-          [Op.or]: [{ payer_id: user.user_id }, { debtor_id: user.user_id }],
+          [Op.or]: [{ payer_id: userId }, { debtor_id: userId }],
         },
+        transaction,
+        paranoid: false,
       },
     );
   });

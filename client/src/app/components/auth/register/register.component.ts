@@ -43,6 +43,8 @@ export class RegisterComponent {
   registerFailed = signal(false);
   isRestoreMode = signal(false);
   isOtpMode = signal(false);
+  isResendDisabled = signal(true);
+  countdown = 30;
 
   constructor() {
     this.form.valueChanges.subscribe(() => {
@@ -84,6 +86,25 @@ export class RegisterComponent {
     return this.formErrorMessages.getErrorMessage(this.form, field);
   }
 
+  startCountdown(): void {
+    this.isResendDisabled.set(true);
+    const interval = setInterval(() => {
+      this.countdown--;
+      if (this.countdown === 0) {
+        clearInterval(interval);
+        this.isResendDisabled.set(false); // Enable the resend button
+        this.countdown = 30; // Reset countdown for next use
+      }
+    }, 1000);
+  }
+
+  resendOtp(): void {
+    this.onSendOtp();
+
+    // Restart the countdown timer after resending the OTP
+    this.startCountdown();
+  }
+
   onClickVerify() {
     if (this.form.valid) {
       const user: RegisterUser = this.form.value as RegisterUser;
@@ -109,6 +130,7 @@ export class RegisterComponent {
                 Validators.pattern(/^[0-9]{6}$/),
               ]),
             );
+            this.startCountdown();
           },
           error: () => {
             this.registerFailed.set(true);
@@ -147,20 +169,24 @@ export class RegisterComponent {
 
   // Method to handle OTP field display after submit
   onSendOtp(): void {
-    this.isOtpMode.set(true);
     if (this.form.valid) {
       const email = this.form.get('restoreAccountEmail')?.value;
-      this.authService.verifyExistingUser(email).subscribe();
+      this.authService.verifyExistingUser(email).subscribe({
+        next: () => {
+          this.isOtpMode.set(true);
+          this.form.addControl(
+            'otp',
+            new FormControl('', [
+              Validators.required,
+              Validators.minLength(6),
+              Validators.maxLength(6),
+              Validators.pattern(/^[0-9]{6}$/),
+            ]),
+          );
+          this.startCountdown();
+        },
+      });
     }
-    this.form.addControl(
-      'otp',
-      new FormControl('', [
-        Validators.required,
-        Validators.minLength(6),
-        Validators.maxLength(6),
-        Validators.pattern(/^[0-9]{6}$/),
-      ]),
-    );
   }
 
   onSubmitOtp(): void {
@@ -171,7 +197,7 @@ export class RegisterComponent {
       this.authService.restoreAccount(email, otp).subscribe({
         next: () => {
           this.toastr.success('Account restored successfully', 'Success');
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/friends']);
         },
       });
     } else {

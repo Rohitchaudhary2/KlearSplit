@@ -1,7 +1,5 @@
 import { DataTypes } from "sequelize";
 
-import FriendMessage from "./friendMessageModel.js";
-
 export default (sequelize) => {
   const Friend = sequelize.define(
     "friends",
@@ -19,7 +17,6 @@ export default (sequelize) => {
           model: "users",
           key: "user_id",
         },
-        onDelete: "CASCADE",
       },
       friend2_id: {
         type: DataTypes.UUID,
@@ -28,7 +25,6 @@ export default (sequelize) => {
           model: "users",
           key: "user_id",
         },
-        onDelete: "CASCADE",
       },
       status: {
         type: DataTypes.ENUM("PENDING", "ACCEPTED", "REJECTED"),
@@ -61,20 +57,6 @@ export default (sequelize) => {
       },
     },
   );
-
-  Friend.addHook("beforeDestroy", async (conversation) => {
-    await FriendMessage.update(
-      { deletedAt: new Date() },
-      { where: { conversation_id: conversation.conversation_id } },
-    );
-  });
-
-  Friend.addHook("afterRestore", async (conversation) => {
-    await FriendMessage.update(
-      { deletedAt: null },
-      { where: { conversation_id: conversation.conversation_id } },
-    );
-  });
 
   return Friend;
 };

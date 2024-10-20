@@ -151,8 +151,11 @@ class FriendService {
   static getMessages = async (conversation_id) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend doesn't exist");
-    if (friendExist.dataValues.status !== "ACCEPTED")
-      throw new ErrorHandler(404, "No messages allowed");
+    if (friendExist.dataValues.status === "REJECTED")
+      throw new ErrorHandler(
+        404,
+        "You are not allowed to message in this chat.",
+      );
     const messages = await FriendDb.getMessages(conversation_id);
 
     return messages.map((message) => {
@@ -171,7 +174,7 @@ class FriendService {
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");
 
     if (
-      friendExist.status === "ACCEPTED" &&
+      friendExist.status !== "REJECTED" &&
       friendExist.archival_status === "NONE" &&
       friendExist.block_status === "NONE"
     ) {
@@ -180,12 +183,18 @@ class FriendService {
         const debtorAmount = calculateDebtorAmount(expenseData);
         expenseData.debtor_amount = debtorAmount;
 
+        const currentBalance = parseFloat(friendExist.balance_amount);
+        if (expenseData.split_type === "SETTLEMENT" && currentBalance === 0) {
+          return { message: "You are all settled up." };
+        }
+
         const expense = await FriendDb.addExpense(expenseData, transaction);
         const balanceAmount = calculateNewBalance(
-          parseFloat(friendExist.balance_amount),
+          currentBalance,
           debtorAmount,
           expenseData.payer_id,
           friendExist,
+          expenseData.split_type,
         );
 
         await FriendDb.updateFriends(
@@ -197,12 +206,11 @@ class FriendService {
 
         return expense;
       } catch (error) {
-        // Rollback the transaction in case of error
         await transaction.rollback();
-        throw error; // Rethrow the error after rollback
+        throw error;
       }
     } else {
-      throw new ErrorHandler(400, "Friend status not recognized");
+      throw new ErrorHandler(400, "This action is not allowed.");
     }
   };
 }
@@ -217,6 +225,8 @@ const calculateDebtorAmount = (expenseData) => {
       return parseFloat(expenseData.debtor_share);
     case "PERCENTAGE":
       return (totalAmount * parseFloat(expenseData.debtor_share)) / 100;
+    case "SETTLEMENT":
+      return totalAmount;
     default:
       throw new ErrorHandler(400, "Split type not recognized");
   }
@@ -228,13 +238,23 @@ const calculateNewBalance = (
   debtorAmount,
   payerId,
   friendExist,
+  type,
 ) => {
   // If the payer is friend1, add the debtor amount, otherwise subtract it
-  const newBalance =
-    payerId === friendExist.friend1_id
-      ? currentBalance + debtorAmount
-      : currentBalance - debtorAmount;
-  return newBalance;
+  if (type !== "SETTLEMENT") {
+    const newBalance =
+      payerId === friendExist.friend1_id
+        ? currentBalance + debtorAmount
+        : currentBalance - debtorAmount;
+    return newBalance;
+  } else {
+    const newBalance =
+      currentBalance > 0
+        ? currentBalance - debtorAmount
+        : currentBalance + debtorAmount;
+
+    return newBalance;
+  }
 };
 
 export default FriendService;

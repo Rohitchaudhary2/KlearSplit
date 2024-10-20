@@ -114,16 +114,50 @@ class FriendDb {
     await FriendMessage.create(messageData);
 
   // Db query to fetch all the messages of a particular conversation
-  static getMessages = async (conversation_id) =>
-    await FriendMessage.findAll({
+  static getMessages = async (conversation_id, page = 1, pageSize = 10) => {
+    const offset = (page - 1) * pageSize;
+
+    return await FriendMessage.findAll({
       where: {
         conversation_id,
       },
+      order: [["createdAt", "ASC"]],
+      limit: pageSize,
+      offset,
     });
+  };
 
   // DB query for add expenses
   static addExpense = async (expenseData, transaction) =>
     await FriendExpense.create(expenseData, { transaction });
+
+  // DB query for fetching all the expenses of a particular conversation
+  static getExpenses = async (
+    friend1_id,
+    friend2_id,
+    page = 1,
+    pageSize = 10,
+  ) => {
+    const offset = (page - 1) * pageSize;
+
+    return await FriendExpense.findAll({
+      where: {
+        [Op.or]: [
+          {
+            payer_id: friend1_id,
+            debtor_id: friend2_id,
+          },
+          {
+            payer_id: friend2_id,
+            debtor_id: friend1_id,
+          },
+        ],
+      },
+      order: [["createdAt", "ASC"]],
+      limit: pageSize,
+      offset,
+    });
+  };
 }
 
 export default FriendDb;

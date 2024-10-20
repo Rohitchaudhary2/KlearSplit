@@ -99,16 +99,23 @@ class FriendController {
     }
   };
 
+  // Controller for get friend messages
   static getMessages = async (req, res, next) => {
     try {
       const { conversation_id } = req.params;
-      const messages = await FriendService.getMessages(conversation_id);
+      const { page = 1, pageSize = 10 } = req.query;
+      const messages = await FriendService.getMessages(
+        conversation_id,
+        parseInt(page),
+        parseInt(pageSize),
+      );
       responseHandler(res, 200, "Messages retrieved successfully", messages);
     } catch (error) {
       next(error);
     }
   };
 
+  // Controller for add expense
   static addExpense = async (req, res, next) => {
     try {
       const { conversation_id } = req.params;
@@ -121,6 +128,22 @@ class FriendController {
       } else {
         responseHandler(res, 200, "Expense added successfully", addedExpense);
       }
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Controller for fetching expenses
+  static getExpenses = async (req, res, next) => {
+    try {
+      const { conversation_id } = req.params;
+      const { page = 1, pageSize = 10 } = req.query;
+      const expenses = await FriendService.getExpenses(
+        conversation_id,
+        page,
+        pageSize,
+      );
+      responseHandler(res, 200, "Expenses fetched successfully", expenses);
     } catch (error) {
       next(error);
     }

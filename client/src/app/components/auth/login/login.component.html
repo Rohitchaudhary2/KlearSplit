@@ -138,7 +138,9 @@
                           (click)="resendOtp()"
                         >
                           Resend OTP
-                          @if (isResendDisabled()) {<span>in {{ countdown }}s</span>}
+                          @if (isResendDisabled()) {
+                            <span>in {{ countdown }}s</span>
+                          }
                         </button>
                       </div>
                     }

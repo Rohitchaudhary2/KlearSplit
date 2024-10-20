@@ -1,6 +1,9 @@
 <div class="d-flex row justify-content-center align-items-center m-5">
   <div class="col-md-4" style="flex: 0 0 auto">
-    <app-friends-list (selectedUser)="onSelectUser($event)" />
+    <app-friends-list
+      (selectedUser)="onSelectUser($event)"
+      [balanceAmount]="selectedUser()?.balance_amount"
+    />
   </div>
 
   <!-- chatbox -->
@@ -218,14 +221,7 @@
           class="text-center p-2 d-flex flex-column justify-content-between"
           style="position: relative; flex: 1 1 0"
         >
-          <h1
-            class="pt-2"
-            style="
-              text-shadow:
-                0 0 20px #00fffb,
-                0 0 40px #0081bc;
-            "
-          >
+          <h1 class="pt-2 animated-text">
             Welcome, <span>{{ user_name }}!</span>
           </h1>
           <img
@@ -235,14 +231,7 @@
             src="robot.gif"
             alt="robot"
           />
-          <h3
-            class="pb-2"
-            style="
-              text-shadow:
-                0 0 20px #00fffb,
-                0 0 40px #0081bc;
-            "
-          >
+          <h3 class="pb-2 animated-text">
             Please select a chat to start messaging
           </h3>
         </div>

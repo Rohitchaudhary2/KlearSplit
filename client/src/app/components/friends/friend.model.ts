@@ -44,3 +44,22 @@ export interface messageData {
   message: string;
   is_read: boolean;
 }
+
+export interface ExpenseResponse {
+  success: string;
+  message: string;
+  data: {
+    createdAt: string;
+    debtor_amount: string;
+    debtor_id: string;
+    deletedAt: string | null;
+    description: string;
+    expense_name: string;
+    friend_expense_id: string;
+    payer_id: string;
+    receipt_url: string | null;
+    split_type: string;
+    total_amount: string;
+    updatedAt: string;
+  };
+}

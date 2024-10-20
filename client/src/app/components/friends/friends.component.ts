@@ -11,7 +11,12 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { API_URLS } from '../../constants/api-urls';
-import { FriendData, message, messageData } from './friend.model';
+import {
+  ExpenseResponse,
+  FriendData,
+  message,
+  messageData,
+} from './friend.model';
 import { TokenService } from '../auth/token.service';
 import { AuthService } from '../auth/auth.service';
 import { ToastrService } from 'ngx-toastr';
@@ -214,7 +219,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.httpClient
-          .post(
+          .post<ExpenseResponse>(
             `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,
             result,
             {
@@ -222,7 +227,18 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             },
           )
           .subscribe({
-            next: () => {
+            next: (response: ExpenseResponse) => {
+              if (response.data.payer_id === this.user?.user_id) {
+                this.selectedUser()!.balance_amount = JSON.stringify(
+                  parseFloat(this.selectedUser()!.balance_amount) +
+                    parseFloat(response.data.debtor_amount),
+                );
+              } else {
+                this.selectedUser()!.balance_amount = JSON.stringify(
+                  parseFloat(this.selectedUser()!.balance_amount) -
+                    parseFloat(response.data.debtor_amount),
+                );
+              }
               this.toastr.success('Expense Created successfully', 'Success');
             },
           });

@@ -188,3 +188,32 @@ td {
 .error {
   color: red; /* Highlight in red if exceeded */
 }
+
+.animated-text {
+  background: linear-gradient(
+    270deg,
+    #00fffb,
+    #0081bc,
+    #00ff00,
+    #ffff00,
+    #ff0000
+  );
+  background-size: 400%; /* Adjust for smoother animation */
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradient-animation 6s ease infinite;
+}
+
+@keyframes gradient-animation {
+  0% {
+    background-position: 0%;
+  }
+  50% {
+    background-position: 100%;
+  }
+  100% {
+    background-position: 0%;
+  }
+}

@@ -45,7 +45,7 @@ export class AddFriendComponent implements OnInit {
   ngOnInit() {
     this.searchSubject
       .pipe(
-        debounceTime(1000),
+        debounceTime(700),
         switchMap((query) => {
           if (query.trim() === '') {
             this.loading.set(false); // Set loading to false if query is empty

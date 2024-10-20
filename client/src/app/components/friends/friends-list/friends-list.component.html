@@ -38,6 +38,7 @@
         <tbody>
           @for (request of requests(); track $index) {
             <tr
+              (click)="onSelectUser(request)"
               class="row equal-height-row d-flex justify-content-between m-0"
               style="cursor: pointer"
             >
@@ -62,7 +63,21 @@
                     >{{ request.friend.first_name }}
                     {{ request.friend.last_name }}</span
                   >
+
                   <span class="text-end pe-3">
+                    <span class="text-end pe-3">
+                      @if (getBalanceAsNumber(request.balance_amount) < 0) {
+                        <span class="text-danger">{{
+                          -getBalanceAsNumber(request.balance_amount)
+                            | currency: "INR"
+                        }}</span>
+                      } @else {
+                        <span class="text-success">{{
+                          getBalanceAsNumber(request.balance_amount)
+                            | currency: "INR"
+                        }}</span>
+                      }
+                    </span>
                     @if (request.status === "RECEIVER") {
                       <span
                         ><button

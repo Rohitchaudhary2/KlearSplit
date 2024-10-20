@@ -64,14 +64,21 @@ class UserDb {
     });
   };
 
-  static updateUser = async (user, id, transaction = null) =>
-    await User.update(user, {
+  static updateUser = async (user, id, transaction = null) => {
+    const [numberOfAffectedRows, [updatedUser]] = await User.update(user, {
       where: {
         user_id: id,
       },
       transaction,
       returning: true,
     });
+
+    if (numberOfAffectedRows === 0) {
+      throw new Error("User not found or no changes made.");
+    }
+
+    return updatedUser;
+  };
 
   static deleteUser = async (id) =>
     await User.destroy({

@@ -4,10 +4,12 @@ import { responseHandler } from "../utils/responseHandler.js";
 class FriendController {
   // Controller to add friend or send friend request
   static addFriend = async (req, res, next) => {
-    const { user_id } = req.user;
+    const { user_id, first_name, last_name } = req.user;
     try {
-      const friendData = await FriendService.addFriend(res, {
+      const friendData = await FriendService.addFriend({
         user_id,
+        first_name,
+        last_name,
         ...req.validatedUser,
       });
       responseHandler(res, 201, "Successfully added friend", friendData);

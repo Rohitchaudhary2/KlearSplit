@@ -1,5 +1,4 @@
 import FriendService from "../friends/friendService.js";
-import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 const socketHandler = (io) => {
   io.on("connection", (socket) => {
@@ -27,7 +26,7 @@ const socketHandler = (io) => {
         // Emit the message to the users in the room
         io.to(conversation_id).emit("newMessage", savedMessage);
       } catch {
-        throw new ErrorHandler(500, "Failed to send a message");
+        socket.emit("messageError", "Failed to send a message");
       }
     });
 

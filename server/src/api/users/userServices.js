@@ -22,7 +22,7 @@ class UserService {
         410,
         "Looks like you had an account. Please restore it.",
       );
-    else if (isUserExists)
+    else if (isUserExists && !isUserExists.dataValues.is_invited)
       throw new ErrorHandler(400, "Account already exist for provided Email.");
 
     // send otp
@@ -55,6 +55,8 @@ class UserService {
       throw new ErrorHandler(400, "Invalid or Expired Otp.");
     }
 
+    const isUserExists = await UserDb.getUserByEmail(user.email, false);
+
     //Generating random password
     const password = generatePassword();
 
@@ -64,19 +66,31 @@ class UserService {
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
-      // Creating new user in the database
-      const createdUser = await UserDb.createUser(user, transaction);
+      let createdUser;
+      if (!isUserExists) {
+        // Creating new user in the database
+        createdUser = await UserDb.createUser(user, transaction);
+      } else if (isUserExists && isUserExists.dataValues.is_invited) {
+        createdUser = await UserDb.updateUser(
+          { ...user, is_invited: false },
+          isUserExists.dataValues.user_id,
+          transaction,
+        );
+        if (!createdUser) {
+          throw new Error();
+        }
+      }
 
       // Generate access and refresh tokens
       const { accessToken, refreshToken } = generateAccessAndRefereshTokens(
-        createdUser.user_id,
+        isUserExists.dataValues.user_id,
       );
 
       // Store the refresh token in the database
       await AuthService.createRefreshToken(
         {
           token: refreshToken,
-          user_id: createdUser.user_id,
+          user_id: isUserExists.dataValues.user_id,
         },
         transaction,
       );

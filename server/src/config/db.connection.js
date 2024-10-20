@@ -7,12 +7,12 @@ import logger from "../api/utils/logger.js";
 const sequelize = new Sequelize(database, username, password, {
   host,
   dialect: "postgres",
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
-  },
+  // dialectOptions: {
+  //   ssl: {
+  //     require: true,
+  //     rejectUnauthorized: false,
+  //   },
+  // },
   logging: false,
 });
 

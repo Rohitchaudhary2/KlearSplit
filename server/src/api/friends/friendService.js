@@ -1,14 +1,41 @@
 import sequelize from "../../config/db.connection.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import UserDb from "../users/userDb.js";
-import { responseHandler } from "../utils/responseHandler.js";
+import { hashedPassword } from "../utils/hashPassword.js";
+import { generatePassword } from "../utils/passwordGenerator.js";
+import sendMail from "../utils/sendMail.js";
 import FriendDb from "./friendDb.js";
 
 class FriendService {
   // Service to add a friend
-  static addFriend = async (res, friendData) => {
-    const friendRequestTo = await UserDb.getUserByEmail(friendData.email);
-    if (!friendRequestTo) throw new ErrorHandler(404, "User not found");
+  static addFriend = async (friendData) => {
+    let friendRequestTo = await UserDb.getUserByEmail(friendData.email);
+    if (!friendRequestTo) {
+      //Generating random password
+      const password = generatePassword();
+
+      //Hashing the password
+      const hashPassword = await hashedPassword(password);
+      friendRequestTo = await UserDb.createUser({
+        first_name: "Invited_Friend",
+        email: friendData.email,
+        is_invited: true,
+        password: hashPassword,
+      });
+
+      const options = {
+        email: friendRequestTo.email,
+        subject: "Invited on KlearSplit",
+      };
+
+      const sender = `${friendData.first_name}${friendData.last_name ? ` ${friendData.last_name}` : ""}`;
+
+      await sendMail(options, "invitationTemplate", {
+        name: friendRequestTo.first_name,
+        sender,
+      });
+    }
+
     const newFriendData = {
       friend1_id: friendData.user_id,
       friend2_id: friendRequestTo.user_id,
@@ -16,8 +43,7 @@ class FriendService {
     if (newFriendData.friend1_id === newFriendData.friend2_id)
       throw new ErrorHandler(400, "You cannot add yourself as a friend.");
     const friendExist = await this.checkFriendExist(newFriendData);
-    if (friendExist)
-      return responseHandler(res, 409, "Friend already exist", friendExist);
+    if (friendExist) throw new ErrorHandler(409, "Friend already exist");
     const friend = await FriendDb.addFriend(newFriendData);
     return friend;
   };
@@ -139,7 +165,7 @@ class FriendService {
     const { conversation_id } = messageData;
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend doesn't exist");
-    if (friendExist.dataValues.status !== "ACCEPTED")
+    if (friendExist.dataValues.status === "REJECTED")
       throw new ErrorHandler(400, "Not allowed to send message");
 
     const message = await FriendDb.addMessage(messageData);
@@ -151,7 +177,7 @@ class FriendService {
   static getMessages = async (conversation_id) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend doesn't exist");
-    if (friendExist.dataValues.status !== "ACCEPTED")
+    if (friendExist.dataValues.status === "REJECTED")
       throw new ErrorHandler(404, "No messages allowed");
     const messages = await FriendDb.getMessages(conversation_id);
 
@@ -171,7 +197,7 @@ class FriendService {
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");
 
     if (
-      friendExist.status === "ACCEPTED" &&
+      friendExist.status !== "REJECTED" &&
       friendExist.archival_status === "NONE" &&
       friendExist.block_status === "NONE"
     ) {

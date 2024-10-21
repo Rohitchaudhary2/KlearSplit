@@ -158,6 +158,22 @@ class FriendDb {
       offset,
     });
   };
+
+  // DB query to fetch a single expense
+  static getExpense = async (friend_expense_id) =>
+    await FriendExpense.findByPk(friend_expense_id);
+
+  // DB query to update friends expenses
+  static updateExpense = async (
+    updatedExpenseData,
+    friend_expense_id,
+    transaction,
+  ) =>
+    await FriendExpense.update(updatedExpenseData, {
+      where: { friend_expense_id },
+      transaction,
+      returning: true,
+    });
 }
 
 export default FriendDb;

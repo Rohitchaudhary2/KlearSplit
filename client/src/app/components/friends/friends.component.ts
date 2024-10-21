@@ -12,6 +12,8 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { API_URLS } from '../../constants/api-urls';
 import {
+  Expense,
+  ExpenseData,
   ExpenseResponse,
   FriendData,
   message,
@@ -25,6 +27,7 @@ import { SocketService } from './socket.service';
 import { MatDialog } from '@angular/material/dialog';
 import { FriendsExpenseComponent } from './friends-expense/friends-expense.component';
 import { NgClass } from '@angular/common';
+import { SettlementComponent } from './friend-expense/settlement/settlement.component';
 
 @Component({
   selector: 'app-friends',
@@ -49,6 +52,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   private authService = inject(AuthService);
   private socketService = inject(SocketService);
   private readonly getMessagesUrl = API_URLS.getMessages;
+  private readonly getExpensesUrl = API_URLS.getExpenses;
   user = this.authService.currentUser();
   user_name = `${this.authService.currentUser()?.first_name}${this.authService.currentUser()?.last_name ? ` ${this.authService.currentUser()?.last_name}` : ''}`;
 
@@ -56,6 +60,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   messageInput = '';
 
   messages = signal<messageData[]>([]);
+  showMessages = signal(true);
+
+  expenses = signal<ExpenseData[] | []>([]);
 
   charCount = 0;
   charCountExceeded = false;
@@ -103,6 +110,22 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         },
       });
 
+    // Fetch expenses for the newly selected user
+    this.httpClient
+      .get<Expense>(
+        `${this.getExpensesUrl}/${this.selectedUser()?.conversation_id}`,
+        {
+          withCredentials: true,
+        },
+      )
+      .subscribe({
+        next: (expenses) => {
+          this.expenses.set(expenses.data);
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        },
+      });
+
     // Join the room for the new conversation
     this.socketService.joinRoom(this.selectedUser()!.conversation_id);
 
@@ -118,6 +141,18 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     const textarea = event.target as HTMLTextAreaElement;
     this.charCount = textarea.value.length;
     this.charCountExceeded = this.charCount === 512;
+  }
+
+  getSettleUpStatus() {
+    if (parseFloat(this.selectedUser()!.balance_amount) === 0) {
+      return 'All Settled';
+    } else {
+      return 'Settle up';
+    }
+  }
+
+  toggleView(flag: boolean) {
+    this.showMessages.set(flag);
   }
 
   scrollToBottom() {
@@ -141,6 +176,70 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
   viewExpense(id: string) {
     return id;
+  }
+
+  settlement() {
+    if (parseFloat(this.selectedUser()!.balance_amount) !== 0) {
+      let payer_name;
+      let payer_image;
+      let debtor_name;
+      let debtor_image;
+      const total_amount = Math.abs(
+        parseFloat(this.selectedUser()!.balance_amount),
+      );
+      if (parseFloat(this.selectedUser()!.balance_amount) > 0) {
+        payer_name = `${this.user?.first_name}${this.user?.last_name ? ` ${this.user?.last_name}` : ''}`;
+        payer_image = this.user?.image_url;
+        debtor_name = `${this.selectedUser()?.friend?.first_name}${this.selectedUser()?.friend?.last_name ? ` ${this.selectedUser()?.friend?.last_name}` : ''}`;
+        debtor_image = this.selectedUser()?.friend.image_url;
+      } else {
+        debtor_name = `${this.user?.first_name}${this.user?.last_name ? ` ${this.user?.last_name}` : ''}`;
+        debtor_image = this.user?.image_url;
+        payer_name = `${this.selectedUser()?.friend?.first_name}${this.selectedUser()?.friend?.last_name ? ` ${this.selectedUser()?.friend?.last_name}` : ''}`;
+        payer_image = this.selectedUser()?.friend.image_url;
+      }
+
+      const dialogRef = this.dialog.open(SettlementComponent, {
+        data: {
+          payer_name,
+          debtor_name,
+          total_amount,
+          debtor_image,
+          payer_image,
+        },
+        // width: window.innerWidth > 600 ? '100px' : '90%',
+        enterAnimationDuration: '200ms',
+        exitAnimationDuration: '200ms',
+      });
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          this.httpClient
+            .post<ExpenseResponse>(
+              `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,
+              result,
+              {
+                withCredentials: true,
+              },
+            )
+            .subscribe({
+              next: (response: ExpenseResponse) => {
+                if (response.data.payer_id === this.user?.user_id) {
+                  this.selectedUser()!.balance_amount = JSON.stringify(
+                    parseFloat(this.selectedUser()!.balance_amount) +
+                      parseFloat(response.data.debtor_amount),
+                  );
+                } else {
+                  this.selectedUser()!.balance_amount = JSON.stringify(
+                    parseFloat(this.selectedUser()!.balance_amount) -
+                      parseFloat(response.data.debtor_amount),
+                  );
+                }
+                this.toastr.success('Settled up successfully', 'Success');
+              },
+            });
+        }
+      });
+    }
   }
 
   getArchiveStatus(): string {

@@ -316,6 +316,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       exitAnimationDuration: '200ms',
     });
     dialogRef.afterClosed().subscribe((result) => {
+      if (!result.description) delete result.description;
       if (result) {
         this.httpClient
           .post<ExpenseResponse>(

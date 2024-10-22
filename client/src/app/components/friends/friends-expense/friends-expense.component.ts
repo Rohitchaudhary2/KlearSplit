@@ -118,7 +118,7 @@ export class FriendsExpenseComponent implements OnInit {
     const id = this.form.value.payer_id;
     if (id === this.participants[0].user_id) return 'you';
     else
-      return `${this.participants[1].first_name} ${this.participants[1].last_name[0]}.`;
+      return `${this.participants[1].first_name}${this.participants[1].last_name ? ` ${this.participants[1].last_name}` : ''}`;
   }
 
   openPayerDialog(): void {

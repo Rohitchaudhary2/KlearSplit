@@ -1,8 +1,10 @@
 import { Op } from "sequelize";
-import Friend from "./models/friendModel.js";
-import User from "../users/models/userModel.js";
-import FriendMessage from "./models/friendMessageModel.js";
-import FriendExpense from "./models/friendExpenseModel.js";
+import {
+  User,
+  Friend,
+  FriendMessage,
+  FriendExpense,
+} from "../../config/db.connection.js";
 
 class FriendDb {
   static addFriend = async (friendData) => await Friend.create(friendData);
@@ -112,16 +114,66 @@ class FriendDb {
     await FriendMessage.create(messageData);
 
   // Db query to fetch all the messages of a particular conversation
-  static getMessages = async (conversation_id) =>
-    await FriendMessage.findAll({
+  static getMessages = async (conversation_id, page = 1, pageSize = 10) => {
+    const offset = (page - 1) * pageSize;
+
+    return await FriendMessage.findAll({
       where: {
         conversation_id,
       },
+      order: [["createdAt", "ASC"]],
+      limit: pageSize,
+      offset,
     });
+  };
 
   // DB query for add expenses
   static addExpense = async (expenseData, transaction) =>
     await FriendExpense.create(expenseData, { transaction });
+
+  // DB query for fetching all the expenses of a particular conversation
+  static getExpenses = async (
+    friend1_id,
+    friend2_id,
+    page = 1,
+    pageSize = 10,
+  ) => {
+    const offset = (page - 1) * pageSize;
+
+    return await FriendExpense.findAll({
+      where: {
+        [Op.or]: [
+          {
+            payer_id: friend1_id,
+            debtor_id: friend2_id,
+          },
+          {
+            payer_id: friend2_id,
+            debtor_id: friend1_id,
+          },
+        ],
+      },
+      order: [["createdAt", "ASC"]],
+      limit: pageSize,
+      offset,
+    });
+  };
+
+  // DB query to fetch a single expense
+  static getExpense = async (friend_expense_id) =>
+    await FriendExpense.findByPk(friend_expense_id);
+
+  // DB query to update friends expenses
+  static updateExpense = async (
+    updatedExpenseData,
+    friend_expense_id,
+    transaction,
+  ) =>
+    await FriendExpense.update(updatedExpenseData, {
+      where: { friend_expense_id },
+      transaction,
+      returning: true,
+    });
 }
 
 export default FriendDb;

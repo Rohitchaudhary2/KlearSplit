@@ -69,18 +69,32 @@
                     </mat-form-field>
 
                     @if (isOtpMode()) {
-                      <mat-form-field
-                        appearance="outline"
-                        class="w-100"
-                        [ngClass]="{ 'mb-2': getFormErrors('otp') }"
-                      >
-                        <mat-label>OTP</mat-label>
-                        <mat-icon matPrefix>key</mat-icon>
-                        <input matInput formControlName="otp" />
-                        @if (getFormErrors("otp")) {
-                          <mat-error>{{ getFormErrors("otp") }}</mat-error>
-                        }
-                      </mat-form-field>
+                      <div class="flex">
+                        <mat-form-field
+                          appearance="outline"
+                          class="w-100"
+                          [ngClass]="{ 'mb-2': getFormErrors('otp') }"
+                        >
+                          <mat-label>OTP</mat-label>
+                          <mat-icon matPrefix>key</mat-icon>
+                          <input matInput formControlName="otp" />
+                          @if (getFormErrors("otp")) {
+                            <mat-error>{{ getFormErrors("otp") }}</mat-error>
+                          }
+                        </mat-form-field>
+                        <div class="text-end p-0 m-0">
+                          <button
+                            mat-button
+                            [disabled]="isResendDisabled()"
+                            (click)="resendOtp()"
+                          >
+                            Resend OTP
+                            @if (isResendDisabled()) {
+                              <span>in {{ countdown }}s</span>
+                            }
+                          </button>
+                        </div>
+                      </div>
                     }
 
                     <div class="text-center text-light pt-1 mt-2 mb-1 pb-1">
@@ -154,6 +168,19 @@
                           <mat-error>{{ getFormErrors("otp") }}</mat-error>
                         }
                       </mat-form-field>
+                      <div class="text-center flex align-items-end mt-1">
+                        <button
+                          mat-button
+                          [disabled]="isResendDisabled()"
+                          (click)="resendOtp()"
+                          class="gap 2"
+                        >
+                          Resend OTP
+                          @if (isResendDisabled()) {
+                            <span>({{ countdown }}s)</span>
+                          }
+                        </button>
+                      </div>
                     }
 
                     <div class="text-center text-light pt-1 mb-1 pb-1">

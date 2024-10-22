@@ -1,12 +1,12 @@
 import { Op } from "sequelize";
-import User from "./models/userModel.js";
+import { User } from "../../config/db.connection.js";
 
 class UserDb {
   static createUser = async (user, transaction) =>
     await User.create(user, { transaction });
 
-  static restoreUser = async (email, transaction) =>
-    await User.restore({ where: { email }, transaction });
+  static restoreUser = async (user, transaction) =>
+    await user.restore({ transaction });
 
   static getUserById = async (id) => await User.findByPk(id);
 
@@ -72,7 +72,6 @@ class UserDb {
       transaction,
       returning: true,
     });
-
     if (response[0] === 0) {
       return 0;
     }
@@ -80,12 +79,8 @@ class UserDb {
     return response[1];
   };
 
-  static deleteUser = async (id) =>
-    await User.destroy({
-      where: {
-        user_id: id,
-      },
-    });
+  static deleteUser = async (user, transaction) =>
+    await user.destroy({ transaction });
 }
 
 export default UserDb;

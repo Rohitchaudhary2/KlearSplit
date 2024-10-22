@@ -1,4 +1,4 @@
-import sequelize from "../../config/db.connection.js";
+import { sequelize } from "../../config/db.connection.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import UserDb from "../users/userDb.js";
 import { hashedPassword } from "../utils/hashPassword.js";
@@ -174,12 +174,19 @@ class FriendService {
   };
 
   // Service to fetch all the messages of a particular conversation
-  static getMessages = async (conversation_id) => {
+  static getMessages = async (conversation_id, page = 1, pageSize = 10) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend doesn't exist");
     if (friendExist.dataValues.status === "REJECTED")
-      throw new ErrorHandler(404, "No messages allowed");
-    const messages = await FriendDb.getMessages(conversation_id);
+      throw new ErrorHandler(
+        404,
+        "You are not allowed to message in this chat.",
+      );
+    const messages = await FriendDb.getMessages(
+      conversation_id,
+      page,
+      pageSize,
+    );
 
     return messages.map((message) => {
       return {
@@ -192,6 +199,7 @@ class FriendService {
     });
   };
 
+  // Service to add expenses in a particular conversation
   static addExpense = async (expenseData, conversation_id) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");
@@ -206,12 +214,37 @@ class FriendService {
         const debtorAmount = calculateDebtorAmount(expenseData);
         expenseData.debtor_amount = debtorAmount;
 
+        const currentBalance = parseFloat(friendExist.balance_amount);
+        if (expenseData.split_type === "SETTLEMENT") {
+          if (currentBalance === 0) {
+            return { message: "You are all settled up." };
+          }
+          validateSettlementAmount(currentBalance, debtorAmount);
+          expenseData.expense_name = "Settlement";
+          expenseData.payer_id =
+            currentBalance > 0
+              ? friendExist.friend2_id
+              : friendExist.friend1_id;
+          expenseData.debtor_id =
+            currentBalance > 0
+              ? friendExist.friend1_id
+              : friendExist.friend2_id;
+        }
+
+        if (expenseData.payer_id === expenseData.debtor_id) {
+          throw new ErrorHandler(
+            400,
+            "You cannot add an expense with yourself",
+          );
+        }
+
         const expense = await FriendDb.addExpense(expenseData, transaction);
         const balanceAmount = calculateNewBalance(
-          parseFloat(friendExist.balance_amount),
+          currentBalance,
           debtorAmount,
           expenseData.payer_id,
           friendExist,
+          expenseData.split_type,
         );
 
         await FriendDb.updateFriends(
@@ -223,12 +256,31 @@ class FriendService {
 
         return expense;
       } catch (error) {
-        // Rollback the transaction in case of error
         await transaction.rollback();
-        throw error; // Rethrow the error after rollback
+        throw error;
       }
     } else {
-      throw new ErrorHandler(400, "Friend status not recognized");
+      throw new ErrorHandler(403, "This action is not allowed.");
+    }
+  };
+
+  // Service to fetch all expenses for a conversation
+  static getExpenses = async (conversation_id, page = 1, pageSize = 10) => {
+    const friendExist = await FriendDb.getFriend(conversation_id);
+    if (!friendExist) throw new ErrorHandler(404, "Friend not found");
+    if (friendExist.status !== "REJECTED") {
+      const expenses = await FriendDb.getExpenses(
+        friendExist.friend1_id,
+        friendExist.friend2_id,
+        page,
+        pageSize,
+      );
+      return expenses;
+    } else {
+      throw new ErrorHandler(
+        403,
+        "You are not allowed to view this conversation.",
+      );
     }
   };
 }
@@ -240,9 +292,37 @@ const calculateDebtorAmount = (expenseData) => {
     case "EQUAL":
       return totalAmount / 2;
     case "UNEQUAL":
-      return parseFloat(expenseData.debtor_share);
+      if (
+        parseFloat(expenseData.participant1_share) +
+          parseFloat(expenseData.participant2_share) ===
+          totalAmount &&
+        (expenseData.debtor_share === expenseData.participant1_share ||
+          expenseData.debtor_share === expenseData.participant2_share)
+      ) {
+        return parseFloat(expenseData.debtor_share);
+      } else {
+        throw new ErrorHandler(
+          400,
+          "The debtor share and payer share do not add up to the total amount.",
+        );
+      }
     case "PERCENTAGE":
-      return (totalAmount * parseFloat(expenseData.debtor_share)) / 100;
+      if (
+        parseFloat(expenseData.participant1_share) +
+          parseFloat(expenseData.participant2_share) ===
+          100 &&
+        (expenseData.debtor_share === expenseData.participant1_share ||
+          expenseData.debtor_share === expenseData.participant2_share)
+      ) {
+        return (totalAmount * parseFloat(expenseData.debtor_share)) / 100;
+      } else {
+        throw new ErrorHandler(
+          400,
+          "The debtor share and payer share do not add up to 100.",
+        );
+      }
+    case "SETTLEMENT":
+      return totalAmount;
     default:
       throw new ErrorHandler(400, "Split type not recognized");
   }
@@ -254,13 +334,38 @@ const calculateNewBalance = (
   debtorAmount,
   payerId,
   friendExist,
+  type,
 ) => {
   // If the payer is friend1, add the debtor amount, otherwise subtract it
-  const newBalance =
-    payerId === friendExist.friend1_id
-      ? currentBalance + debtorAmount
-      : currentBalance - debtorAmount;
-  return newBalance;
+  if (type !== "SETTLEMENT") {
+    const newBalance =
+      payerId === friendExist.friend1_id
+        ? currentBalance + debtorAmount
+        : currentBalance - debtorAmount;
+    return newBalance;
+  } else {
+    const newBalance =
+      currentBalance > 0
+        ? currentBalance - debtorAmount
+        : currentBalance + debtorAmount;
+
+    return newBalance;
+  }
+};
+
+// Helper function to validate settlement amount
+const validateSettlementAmount = (currentBalance, debtorAmount) => {
+  if (currentBalance < 0 && debtorAmount > Math.abs(currentBalance)) {
+    throw new ErrorHandler(
+      400,
+      "Settlement amount cannot exceed your current debt.",
+    );
+  } else if (currentBalance > 0 && debtorAmount > currentBalance) {
+    throw new ErrorHandler(
+      400,
+      "Settlement amount cannot exceed your current balance.",
+    );
+  }
 };
 
 export default FriendService;

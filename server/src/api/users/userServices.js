@@ -2,7 +2,7 @@ import { generatePassword } from "../utils/passwordGenerator.js";
 import UserDb from "./userDb.js";
 import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import AuthService from "../auth/authServices.js";
-import sequelize from "../../config/db.connection.js";
+import { sequelize } from "../../config/db.connection.js";
 import { hashedPassword } from "../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
@@ -170,7 +170,7 @@ class UserService {
 
     try {
       // Restoring user in the database
-      await UserDb.restoreUser(user.email, transaction);
+      await UserDb.restoreUser(isEmailExists, transaction);
       const restoredUser = isEmailExists.dataValues;
 
       // Generate access and refresh tokens
@@ -306,9 +306,17 @@ class UserService {
   // Service for deleting user in the database
   static deleteUser = async (req) => {
     const id = req.params.id;
-    await this.getUser(id);
+    const user = await this.getUser(id);
+    const transaction = await sequelize.transaction();
 
-    return await UserDb.deleteUser(id);
+    try {
+      await UserDb.deleteUser(user);
+      await transaction.commit();
+      return { message: "User deleted successfully" };
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   };
 }
 

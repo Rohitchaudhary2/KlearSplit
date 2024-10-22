@@ -2,6 +2,11 @@ import { Sequelize } from "sequelize";
 
 import { database, host, password, username } from "./db.config.js";
 import logger from "../api/utils/logger.js";
+import initializeUser from "../api/users/models/userModel.js";
+import initializeRefreshToken from "../api/auth/refreshTokenModel.js";
+import initializeFriend from "../api/friends/models/friendModel.js";
+import initializeFriendMessage from "../api/friends/models/friendMessageModel.js";
+import initializeFriendExpense from "../api/friends/models/friendExpenseModel.js";
 
 // Creating a new Sequelize instance for connecting to the PostgreSQL database
 const sequelize = new Sequelize(database, username, password, {
@@ -15,6 +20,35 @@ const sequelize = new Sequelize(database, username, password, {
   // },
   logging: false,
 });
+
+// Associations for the models
+const User = initializeUser(sequelize);
+const RefreshToken = initializeRefreshToken(sequelize);
+const Friend = initializeFriend(sequelize);
+const FriendMessage = initializeFriendMessage(sequelize);
+const FriendExpense = initializeFriendExpense(sequelize);
+
+// User model association with Friends model
+User.hasMany(Friend, { foreignKey: "friend1_id" });
+User.hasMany(Friend, { foreignKey: "friend2_id" });
+Friend.belongsTo(User, { foreignKey: "friend1_id", as: "friend1" });
+
+Friend.belongsTo(User, { foreignKey: "friend2_id", as: "friend2" });
+
+// Friend Messages model associations with User and Friend models
+User.hasMany(FriendMessage, { foreignKey: "sender_id" });
+Friend.hasMany(FriendMessage, { foreignKey: "conversation_id" });
+FriendMessage.belongsTo(User, { foreignKey: "sender_id", as: "sender" });
+FriendMessage.belongsTo(Friend, {
+  foreignKey: "conversation_id",
+  as: "conversation",
+});
+
+// Friend Expenses model association with User model
+User.hasMany(FriendExpense, { foreignKey: "payer_id" });
+User.hasMany(FriendExpense, { foreignKey: "debtor_id" });
+FriendExpense.belongsTo(User, { foreignKey: "payer_id", as: "payer" });
+FriendExpense.belongsTo(User, { foreignKey: "debtor_id", as: "debtor" });
 
 try {
   await sequelize.authenticate(); // Attempting to authenticate the connection to the database
@@ -31,4 +65,4 @@ try {
   });
 }
 
-export default sequelize;
+export { sequelize, User, RefreshToken, Friend, FriendMessage, FriendExpense };

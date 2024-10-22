@@ -36,6 +36,7 @@ export const appConfig: ApplicationConfig = {
         preventDuplicates: true,
         timeOut: 3000,
         progressBar: true,
+        easing: 'ease-out',
       }),
     ),
     provideAnimationsAsync(),

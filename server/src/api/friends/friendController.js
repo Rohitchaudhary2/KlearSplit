@@ -22,7 +22,7 @@ class FriendController {
   static getAllFriends = async (req, res, next) => {
     try {
       const { user_id } = req.user;
-      const { status, archival_status, block_status } = req.query;
+      const { status, archival_status, block_status } = req.validatedFriends;
       const friendData = await FriendService.getAllFriends(user_id, {
         status,
         archival_status,
@@ -42,9 +42,9 @@ class FriendController {
   // Controller to accept and reject friend request
   static acceptRejectFriendRequest = async (req, res, next) => {
     try {
-      const { conversation_id } = req.params;
+      const { conversation_id } = req.validatedParams;
       const { user_id } = req.user;
-      const { status } = req.body;
+      const { status } = req.validatedFriend;
       const updatedFriendStatus = await FriendService.acceptRejectFriendRequest(
         { user_id, conversation_id, status },
       );
@@ -62,7 +62,7 @@ class FriendController {
   // Controller for withdrawing friend request
   static withdrawFriendRequest = async (req, res, next) => {
     try {
-      const { conversation_id } = req.params;
+      const { conversation_id } = req.validatedParams;
       const { user_id } = req.user;
       const deleteFriendRequest = await FriendService.withdrawFriendRequest({
         user_id,
@@ -82,9 +82,9 @@ class FriendController {
   // Controller for archive/block friend
   static archiveBlockFriend = async (req, res, next) => {
     try {
-      const { conversation_id } = req.params;
+      const { conversation_id } = req.validatedParams;
       const { user_id } = req.user;
-      const { type } = req.body;
+      const { type } = req.validatedFriend;
       const updatedFriendStatus = await FriendService.archiveBlockFriend({
         user_id,
         conversation_id,
@@ -101,24 +101,51 @@ class FriendController {
     }
   };
 
+  // Controller for get friend messages
   static getMessages = async (req, res, next) => {
     try {
-      const { conversation_id } = req.params;
-      const messages = await FriendService.getMessages(conversation_id);
+      const { conversation_id } = req.validatedParams;
+      const { page = 1, pageSize = 10 } = req.validatedPagination;
+      const messages = await FriendService.getMessages(
+        conversation_id,
+        parseInt(page),
+        parseInt(pageSize),
+      );
       responseHandler(res, 200, "Messages retrieved successfully", messages);
     } catch (error) {
       next(error);
     }
   };
 
+  // Controller for add expense
   static addExpense = async (req, res, next) => {
     try {
-      const { conversation_id } = req.params;
+      const { conversation_id } = req.validatedParams;
       const addedExpense = await FriendService.addExpense(
-        req.body,
+        req.validatedExpense,
         conversation_id,
       );
-      responseHandler(res, 200, "Expense added successfully", addedExpense);
+      if (addedExpense && addedExpense.message === "You are all settled up.") {
+        responseHandler(res, 200, "You are all settled up.");
+      } else {
+        responseHandler(res, 200, "Expense added successfully", addedExpense);
+      }
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Controller for fetching expenses
+  static getExpenses = async (req, res, next) => {
+    try {
+      const { conversation_id } = req.validatedParams;
+      const { page = 1, pageSize = 10 } = req.validatedPagination;
+      const expenses = await FriendService.getExpenses(
+        conversation_id,
+        page,
+        pageSize,
+      );
+      responseHandler(res, 200, "Expenses fetched successfully", expenses);
     } catch (error) {
       next(error);
     }

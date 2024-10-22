@@ -64,14 +64,20 @@ class UserDb {
     });
   };
 
-  static updateUser = async (user, id, transaction = null) =>
-    await User.update(user, {
+  static updateUser = async (user, id, transaction = null) => {
+    const response = await User.update(user, {
       where: {
         user_id: id,
       },
       transaction,
       returning: true,
     });
+    if (response[0] === 0) {
+      return 0;
+    }
+
+    return response[1];
+  };
 
   static deleteUser = async (user, transaction) =>
     await user.destroy({ transaction });

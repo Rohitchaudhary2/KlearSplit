@@ -26,7 +26,7 @@ passport.use(
         // Check if the user already exists in the database
         let user = await UserDb.getUserByEmail(profile._json.email);
 
-        if (!user) {
+        if (!user || (user && user.dataValues.is_invited)) {
           const newUser = {};
           newUser.email = profile._json.email;
           newUser.first_name = profile._json.given_name;
@@ -34,7 +34,8 @@ passport.use(
             newUser.last_name = profile._json.family_name;
           const password = generatePassword();
           newUser.password = await hashedPassword(password);
-          user = await UserDb.createUser(newUser, transaction);
+          if (!user) user = await UserDb.createUser(newUser, transaction);
+          else user = await UserDb.updateUser(newUser, user.dataValues.user_id);
 
           const options = {
             email: user.email,
@@ -76,9 +77,6 @@ passport.use(
         );
 
         await UserDb.updateUser({ failedAttempts: 0 }, user.user_id);
-
-        user.failedAttempts = 0;
-        await user.save();
 
         // Commit the transaction
         await transaction.commit();

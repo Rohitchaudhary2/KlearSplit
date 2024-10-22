@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation to Join KlearSplit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>You’ve Been Invited!</h1>
+        <p>Hi <%= name %>,</p>
+        <p>You’ve been invited to join a bill-splitting experience with <strong><%= sender %></strong> on <strong>KlearSplit!</strong> 🎉</p>
+        
+        <p><strong>What’s This About?</strong></p>
+        <p>With <strong>KlearSplit</strong>, managing shared expenses has never been easier! You can split bills, keep track of who owes what, and settle up in just a few simple steps.</p>
+        
+        <p><strong>Your Invitation Details:</strong></p>
+        <ul>
+            <li><strong>Sender:</strong> <%= sender %></li>
+            <li><strong>Join Link:</strong> <a href="http://localhost:4200/register">Join Now</a></li>
+        </ul>
+        
+        <p><strong>How to Get Started:</strong></p>
+        <ol>
+            <li>Click the link above to create your account or log in.</li>
+            <li>Follow the prompts to set up your profile.</li>
+            <li>Start splitting bills with friends and family!</li>
+        </ol>
+
+        <p>If you have any questions, feel free to reply to this email.</p>
+        
+        <p>We can’t wait for you to join us!</p>
+
+        <div class="footer">
+            <p>Best regards,</p>
+            <p><strong>KlearSplit</strong></p>
+        </div>
+    </div>
+</body>
+</html>

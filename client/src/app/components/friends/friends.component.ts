@@ -6,11 +6,19 @@ import {
   viewChild,
   OnDestroy,
   ChangeDetectorRef,
+  AfterViewInit,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { API_URLS } from '../../constants/api-urls';
-import { FriendData, message, messageData } from './friend.model';
+import {
+  Expense,
+  ExpenseData,
+  ExpenseResponse,
+  FriendData,
+  message,
+  messageData,
+} from './friend.model';
 import { TokenService } from '../auth/token.service';
 import { AuthService } from '../auth/auth.service';
 import { ToastrService } from 'ngx-toastr';
@@ -18,15 +26,22 @@ import { FriendsListComponent } from './friends-list/friends-list.component';
 import { SocketService } from './socket.service';
 import { MatDialog } from '@angular/material/dialog';
 import { FriendsExpenseComponent } from './friends-expense/friends-expense.component';
+import { NgClass } from '@angular/common';
+import { SettlementComponent } from './friend-expense/settlement/settlement.component';
 
 @Component({
   selector: 'app-friends',
   standalone: true,
-  imports: [FormsModule, FriendsListComponent, FriendsExpenseComponent],
+  imports: [
+    FormsModule,
+    FriendsListComponent,
+    FriendsExpenseComponent,
+    NgClass,
+  ],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })
-export class FriendsComponent implements OnDestroy {
+export class FriendsComponent implements OnDestroy, AfterViewInit {
   messageContainer = viewChild<ElementRef>('messageContainer');
   private httpClient = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
@@ -37,6 +52,7 @@ export class FriendsComponent implements OnDestroy {
   private authService = inject(AuthService);
   private socketService = inject(SocketService);
   private readonly getMessagesUrl = API_URLS.getMessages;
+  private readonly getExpensesUrl = API_URLS.getExpenses;
   user = this.authService.currentUser();
   user_name = `${this.authService.currentUser()?.first_name}${this.authService.currentUser()?.last_name ? ` ${this.authService.currentUser()?.last_name}` : ''}`;
 
@@ -44,12 +60,28 @@ export class FriendsComponent implements OnDestroy {
   messageInput = '';
 
   messages = signal<messageData[]>([]);
+  showMessages = signal(true);
+
+  expenses = signal<ExpenseData[] | []>([]);
+
+  charCount = 0;
+  charCountExceeded = false;
+
+  isLoaded = false;
+
+  onLoad() {
+    this.isLoaded = true; // Set loaded state to true
+  }
 
   ngOnDestroy(): void {
     if (this.selectedUser()) {
       this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
       this.socketService.disconnect();
     }
+  }
+
+  ngAfterViewInit() {
+    this.scrollToBottom();
   }
 
   onSelectUser(friend: FriendData) {
@@ -78,6 +110,22 @@ export class FriendsComponent implements OnDestroy {
         },
       });
 
+    // Fetch expenses for the newly selected user
+    this.httpClient
+      .get<Expense>(
+        `${this.getExpensesUrl}/${this.selectedUser()?.conversation_id}`,
+        {
+          withCredentials: true,
+        },
+      )
+      .subscribe({
+        next: (expenses) => {
+          this.expenses.set(expenses.data);
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        },
+      });
+
     // Join the room for the new conversation
     this.socketService.joinRoom(this.selectedUser()!.conversation_id);
 
@@ -87,6 +135,24 @@ export class FriendsComponent implements OnDestroy {
       this.cdr.detectChanges();
       this.scrollToBottom();
     });
+  }
+
+  onInputChange(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    this.charCount = textarea.value.length;
+    this.charCountExceeded = this.charCount === 512;
+  }
+
+  getSettleUpStatus() {
+    if (parseFloat(this.selectedUser()!.balance_amount) === 0) {
+      return 'All Settled';
+    } else {
+      return 'Settle up';
+    }
+  }
+
+  toggleView(flag: boolean) {
+    this.showMessages.set(flag);
   }
 
   scrollToBottom() {
@@ -110,6 +176,70 @@ export class FriendsComponent implements OnDestroy {
 
   viewExpense(id: string) {
     return id;
+  }
+
+  settlement() {
+    if (parseFloat(this.selectedUser()!.balance_amount) !== 0) {
+      let payer_name;
+      let payer_image;
+      let debtor_name;
+      let debtor_image;
+      const total_amount = Math.abs(
+        parseFloat(this.selectedUser()!.balance_amount),
+      );
+      if (parseFloat(this.selectedUser()!.balance_amount) > 0) {
+        payer_name = `${this.user?.first_name}${this.user?.last_name ? ` ${this.user?.last_name}` : ''}`;
+        payer_image = this.user?.image_url;
+        debtor_name = `${this.selectedUser()?.friend?.first_name}${this.selectedUser()?.friend?.last_name ? ` ${this.selectedUser()?.friend?.last_name}` : ''}`;
+        debtor_image = this.selectedUser()?.friend.image_url;
+      } else {
+        debtor_name = `${this.user?.first_name}${this.user?.last_name ? ` ${this.user?.last_name}` : ''}`;
+        debtor_image = this.user?.image_url;
+        payer_name = `${this.selectedUser()?.friend?.first_name}${this.selectedUser()?.friend?.last_name ? ` ${this.selectedUser()?.friend?.last_name}` : ''}`;
+        payer_image = this.selectedUser()?.friend.image_url;
+      }
+
+      const dialogRef = this.dialog.open(SettlementComponent, {
+        data: {
+          payer_name,
+          debtor_name,
+          total_amount,
+          debtor_image,
+          payer_image,
+        },
+        // width: window.innerWidth > 600 ? '100px' : '90%',
+        enterAnimationDuration: '200ms',
+        exitAnimationDuration: '200ms',
+      });
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          this.httpClient
+            .post<ExpenseResponse>(
+              `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,
+              result,
+              {
+                withCredentials: true,
+              },
+            )
+            .subscribe({
+              next: (response: ExpenseResponse) => {
+                if (response.data.payer_id === this.user?.user_id) {
+                  this.selectedUser()!.balance_amount = JSON.stringify(
+                    parseFloat(this.selectedUser()!.balance_amount) +
+                      parseFloat(response.data.debtor_amount),
+                  );
+                } else {
+                  this.selectedUser()!.balance_amount = JSON.stringify(
+                    parseFloat(this.selectedUser()!.balance_amount) -
+                      parseFloat(response.data.debtor_amount),
+                  );
+                }
+                this.toastr.success('Settled up successfully', 'Success');
+              },
+            });
+        }
+      });
+    }
   }
 
   getArchiveStatus(): string {
@@ -188,7 +318,7 @@ export class FriendsComponent implements OnDestroy {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.httpClient
-          .post(
+          .post<ExpenseResponse>(
             `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,
             result,
             {
@@ -196,7 +326,18 @@ export class FriendsComponent implements OnDestroy {
             },
           )
           .subscribe({
-            next: () => {
+            next: (response: ExpenseResponse) => {
+              if (response.data.payer_id === this.user?.user_id) {
+                this.selectedUser()!.balance_amount = JSON.stringify(
+                  parseFloat(this.selectedUser()!.balance_amount) +
+                    parseFloat(response.data.debtor_amount),
+                );
+              } else {
+                this.selectedUser()!.balance_amount = JSON.stringify(
+                  parseFloat(this.selectedUser()!.balance_amount) -
+                    parseFloat(response.data.debtor_amount),
+                );
+              }
               this.toastr.success('Expense Created successfully', 'Success');
             },
           });

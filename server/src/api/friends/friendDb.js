@@ -186,6 +186,13 @@ class FriendDb {
     );
     return { affectedRows, updatedExpense };
   };
+
+  // DB query to delete friends expenses
+  static deleteExpense = async (friend_expense_id, transaction) =>
+    await FriendExpense.destroy({
+      where: { friend_expense_id },
+      transaction,
+    });
 }
 
 export default FriendDb;

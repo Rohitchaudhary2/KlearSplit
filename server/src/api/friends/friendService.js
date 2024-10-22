@@ -394,6 +394,46 @@ class FriendService {
       throw error;
     }
   };
+
+  // Service to delete a friend expense
+  static deleteExpense = async (conversation_id, friend_expense_id) => {
+    const friendExist = await FriendDb.getFriend(conversation_id);
+    if (!friendExist) throw new ErrorHandler(404, "Friend not found");
+
+    const existingExpense = await FriendDb.getExpense(friend_expense_id);
+    if (!existingExpense) throw new ErrorHandler(404, "Expense not found");
+
+    const transaction = await sequelize.transaction();
+    try {
+      // Delete the expense
+      const { affectedRows } = await FriendDb.deleteExpense(
+        friend_expense_id,
+        transaction,
+      );
+      if (affectedRows === 0) {
+        throw new ErrorHandler(400, "Failed to delete expense");
+      }
+      // Update the balance in the friends table
+      await FriendDb.updateFriends(
+        {
+          balance_amount:
+            existingExpense.payer_id === friendExist.friend1_id
+              ? parseFloat(friendExist.balance_amount) -
+                parseFloat(existingExpense.debtor_amount)
+              : parseFloat(friendExist.balance_amount) +
+                parseFloat(existingExpense.debtor_amount),
+        },
+        conversation_id,
+        transaction,
+      );
+      // Commit the transaction
+      await transaction.commit();
+      return { message: "Expense deleted successfully" };
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  };
 }
 
 // Helper function to calculate the debtor amount based on split type

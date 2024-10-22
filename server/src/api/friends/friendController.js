@@ -164,6 +164,21 @@ class FriendController {
       next(error);
     }
   };
+
+  // Controller for deleting an expense
+  static deleteExpense = async (req, res, next) => {
+    try {
+      const { conversation_id } = req.validatedParams;
+      const { friend_expense_id } = req.body;
+      const deletedExpense = await FriendService.deleteExpense(
+        conversation_id,
+        friend_expense_id,
+      );
+      responseHandler(res, 200, "Expense deleted successfully", deletedExpense);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default FriendController;

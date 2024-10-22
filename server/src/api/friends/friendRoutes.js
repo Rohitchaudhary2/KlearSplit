@@ -82,4 +82,11 @@ friendRouter.patch(
   FriendController.updateExpense,
 );
 
+friendRouter.delete(
+  "/deleteexpense/:conversation_id",
+  authenticateToken,
+  validateParams,
+  FriendController.deleteExpense,
+);
+
 export default friendRouter;

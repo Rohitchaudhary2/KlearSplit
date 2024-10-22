@@ -10,6 +10,7 @@ import { sequelize } from "../../config/db.connection.js";
 import UserDb from "../users/userDb.js";
 import { ErrorHandler } from "./errorHandler.js";
 import Redis from "ioredis";
+import logger from "../utils/logger.js";
 
 const redis = new Redis();
 
@@ -34,8 +35,18 @@ passport.use(
             newUser.last_name = profile._json.family_name;
           const password = generatePassword();
           newUser.password = await hashedPassword(password);
-          if (!user) user = await UserDb.createUser(newUser, transaction);
-          else user = await UserDb.updateUser(newUser, user.dataValues.user_id);
+          newUser.is_invited = false;
+          if (!user) {
+            user = await UserDb.createUser(newUser, transaction);
+            user = user.dataValues;
+          } else {
+            user = await UserDb.updateUser(
+              newUser,
+              user.dataValues.user_id,
+              transaction,
+            );
+            user = user[0].dataValues;
+          }
 
           const options = {
             email: user.email,
@@ -76,7 +87,7 @@ passport.use(
           transaction,
         );
 
-        await UserDb.updateUser({ failedAttempts: 0 }, user.user_id);
+        await redis.del(failedAttemptsKey);
 
         // Commit the transaction
         await transaction.commit();
@@ -84,6 +95,11 @@ passport.use(
         return done(null, { user, accessToken, refreshToken });
       } catch (error) {
         await transaction.rollback();
+        logger.log({
+          level: "error",
+          statusCode: error.statusCode,
+          message: error.message,
+        });
         return done(error);
       }
     },

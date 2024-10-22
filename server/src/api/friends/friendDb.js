@@ -167,13 +167,18 @@ class FriendDb {
   static updateExpense = async (
     updatedExpenseData,
     friend_expense_id,
-    transaction,
-  ) =>
-    await FriendExpense.update(updatedExpenseData, {
-      where: { friend_expense_id },
-      transaction,
-      returning: true,
-    });
+    transaction = null,
+  ) => {
+    const [affectedRows, [updatedExpense]] = await FriendExpense.update(
+      updatedExpenseData,
+      {
+        where: { friend_expense_id },
+        transaction,
+        returning: true,
+      },
+    );
+    return { affectedRows, updatedExpense };
+  };
 }
 
 export default FriendDb;

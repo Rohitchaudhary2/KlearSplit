@@ -2,7 +2,7 @@ import { Router } from "express";
 import FriendController from "./friendController.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import {
-  validateAddExpense,
+  validateExpense,
   validateArchiveBlockFriend,
   validateEmail,
   validateFriendRequest,
@@ -62,7 +62,7 @@ friendRouter.post(
   "/addexpense/:conversation_id",
   authenticateToken,
   validateParams,
-  validateAddExpense,
+  validateExpense,
   FriendController.addExpense,
 );
 
@@ -72,6 +72,14 @@ friendRouter.get(
   validateParams,
   validatePagination,
   FriendController.getExpenses,
+);
+
+friendRouter.patch(
+  "/updateexpense/:conversation_id",
+  authenticateToken,
+  validateParams,
+  validateExpense,
+  FriendController.updateExpense,
 );
 
 export default friendRouter;

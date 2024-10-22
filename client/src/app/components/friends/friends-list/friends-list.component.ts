@@ -1,4 +1,11 @@
-import { Component, inject, OnInit, output, signal } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AddFriendComponent } from '../add-friend/add-friend.component';
 import { MatDialog } from '@angular/material/dialog';
@@ -28,6 +35,8 @@ export class FriendsListComponent implements OnInit {
   friendList = signal(this.friends());
 
   selectedUser = output<FriendData>();
+
+  balanceAmount = input<string>();
 
   fetchFriendRequests() {
     const params = new HttpParams().set('status', 'PENDING');
@@ -80,7 +89,7 @@ export class FriendsListComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.httpClient
-          .post(API_URLS.appFriend, result, {
+          .post(API_URLS.addFriend, result, {
             withCredentials: true,
           })
           .subscribe({

@@ -48,70 +48,27 @@ git clone https://github.com/Rohitchaudhary2/KlearSplit.git
 cd KlearSplit
 ```
 
-### Backend (Node.js)
+### Running the Application
 
-1. Navigate to the server directory:
-
-    ```bash
-    cd server
-    ```
-
-2. Install server dependencies:
+1. Install dependencies:
 
     ```bash
     npm install
     ```
 
-3. Start the backend server:
+3. Start the application:
 
     ```bash
     npm run dev
     ```
 
    The backend server will run on `http://localhost:3000` by default.
-
-### Frontend (Angular)
-
-1. Navigate to the client directory:
-
-    ```bash
-    cd ../client
-    ```
-
-2. Install client dependencies:
-
-    ```bash
-    npm install
-    ```
-
-3. Start the Angular development server:
-
-    ```bash
-    npm start
-    ```
-
+   
    The Angular application will run on `http://localhost:4200` by default.
 
 ## Environment Variables
 
-Create a `.env` file in the `server` directory with the following structure:
-
-```plaintext
-PORT=set_your_port
-DATABASE_HOST=your_database_hostname
-DATABASE_USERNAME=your_database_username
-DATABASE_PASSWORD=your_database_password
-DATABASE_NAME=your_database_name
-ACCESS_SECRET_KEY=your_access_secret_key
-ACCESS_EXPIRY=your_access_token_expiry_time
-REFRESH_SECRET_KEY=your_refresh_secret_key
-REFRESH_EXPIRY=your_refresh_token_expiry_time
-SMTP_USER=your_smtp_username
-SMTP_PASSWORD=your_smtp_password
-SMTP_MAIL=your_smtp_mail
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-```
+Create a `.env` file in the `server` directory and follow the structure in the sample.env file.
 
 Firstly create a database in pgAdmin.
 Make sure to replace the placeholder values with your actual database credentials and secret keys.

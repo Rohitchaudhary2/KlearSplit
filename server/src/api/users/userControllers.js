@@ -9,7 +9,11 @@ class UserController {
   static verifyUser = async (req, res, next) => {
     try {
       await UserService.verifyUser(req.validatedUser);
-      responseHandler(res, 200, "Successfully Sent Otp");
+      responseHandler(
+        res,
+        200,
+        "If email is valid then OTP sent successfully.",
+      );
     } catch (error) {
       next(error);
     }

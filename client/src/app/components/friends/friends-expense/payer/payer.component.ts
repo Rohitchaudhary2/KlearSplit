@@ -14,7 +14,7 @@ export class PayerComponent implements OnInit {
   participants = inject(MAT_DIALOG_DATA);
 
   ngOnInit(): void {
-    this.dialogRef.updateSize('25%', '65%');
+    this.dialogRef.updateSize('25%');
   }
 
   sendPayer(id: string) {

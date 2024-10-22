@@ -41,81 +41,33 @@
           <mat-error>Description can have at max 150 characters.</mat-error>
         }
       </mat-form-field>
-      <!-- <mat-form-field appearance="fill" class="w-10"  (click)="openSecondDialog()">
-        <mat-label>Payer</mat-label>
-        <mat-select formControlName="payer_id">
-          <mat-option [value]="participants[0].user_id"
-            >{{ participants[0].first_name }}
-            {{ participants[0].last_name }}</mat-option
-          >
-          <mat-option [value]="participants[1].user_id"
-            >{{ participants[1].first_name }}
-            {{ participants[1].last_name }}</mat-option
-          >
-        </mat-select>
-      </mat-form-field> -->
       <div class="d-flex justify-content-center align-items-center mb-3">
         <mat-label>Paid by</mat-label>
         <button
           class="mx-2 text-success"
           mat-raised-button
-          (click)="openSecondDialog()"
+          (click)="openPayerDialog()"
+          [disabled]="form.invalid"
         >
           {{ getPayerName() }}
         </button>
         <mat-label>and split</mat-label>
-        <button class="mx-2 text-success" mat-raised-button>equally</button>
+        <button
+          class="mx-2 text-success"
+          mat-raised-button
+          (click)="openSplitTypeDialog()"
+          [disabled]="form.invalid"
+        >
+          {{ splitType }}
+        </button>
       </div>
-
-      <!-- <mat-form-field appearance="outline" class="w-100 custom-form-field">
-        <mat-label>Split Type</mat-label>
-        <mat-select formControlName="split_type">
-          <mat-option value="EQUAL">EQUAL</mat-option>
-          <mat-option value="UNEQUAL">UNEQUAL</mat-option>
-          <mat-option value="PERCENTAGE">PERCENTAGE</mat-option>
-        </mat-select>
-      </mat-form-field> -->
-      @if (showAdditionalFields()) {
-        <mat-form-field appearance="fill" class="w-100">
-          <mat-label
-            >{{ participants[0].first_name }} {{ participants[0].last_name }}'s
-            share</mat-label
-          >
-          <input
-            matInput
-            type="number"
-            name="participant1_share"
-            formControlName="participant1_share"
-            style="background-color: transparent"
-            step="0.01"
-            min="0"
-            max="999999999999.99"
-          />
-        </mat-form-field>
-        <mat-form-field appearance="fill" class="w-100">
-          <mat-label
-            >{{ participants[1].first_name }} {{ participants[1].last_name }}'s
-            share</mat-label
-          >
-          <input
-            matInput
-            type="number"
-            name="participant2_share"
-            formControlName="participant2_share"
-            style="background-color: transparent"
-            step="0.01"
-            min="0"
-            max="999999999999.99"
-          />
-        </mat-form-field>
-      }
       <div class="parent-container">
         <div class="file-upload" style="text-align: center">
           <label
             for="bill-receipt"
             class="upload-label px-3"
             style="color: green"
-            >Upload Bill Receipt</label
+            >{{ imageName() }}</label
           >
           <input
             type="file"
@@ -126,26 +78,6 @@
           />
         </div>
       </div>
-
-      <!-- <div class="file-upload">
-        <label for="bill-receipt" style="width: 30%;">Bill Receipt</label>
-        <input
-        style="width: 70%;"
-          type="file"
-          id="bill-receipt"
-          accept="image/*"
-          (change)="selectImage($event)"
-        />
-      </div> -->
-      <!-- <div class="input-group mb-3">
-        <span><label for="bill-receipt">Bill Receipt</label></span>
-        <span><input
-          type="file"
-          name="image"
-          (change)="selectImage($event)"
-          id="inputGroupFile02"
-        /></span>
-      </div> -->
     </div>
   </form>
 </div>

@@ -249,7 +249,12 @@ class FriendService {
         page,
         pageSize,
       );
-      return expenses;
+      const expensesToSend = expenses.map((expense) => expense.toJSON());
+      return expensesToSend.map((expense) => ({
+        ...expense,
+        payer:
+          `${expense.payer.first_name} ${expense.payer.last_name || ""}`.trim(),
+      }));
     } else {
       throw new ErrorHandler(
         403,

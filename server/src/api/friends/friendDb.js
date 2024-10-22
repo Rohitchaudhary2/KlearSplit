@@ -153,6 +153,13 @@ class FriendDb {
           },
         ],
       },
+      include: [
+        {
+          model: User,
+          as: "payer",
+          attributes: ["first_name", "last_name"],
+        },
+      ],
       order: [["createdAt", "ASC"]],
       limit: pageSize,
       offset,

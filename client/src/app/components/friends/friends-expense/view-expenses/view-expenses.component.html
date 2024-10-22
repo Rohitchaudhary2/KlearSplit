@@ -1,0 +1,52 @@
+<h2 mat-dialog-title class="text-center bg-success text-white py-2 mb-0">
+  Expenses
+</h2>
+
+<table class="table table-hover table-bordered expense-list">
+  <thead class="thead-dark">
+    <tr style="text-align: center">
+      <th scope="col" class="col-2">Expense Name</th>
+      <th scope="col" class="col-2">Total Amount</th>
+      <th scope="col" class="col-2">Payer Name</th>
+      <th scope="col" class="col-1">Split Type</th>
+      <th scope="col" class="col-2">Debt Amount</th>
+      <th scope="col" class="col-5">Description</th>
+      <th scope="col" class="col-1">Actions</th>
+      <th scope="col" class="col-1">Settlement</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (expense of expenses(); track expense.friend_expense_id) {
+      <tr style="text-align: center; vertical-align: middle">
+        <td class="col-2">{{ expense.expense_name }}</td>
+        <td class="col-2">{{ expense.total_amount }}</td>
+        <td class="col-2">{{ expense.payer_name }}</td>
+        <td class="col-1">{{ expense.split_type }}</td>
+        <td class="col-2">{{ expense.debtor_amount }}</td>
+        <td class="col-5">{{ expense.description }}</td>
+        <td class="col-1">
+          <mat-icon matPrefix class="me-2">edit</mat-icon>
+          <mat-icon matPrefix>delete</mat-icon>
+        </td>
+        <td class="col-1">
+          <button class="btn btn-sm btn-success">Settle</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+<div
+  mat-dialog-actions
+  class="d-flex align-items-center justify-content-end gap-2 pb-2 px-3"
+>
+  <mat-icon>download</mat-icon>
+  <button
+    mat-button
+    disableRipple
+    class="custom-mat-button"
+    (click)="onCancel()"
+  >
+    Close
+  </button>
+</div>

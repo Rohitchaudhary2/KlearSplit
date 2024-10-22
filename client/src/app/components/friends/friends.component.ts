@@ -24,10 +24,12 @@ import { AuthService } from '../auth/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { FriendsListComponent } from './friends-list/friends-list.component';
 import { SocketService } from './socket.service';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogPosition, MatDialog } from '@angular/material/dialog';
 import { FriendsExpenseComponent } from './friends-expense/friends-expense.component';
 import { NgClass } from '@angular/common';
-import { SettlementComponent } from './friend-expense/settlement/settlement.component';
+import { SettlementComponent } from './friends-expense/settlement/settlement.component';
+import { concatMap } from 'rxjs';
+import { ViewExpensesComponent } from './friends-expense/view-expenses/view-expenses.component';
 
 @Component({
   selector: 'app-friends',
@@ -84,7 +86,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.scrollToBottom();
   }
 
-  onSelectUser(friend: FriendData) {
+  onSelectUser(friend: FriendData | undefined) {
     if (this.selectedUser()) {
       // Leave the previous room
       this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
@@ -94,47 +96,43 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
     this.selectedUser.set(friend);
 
-    // Fetch messages for the newly selected user
-    this.httpClient
-      .get<message>(
-        `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
-        {
-          withCredentials: true,
-        },
-      )
-      .subscribe({
-        next: (messages) => {
-          this.messages.set(messages.data);
-          this.cdr.detectChanges();
-          this.scrollToBottom();
-        },
+    if (this.selectedUser()) {
+      this.httpClient
+        .get<message>(
+          `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
+          { withCredentials: true },
+        )
+        .pipe(
+          concatMap((messages) => {
+            this.messages.set(messages.data);
+            this.cdr.detectChanges();
+            this.scrollToBottom();
+
+            // Fetch expenses for the same user after the messages are loaded
+            return this.httpClient.get<Expense>(
+              `${this.getExpensesUrl}/${this.selectedUser()?.conversation_id}`,
+              { withCredentials: true },
+            );
+          }),
+        )
+        .subscribe({
+          next: (expenses) => {
+            this.expenses.set(expenses.data);
+            this.cdr.detectChanges();
+            this.scrollToBottom();
+          },
+        });
+
+      // Join the room for the new conversation
+      this.socketService.joinRoom(this.selectedUser()!.conversation_id);
+
+      // Listen for new messages from the server for the new room
+      this.socketService.onNewMessage((message: messageData) => {
+        this.messages.set([...this.messages(), message]);
+        this.cdr.detectChanges();
+        this.scrollToBottom();
       });
-
-    // Fetch expenses for the newly selected user
-    this.httpClient
-      .get<Expense>(
-        `${this.getExpensesUrl}/${this.selectedUser()?.conversation_id}`,
-        {
-          withCredentials: true,
-        },
-      )
-      .subscribe({
-        next: (expenses) => {
-          this.expenses.set(expenses.data);
-          this.cdr.detectChanges();
-          this.scrollToBottom();
-        },
-      });
-
-    // Join the room for the new conversation
-    this.socketService.joinRoom(this.selectedUser()!.conversation_id);
-
-    // Listen for new messages from the server for the new room
-    this.socketService.onNewMessage((message: messageData) => {
-      this.messages.set([...this.messages(), message]);
-      this.cdr.detectChanges();
-      this.scrollToBottom();
-    });
+    }
   }
 
   onInputChange(event: Event): void {
@@ -153,6 +151,8 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
   toggleView(flag: boolean) {
     this.showMessages.set(flag);
+    this.cdr.detectChanges();
+    this.scrollToBottom();
   }
 
   scrollToBottom() {
@@ -174,8 +174,53 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     }
   }
 
-  viewExpense(id: string) {
-    return id;
+  viewExpense() {
+    const dialogPosition: DialogPosition = {
+      top: '5%', // Set top position to 10%
+    };
+    const dialogRef = this.dialog.open(ViewExpensesComponent, {
+      data: this.expenses,
+      maxWidth: '90vw',
+      maxHeight: '85vh',
+      height: '100%',
+      width: '100%',
+      position: dialogPosition,
+      enterAnimationDuration: '200ms',
+      exitAnimationDuration: '200ms',
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result.description) delete result.description;
+      if (!result.receipt) delete result.receipt;
+      if (result) {
+        this.httpClient
+          .post<ExpenseResponse>(
+            `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,
+            result,
+            {
+              withCredentials: true,
+            },
+          )
+          .subscribe({
+            next: (response: ExpenseResponse) => {
+              this.expenses.set([...this.expenses(), response.data]);
+              this.cdr.detectChanges();
+              this.scrollToBottom();
+              if (response.data.payer_id === this.user?.user_id) {
+                this.selectedUser()!.balance_amount = JSON.stringify(
+                  parseFloat(this.selectedUser()!.balance_amount) +
+                    parseFloat(response.data.debtor_amount),
+                );
+              } else {
+                this.selectedUser()!.balance_amount = JSON.stringify(
+                  parseFloat(this.selectedUser()!.balance_amount) -
+                    parseFloat(response.data.debtor_amount),
+                );
+              }
+              this.toastr.success('Expense Created successfully', 'Success');
+            },
+          });
+      }
+    });
   }
 
   settlement() {
@@ -223,6 +268,8 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             )
             .subscribe({
               next: (response: ExpenseResponse) => {
+                this.cdr.detectChanges();
+                this.scrollToBottom();
                 if (response.data.payer_id === this.user?.user_id) {
                   this.selectedUser()!.balance_amount = JSON.stringify(
                     parseFloat(this.selectedUser()!.balance_amount) +
@@ -317,6 +364,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (!result.description) delete result.description;
+      if (!result.receipt) delete result.receipt;
       if (result) {
         this.httpClient
           .post<ExpenseResponse>(
@@ -328,6 +376,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           )
           .subscribe({
             next: (response: ExpenseResponse) => {
+              this.expenses.set([...this.expenses(), response.data]);
+              this.cdr.detectChanges();
+              this.scrollToBottom();
               if (response.data.payer_id === this.user?.user_id) {
                 this.selectedUser()!.balance_amount = JSON.stringify(
                   parseFloat(this.selectedUser()!.balance_amount) +

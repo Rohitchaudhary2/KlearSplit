@@ -87,6 +87,7 @@
                             mat-button
                             [disabled]="isResendDisabled()"
                             (click)="resendOtp()"
+                            type="button"
                           >
                             Resend OTP
                             @if (isResendDisabled()) {
@@ -174,6 +175,7 @@
                           [disabled]="isResendDisabled()"
                           (click)="resendOtp()"
                           class="gap 2"
+                          type="button"
                         >
                           Resend OTP
                           @if (isResendDisabled()) {

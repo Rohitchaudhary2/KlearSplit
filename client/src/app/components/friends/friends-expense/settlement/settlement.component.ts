@@ -72,7 +72,6 @@ export class SettlementComponent implements OnInit {
         split_type: 'SETTLEMENT',
         total_amount: this.form.value.settlement_amount,
       });
-      // console.log('Settlement Amount:', this.form.value.settlement_amount);
     }
   }
 

@@ -99,7 +99,11 @@ export class RegisterComponent {
   }
 
   resendOtp(): void {
-    this.onSendOtp();
+    if (this.isRestoreMode()) {
+      this.onSendOtp();
+    } else {
+      this.onResendOtp();
+    }
 
     // Restart the countdown timer after resending the OTP
     this.startCountdown();
@@ -183,6 +187,27 @@ export class RegisterComponent {
               Validators.pattern(/^[0-9]{6}$/),
             ]),
           );
+          this.startCountdown();
+        },
+      });
+    }
+  }
+
+  // Method to resend otp
+  onResendOtp(): void {
+    if (this.form.controls.email?.valid) {
+      const user: RegisterUser = this.form.value as RegisterUser;
+
+      // Create a new user object without empty fields
+      const userToSend: Partial<RegisterUser> = {};
+      Object.keys(user).forEach((key) => {
+        const typedKey = key as keyof RegisterUser; // Type assertion
+        if (user[typedKey] !== '' && user[typedKey] !== null) {
+          userToSend[typedKey] = user[typedKey];
+        }
+      });
+      this.authService.verifyUser(userToSend).subscribe({
+        next: () => {
           this.startCountdown();
         },
       });

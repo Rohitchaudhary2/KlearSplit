@@ -106,7 +106,7 @@ export default (sequelize) => {
       {
         where: {
           [Op.and]: [
-            { status: "ACCEPTED" },
+            { status: { [Op.ne]: "REJECTED" } },
             { [Op.or]: [{ friend1_id: userId }, { friend2_id: userId }] },
           ],
         },
@@ -134,7 +134,7 @@ export default (sequelize) => {
       {
         where: {
           [Op.and]: [
-            { status: "ACCEPTED" },
+            { status: { [Op.ne]: "REJECTED" } },
             { [Op.or]: [{ friend1_id: userId }, { friend2_id: userId }] },
           ],
         },

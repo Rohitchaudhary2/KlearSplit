@@ -34,7 +34,7 @@ export class FriendsListComponent implements OnInit {
   private friends = signal<FriendData[]>([]);
   friendList = signal(this.friends());
 
-  selectedUser = output<FriendData>();
+  selectedUser = output<FriendData | undefined>();
 
   balanceAmount = input<string>();
 
@@ -150,6 +150,7 @@ export class FriendsListComponent implements OnInit {
       .delete(`${API_URLS.withdrawRequest}/${id}`, { withCredentials: true })
       .subscribe({
         next: () => {
+          this.onSelectUser(undefined);
           this.toastr.success(`Request deleted Successfully`, 'Success', {
             timeOut: 3000,
           });
@@ -166,7 +167,7 @@ export class FriendsListComponent implements OnInit {
       });
   }
 
-  onSelectUser(friend: FriendData) {
+  onSelectUser(friend: FriendData | undefined) {
     this.selectedUser.emit(friend);
   }
 }

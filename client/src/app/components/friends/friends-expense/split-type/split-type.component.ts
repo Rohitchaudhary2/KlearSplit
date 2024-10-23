@@ -64,23 +64,41 @@ export class SplitTypeComponent implements OnInit {
     this.inputFieldControls();
 
     this.form.get('participant1_share')?.valueChanges.subscribe((value) => {
-      if (this.activeItem === 'UNEQUAL' && value! > this.total_amount) {
-        this.form.get('participant1_share')?.setValue(this.total_amount);
-        value = this.total_amount;
-      } else if (this.activeItem === 'PERCENTAGE' && value! > 100) {
-        this.form.get('participant1_share')?.setValue(100);
-        value = 100;
+      if (
+        this.activeItem === 'UNEQUAL' &&
+        (value! > this.total_amount || value! < 0)
+      ) {
+        if (value! > this.total_amount) value = this.total_amount;
+        else if (value! < 0) value = 0;
+        this.form.get('participant1_share')?.setValue(value);
+      } else if (
+        this.activeItem === 'PERCENTAGE' &&
+        (value! > this.total_amount || value! < 0)
+      ) {
+        if (value! > 100) value = 100;
+        else if (value! < 0) value = 0;
+        this.form.get('participant1_share')?.setValue(value);
       }
       this.updateParticipant2Share(value!);
     });
 
     this.form.get('participant2_share')?.valueChanges.subscribe((value) => {
-      if (this.activeItem === 'UNEQUAL' && value! > this.total_amount) {
-        this.form.get('participant2_share')?.setValue(this.total_amount);
-        value = this.total_amount;
-      } else if (this.activeItem === 'PERCENTAGE' && value! > 100) {
-        this.form.get('participant2_share')?.setValue(100);
-        value = 100;
+      if (
+        this.activeItem === 'UNEQUAL' &&
+        value! > this.total_amount &&
+        value! < 0
+      ) {
+        if (value! > this.total_amount) value = this.total_amount;
+        else if (value! < 0) value = 0;
+        this.form.get('participant2_share')?.setValue(value);
+      } else if (
+        this.activeItem === 'PERCENTAGE' &&
+        value! > 100 &&
+        value! < 0
+      ) {
+        if (value! > 100) value = 100;
+        else if (value! < 0) value = 0;
+        this.form.get('participant2_share')?.setValue(value);
       }
       this.updateParticipant1Share(value!);
     });

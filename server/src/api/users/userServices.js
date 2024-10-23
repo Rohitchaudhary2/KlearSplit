@@ -84,14 +84,14 @@ class UserService {
 
       // Generate access and refresh tokens
       const { accessToken, refreshToken } = generateAccessAndRefereshTokens(
-        isUserExists.dataValues.user_id,
+        createdUser.user_id,
       );
 
       // Store the refresh token in the database
       await AuthService.createRefreshToken(
         {
           token: refreshToken,
-          user_id: isUserExists.dataValues.user_id,
+          user_id: createdUser.user_id,
         },
         transaction,
       );

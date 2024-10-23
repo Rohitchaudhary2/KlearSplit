@@ -10,6 +10,7 @@ import {
   validatePagination,
   validateParams,
 } from "../middlewares/validationMiddleware.js";
+import { upload } from "../utils/fileUpload.js";
 
 const friendRouter = Router();
 
@@ -62,6 +63,7 @@ friendRouter.post(
   "/addexpense/:conversation_id",
   authenticateToken,
   validateParams,
+  upload.single("receipt"),
   validateExpense,
   FriendController.addExpense,
 );

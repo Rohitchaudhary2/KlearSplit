@@ -2,3 +2,20 @@
   height: 70vh;
   overflow-y: auto;
 }
+
+::-webkit-scrollbar {
+  width: 5px; /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(128, 128, 128, 0.5); /* Background of the scrollbar track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: green; /* Color of the scrollbar thumb */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: green; /* Color when hovered */
+}

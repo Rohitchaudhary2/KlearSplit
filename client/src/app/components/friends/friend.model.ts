@@ -43,25 +43,13 @@ export interface messageData {
   sender_id: string;
   message: string;
   is_read: boolean;
+  createdAt: string;
 }
 
 export interface ExpenseResponse {
   success: string;
   message: string;
-  data: {
-    createdAt: string;
-    debtor_amount: string;
-    debtor_id: string;
-    deletedAt: string | null;
-    description: string;
-    expense_name: string;
-    friend_expense_id: string;
-    payer_id: string;
-    receipt_url: string | null;
-    split_type: string;
-    total_amount: string;
-    updatedAt: string;
-  };
+  data: ExpenseData;
 }
 
 export interface Expense {
@@ -83,4 +71,5 @@ export interface ExpenseData {
   split_type: string;
   total_amount: string;
   updatedAt: string;
+  payer: string;
 }

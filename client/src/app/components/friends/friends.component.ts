@@ -50,7 +50,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   private toastr = inject(ToastrService);
   private dialog = inject(MatDialog);
 
-  tokenService = inject(TokenService);
+  private tokenService = inject(TokenService);
   private authService = inject(AuthService);
   private socketService = inject(SocketService);
   private readonly getMessagesUrl = API_URLS.getMessages;
@@ -104,6 +104,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         )
         .pipe(
           concatMap((messages) => {
+            messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
             this.messages.set(messages.data);
             this.cdr.detectChanges();
             this.scrollToBottom();
@@ -117,6 +118,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         )
         .subscribe({
           next: (expenses) => {
+            expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
             this.expenses.set(expenses.data);
             this.cdr.detectChanges();
             this.scrollToBottom();
@@ -175,52 +177,26 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   }
 
   viewExpense() {
+    const expenseList = [...this.expenses()];
+    const expenses = expenseList
+      .sort((a: ExpenseData, b: ExpenseData) =>
+        a.createdAt < b.createdAt ? 1 : -1,
+      )
+      .slice(0, 10);
     const dialogPosition: DialogPosition = {
-      top: '5%', // Set top position to 10%
+      top: '5%',
     };
     const dialogRef = this.dialog.open(ViewExpensesComponent, {
-      data: this.expenses,
-      maxWidth: '90vw',
+      data: expenses,
+      maxWidth: '91vw',
       maxHeight: '85vh',
-      height: '100%',
+      height: '85%',
       width: '100%',
       position: dialogPosition,
       enterAnimationDuration: '200ms',
       exitAnimationDuration: '200ms',
     });
-    dialogRef.afterClosed().subscribe((result) => {
-      if (!result.description) delete result.description;
-      if (!result.receipt) delete result.receipt;
-      if (result) {
-        this.httpClient
-          .post<ExpenseResponse>(
-            `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,
-            result,
-            {
-              withCredentials: true,
-            },
-          )
-          .subscribe({
-            next: (response: ExpenseResponse) => {
-              this.expenses.set([...this.expenses(), response.data]);
-              this.cdr.detectChanges();
-              this.scrollToBottom();
-              if (response.data.payer_id === this.user?.user_id) {
-                this.selectedUser()!.balance_amount = JSON.stringify(
-                  parseFloat(this.selectedUser()!.balance_amount) +
-                    parseFloat(response.data.debtor_amount),
-                );
-              } else {
-                this.selectedUser()!.balance_amount = JSON.stringify(
-                  parseFloat(this.selectedUser()!.balance_amount) -
-                    parseFloat(response.data.debtor_amount),
-                );
-              }
-              this.toastr.success('Expense Created successfully', 'Success');
-            },
-          });
-      }
-    });
+    dialogRef.afterClosed().subscribe();
   }
 
   settlement() {
@@ -376,6 +352,10 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           )
           .subscribe({
             next: (response: ExpenseResponse) => {
+              if (response.data.payer_id === this.user?.user_id)
+                response.data.payer = this.user_name;
+              else
+                response.data.payer = `${this.selectedUser()?.friend.first_name}${this.selectedUser()?.friend.last_name || ''}`;
               this.expenses.set([...this.expenses(), response.data]);
               this.cdr.detectChanges();
               this.scrollToBottom();

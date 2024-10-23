@@ -72,7 +72,7 @@ export default (sequelize) => {
       paranoid: true,
       defaultScope: {
         attributes: {
-          exclude: ["createdAt", "updatedAt", "deletedAt"],
+          exclude: ["updatedAt", "deletedAt"],
         },
       },
     },

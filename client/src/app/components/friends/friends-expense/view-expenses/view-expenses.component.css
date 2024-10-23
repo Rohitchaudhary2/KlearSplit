@@ -19,3 +19,7 @@
 ::-webkit-scrollbar-thumb:hover {
   background: green; /* Color when hovered */
 }
+
+.hover {
+  cursor: pointer;
+}

@@ -1,12 +1,16 @@
 <h3 mat-dialog-title class="text-center pt-2">
   Add Friends for Easier Bill Splitting
 </h3>
-<div mat-dialog-content class="d-flex flex-column align-items-center p-4 pb-0">
+<div
+  [formGroup]="form"
+  mat-dialog-content
+  class="d-flex flex-column align-items-center p-4 pb-0"
+>
   <mat-form-field appearance="outline" class="w-100" style="border: none">
     <mat-icon matPrefix>person</mat-icon>
     <input
       matInput
-      [formControl]="searchInputControl"
+      formControlName="searchInputControl"
       placeholder="Search"
       (ngModelChange)="onSearchInputChange()"
       style="
@@ -17,10 +21,10 @@
         padding-bottom: 0 !important;
       "
     />
+    @if (getFormErrors("searchInputControl")) {
+      <mat-error>{{ getFormErrors("searchInputControl") }}</mat-error>
+    }
   </mat-form-field>
-  @if (inputError()) {
-    <div style="color: red">Invalid email format.</div>
-  }
 </div>
 @if (!selectedUser()) {
   <div class="px-4" style="border-radius: 5px">
@@ -51,7 +55,13 @@
   >
     Cancel
   </button>
-  <button mat-button disableRipple class="custom-mat-button" (click)="onAdd()">
+  <button
+    mat-button
+    disableRipple
+    class="custom-mat-button"
+    [disabled]="form.invalid"
+    (click)="onAdd()"
+  >
     Add
   </button>
 </div>

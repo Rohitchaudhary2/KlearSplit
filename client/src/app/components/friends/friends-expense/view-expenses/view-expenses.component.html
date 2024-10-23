@@ -18,10 +18,10 @@
       </tr>
     </thead>
     <tbody style="max-height: 70vh; overflow-y: auto">
-      @for (expense of expenses; track expense.friend_expense_id) {
+      @for (expense of expenses(); track expense.friend_expense_id) {
         <tr style="text-align: center; vertical-align: middle">
           <td class="col-1">{{ expense.createdAt | date }}</td>
-          <td class="col-2" style="word-wrap: break-word">
+          <td class="col-2" style="max-width: 13vw; word-wrap: break-word">
             {{ expense.expense_name }}
           </td>
           <td class="col-2">{{ expense.total_amount }}</td>
@@ -30,8 +30,13 @@
           <td class="col-2">{{ expense.debtor_amount }}</td>
           <td class="col-5">{{ expense.description || "-" }}</td>
           <td class="col-1">
-            <mat-icon matPrefix class="me-2">edit</mat-icon>
-            <mat-icon matPrefix>delete</mat-icon>
+            <mat-icon matPrefix class="hover me-2">edit</mat-icon>
+            <mat-icon
+              matPrefix
+              class="hover"
+              (click)="onDeleteExpense(expense.friend_expense_id)"
+              >delete</mat-icon
+            >
           </td>
           <!-- <td class="col-1">
           <button class="btn btn-sm btn-success">Settle</button>

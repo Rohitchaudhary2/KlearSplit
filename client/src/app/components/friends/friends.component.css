@@ -217,3 +217,10 @@ td {
     background-position: 0%;
   }
 }
+
+::ng-deep {
+  .cdk-overlay-pane {
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+  }
+}

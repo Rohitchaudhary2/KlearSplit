@@ -83,7 +83,8 @@
                         ><button
                           class="btn btn-success btn-sm"
                           (click)="
-                            onAcceptReject(request.conversation_id, 'ACCEPTED')
+                            onAcceptReject(request.conversation_id, 'ACCEPTED');
+                            $event.stopPropagation()
                           "
                         >
                           Accept
@@ -93,7 +94,8 @@
                         ><button
                           class="btn btn-danger btn-sm"
                           (click)="
-                            onAcceptReject(request.conversation_id, 'REJECTED')
+                            onAcceptReject(request.conversation_id, 'REJECTED');
+                            $event.stopPropagation()
                           "
                         >
                           Reject
@@ -103,7 +105,10 @@
                       <span
                         ><button
                           class="btn btn-danger btn-sm"
-                          (click)="onWithdrawRequest(request.conversation_id)"
+                          (click)="
+                            onWithdrawRequest(request.conversation_id);
+                            $event.stopPropagation()
+                          "
                         >
                           Withdraw Request
                         </button></span

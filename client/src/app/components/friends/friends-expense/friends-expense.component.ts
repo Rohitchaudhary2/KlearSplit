@@ -43,10 +43,14 @@ export class FriendsExpenseComponent implements OnInit {
 
   form = new FormGroup({
     expense_name: new FormControl('', {
-      validators: [Validators.required],
+      validators: [Validators.required, Validators.maxLength(50)],
     }),
     total_amount: new FormControl('', {
-      validators: [Validators.required],
+      validators: [
+        Validators.required,
+        Validators.min(0.1),
+        Validators.max(999999999999.99),
+      ],
     }),
     description: new FormControl('', {
       validators: [Validators.maxLength(150)],
@@ -85,6 +89,14 @@ export class FriendsExpenseComponent implements OnInit {
     this.dialogRef.updateSize('30%');
   }
 
+  trimInput(controlName: string) {
+    const control = this.form.get(controlName);
+    if (control) {
+      const trimmedValue = control.value.trim();
+      control.setValue(trimmedValue, { emitEvent: false });
+    }
+  }
+
   selectImage(event: Event): void {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files.length > 0) {
@@ -95,6 +107,18 @@ export class FriendsExpenseComponent implements OnInit {
   }
 
   onAdd(): void {
+    if (this.form.value.split_type === 'EQUAL') {
+      this.form
+        .get('participant1_share')
+        ?.setValue(
+          JSON.stringify(parseFloat(this.form.value.total_amount!) / 2),
+        );
+      this.form
+        .get('participant2_share')
+        ?.setValue(
+          JSON.stringify(parseFloat(this.form.value.total_amount!) / 2),
+        );
+    }
     if (this.form.valid) {
       let debtor_share;
       if (
@@ -118,7 +142,7 @@ export class FriendsExpenseComponent implements OnInit {
     const id = this.form.value.payer_id;
     if (id === this.participants[0].user_id) return 'you';
     else
-      return `${this.participants[1].first_name} ${this.participants[1].last_name[0]}.`;
+      return `${this.participants[1].first_name}${this.participants[1].last_name ? ` ${this.participants[1].last_name}` : ''}`;
   }
 
   openPayerDialog(): void {
@@ -159,10 +183,10 @@ export class FriendsExpenseComponent implements OnInit {
         this.form.get('split_type')?.setValue(result.split_type);
         this.form
           .get('participant1_share')
-          ?.setValue(result.participant1_share);
+          ?.setValue(JSON.stringify(result.participant1_share));
         this.form
           .get('participant2_share')
-          ?.setValue(result.participant2_share);
+          ?.setValue(JSON.stringify(result.participant2_share));
       }
     });
   }

@@ -195,6 +195,7 @@ class FriendService {
         conversation_id: message.dataValues.conversation_id,
         message: message.dataValues.message,
         is_read: message.dataValues.is_read,
+        createdAt: message.dataValues.createdAt,
       };
     });
   };

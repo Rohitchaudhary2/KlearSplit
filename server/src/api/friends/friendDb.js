@@ -121,7 +121,7 @@ class FriendDb {
       where: {
         conversation_id,
       },
-      order: [["createdAt", "ASC"]],
+      order: [["createdAt", "DESC"]],
       limit: pageSize,
       offset,
     });
@@ -160,7 +160,7 @@ class FriendDb {
           attributes: ["first_name", "last_name"],
         },
       ],
-      order: [["createdAt", "ASC"]],
+      order: [["createdAt", "DESC"]],
       limit: pageSize,
       offset,
     });

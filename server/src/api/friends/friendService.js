@@ -265,7 +265,7 @@ class FriendService {
   };
 
   // Service to fetch all expenses for a conversation
-  static getExpenses = async (conversation_id, page = 1, pageSize = 10) => {
+  static getExpenses = async (conversation_id, page, pageSize) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");
     if (friendExist.status !== "REJECTED") {
@@ -275,7 +275,12 @@ class FriendService {
         page,
         pageSize,
       );
-      return expenses;
+      const expensesToSend = expenses.map((expense) => expense.toJSON());
+      return expensesToSend.map((expense) => ({
+        ...expense,
+        payer:
+          `${expense.payer.first_name} ${expense.payer.last_name || ""}`.trim(),
+      }));
     } else {
       throw new ErrorHandler(
         403,
@@ -283,11 +288,160 @@ class FriendService {
       );
     }
   };
+
+  // Service to update a friend expense
+  static updateExpense = async (updatedExpenseData, conversation_id) => {
+    const friendExist = await FriendDb.getFriend(conversation_id);
+    if (!friendExist) {
+      throw new ErrorHandler(404, "Friend not found");
+    }
+    const existingExpense = await FriendDb.getExpense(
+      updatedExpenseData.friend_expense_id,
+    );
+    if (!existingExpense) {
+      throw new ErrorHandler(404, "Expense not found");
+    }
+
+    const balanceAffectingFields = [
+      "total_amount",
+      "payer_id",
+      "debtor_id",
+      "split_type",
+      "participant1_share",
+      "participant2_share",
+      "debtor_share",
+    ];
+
+    // Check if balance-related fields are being updated
+    const requiresBalanceUpdate = balanceAffectingFields.some(
+      (field) => field in updatedExpenseData,
+    );
+
+    // Only non-balance fields are being updated, skip transaction
+    if (!requiresBalanceUpdate) {
+      const { affectedRows, updatedExpense } = await FriendDb.updateExpense(
+        updatedExpenseData,
+        updatedExpenseData.friend_expense_id,
+      );
+
+      if (affectedRows === 0) {
+        throw new ErrorHandler(400, "Failed to update expense");
+      }
+      return updatedExpense;
+    }
+
+    // Balance-related fields need an update, use a transaction
+    const transaction = await sequelize.transaction();
+    try {
+      const debtorAmount = calculateDebtorAmount(
+        updatedExpenseData,
+        existingExpense,
+      );
+      updatedExpenseData.debtor_amount = debtorAmount;
+
+      const currentBalance = parseFloat(friendExist.balance_amount);
+
+      if (updatedExpenseData.split_type === "SETTLEMENT") {
+        if (currentBalance === 0) {
+          throw new ErrorHandler(400, "You are all settled up.");
+        }
+        validateSettlementAmount(currentBalance, debtorAmount);
+      }
+
+      if (
+        updatedExpenseData.payer_id &&
+        updatedExpenseData.debtor_id &&
+        updatedExpenseData.payer_id === updatedExpenseData.debtor_id
+      ) {
+        throw new ErrorHandler(400, "You cannot add an expense with yourself");
+      }
+
+      const newBalance = calculateNewBalance(
+        currentBalance,
+        debtorAmount,
+        updatedExpenseData.payer_id || existingExpense.payer_id,
+        friendExist,
+        updatedExpenseData.split_type || existingExpense.split_type,
+        existingExpense,
+        true,
+      );
+
+      // Update the expense with a transaction
+      const { affectedRows, updatedExpense } = await FriendDb.updateExpense(
+        updatedExpenseData,
+        updatedExpenseData.friend_expense_id,
+        transaction,
+      );
+
+      if (affectedRows === 0) {
+        throw new ErrorHandler(400, "Failed to update expense");
+      }
+
+      // Update the balance in the friends table
+      await FriendDb.updateFriends(
+        { balance_amount: newBalance },
+        friendExist.conversation_id,
+        transaction,
+      );
+
+      // Commit the transaction
+      await transaction.commit();
+
+      return updatedExpense;
+    } catch (error) {
+      // Rollback the transaction in case of any error
+      await transaction.rollback();
+      throw error;
+    }
+  };
+
+  // Service to delete a friend expense
+  static deleteExpense = async (conversation_id, friend_expense_id) => {
+    const friendExist = await FriendDb.getFriend(conversation_id);
+    if (!friendExist) throw new ErrorHandler(404, "Friend not found");
+
+    const existingExpense = await FriendDb.getExpense(friend_expense_id);
+    if (!existingExpense) throw new ErrorHandler(404, "Expense not found");
+
+    const transaction = await sequelize.transaction();
+    try {
+      // Delete the expense
+      const { affectedRows } = await FriendDb.deleteExpense(
+        friend_expense_id,
+        transaction,
+      );
+      if (affectedRows === 0) {
+        throw new ErrorHandler(400, "Failed to delete expense");
+      }
+      // Update the balance in the friends table
+      await FriendDb.updateFriends(
+        {
+          balance_amount:
+            existingExpense.payer_id === friendExist.friend1_id
+              ? parseFloat(friendExist.balance_amount) -
+                parseFloat(existingExpense.debtor_amount)
+              : parseFloat(friendExist.balance_amount) +
+                parseFloat(existingExpense.debtor_amount),
+        },
+        conversation_id,
+        transaction,
+      );
+      // Commit the transaction
+      await transaction.commit();
+      return { message: "Expense deleted successfully" };
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  };
 }
 
 // Helper function to calculate the debtor amount based on split type
-const calculateDebtorAmount = (expenseData) => {
-  const totalAmount = parseFloat(expenseData.total_amount);
+const calculateDebtorAmount = (expenseData, existingExpense = null) => {
+  const totalAmount =
+    parseFloat(expenseData.total_amount) ||
+    parseFloat(existingExpense.total_amount);
+  expenseData.split_type = expenseData.split_type || existingExpense.split_type;
   switch (expenseData.split_type) {
     case "EQUAL":
       return totalAmount / 2;
@@ -335,21 +489,51 @@ const calculateNewBalance = (
   payerId,
   friendExist,
   type,
+  existingExpense = null,
+  isUpdate = false,
 ) => {
-  // If the payer is friend1, add the debtor amount, otherwise subtract it
-  if (type !== "SETTLEMENT") {
-    const newBalance =
-      payerId === friendExist.friend1_id
-        ? currentBalance + debtorAmount
-        : currentBalance - debtorAmount;
-    return newBalance;
-  } else {
-    const newBalance =
-      currentBalance > 0
-        ? currentBalance - debtorAmount
-        : currentBalance + debtorAmount;
+  if (!isUpdate) {
+    // If the payer is friend1, add the debtor amount, otherwise subtract it
+    if (type !== "SETTLEMENT") {
+      const newBalance =
+        payerId === friendExist.friend1_id
+          ? currentBalance + debtorAmount
+          : currentBalance - debtorAmount;
+      return newBalance;
+    } else {
+      const newBalance =
+        currentBalance > 0
+          ? currentBalance - debtorAmount
+          : currentBalance + debtorAmount;
 
-    return newBalance;
+      return newBalance;
+    }
+  } else {
+    if (type !== "SETTLEMENT") {
+      const newBalance =
+        payerId === existingExpense.debtor_id
+          ? payerId === friendExist.friend1_id
+            ? currentBalance + debtorAmount * 2
+            : currentBalance - debtorAmount * 2
+          : payerId === friendExist.friend1_id
+            ? currentBalance +
+              debtorAmount -
+              parseFloat(existingExpense.debtor_amount)
+            : currentBalance -
+              debtorAmount +
+              parseFloat(existingExpense.debtor_amount);
+      return newBalance;
+    } else {
+      const newBalance =
+        currentBalance > 0
+          ? currentBalance -
+            debtorAmount +
+            parseFloat(existingExpense.debtor_amount)
+          : currentBalance +
+            debtorAmount -
+            parseFloat(existingExpense.debtor_amount);
+      return newBalance;
+    }
   }
 };
 

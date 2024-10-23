@@ -5,6 +5,7 @@ import {
   getFriendsValidation,
   paginationValidation,
   settleExpenseValidation,
+  updateExpenseValidation,
   uuidParamValidation,
 } from "../friends/friendValidations.js";
 import {
@@ -107,12 +108,15 @@ export const validateArchiveBlockFriend = (req, res, next) => {
   }
 };
 
-export const validateAddExpense = (req, res, next) => {
+export const validateExpense = (req, res, next) => {
   try {
+    const isUpdate = req.method === "PATCH";
     const isSettlement = req.body.split_type === "SETTLEMENT";
-    const schema = isSettlement
-      ? settleExpenseValidation
-      : addExpenseValidation;
+    const schema = isUpdate
+      ? updateExpenseValidation
+      : isSettlement
+        ? settleExpenseValidation
+        : addExpenseValidation;
     const { error, value } = schema.validate(req.body);
     if (error) throw new ErrorHandler(400, error);
     req.validatedExpense = value;

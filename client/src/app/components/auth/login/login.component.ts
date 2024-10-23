@@ -139,7 +139,11 @@ export class LoginComponent {
 
   // Method to handle OTP field display after submit
   onSendOtp(): void {
-    if (this.form.valid) {
+    if (
+      this.isForgotPasswordMode()
+        ? this.form.controls.forgotPasswordEmail?.valid
+        : this.form.valid
+    ) {
       const email = this.form.get('forgotPasswordEmail')?.value;
       this.authService.verifyForgotPasswordUser(email).subscribe({
         next: () => {

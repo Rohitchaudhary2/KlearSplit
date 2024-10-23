@@ -139,13 +139,42 @@ class FriendController {
   static getExpenses = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
-      const { page = 1, pageSize = 10 } = req.validatedPagination;
+      const { page, pageSize } = req.validatedPagination;
       const expenses = await FriendService.getExpenses(
         conversation_id,
         page,
         pageSize,
       );
       responseHandler(res, 200, "Expenses fetched successfully", expenses);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Controller for updating an expense
+  static updateExpense = async (req, res, next) => {
+    try {
+      const { conversation_id } = req.validatedParams;
+      const updatedExpense = await FriendService.updateExpense(
+        req.validatedExpense,
+        conversation_id,
+      );
+      responseHandler(res, 200, "Expense updated successfully", updatedExpense);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Controller for deleting an expense
+  static deleteExpense = async (req, res, next) => {
+    try {
+      const { conversation_id } = req.validatedParams;
+      const { friend_expense_id } = req.body;
+      const deletedExpense = await FriendService.deleteExpense(
+        conversation_id,
+        friend_expense_id,
+      );
+      responseHandler(res, 200, "Expense deleted successfully", deletedExpense);
     } catch (error) {
       next(error);
     }

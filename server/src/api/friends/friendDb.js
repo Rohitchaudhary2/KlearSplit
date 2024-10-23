@@ -153,6 +153,13 @@ class FriendDb {
           },
         ],
       },
+      include: [
+        {
+          model: User,
+          as: "payer",
+          attributes: ["first_name", "last_name"],
+        },
+      ],
       order: [["createdAt", "ASC"]],
       limit: pageSize,
       offset,
@@ -167,12 +174,24 @@ class FriendDb {
   static updateExpense = async (
     updatedExpenseData,
     friend_expense_id,
-    transaction,
-  ) =>
-    await FriendExpense.update(updatedExpenseData, {
+    transaction = null,
+  ) => {
+    const [affectedRows, [updatedExpense]] = await FriendExpense.update(
+      updatedExpenseData,
+      {
+        where: { friend_expense_id },
+        transaction,
+        returning: true,
+      },
+    );
+    return { affectedRows, updatedExpense };
+  };
+
+  // DB query to delete friends expenses
+  static deleteExpense = async (friend_expense_id, transaction) =>
+    await FriendExpense.destroy({
       where: { friend_expense_id },
       transaction,
-      returning: true,
     });
 }
 

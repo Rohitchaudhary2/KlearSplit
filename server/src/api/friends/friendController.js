@@ -139,11 +139,12 @@ class FriendController {
   static getExpenses = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
-      const { page, pageSize } = req.validatedPagination;
+      const { page, pageSize, fetchAll } = req.validatedPagination;
       const expenses = await FriendService.getExpenses(
         conversation_id,
         page,
         pageSize,
+        fetchAll,
       );
       responseHandler(res, 200, "Expenses fetched successfully", expenses);
     } catch (error) {

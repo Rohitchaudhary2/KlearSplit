@@ -137,10 +137,10 @@ class FriendDb {
     friend2_id,
     page = 1,
     pageSize = 10,
+    fetchAll = false,
   ) => {
     const offset = (page - 1) * pageSize;
-
-    return await FriendExpense.findAll({
+    const options = {
       where: {
         [Op.or]: [
           {
@@ -161,9 +161,14 @@ class FriendDb {
         },
       ],
       order: [["createdAt", "DESC"]],
-      limit: pageSize,
-      offset,
-    });
+    };
+
+    if (!fetchAll) {
+      options.limit = pageSize;
+      options.offset = offset;
+    }
+
+    return await FriendExpense.findAll(options);
   };
 
   // DB query to fetch a single expense

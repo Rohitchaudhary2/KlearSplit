@@ -266,7 +266,7 @@ class FriendService {
   };
 
   // Service to fetch all expenses for a conversation
-  static getExpenses = async (conversation_id, page, pageSize) => {
+  static getExpenses = async (conversation_id, page, pageSize, fetchAll) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");
     if (friendExist.status !== "REJECTED") {
@@ -275,6 +275,7 @@ class FriendService {
         friendExist.friend2_id,
         page,
         pageSize,
+        fetchAll,
       );
       const expensesToSend = expenses.map((expense) => expense.toJSON());
       return expensesToSend.map((expense) => ({

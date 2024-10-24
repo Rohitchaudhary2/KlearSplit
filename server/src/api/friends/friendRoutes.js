@@ -62,8 +62,8 @@ friendRouter.get(
 friendRouter.post(
   "/addexpense/:conversation_id",
   authenticateToken,
-  validateParams,
   upload.single("receipt"),
+  validateParams,
   validateExpense,
   FriendController.addExpense,
 );

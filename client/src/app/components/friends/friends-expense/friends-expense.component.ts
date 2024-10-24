@@ -17,6 +17,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { NgClass } from '@angular/common';
 import { PayerComponent } from './payer/payer.component';
 import { SplitTypeComponent } from './split-type/split-type.component';
+import { FormErrorMessageService } from '../../shared/form-error-message.service';
 
 @Component({
   selector: 'app-friends-expense',
@@ -33,6 +34,7 @@ import { SplitTypeComponent } from './split-type/split-type.component';
   styleUrl: './friends-expense.component.css',
 })
 export class FriendsExpenseComponent implements OnInit {
+  private formErrorMessages = inject(FormErrorMessageService);
   dialogRef = inject(MatDialogRef<FriendsExpenseComponent>);
   data = inject(MAT_DIALOG_DATA);
   showAdditionalFields = signal<boolean>(false);
@@ -65,6 +67,10 @@ export class FriendsExpenseComponent implements OnInit {
     }),
     receipt: new FormControl<File | null>(null),
   });
+
+  getFormErrors(field: string): string | null {
+    return this.formErrorMessages.getErrorMessage(this.form, field);
+  }
 
   ngOnInit(): void {
     this.form.get('split_type')!.valueChanges.subscribe((value) => {
@@ -101,7 +107,7 @@ export class FriendsExpenseComponent implements OnInit {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files.length > 0) {
       const file = target.files[0];
-      this.form.value.receipt = file;
+      this.form.get('receipt')?.setValue(file);
       this.imageName.set(file.name);
     }
   }

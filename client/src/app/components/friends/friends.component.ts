@@ -8,16 +8,14 @@ import {
   ChangeDetectorRef,
   AfterViewInit,
 } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { API_URLS } from '../../constants/api-urls';
 import {
-  Expense,
+  CombinedExpense,
+  CombinedMessage,
   ExpenseData,
   ExpenseResponse,
   FriendData,
-  message,
-  messageData,
+  MessageData,
 } from './friend.model';
 import { TokenService } from '../auth/token.service';
 import { AuthService } from '../auth/auth.service';
@@ -28,8 +26,10 @@ import { DialogPosition, MatDialog } from '@angular/material/dialog';
 import { FriendsExpenseComponent } from './friends-expense/friends-expense.component';
 import { NgClass } from '@angular/common';
 import { SettlementComponent } from './friends-expense/settlement/settlement.component';
-import { concatMap } from 'rxjs';
 import { ViewExpensesComponent } from './friends-expense/view-expenses/view-expenses.component';
+import { FriendsService } from './friends.service';
+import { MessageComponent } from './message/message.component';
+import { ExpenseComponent } from './expense/expense.component';
 
 @Component({
   selector: 'app-friends',
@@ -39,32 +39,33 @@ import { ViewExpensesComponent } from './friends-expense/view-expenses/view-expe
     FriendsListComponent,
     FriendsExpenseComponent,
     NgClass,
+    MessageComponent,
+    ExpenseComponent,
   ],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })
 export class FriendsComponent implements OnDestroy, AfterViewInit {
   messageContainer = viewChild<ElementRef>('messageContainer');
-  private httpClient = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
   private toastr = inject(ToastrService);
   private dialog = inject(MatDialog);
+  private friendsService = inject(FriendsService);
 
   private tokenService = inject(TokenService);
   private authService = inject(AuthService);
   private socketService = inject(SocketService);
-  private readonly getMessagesUrl = API_URLS.getMessages;
-  private readonly getExpensesUrl = API_URLS.getExpenses;
   user = this.authService.currentUser();
   user_name = `${this.authService.currentUser()?.first_name}${this.authService.currentUser()?.last_name ? ` ${this.authService.currentUser()?.last_name}` : ''}`;
 
   selectedUser = signal<FriendData | undefined>(undefined);
   messageInput = '';
 
-  messages = signal<messageData[]>([]);
-  showMessages = signal(true);
+  messages = signal<MessageData[]>([]);
+  showMessages = signal<'Messages' | 'Expenses' | 'All'>('All');
 
   expenses = signal<ExpenseData[] | []>([]);
+  combinedView = signal<(CombinedMessage | CombinedExpense)[]>([]);
 
   charCount = 0;
   charCountExceeded = false;
@@ -97,29 +98,21 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.selectedUser.set(friend);
 
     if (this.selectedUser()) {
-      this.httpClient
-        .get<message>(
-          `${this.getMessagesUrl}/${this.selectedUser()?.conversation_id}`,
-          { withCredentials: true },
-        )
-        .pipe(
-          concatMap((messages) => {
-            messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
-            this.messages.set(messages.data);
-            this.cdr.detectChanges();
-            this.scrollToBottom();
-
-            // Fetch expenses for the same user after the messages are loaded
-            return this.httpClient.get<Expense>(
-              `${this.getExpensesUrl}/${this.selectedUser()?.conversation_id}`,
-              { withCredentials: true },
-            );
-          }),
-        )
+      this.friendsService
+        .fetchMessagesAndExpenses(this.selectedUser()!.conversation_id)
         .subscribe({
-          next: (expenses) => {
-            expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
-            this.expenses.set(expenses.data);
+          next: ({ messages, expenses }) => {
+            this.messages.set(messages);
+            expenses.sort((a: ExpenseData, b: ExpenseData) =>
+              a.createdAt < b.createdAt ? -1 : 1,
+            );
+            this.expenses.set(expenses);
+
+            const combinedData = this.combineMessagesAndExpenses(
+              messages,
+              expenses,
+            );
+            this.combinedView.set(combinedData);
             this.cdr.detectChanges();
             this.scrollToBottom();
           },
@@ -129,8 +122,12 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       this.socketService.joinRoom(this.selectedUser()!.conversation_id);
 
       // Listen for new messages from the server for the new room
-      this.socketService.onNewMessage((message: messageData) => {
+      this.socketService.onNewMessage((message: MessageData) => {
         this.messages.set([...this.messages(), message]);
+        this.combinedView.set([
+          ...this.combinedView(),
+          { ...message, type: 'message' },
+        ]);
         this.cdr.detectChanges();
         this.scrollToBottom();
       });
@@ -143,6 +140,31 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.charCountExceeded = this.charCount === 512;
   }
 
+  combineMessagesAndExpenses(
+    messages: MessageData[],
+    expenses: ExpenseData[],
+  ): (CombinedMessage | CombinedExpense)[] {
+    // Create a new array with timestamps
+    const combined = [
+      ...messages.map((m) => ({ ...m, type: 'message' })),
+      ...expenses.map((e) => ({ ...e, type: 'expense' })),
+    ];
+
+    // Sort combined array by createdAt
+    combined.sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
+    return combined;
+  }
+
+  isCombinedExpense(
+    item: CombinedMessage | CombinedExpense,
+  ): item is CombinedExpense {
+    return (item as CombinedExpense).payer_id !== undefined;
+  }
+
   getSettleUpStatus() {
     if (parseFloat(this.selectedUser()!.balance_amount) === 0) {
       return 'All Settled';
@@ -151,8 +173,8 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     }
   }
 
-  toggleView(flag: boolean) {
-    this.showMessages.set(flag);
+  toggleView(filter: 'Messages' | 'Expenses' | 'All') {
+    this.showMessages.set(filter);
     this.cdr.detectChanges();
     this.scrollToBottom();
   }
@@ -234,16 +256,20 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       });
       dialogRef.afterClosed().subscribe((result) => {
         if (result) {
-          this.httpClient
-            .post<ExpenseResponse>(
-              `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,
-              result,
-              {
-                withCredentials: true,
-              },
-            )
+          this.friendsService
+            .addExpense(this.selectedUser()!.conversation_id, result)
             .subscribe({
               next: (response: ExpenseResponse) => {
+                if (response.data.payer_id === this.user?.user_id)
+                  response.data.payer = this.user_name;
+                else
+                  response.data.payer = `${this.selectedUser()?.friend.first_name}${this.selectedUser()?.friend.last_name || ''}`;
+                this.expenses.set([...this.expenses(), response.data]);
+                const combinedData = [
+                  ...this.combinedView(),
+                  { ...response.data, type: 'message' },
+                ];
+                this.combinedView.set(combinedData);
                 this.cdr.detectChanges();
                 this.scrollToBottom();
                 if (response.data.payer_id === this.user?.user_id) {
@@ -308,48 +334,33 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   }
 
   archiveBlock(id: string, type: string) {
-    this.httpClient
-      .patch(
-        `${API_URLS.archiveBlockRequest}/${id}`,
-        { type },
-        { withCredentials: true },
-      )
-      .subscribe({
-        next: () => {
-          if (type === 'archived') {
-            this.toastr.success(
-              `${this.getArchiveStatus()} Successfully`,
-              'Success',
-            );
-          } else {
-            this.toastr.success(
-              `${this.getBlockStatus()} Successfully`,
-              'Success',
-            );
-          }
-        },
-      });
+    this.friendsService.archiveBlockRequest(id, type).subscribe({
+      next: () => {
+        if (type === 'archived') {
+          this.toastr.success(
+            `${this.getArchiveStatus()} Successfully`,
+            'Success',
+          );
+        } else {
+          this.toastr.success(
+            `${this.getBlockStatus()} Successfully`,
+            'Success',
+          );
+        }
+      },
+    });
   }
 
   openAddExpenseDialog() {
     const dialogRef = this.dialog.open(FriendsExpenseComponent, {
       data: [this.user, this.selectedUser()],
-      width: window.innerWidth > 600 ? '100px' : '90%',
       enterAnimationDuration: '200ms',
       exitAnimationDuration: '200ms',
     });
     dialogRef.afterClosed().subscribe((result) => {
-      if (!result.description) delete result.description;
-      if (!result.receipt) delete result.receipt;
       if (result) {
-        this.httpClient
-          .post<ExpenseResponse>(
-            `${API_URLS.addExpense}/${this.selectedUser()?.conversation_id}`,
-            result,
-            {
-              withCredentials: true,
-            },
-          )
+        this.friendsService
+          .addExpense(this.selectedUser()!.conversation_id, result)
           .subscribe({
             next: (response: ExpenseResponse) => {
               if (response.data.payer_id === this.user?.user_id)
@@ -357,6 +368,11 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
               else
                 response.data.payer = `${this.selectedUser()?.friend.first_name}${this.selectedUser()?.friend.last_name || ''}`;
               this.expenses.set([...this.expenses(), response.data]);
+              const combinedData = [
+                ...this.combinedView(),
+                { ...response.data, type: 'message' },
+              ];
+              this.combinedView.set(combinedData);
               this.cdr.detectChanges();
               this.scrollToBottom();
               if (response.data.payer_id === this.user?.user_id) {

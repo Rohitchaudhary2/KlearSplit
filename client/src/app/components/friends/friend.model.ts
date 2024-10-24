@@ -31,13 +31,13 @@ export interface AddedFriend {
   image_url: string;
 }
 
-export interface message {
+export interface Message {
   success: string;
   message: string;
-  data: messageData[];
+  data: MessageData[];
 }
 
-export interface messageData {
+export interface MessageData {
   message_id: string;
   conversation_id: string;
   sender_id: string;
@@ -72,4 +72,30 @@ export interface ExpenseData {
   total_amount: string;
   updatedAt: string;
   payer: string;
+}
+
+export interface SettlementData {
+  split_type: string;
+  total_amount: string;
+}
+
+export interface ExpenseInput {
+  expense_name: string;
+  total_amount: string;
+  description?: string;
+  split_type: string;
+  payer_id: string;
+  participant1_share: string;
+  participant2_share: string;
+  receipt?: File;
+  debtor_share: string;
+  debtor_id: string;
+}
+
+export interface CombinedMessage extends MessageData {
+  type: string;
+}
+
+export interface CombinedExpense extends ExpenseData {
+  type: string;
 }

@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import {
   FormControl,
@@ -12,10 +11,10 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { debounceTime, of, Subject, switchMap } from 'rxjs';
-import { SearchedUser, User } from '../friend.model';
-import { API_URLS } from '../../../constants/api-urls';
+import { User } from '../friend.model';
 import { MatIconModule } from '@angular/material/icon';
 import { FormErrorMessageService } from '../../shared/form-error-message.service';
+import { FriendsService } from '../friends.service';
 
 @Component({
   selector: 'app-add-friend',
@@ -36,7 +35,6 @@ export class AddFriendComponent implements OnInit {
   users = signal<User[]>([]);
   searchSubject = new Subject<string>();
   loading = signal(false);
-  private httpClient = inject(HttpClient);
   form = new FormGroup({
     searchInputControl: new FormControl('', [
       Validators.email,
@@ -44,8 +42,9 @@ export class AddFriendComponent implements OnInit {
     ]),
   });
   formErrorMessages = inject(FormErrorMessageService);
+  friendsService = inject(FriendsService);
 
-  searchInput = signal('');
+  searchInput = signal<string | null | undefined>('');
   selectedUser = signal<User | undefined>(undefined);
 
   inputError = signal<string | undefined>(undefined);
@@ -64,7 +63,7 @@ export class AddFriendComponent implements OnInit {
             }); // Return an empty result
           } else {
             this.loading.set(true); // Set loading to true for non-empty queries
-            return this.searchUsers(query); // Call the API for valid queries
+            return this.friendsService.searchUsers(query); // Call the API for valid queries
           }
         }),
       )
@@ -78,19 +77,13 @@ export class AddFriendComponent implements OnInit {
     this.selectedUser.set(undefined);
     this.loading.set(true);
     this.inputError.set(undefined);
-    // this.searchInput.set(this.form.value.searchInputControl);
-    if (this.form.value.searchInputControl)
+    this.searchInput.set(this.form.value.searchInputControl);
+    if (typeof this.form.value.searchInputControl === 'string')
       this.searchSubject.next(this.form.value.searchInputControl);
   }
 
   getFormErrors(field: string): string | null {
     return this.formErrorMessages.getErrorMessage(this.form, field);
-  }
-
-  searchUsers(query: string) {
-    return this.httpClient.get<SearchedUser>(`${API_URLS.getUsers}/${query}`, {
-      withCredentials: true,
-    });
   }
 
   selectUser(user: User) {
@@ -102,7 +95,7 @@ export class AddFriendComponent implements OnInit {
 
   onAdd() {
     if (this.form.valid) {
-      this.dialogRef.close({ email: this.searchInput() });
+      this.dialogRef.close({ email: this.form.value.searchInputControl });
     } else {
       this.inputError.set('Invalid Input.');
     }

@@ -12,7 +12,7 @@
       class="chat-box d-flex flex-column justify-content-between subcontainer shadow-lg mx-3"
     >
       @if (selectedUser()) {
-        <div class="d-flex justify-content-between p-2">
+        <div class="d-flex justify-content-between align-items-center p-2">
           <div>
             <span
               ><img
@@ -33,16 +33,27 @@
                 id="dropdownMenuButton2"
                 data-bs-toggle="dropdown"
               >
-                {{ showMessages() ? "Messages" : "Expenses" }}
+                {{ showMessages() }}
               </button>
               <ul class="dropdown-menu">
                 <li>
-                  <button class="dropdown-item" (click)="toggleView(true)">
+                  <button class="dropdown-item" (click)="toggleView('All')">
+                    All
+                  </button>
+                </li>
+                <li>
+                  <button
+                    class="dropdown-item"
+                    (click)="toggleView('Messages')"
+                  >
                     Messages
                   </button>
                 </li>
                 <li>
-                  <button class="dropdown-item" (click)="toggleView(false)">
+                  <button
+                    class="dropdown-item"
+                    (click)="toggleView('Expenses')"
+                  >
                     Expenses
                   </button>
                 </li>
@@ -105,215 +116,64 @@
             style="height: 100%"
           >
             <ul class="message-body list-unstyled text-white m-0">
-              @if (showMessages()) {
+              @if (showMessages() === "Messages") {
                 @for (message of messages(); track message.message_id) {
-                  @if (message.sender_id !== user?.user_id) {
-                    <li class="d-flex justify-content-start mb-1 px-2">
-                      <img
-                        [src]="selectedUser()?.friend?.image_url"
-                        alt="avatar"
-                        class="rounded-circle d-inline-flex align-self-end me-3 shadow-1-strong"
-                        width="40"
-                      />
-                      <div
-                        class="card"
-                        style="
-                          max-width: 28vw;
-                          background: rgba(24, 24, 16, 0.2);
-                          border-radius: 2em;
-                          backdrop-filter: blur(15px);
-                          border: 2px solid rgba(255, 255, 255, 0.05);
-                          background-clip: padding-box;
-                          box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
-                        "
-                      >
-                        <div
-                          class="card-header d-flex justify-content-start px-4"
-                          style="
-                            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-                            background: transparent;
-                          "
-                        >
-                          <p class="fw-bold mb-0">
-                            {{ selectedUser()?.friend?.first_name }}
-                          </p>
-                        </div>
-                        <div class="card-body px-4" style="max-width: 28vw">
-                          <p class="mb-0">{{ message.message }}</p>
-                        </div>
-                      </div>
-                    </li>
-                  } @else {
-                    <li class="d-flex justify-content-end mb-1 px-2">
-                      <div
-                        class="card"
-                        style="
-                          max-width: 28vw;
-                          background: rgba(24, 24, 16, 0.2);
-                          border-radius: 2em;
-                          backdrop-filter: blur(15px);
-                          border: 2px solid rgba(255, 255, 255, 0.05);
-                          background-clip: padding-box;
-                          box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
-                        "
-                      >
-                        <div
-                          class="card-header d-inline-flex justify-content-end px-4"
-                          style="
-                            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-                            background: transparent;
-                          "
-                        >
-                          <p class="fw-bold mb-0">You</p>
-                        </div>
-                        <div class="card-body px-4" style="max-width: 28vw">
-                          <p class="mb-0">
-                            {{ message.message }}
-                          </p>
-                        </div>
-                      </div>
-                      <img
-                        [src]="user?.image_url"
-                        alt="avatar"
-                        class="rounded-circle d-inline-flex align-self-end ms-3 shadow-1-strong"
-                        width="40"
-                      />
-                    </li>
-                  }
+                  <app-message
+                    [message]="{
+                      sender_id: message.sender_id,
+                      message: message.message,
+                    }"
+                    [currentUserId]="user?.user_id"
+                    [friendImageUrl]="selectedUser()?.friend?.image_url"
+                    [friendName]="selectedUser()?.friend?.first_name"
+                    [currentUserImageUrl]="user?.image_url"
+                  >
+                  </app-message>
+                }
+              } @else if (showMessages() === "Expenses") {
+                @for (expense of expenses(); track expense.friend_expense_id) {
+                  <app-expense
+                    [expense]="{
+                      expense_name: expense.expense_name,
+                      total_amount: expense.total_amount,
+                      debtor_amount: expense.debtor_amount,
+                      payer_id: expense.payer_id,
+                    }"
+                    [currentUserId]="user?.user_id"
+                    [friendImageUrl]="selectedUser()?.friend?.image_url"
+                    [friendName]="selectedUser()?.friend?.first_name"
+                    [currentUserImageUrl]="user?.image_url"
+                  >
+                  </app-expense>
                 }
               } @else {
-                @for (expense of expenses(); track expense.friend_expense_id) {
-                  @if (expense.payer_id !== user?.user_id) {
-                    <li class="d-flex justify-content-start mb-1 px-2">
-                      <img
-                        [src]="selectedUser()?.friend?.image_url"
-                        alt="avatar"
-                        class="rounded-circle d-inline-flex align-self-end me-3 shadow-1-strong"
-                        width="40"
-                      />
-                      <div
-                        class="d-flex justify-content-between align-items-center"
-                        style="
-                          max-width: 28vw;
-                          background: rgba(24, 24, 16, 0.2);
-                          border-radius: 2em;
-                          backdrop-filter: blur(15px);
-                          border: 2px solid rgba(255, 255, 255, 0.05);
-                          background-clip: padding-box;
-                          box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
-                        "
-                      >
-                        <div
-                          class="px-3 text-black"
-                          style="
-                            max-width: 13vw;
-                            word-wrap: break-word;
-                            vertical-align: middle;
-                          "
-                        >
-                          <p class="m-0">
-                            {{ expense.expense_name }}
-                          </p>
-                        </div>
-                        <div
-                          class="card"
-                          style="background-color: transparent; border: none"
-                        >
-                          <div
-                            class="card-header d-flex justify-content-start px-4"
-                            style="
-                              border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-                              background: transparent;
-                            "
-                          >
-                            <p class="fw-bold mb-0">
-                              {{ selectedUser()?.friend?.first_name }} paid
-                            </p>
-                          </div>
-                          <div class="card-body px-4" style="max-width: 28vw">
-                            <p class="mb-0">{{ expense.total_amount }}</p>
-                          </div>
-                        </div>
-                        <div
-                          class="card"
-                          style="background-color: transparent; border: none"
-                        >
-                          <div
-                            class="card-header d-flex justify-content-start px-4"
-                            style="
-                              border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-                              background: transparent;
-                            "
-                          >
-                            <p class="fw-bold mb-0">
-                              {{ selectedUser()?.friend?.first_name }} lent you
-                            </p>
-                          </div>
-                          <div class="card-body px-4" style="max-width: 28vw">
-                            <p class="mb-0">{{ expense.debtor_amount }}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  } @else {
-                    <li class="d-flex justify-content-end mb-1 px-2">
-                      <div
-                        class="d-flex justify-content-between align-items-center"
-                        style="
-                          max-width: 28vw;
-                          background: rgba(24, 24, 16, 0.2);
-                          border-radius: 2em;
-                          backdrop-filter: blur(15px);
-                          border: 2px solid rgba(255, 255, 255, 0.05);
-                          background-clip: padding-box;
-                          box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
-                        "
-                      >
-                        <div class="px-3 text-black" style="max-width: 23vw">
-                          {{ expense.expense_name }}
-                        </div>
-                        <div
-                          class="card"
-                          style="background-color: transparent; border: none"
-                        >
-                          <div
-                            class="card-header d-flex justify-content-start px-4"
-                            style="
-                              border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-                              background: transparent;
-                            "
-                          >
-                            <p class="fw-bold mb-0">You paid</p>
-                          </div>
-                          <div class="card-body px-4" style="max-width: 28vw">
-                            <p class="mb-0">{{ expense.total_amount }}</p>
-                          </div>
-                        </div>
-                        <div
-                          class="card"
-                          style="background-color: transparent; border: none"
-                        >
-                          <div
-                            class="card-header d-flex justify-content-start px-4"
-                            style="
-                              border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-                              background: transparent;
-                            "
-                          >
-                            <p class="fw-bold mb-0">You lent</p>
-                          </div>
-                          <div class="card-body px-4" style="max-width: 28vw">
-                            <p class="mb-0">{{ expense.debtor_amount }}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <img
-                        [src]="selectedUser()?.friend?.image_url"
-                        alt="avatar"
-                        class="rounded-circle d-inline-flex align-self-end ms-3 shadow-1-strong"
-                        width="40"
-                      />
-                    </li>
+                @for (item of combinedView(); track $index) {
+                  @if (item.type === "message" && !isCombinedExpense(item)) {
+                    <app-message
+                      [message]="{
+                        sender_id: item.sender_id,
+                        message: item.message,
+                      }"
+                      [currentUserId]="user?.user_id"
+                      [friendImageUrl]="selectedUser()?.friend?.image_url"
+                      [friendName]="selectedUser()?.friend?.first_name"
+                      [currentUserImageUrl]="user?.image_url"
+                    >
+                    </app-message>
+                  } @else if (isCombinedExpense(item)) {
+                    <app-expense
+                      [expense]="{
+                        expense_name: item.expense_name,
+                        total_amount: item.total_amount,
+                        debtor_amount: item.debtor_amount,
+                        payer_id: item.payer_id,
+                      }"
+                      [currentUserId]="user?.user_id"
+                      [friendImageUrl]="selectedUser()?.friend?.image_url"
+                      [friendName]="selectedUser()?.friend?.first_name"
+                      [currentUserImageUrl]="user?.image_url"
+                    >
+                    </app-expense>
                   }
                 }
               }

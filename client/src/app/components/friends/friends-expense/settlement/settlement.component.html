@@ -28,13 +28,8 @@
     <mat-label>Settlement Amount</mat-label>
     <mat-icon matPrefix>currency_rupee</mat-icon>
     <input matInput formControlName="settlement_amount" />
-    @if (form.get("settlement_amount")?.hasError("required")) {
-      <mat-error> Settlement amount is required. </mat-error>
-    }
-    @if (form.get("settlement_amount")?.hasError("outOfRange")) {
-      <mat-error>
-        Settlement amount must be between 0 and {{ total_amount }}.
-      </mat-error>
+    @if (getFormErrors("settlement_amount")) {
+      <mat-error>{{ getFormErrors("settlement_amount") }}</mat-error>
     }
   </mat-form-field>
 </div>

@@ -11,15 +11,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { FormErrorMessageService } from '../../../shared/form-error-message.service';
 
 function amountRangeValidator(totalAmount: number): ValidatorFn {
-  return (control: AbstractControl): { outOfRange: boolean } | null => {
+  return (control: AbstractControl): { outOfRange: { max: number } } | null => {
     const value = control.value;
     if (value === null || value === '') {
       return null; // No error if the control is empty
     }
     const isInvalid = value <= 0 || value > totalAmount;
-    return isInvalid ? { outOfRange: true } : null;
+    return isInvalid ? { outOfRange: { max: totalAmount } } : null;
   };
 }
 
@@ -53,7 +54,12 @@ export class SettlementComponent implements OnInit {
     } = data);
   }
 
+  formErrorMessages = inject(FormErrorMessageService);
+
   form: FormGroup = new FormGroup({});
+  getFormErrors(field: string): string | null {
+    return this.formErrorMessages.getErrorMessage(this.form, field);
+  }
 
   ngOnInit() {
     this.form = new FormGroup({

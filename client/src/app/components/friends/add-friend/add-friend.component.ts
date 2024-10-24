@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import {
   FormControl,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
   Validators,
@@ -14,6 +15,7 @@ import { debounceTime, of, Subject, switchMap } from 'rxjs';
 import { SearchedUser, User } from '../friend.model';
 import { API_URLS } from '../../../constants/api-urls';
 import { MatIconModule } from '@angular/material/icon';
+import { FormErrorMessageService } from '../../shared/form-error-message.service';
 
 @Component({
   selector: 'app-add-friend',
@@ -35,7 +37,13 @@ export class AddFriendComponent implements OnInit {
   searchSubject = new Subject<string>();
   loading = signal(false);
   private httpClient = inject(HttpClient);
-  searchInputControl: FormControl = new FormControl('', [Validators.email]);
+  form = new FormGroup({
+    searchInputControl: new FormControl('', [
+      Validators.email,
+      Validators.required,
+    ]),
+  });
+  formErrorMessages = inject(FormErrorMessageService);
 
   searchInput = signal('');
   selectedUser = signal<User | undefined>(undefined);
@@ -70,8 +78,13 @@ export class AddFriendComponent implements OnInit {
     this.selectedUser.set(undefined);
     this.loading.set(true);
     this.inputError.set(undefined);
-    this.searchInput.set(this.searchInputControl.value);
-    this.searchSubject.next(this.searchInput());
+    // this.searchInput.set(this.form.value.searchInputControl);
+    if (this.form.value.searchInputControl)
+      this.searchSubject.next(this.form.value.searchInputControl);
+  }
+
+  getFormErrors(field: string): string | null {
+    return this.formErrorMessages.getErrorMessage(this.form, field);
   }
 
   searchUsers(query: string) {
@@ -82,13 +95,13 @@ export class AddFriendComponent implements OnInit {
 
   selectUser(user: User) {
     this.searchInput.set(user.email);
-    this.searchInputControl.setValue(user.email);
+    this.form.get('searchInputControl')!.setValue(user.email);
     this.users.set([]);
     this.selectedUser.set(user);
   }
 
   onAdd() {
-    if (this.searchInputControl.valid) {
+    if (this.form.valid) {
       this.dialogRef.close({ email: this.searchInput() });
     } else {
       this.inputError.set('Invalid Input.');

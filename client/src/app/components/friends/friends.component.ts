@@ -187,7 +187,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       top: '5%',
     };
     const dialogRef = this.dialog.open(ViewExpensesComponent, {
-      data: expenses,
+      data: [expenses, this.selectedUser()?.conversation_id],
       maxWidth: '91vw',
       maxHeight: '85vh',
       height: '85%',

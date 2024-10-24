@@ -20,4 +20,5 @@ export const API_URLS = {
   getMessages: `${environment.apiBaseUrl}/friends/getmessages`,
   addExpense: `${environment.apiBaseUrl}/friends/addexpense`,
   getExpenses: `${environment.apiBaseUrl}/friends/getexpenses`,
+  deleteExpense: `${environment.apiBaseUrl}/friends/deleteexpense`,
 };

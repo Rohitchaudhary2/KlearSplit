@@ -271,8 +271,7 @@ class FriendService {
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");
     if (friendExist.status !== "REJECTED") {
       const expenses = await FriendDb.getExpenses(
-        friendExist.friend1_id,
-        friendExist.friend2_id,
+        conversation_id,
         page,
         pageSize,
         fetchAll,

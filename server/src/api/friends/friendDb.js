@@ -133,8 +133,7 @@ class FriendDb {
 
   // DB query for fetching all the expenses of a particular conversation
   static getExpenses = async (
-    friend1_id,
-    friend2_id,
+    conversation_id,
     page = 1,
     pageSize = 10,
     fetchAll = false,
@@ -142,16 +141,7 @@ class FriendDb {
     const offset = (page - 1) * pageSize;
     const options = {
       where: {
-        [Op.or]: [
-          {
-            payer_id: friend1_id,
-            debtor_id: friend2_id,
-          },
-          {
-            payer_id: friend2_id,
-            debtor_id: friend1_id,
-          },
-        ],
+        conversation_id,
       },
       include: [
         {

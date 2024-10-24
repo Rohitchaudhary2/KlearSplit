@@ -12,12 +12,12 @@ import initializeFriendExpense from "../api/friends/models/friendExpenseModel.js
 const sequelize = new Sequelize(database, username, password, {
   host,
   dialect: "postgres",
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
-  },
+  // dialectOptions: {
+  //   ssl: {
+  //     require: true,
+  //     rejectUnauthorized: false,
+  //   },
+  // },
   logging: false,
 });
 
@@ -44,11 +44,16 @@ FriendMessage.belongsTo(Friend, {
   as: "conversation",
 });
 
-// Friend Expenses model association with User model
+// Friend Expenses model association with User and Friend models
 User.hasMany(FriendExpense, { foreignKey: "payer_id" });
 User.hasMany(FriendExpense, { foreignKey: "debtor_id" });
+Friend.hasMany(FriendExpense, { foreignKey: "conversation_id" });
 FriendExpense.belongsTo(User, { foreignKey: "payer_id", as: "payer" });
 FriendExpense.belongsTo(User, { foreignKey: "debtor_id", as: "debtor" });
+FriendExpense.belongsTo(Friend, {
+  foreignKey: "conversation_id",
+  as: "conversation",
+});
 
 try {
   await sequelize.authenticate(); // Attempting to authenticate the connection to the database

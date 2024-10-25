@@ -7,6 +7,7 @@ import {
   OnDestroy,
   ChangeDetectorRef,
   AfterViewInit,
+  HostListener,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
@@ -71,6 +72,10 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   charCountExceeded = false;
 
   isLoaded = false;
+  page = 1;
+  pageSize = 10;
+  loading = false;
+  allLoaded = false;
 
   onLoad() {
     this.isLoaded = true; // Set loaded state to true
@@ -87,6 +92,14 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.scrollToBottom();
   }
 
+  @HostListener('scroll', ['$event'])
+  onScroll(event: Event) {
+    const element = event.target as HTMLElement;
+    if (element.scrollTop === 0 && !this.loading) {
+      // this.loadItems();
+    }
+  }
+
   onSelectUser(friend: FriendData | undefined) {
     if (this.selectedUser()) {
       // Leave the previous room
@@ -98,25 +111,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.selectedUser.set(friend);
 
     if (this.selectedUser()) {
-      this.friendsService
-        .fetchMessagesAndExpenses(this.selectedUser()!.conversation_id)
-        .subscribe({
-          next: ({ messages, expenses }) => {
-            this.messages.set(messages);
-            expenses.sort((a: ExpenseData, b: ExpenseData) =>
-              a.createdAt < b.createdAt ? -1 : 1,
-            );
-            this.expenses.set(expenses);
-
-            const combinedData = this.combineMessagesAndExpenses(
-              messages,
-              expenses,
-            );
-            this.combinedView.set(combinedData);
-            this.cdr.detectChanges();
-            this.scrollToBottom();
-          },
-        });
+      if (this.showMessages() === 'All') this.onLoadBoth();
+      else if (this.showMessages() === 'Messages') this.onLoadMessages();
+      else this.onLoadExpenses();
 
       // Join the room for the new conversation
       this.socketService.joinRoom(this.selectedUser()!.conversation_id);
@@ -132,6 +129,58 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         this.scrollToBottom();
       });
     }
+  }
+
+  loadItems() {
+    if (this.showMessages() === 'All') this.onLoadBoth();
+    else if (this.showMessages() === 'Messages') this.onLoadMessages();
+    else this.onLoadExpenses();
+  }
+
+  onLoadMessages() {
+    this.fetchMessagesAndExpenses(true, false); // Load only messages
+  }
+
+  onLoadExpenses() {
+    this.fetchMessagesAndExpenses(false, true); // Load only expenses
+  }
+
+  onLoadBoth() {
+    this.fetchMessagesAndExpenses(true, true); // Load both messages and expenses
+  }
+
+  fetchMessagesAndExpenses(loadMessages: boolean, loadExpenses: boolean) {
+    // if (this.loading || this.allLoaded) return;
+
+    // this.loading = true;
+    this.friendsService
+      .fetchMessagesAndExpenses(
+        this.selectedUser()!.conversation_id,
+        loadMessages,
+        loadExpenses,
+        this.page,
+        this.pageSize,
+      )
+      .subscribe({
+        next: ({ messages, expenses }) => {
+          this.messages.set([...messages, ...this.messages()]);
+          expenses.sort((a: ExpenseData, b: ExpenseData) =>
+            a.createdAt < b.createdAt ? -1 : 1,
+          );
+          this.expenses.set([...expenses, ...this.expenses()]);
+
+          const combinedData = this.combineMessagesAndExpenses(
+            messages,
+            expenses,
+          );
+          this.combinedView.set(combinedData);
+
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+          // this.page++;
+          // this.loading = false;
+        },
+      });
   }
 
   onInputChange(event: Event): void {

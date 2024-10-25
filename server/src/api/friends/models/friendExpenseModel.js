@@ -35,6 +35,14 @@ export default (sequelize) => {
         type: DataTypes.STRING(150),
         allowNull: true,
       },
+      conversation_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "friends",
+          key: "conversation_id",
+        },
+      },
       payer_id: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -42,7 +50,6 @@ export default (sequelize) => {
           model: "users",
           key: "user_id",
         },
-        onDelete: "CASCADE",
       },
       debtor_id: {
         type: DataTypes.UUID,
@@ -51,7 +58,6 @@ export default (sequelize) => {
           model: "users",
           key: "user_id",
         },
-        onDelete: "CASCADE",
       },
       split_type: {
         type: DataTypes.ENUM("EQUAL", "UNEQUAL", "PERCENTAGE", "SETTLEMENT"),
@@ -72,7 +78,7 @@ export default (sequelize) => {
       paranoid: true,
       defaultScope: {
         attributes: {
-          exclude: ["updatedAt", "deletedAt"],
+          exclude: ["deletedAt"],
         },
       },
     },

@@ -1,4 +1,5 @@
 import { DataTypes } from "sequelize";
+import { FriendExpense, FriendMessage } from "../../../config/db.connection.js";
 
 export default (sequelize) => {
   const Friend = sequelize.define(
@@ -55,8 +56,65 @@ export default (sequelize) => {
           exclude: ["createdAt", "updatedAt", "deletedAt"],
         },
       },
+      scopes: {
+        withDeletedAt: {
+          attributes: {},
+        },
+      },
     },
   );
+
+  Friend.beforeDestroy(async (conversation, options) => {
+    const transaction = options.transaction;
+    const conversation_id = conversation.conversation_id;
+
+    // Soft delete friends where the conversation is either friend1 or friend2
+    await FriendMessage.update(
+      { deletedAt: new Date() },
+      {
+        where: {
+          conversation_id,
+        },
+        transaction,
+      },
+    );
+    await FriendExpense.update(
+      { deletedAt: new Date() },
+      {
+        where: {
+          conversation_id,
+        },
+        transaction,
+      },
+    );
+  });
+
+  Friend.afterRestore(async (conversation, options) => {
+    const transaction = options.transaction;
+    const conversation_id = conversation.conversation_id;
+
+    // Soft delete friends where the conversation is either friend1 or friend2
+    await FriendMessage.update(
+      { deletedAt: null },
+      {
+        where: {
+          conversation_id,
+        },
+        transaction,
+        paranoid: false,
+      },
+    );
+    await FriendExpense.update(
+      { deletedAt: null },
+      {
+        where: {
+          conversation_id,
+        },
+        transaction,
+        paranoid: false,
+      },
+    );
+  });
 
   return Friend;
 };

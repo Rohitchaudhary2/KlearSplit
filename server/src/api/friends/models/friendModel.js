@@ -56,6 +56,11 @@ export default (sequelize) => {
           exclude: ["createdAt", "updatedAt", "deletedAt"],
         },
       },
+      scopes: {
+        withDeletedAt: {
+          attributes: {},
+        },
+      },
     },
   );
 
@@ -89,7 +94,7 @@ export default (sequelize) => {
     const conversation_id = conversation.conversation_id;
 
     // Soft delete friends where the conversation is either friend1 or friend2
-    await Friend.update(
+    await FriendMessage.update(
       { deletedAt: null },
       {
         where: {

@@ -30,6 +30,7 @@ const io = new Server(server, {
 socketHandler(io);
 
 app.use(express.json()); // Parse incoming JSON requests and make the data available under req.body
+app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
 app.use(cors(corsOptions)); // Enable Cross-Origin Resource Sharing (CORS) to allow requests from different origins

@@ -9,8 +9,8 @@ import {
 class FriendDb {
   static addFriend = async (friendData) => await Friend.create(friendData);
 
-  static checkFriendExist = async (friendData) => {
-    const result = await Friend.findAll({
+  static checkFriendExist = async (friendData, flag = true) =>
+    await Friend.scope("withDeletedAt").findOne({
       where: {
         [Op.or]: [
           {
@@ -23,9 +23,11 @@ class FriendDb {
           },
         ],
       },
+      paranoid: flag,
     });
-    return result.length > 0;
-  };
+
+  // DB query to restore friend
+  static restoreFriend = async (friend) => await friend.restore();
 
   // DB query for fetching all the friend
   static getAllFriends = async (userId, filters) => {
@@ -100,8 +102,8 @@ class FriendDb {
     });
 
   // DB query for withdrawing friend request
-  static withdrawFriendRequest = async (friendRequest) => {
-    const result = await Friend.destroy({
+  static withdrawFriendRequest = async (friendRequest, friend) => {
+    const result = await friend.destroy({
       where: {
         conversation_id: friendRequest.conversation_id,
       },

@@ -10,7 +10,7 @@ import {
   validatePagination,
   validateParams,
 } from "../middlewares/validationMiddleware.js";
-import { upload } from "../utils/fileUpload.js";
+import uploadMiddleware from "../middlewares/uploadMiddleware.js";
 
 const friendRouter = Router();
 
@@ -62,7 +62,7 @@ friendRouter.get(
 friendRouter.post(
   "/addexpense/:conversation_id",
   authenticateToken,
-  upload.single("receipt"),
+  uploadMiddleware,
   validateParams,
   validateExpense,
   FriendController.addExpense,

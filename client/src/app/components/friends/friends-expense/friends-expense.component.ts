@@ -112,6 +112,38 @@ export class FriendsExpenseComponent implements OnInit {
     }
   }
 
+  // onAdd(): void {
+  //   if (this.form.value.split_type === 'EQUAL') {
+  //     this.form
+  //       .get('participant1_share')
+  //       ?.setValue(
+  //         JSON.stringify(parseFloat(this.form.value.total_amount!) / 2),
+  //       );
+  //     this.form
+  //       .get('participant2_share')
+  //       ?.setValue(
+  //         JSON.stringify(parseFloat(this.form.value.total_amount!) / 2),
+  //       );
+  //   }
+  //   if (this.form.valid) {
+  //     let debtor_share;
+  //     if (
+  //       this.form.value.split_type === 'UNEQUAL' ||
+  //       this.form.value.split_type === 'PERCENTAGE'
+  //     ) {
+  //       debtor_share =
+  //         this.form.value.payer_id === this.participants[0].user_id
+  //           ? this.form.value.participant2_share
+  //           : this.form.value.participant1_share;
+  //     }
+  //     const debtor_id =
+  //       this.form.value.payer_id === this.participants[0].user_id
+  //         ? this.participants[1].user_id
+  //         : this.participants[0].user_id;
+  //     this.dialogRef.close({ ...this.form.value, debtor_share, debtor_id });
+  //   }
+  // }
+
   onAdd(): void {
     if (this.form.value.split_type === 'EQUAL') {
       this.form
@@ -126,6 +158,36 @@ export class FriendsExpenseComponent implements OnInit {
         );
     }
     if (this.form.valid) {
+      const formData = new FormData();
+      formData.append(
+        'expense_name',
+        this.form.get('expense_name')?.value as string,
+      );
+      formData.append(
+        'total_amount',
+        this.form.get('total_amount')?.value as string,
+      );
+      if (this.form.get('description')?.value)
+        formData.append(
+          'description',
+          this.form.get('description')?.value as string,
+        );
+      formData.append(
+        'split_type',
+        this.form.get('split_type')?.value as string,
+      );
+      formData.append('payer_id', this.form.get('payer_id')?.value as string);
+      formData.append(
+        'participant1_share',
+        this.form.get('participant1_share')?.value as string,
+      );
+      formData.append(
+        'participant2_share',
+        this.form.get('participant2_share')?.value as string,
+      );
+      if (this.form.get('receipt')?.value)
+        formData.append('receipt', this.form.get('receipt')?.value as File);
+
       let debtor_share;
       if (
         this.form.value.split_type === 'UNEQUAL' ||
@@ -140,7 +202,10 @@ export class FriendsExpenseComponent implements OnInit {
         this.form.value.payer_id === this.participants[0].user_id
           ? this.participants[1].user_id
           : this.participants[0].user_id;
-      this.dialogRef.close({ ...this.form.value, debtor_share, debtor_id });
+
+      formData.append('debtor_share', debtor_share as string);
+      formData.append('debtor_id', debtor_id as string);
+      this.dialogRef.close(formData);
     }
   }
 

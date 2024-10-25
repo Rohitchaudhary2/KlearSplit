@@ -121,8 +121,14 @@ class FriendController {
   static addExpense = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
+      const expenseData = req.validatedExpense; // Access the form data here
+
+      // Access file data if a file is uploaded
+      if (req.file) {
+        expenseData.receipt_url = req.file.path; // Save the file path in the database
+      }
       const addedExpense = await FriendService.addExpense(
-        req.validatedExpense,
+        expenseData,
         conversation_id,
       );
       if (addedExpense && addedExpense.message === "You are all settled up.") {

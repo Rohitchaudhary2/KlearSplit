@@ -45,7 +45,7 @@ export class AddFriendComponent implements OnInit {
   });
   formErrorMessages = inject(FormErrorMessageService);
 
-  searchInput = signal('');
+  searchInput = signal<string | null | undefined>('');
   selectedUser = signal<User | undefined>(undefined);
 
   inputError = signal<string | undefined>(undefined);
@@ -78,7 +78,7 @@ export class AddFriendComponent implements OnInit {
     this.selectedUser.set(undefined);
     this.loading.set(true);
     this.inputError.set(undefined);
-    // this.searchInput.set(this.form.value.searchInputControl);
+    this.searchInput.set(this.form.value.searchInputControl);
     if (this.form.value.searchInputControl)
       this.searchSubject.next(this.form.value.searchInputControl);
   }
@@ -102,6 +102,7 @@ export class AddFriendComponent implements OnInit {
 
   onAdd() {
     if (this.form.valid) {
+      this.searchInput.set(this.form.value.searchInputControl);
       this.dialogRef.close({ email: this.searchInput() });
     } else {
       this.inputError.set('Invalid Input.');

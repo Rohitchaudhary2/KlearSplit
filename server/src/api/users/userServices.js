@@ -30,7 +30,7 @@ class UserService {
 
     await redis.setex(`otp:${user.email}`, 300, otp);
 
-    await sendMail(
+    sendMail(
       {
         email: user.email,
         subject: "Otp for sign up in KlearSplit",
@@ -104,7 +104,7 @@ class UserService {
         subject: "Password for Sign in for KlearSplit",
       };
 
-      await sendMail(options, "passwordTemplate", {
+      sendMail(options, "passwordTemplate", {
         name: user.first_name,
         heading: "Welcome to Our Service",
         email: user.email,
@@ -139,7 +139,7 @@ class UserService {
 
     await redis.setex(`otp:${user.email}`, 300, otp);
 
-    await sendMail(
+    sendMail(
       {
         email: user.email,
         subject: "Otp for restoring your account for KlearSplit",
@@ -214,7 +214,7 @@ class UserService {
 
     await redis.setex(`otp:${user.email}`, 300, otp);
 
-    await sendMail(
+    sendMail(
       {
         email: user.email,
         subject: "Otp for changing password for KlearSplit",
@@ -253,7 +253,7 @@ class UserService {
       subject: "Password Reset Confirmation",
     };
 
-    await sendMail(options, "passwordTemplate", {
+    sendMail(options, "passwordTemplate", {
       name: user.first_name,
       email: user.email,
       heading: "Password Successfully Changed",

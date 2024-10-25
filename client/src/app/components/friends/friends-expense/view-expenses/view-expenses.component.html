@@ -14,7 +14,6 @@
         <th scope="col" class="col-2">Debt Amount</th>
         <th scope="col" class="col-5">Description</th>
         <th scope="col" class="col-1">Actions</th>
-        <!-- <th scope="col" class="col-1">Settlement</th> -->
       </tr>
     </thead>
     <tbody style="max-height: 70vh; overflow-y: auto">
@@ -34,13 +33,16 @@
             <mat-icon
               matPrefix
               class="hover"
-              (click)="onDeleteExpense(expense.friend_expense_id)"
+              (click)="
+                onDeleteExpense(
+                  expense.friend_expense_id,
+                  expense.payer_id,
+                  expense.debtor_amount
+                )
+              "
               >delete</mat-icon
             >
           </td>
-          <!-- <td class="col-1">
-          <button class="btn btn-sm btn-success">Settle</button>
-        </td> -->
         </tr>
       }
     </tbody>
@@ -56,6 +58,7 @@
     mat-button
     disableRipple
     class="custom-mat-button"
+    color="warn"
     (click)="onCancel()"
   >
     Close

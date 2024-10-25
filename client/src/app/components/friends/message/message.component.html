@@ -27,14 +27,18 @@
     "
   >
     <div
-      class="card-header d-flex justify-content-start px-4"
+      class="card-header d-flex px-4"
+      [ngClass]="{
+        'justify-content-start': !isCurrentUserMessage(),
+        'justify-content-end': isCurrentUserMessage(),
+      }"
       style="
         border-bottom: 1px solid rgba(255, 255, 255, 0.3);
         background: transparent;
       "
     >
       <p class="fw-bold mb-0">
-        {{ isCurrentUserMessage() ? "You" : friendName }}
+        {{ isCurrentUserMessage() ? "You" : friendName() }}
       </p>
     </div>
     <div class="card-body px-4" style="max-width: 28vw">

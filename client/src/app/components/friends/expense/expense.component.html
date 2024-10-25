@@ -1,0 +1,79 @@
+<li
+  class="d-flex mb-1 px-2"
+  [ngClass]="{
+    'justify-content-start': !isCurrentUserPayer(),
+    'justify-content-end': isCurrentUserPayer(),
+  }"
+>
+  @if (!isCurrentUserPayer()) {
+    <img
+      [src]="friendImageUrl()"
+      alt="avatar"
+      class="rounded-circle d-inline-flex align-self-end me-3 shadow-1-strong"
+      width="40"
+    />
+  }
+
+  <div
+    class="d-flex justify-content-between align-items-center"
+    style="
+      max-width: 28vw;
+      background: rgba(24, 24, 16, 0.2);
+      border-radius: 2em;
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      background-clip: padding-box;
+      box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
+    "
+  >
+    <div
+      class="px-3 text-black"
+      style="max-width: 13vw; word-wrap: break-word; vertical-align: middle"
+    >
+      <p class="m-0">{{ expense()?.expense_name }}</p>
+    </div>
+
+    <div class="card" style="background-color: transparent; border: none">
+      <div
+        class="card-header d-flex justify-content-start px-4"
+        style="
+          border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+          background: transparent;
+        "
+      >
+        <p class="fw-bold mb-0">
+          {{ isCurrentUserPayer() ? "You paid" : friendName() + " paid" }}
+        </p>
+      </div>
+      <div class="card-body px-4" style="max-width: 28vw">
+        <p class="mb-0">{{ expense()?.total_amount }}</p>
+      </div>
+    </div>
+
+    <div class="card" style="background-color: transparent; border: none">
+      <div
+        class="card-header d-flex justify-content-start px-4"
+        style="
+          border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+          background: transparent;
+        "
+      >
+        <p class="fw-bold mb-0">
+          {{ isCurrentUserPayer() ? "You lent" : friendName() + " lent you" }}
+        </p>
+      </div>
+      <div class="card-body px-4" style="max-width: 28vw">
+        <p class="mb-0">{{ expense()?.debtor_amount }}</p>
+      </div>
+    </div>
+  </div>
+
+  @if (isCurrentUserPayer()) {
+    <img
+      [src]="currentUserImageUrl()"
+      alt="avatar"
+      class="rounded-circle d-inline-flex align-self-end ms-3 shadow-1-strong"
+      width="40"
+    />
+  }
+</li>

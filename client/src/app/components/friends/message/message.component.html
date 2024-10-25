@@ -1,0 +1,53 @@
+<li
+  class="d-flex mb-1 px-2"
+  [ngClass]="{
+    'justify-content-start': !isCurrentUserMessage(),
+    'justify-content-end': isCurrentUserMessage(),
+  }"
+>
+  @if (!isCurrentUserMessage()) {
+    <img
+      [src]="friendImageUrl()"
+      alt="avatar"
+      class="rounded-circle d-inline-flex align-self-end me-3 shadow-1-strong"
+      width="40"
+    />
+  }
+
+  <div
+    class="card"
+    style="
+      max-width: 28vw;
+      background: rgba(24, 24, 16, 0.2);
+      border-radius: 2em;
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      background-clip: padding-box;
+      box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
+    "
+  >
+    <div
+      class="card-header d-flex justify-content-start px-4"
+      style="
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        background: transparent;
+      "
+    >
+      <p class="fw-bold mb-0">
+        {{ isCurrentUserMessage() ? "You" : friendName }}
+      </p>
+    </div>
+    <div class="card-body px-4" style="max-width: 28vw">
+      <p class="mb-0">{{ message()!.message }}</p>
+    </div>
+  </div>
+
+  @if (isCurrentUserMessage()) {
+    <img
+      [src]="currentUserImageUrl()"
+      alt="avatar"
+      class="rounded-circle d-inline-flex align-self-end ms-3 shadow-1-strong"
+      width="40"
+    />
+  }
+</li>

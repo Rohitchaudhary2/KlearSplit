@@ -112,6 +112,38 @@ export class FriendsExpenseComponent implements OnInit {
     }
   }
 
+  // onAdd(): void {
+  //   if (this.form.value.split_type === 'EQUAL') {
+  //     this.form
+  //       .get('participant1_share')
+  //       ?.setValue(
+  //         JSON.stringify(parseFloat(this.form.value.total_amount!) / 2),
+  //       );
+  //     this.form
+  //       .get('participant2_share')
+  //       ?.setValue(
+  //         JSON.stringify(parseFloat(this.form.value.total_amount!) / 2),
+  //       );
+  //   }
+  //   if (this.form.valid) {
+  //     let debtor_share;
+  //     if (
+  //       this.form.value.split_type === 'UNEQUAL' ||
+  //       this.form.value.split_type === 'PERCENTAGE'
+  //     ) {
+  //       debtor_share =
+  //         this.form.value.payer_id === this.participants[0].user_id
+  //           ? this.form.value.participant2_share
+  //           : this.form.value.participant1_share;
+  //     }
+  //     const debtor_id =
+  //       this.form.value.payer_id === this.participants[0].user_id
+  //         ? this.participants[1].user_id
+  //         : this.participants[0].user_id;
+  //     this.dialogRef.close({ ...this.form.value, debtor_share, debtor_id });
+  //   }
+  // }
+
   onAdd(): void {
     if (this.form.value.split_type === 'EQUAL') {
       this.form

@@ -30,7 +30,7 @@ class FriendService {
 
       const sender = `${friendData.first_name}${friendData.last_name ? ` ${friendData.last_name}` : ""}`;
 
-      await sendMail(options, "invitationTemplate", {
+      sendMail(options, "invitationTemplate", {
         name: friendRequestTo.first_name,
         sender,
       });
@@ -42,15 +42,19 @@ class FriendService {
     };
     if (newFriendData.friend1_id === newFriendData.friend2_id)
       throw new ErrorHandler(400, "You cannot add yourself as a friend.");
-    const friendExist = await this.checkFriendExist(newFriendData);
-    if (friendExist) throw new ErrorHandler(409, "Friend already exist");
+    const friendExist = await this.checkFriendExist(newFriendData, false);
+    if (friendExist && !friendExist.dataValues.deletedAt)
+      throw new ErrorHandler(409, "Friend already exist");
+    if (friendExist && friendExist.dataValues.deletedAt) {
+      return await FriendDb.restoreFriend(friendExist);
+    }
     const friend = await FriendDb.addFriend(newFriendData);
     return friend;
   };
 
   // Service to check whether friend already exists
-  static checkFriendExist = async (friendData) =>
-    await FriendDb.checkFriendExist(friendData);
+  static checkFriendExist = async (friendData, flag) =>
+    await FriendDb.checkFriendExist(friendData, flag);
 
   // Service to get all friends
   static getAllFriends = async (userId, filters) => {
@@ -109,8 +113,10 @@ class FriendService {
       friendRequest.user_id === friendRequestExist.dataValues.friend1_id &&
       friendRequestExist.dataValues.status === "PENDING"
     ) {
-      const friendRequestDelete =
-        await FriendDb.withdrawFriendRequest(friendRequest);
+      const friendRequestDelete = await FriendDb.withdrawFriendRequest(
+        friendRequest,
+        friendRequestExist,
+      );
       return friendRequestDelete;
     }
     throw new ErrorHandler(400, "Invalid request");
@@ -204,77 +210,70 @@ class FriendService {
   static addExpense = async (expenseData, conversation_id) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");
+    expenseData.conversation_id = conversation_id;
 
     if (
-      friendExist.status !== "REJECTED" &&
-      friendExist.archival_status === "NONE" &&
-      friendExist.block_status === "NONE"
+      friendExist.status === "REJECTED" ||
+      friendExist.archival_status !== "NONE" ||
+      friendExist.block_status !== "NONE"
     ) {
-      const transaction = await sequelize.transaction();
-      try {
-        const debtorAmount = calculateDebtorAmount(expenseData);
-        expenseData.debtor_amount = debtorAmount;
-
-        const currentBalance = parseFloat(friendExist.balance_amount);
-        if (expenseData.split_type === "SETTLEMENT") {
-          if (currentBalance === 0) {
-            return { message: "You are all settled up." };
-          }
-          validateSettlementAmount(currentBalance, debtorAmount);
-          expenseData.expense_name = "Settlement";
-          expenseData.payer_id =
-            currentBalance > 0
-              ? friendExist.friend2_id
-              : friendExist.friend1_id;
-          expenseData.debtor_id =
-            currentBalance > 0
-              ? friendExist.friend1_id
-              : friendExist.friend2_id;
-        }
-
-        if (expenseData.payer_id === expenseData.debtor_id) {
-          throw new ErrorHandler(
-            400,
-            "You cannot add an expense with yourself",
-          );
-        }
-
-        const expense = await FriendDb.addExpense(expenseData, transaction);
-        const balanceAmount = calculateNewBalance(
-          currentBalance,
-          debtorAmount,
-          expenseData.payer_id,
-          friendExist,
-          expenseData.split_type,
-        );
-
-        await FriendDb.updateFriends(
-          { balance_amount: balanceAmount },
-          conversation_id,
-          transaction,
-        );
-        await transaction.commit();
-
-        return expense;
-      } catch (error) {
-        await transaction.rollback();
-        throw error;
-      }
-    } else {
       throw new ErrorHandler(403, "This action is not allowed.");
+    }
+    const transaction = await sequelize.transaction();
+    try {
+      const debtorAmount = calculateDebtorAmount(expenseData);
+      expenseData.debtor_amount = debtorAmount;
+
+      const currentBalance = parseFloat(friendExist.balance_amount);
+      if (expenseData.split_type === "SETTLEMENT") {
+        if (currentBalance === 0) {
+          return { message: "You are all settled up." };
+        }
+        validateSettlementAmount(currentBalance, debtorAmount);
+        expenseData.expense_name = "Settlement";
+        expenseData.payer_id =
+          currentBalance > 0 ? friendExist.friend2_id : friendExist.friend1_id;
+        expenseData.debtor_id =
+          currentBalance > 0 ? friendExist.friend1_id : friendExist.friend2_id;
+      }
+
+      if (expenseData.payer_id === expenseData.debtor_id) {
+        throw new ErrorHandler(400, "You cannot add an expense with yourself");
+      }
+
+      const expense = await FriendDb.addExpense(expenseData, transaction);
+      const balanceAmount = calculateNewBalance(
+        currentBalance,
+        debtorAmount,
+        expenseData.payer_id,
+        friendExist,
+        expenseData.split_type,
+      );
+
+      await FriendDb.updateFriends(
+        { balance_amount: balanceAmount },
+        conversation_id,
+        transaction,
+      );
+      await transaction.commit();
+
+      return expense;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
     }
   };
 
   // Service to fetch all expenses for a conversation
-  static getExpenses = async (conversation_id, page, pageSize) => {
+  static getExpenses = async (conversation_id, page, pageSize, fetchAll) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");
     if (friendExist.status !== "REJECTED") {
       const expenses = await FriendDb.getExpenses(
-        friendExist.friend1_id,
-        friendExist.friend2_id,
+        conversation_id,
         page,
         pageSize,
+        fetchAll,
       );
       const expensesToSend = expenses.map((expense) => expense.toJSON());
       return expensesToSend.map((expense) => ({
@@ -317,82 +316,93 @@ class FriendService {
     const requiresBalanceUpdate = balanceAffectingFields.some(
       (field) => field in updatedExpenseData,
     );
+    if (
+      (existingExpense.payer_id === friendExist.friend1_id &&
+        existingExpense.debtor_id === friendExist.friend2_id) ||
+      (existingExpense.payer_id === friendExist.friend2_id &&
+        existingExpense.debtor_id === friendExist.friend1_id)
+    ) {
+      // Only non-balance fields are being updated, skip transaction
+      if (!requiresBalanceUpdate) {
+        const { affectedRows, updatedExpense } = await FriendDb.updateExpense(
+          updatedExpenseData,
+          updatedExpenseData.friend_expense_id,
+        );
 
-    // Only non-balance fields are being updated, skip transaction
-    if (!requiresBalanceUpdate) {
-      const { affectedRows, updatedExpense } = await FriendDb.updateExpense(
-        updatedExpenseData,
-        updatedExpenseData.friend_expense_id,
-      );
-
-      if (affectedRows === 0) {
-        throw new ErrorHandler(400, "Failed to update expense");
-      }
-      return updatedExpense;
-    }
-
-    // Balance-related fields need an update, use a transaction
-    const transaction = await sequelize.transaction();
-    try {
-      const debtorAmount = calculateDebtorAmount(
-        updatedExpenseData,
-        existingExpense,
-      );
-      updatedExpenseData.debtor_amount = debtorAmount;
-
-      const currentBalance = parseFloat(friendExist.balance_amount);
-
-      if (updatedExpenseData.split_type === "SETTLEMENT") {
-        if (currentBalance === 0) {
-          throw new ErrorHandler(400, "You are all settled up.");
+        if (affectedRows === 0) {
+          throw new ErrorHandler(400, "Failed to update expense");
         }
-        validateSettlementAmount(currentBalance, debtorAmount);
+        return updatedExpense;
       }
 
-      if (
-        updatedExpenseData.payer_id &&
-        updatedExpenseData.debtor_id &&
-        updatedExpenseData.payer_id === updatedExpenseData.debtor_id
-      ) {
-        throw new ErrorHandler(400, "You cannot add an expense with yourself");
+      // Balance-related fields need an update, use a transaction
+      const transaction = await sequelize.transaction();
+      try {
+        const debtorAmount = calculateDebtorAmount(
+          updatedExpenseData,
+          existingExpense,
+        );
+        updatedExpenseData.debtor_amount = debtorAmount;
+
+        const currentBalance = parseFloat(friendExist.balance_amount);
+
+        if (updatedExpenseData.split_type === "SETTLEMENT") {
+          if (currentBalance === 0) {
+            throw new ErrorHandler(400, "You are all settled up.");
+          }
+          validateSettlementAmount(currentBalance, debtorAmount);
+        }
+
+        if (
+          updatedExpenseData.payer_id &&
+          updatedExpenseData.debtor_id &&
+          updatedExpenseData.payer_id === updatedExpenseData.debtor_id
+        ) {
+          throw new ErrorHandler(
+            400,
+            "You cannot add an expense with yourself",
+          );
+        }
+
+        const newBalance = calculateNewBalance(
+          currentBalance,
+          debtorAmount,
+          updatedExpenseData.payer_id || existingExpense.payer_id,
+          friendExist,
+          updatedExpenseData.split_type || existingExpense.split_type,
+          existingExpense,
+          true,
+        );
+
+        // Update the expense with a transaction
+        const { affectedRows, updatedExpense } = await FriendDb.updateExpense(
+          updatedExpenseData,
+          updatedExpenseData.friend_expense_id,
+          transaction,
+        );
+
+        if (affectedRows === 0) {
+          throw new ErrorHandler(400, "Failed to update expense");
+        }
+
+        // Update the balance in the friends table
+        await FriendDb.updateFriends(
+          { balance_amount: newBalance },
+          friendExist.conversation_id,
+          transaction,
+        );
+
+        // Commit the transaction
+        await transaction.commit();
+
+        return updatedExpense;
+      } catch (error) {
+        // Rollback the transaction in case of any error
+        await transaction.rollback();
+        throw error;
       }
-
-      const newBalance = calculateNewBalance(
-        currentBalance,
-        debtorAmount,
-        updatedExpenseData.payer_id || existingExpense.payer_id,
-        friendExist,
-        updatedExpenseData.split_type || existingExpense.split_type,
-        existingExpense,
-        true,
-      );
-
-      // Update the expense with a transaction
-      const { affectedRows, updatedExpense } = await FriendDb.updateExpense(
-        updatedExpenseData,
-        updatedExpenseData.friend_expense_id,
-        transaction,
-      );
-
-      if (affectedRows === 0) {
-        throw new ErrorHandler(400, "Failed to update expense");
-      }
-
-      // Update the balance in the friends table
-      await FriendDb.updateFriends(
-        { balance_amount: newBalance },
-        friendExist.conversation_id,
-        transaction,
-      );
-
-      // Commit the transaction
-      await transaction.commit();
-
-      return updatedExpense;
-    } catch (error) {
-      // Rollback the transaction in case of any error
-      await transaction.rollback();
-      throw error;
+    } else {
+      throw new ErrorHandler(403, "You are not allowed to update this expense");
     }
   };
 
@@ -404,35 +414,44 @@ class FriendService {
     const existingExpense = await FriendDb.getExpense(friend_expense_id);
     if (!existingExpense) throw new ErrorHandler(404, "Expense not found");
 
-    const transaction = await sequelize.transaction();
-    try {
-      // Delete the expense
-      const { affectedRows } = await FriendDb.deleteExpense(
-        friend_expense_id,
-        transaction,
-      );
-      if (affectedRows === 0) {
-        throw new ErrorHandler(400, "Failed to delete expense");
+    if (
+      (existingExpense.payer_id === friendExist.friend1_id &&
+        existingExpense.debtor_id === friendExist.friend2_id) ||
+      (existingExpense.payer_id === friendExist.friend2_id &&
+        existingExpense.debtor_id === friendExist.friend1_id)
+    ) {
+      const transaction = await sequelize.transaction();
+      try {
+        // Delete the expense
+        const { affectedRows } = await FriendDb.deleteExpense(
+          friend_expense_id,
+          transaction,
+        );
+        if (affectedRows === 0) {
+          throw new ErrorHandler(400, "Failed to delete expense");
+        }
+        // Update the balance in the friends table
+        await FriendDb.updateFriends(
+          {
+            balance_amount:
+              existingExpense.payer_id === friendExist.friend1_id
+                ? parseFloat(friendExist.balance_amount) -
+                  parseFloat(existingExpense.debtor_amount)
+                : parseFloat(friendExist.balance_amount) +
+                  parseFloat(existingExpense.debtor_amount),
+          },
+          conversation_id,
+          transaction,
+        );
+        // Commit the transaction
+        await transaction.commit();
+        return { message: "Expense deleted successfully" };
+      } catch (error) {
+        await transaction.rollback();
+        throw error;
       }
-      // Update the balance in the friends table
-      await FriendDb.updateFriends(
-        {
-          balance_amount:
-            existingExpense.payer_id === friendExist.friend1_id
-              ? parseFloat(friendExist.balance_amount) -
-                parseFloat(existingExpense.debtor_amount)
-              : parseFloat(friendExist.balance_amount) +
-                parseFloat(existingExpense.debtor_amount),
-        },
-        conversation_id,
-        transaction,
-      );
-      // Commit the transaction
-      await transaction.commit();
-      return { message: "Expense deleted successfully" };
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
+    } else {
+      throw new ErrorHandler(403, "You are not allowed to delete this expense");
     }
   };
 }

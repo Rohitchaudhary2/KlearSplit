@@ -13,6 +13,7 @@ const uuidParamValidation = Joi.object({
 const paginationValidation = Joi.object({
   page: Joi.number().integer().min(1).default(1).label("Page"),
   pageSize: Joi.number().integer().min(1).default(10).label("Page Size"),
+  fetchAll: Joi.boolean().optional(),
 });
 
 // Validation for getFriends
@@ -46,74 +47,64 @@ const acceptRejectFriendRequestValidation = Joi.object({
 // Validation for blocking or archiving a friend
 const archiveBlockFriendValidation = Joi.object({
   type: Joi.string()
+    .trim()
     .valid("archived", "blocked")
     .required()
-    .trim()
     .label("Type"),
 });
 
 // Validation for adding an expense
 const addExpenseValidation = Joi.object({
-  expense_name: Joi.string()
-    .min(1)
-    .max(50)
-    .required()
-    .trim()
-    .label("Expense Name"),
+  expense_name: Joi.string().trim().max(50).required().label("Expense Name"),
   total_amount: Joi.number()
     .positive()
-    .max(100000000)
+    .max(9999999999.99)
     .required()
     .label("Total Amount"),
-  description: Joi.string().optional().trim().label("Expense Description"),
+  description: Joi.string().trim().optional().label("Expense Description"),
   split_type: Joi.string()
+    .trim()
     .valid("EQUAL", "UNEQUAL", "PERCENTAGE", "SETTLEMENT")
     .required()
-    .trim()
     .label("Split Type"),
-  payer_id: Joi.string().uuid().required().trim().label("Payer ID"),
-  debtor_id: Joi.string().uuid().required().trim().label("Debtor ID"),
-  friend_expense_id: Joi.string().uuid().optional().trim().label("Expense ID"),
-  participant1_share: Joi.string().optional().trim().label("Participant Share"),
-  participant2_share: Joi.string().optional().trim().label("Participant Share"),
-  debtor_share: Joi.string().optional().trim().label("Debtor Share"),
+  payer_id: Joi.string().trim().uuid().required().label("Payer ID"),
+  debtor_id: Joi.string().trim().uuid().required().label("Debtor ID"),
+  friend_expense_id: Joi.string().trim().uuid().optional().label("Expense ID"),
+  participant1_share: Joi.string().trim().optional().label("Participant Share"),
+  participant2_share: Joi.string().trim().optional().label("Participant Share"),
+  debtor_share: Joi.string().trim().optional().label("Debtor Share"),
 });
 
 // Validation for settlement of an expense
 const settleExpenseValidation = Joi.object({
   total_amount: Joi.number().positive().required().label("Total Amount"),
   split_type: Joi.string()
+    .trim()
     .valid("SETTLEMENT")
     .required()
-    .trim()
     .label("Split Type"),
 });
 
 // Validation for expense update
 const updateExpenseValidation = Joi.object({
-  expense_name: Joi.string()
-    .min(1)
-    .max(50)
-    .optional()
-    .trim()
-    .label("Expense Name"),
+  expense_name: Joi.string().trim().max(50).optional().label("Expense Name"),
   total_amount: Joi.number()
     .positive()
-    .max(100000000)
+    .max(9999999999.99)
     .optional()
     .label("Total Amount"),
-  description: Joi.string().optional().trim().label("Expense Description"),
+  description: Joi.string().trim().optional().label("Expense Description"),
   split_type: Joi.string()
+    .trim()
     .valid("EQUAL", "UNEQUAL", "PERCENTAGE", "SETTLEMENT")
     .optional()
-    .trim()
     .label("Split Type"),
-  payer_id: Joi.string().uuid().optional().trim().label("Payer ID"),
-  debtor_id: Joi.string().uuid().optional().trim().label("Debtor ID"),
-  friend_expense_id: Joi.string().uuid().optional().trim().label("Expense ID"),
-  participant1_share: Joi.string().optional().trim().label("Participant Share"),
-  participant2_share: Joi.string().optional().trim().label("Participant Share"),
-  debtor_share: Joi.string().optional().trim().label("Debtor Share"),
+  payer_id: Joi.string().trim().uuid().optional().label("Payer ID"),
+  debtor_id: Joi.string().trim().uuid().optional().label("Debtor ID"),
+  friend_expense_id: Joi.string().trim().uuid().optional().label("Expense ID"),
+  participant1_share: Joi.string().trim().optional().label("Participant Share"),
+  participant2_share: Joi.string().trim().optional().label("Participant Share"),
+  debtor_share: Joi.string().trim().optional().label("Debtor Share"),
 });
 
 // Exporting all validations

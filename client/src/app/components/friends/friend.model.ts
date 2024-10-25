@@ -99,3 +99,9 @@ export interface CombinedMessage extends MessageData {
 export interface CombinedExpense extends ExpenseData {
   type: string;
 }
+
+export interface ExpenseDeletedEvent {
+  id: string;
+  payer_id: string;
+  debtor_amount: string;
+}

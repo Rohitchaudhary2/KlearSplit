@@ -14,6 +14,7 @@ import {
   CombinedExpense,
   CombinedMessage,
   ExpenseData,
+  ExpenseDeletedEvent,
   ExpenseResponse,
   FriendData,
   MessageData,
@@ -267,7 +268,36 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       enterAnimationDuration: '200ms',
       exitAnimationDuration: '200ms',
     });
+    dialogRef.componentInstance.expenseDeleted.subscribe(
+      ({ id, payer_id, debtor_amount }) => {
+        this.onDeleteExpense({ id, payer_id, debtor_amount });
+      },
+    );
     dialogRef.afterClosed().subscribe();
+  }
+
+  onDeleteExpense({ id, payer_id, debtor_amount }: ExpenseDeletedEvent) {
+    this.selectedUser()!.balance_amount =
+      this.user?.user_id === payer_id
+        ? JSON.stringify(
+            parseFloat(this.selectedUser()!.balance_amount) -
+              parseFloat(debtor_amount),
+          )
+        : JSON.stringify(
+            parseFloat(this.selectedUser()!.balance_amount) +
+              parseFloat(debtor_amount),
+          );
+    const updatedExpenses = this.expenses().filter(
+      (expense: ExpenseData) => expense.friend_expense_id !== id,
+    );
+    this.expenses.set(updatedExpenses);
+    const updatedCombinedView = this.combinedView().filter(
+      (item: CombinedMessage | CombinedExpense) => {
+        if (this.isCombinedExpense(item)) return item.friend_expense_id !== id;
+        else return true;
+      },
+    );
+    this.combinedView.set(updatedCombinedView);
   }
 
   settlement() {

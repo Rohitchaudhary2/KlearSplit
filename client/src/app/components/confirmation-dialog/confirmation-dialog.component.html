@@ -1,0 +1,18 @@
+<div>
+  <h4 class="text-center bg-success text-white py-2">Confirm</h4>
+  <mat-dialog-content class="p-0 px-3">{{ message }}</mat-dialog-content>
+
+  <div mat-dialog-actions class="d-flex justify-content-end pb-2 px-3">
+    <button mat-button class="custom-mat-button" (click)="onCancel()">
+      Cancel
+    </button>
+    <button
+      mat-button
+      color="warn"
+      class="custom-mat-button"
+      (click)="onConfirm()"
+    >
+      Confirm
+    </button>
+  </div>
+</div>

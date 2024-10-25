@@ -58,13 +58,13 @@
                 /></span>
               </td>
               <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                   <span
                     >{{ request.friend.first_name }}
                     {{ request.friend.last_name }}</span
                   >
 
-                  <span class="text-end pe-3">
+                  <span class="text-end pe-3 d-flex align-items-center">
                     <span class="text-end pe-3">
                       @if (getBalanceAsNumber(request.balance_amount) < 0) {
                         <span class="text-danger">{{
@@ -80,39 +80,44 @@
                     </span>
                     @if (request.status === "RECEIVER") {
                       <span
-                        ><button
-                          class="btn btn-success btn-sm"
+                        class="d-flex align-items-center border bg-success text-white"
+                        matTooltip="Accept Request"
+                        matTooltipPosition="above"
+                      >
+                        <mat-icon
                           (click)="
                             onAcceptReject(request.conversation_id, 'ACCEPTED');
                             $event.stopPropagation()
                           "
+                          >check</mat-icon
                         >
-                          Accept
-                        </button></span
+                      </span>
+                      <span
+                        class="ms-2 d-flex align-items-center border bg-danger text-white"
+                        matTooltip="Reject Request"
+                        matTooltipPosition="above"
                       >
-                      <span class="ps-2"
-                        ><button
-                          class="btn btn-danger btn-sm"
+                        <mat-icon
                           (click)="
                             onAcceptReject(request.conversation_id, 'REJECTED');
                             $event.stopPropagation()
                           "
+                          >close</mat-icon
                         >
-                          Reject
-                        </button>
                       </span>
                     } @else {
                       <span
-                        ><button
-                          class="btn btn-danger btn-sm"
+                        class="d-flex align-items-center border bg-danger text-white"
+                        matTooltip="Withdraw Request"
+                        matTooltipPosition="above"
+                        ><mat-icon
                           (click)="
                             onWithdrawRequest(request.conversation_id);
                             $event.stopPropagation()
                           "
+                          >close</mat-icon
                         >
-                          Withdraw Request
-                        </button></span
-                      >
+                      </span>
                     }
                   </span>
                 </div>

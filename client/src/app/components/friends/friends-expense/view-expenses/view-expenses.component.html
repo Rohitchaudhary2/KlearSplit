@@ -33,7 +33,13 @@
             <mat-icon
               matPrefix
               class="hover"
-              (click)="onDeleteExpense(expense.friend_expense_id)"
+              (click)="
+                onDeleteExpense(
+                  expense.friend_expense_id,
+                  expense.payer_id,
+                  expense.debtor_amount
+                )
+              "
               >delete</mat-icon
             >
           </td>
@@ -52,6 +58,7 @@
     mat-button
     disableRipple
     class="custom-mat-button"
+    color="warn"
     (click)="onCancel()"
   >
     Close

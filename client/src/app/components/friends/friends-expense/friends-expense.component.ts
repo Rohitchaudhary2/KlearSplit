@@ -18,6 +18,7 @@ import { NgClass } from '@angular/common';
 import { PayerComponent } from './payer/payer.component';
 import { SplitTypeComponent } from './split-type/split-type.component';
 import { FormErrorMessageService } from '../../shared/form-error-message.service';
+import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-friends-expense',
@@ -221,8 +222,9 @@ export class FriendsExpenseComponent implements OnInit {
       panelClass: 'second-dialog',
       width: '30%',
       data: this.participants,
+      backdropClass: 'dialog-bg-trans',
       position: {
-        right: '7%', // Adjust as needed
+        right: '7%',
       },
     });
 
@@ -234,7 +236,18 @@ export class FriendsExpenseComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.dialogRef.close(null);
+    const confirmationDialogRef = this.dialog.open(
+      ConfirmationDialogComponent,
+      {
+        data: 'Your changes would be lost. Would you like to continue?',
+      },
+    );
+
+    confirmationDialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.dialogRef.close(null);
+      }
+    });
   }
 
   openSplitTypeDialog(): void {
@@ -242,8 +255,9 @@ export class FriendsExpenseComponent implements OnInit {
       panelClass: 'second-dialog',
       width: '30%',
       data: [this.participants, this.form.value.total_amount],
+      backdropClass: 'dialog-bg-trans',
       position: {
-        right: '7%', // Adjust as needed
+        right: '7%',
       },
     });
 

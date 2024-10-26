@@ -90,17 +90,16 @@ class FriendService {
     if (!friendRequestExist)
       throw new ErrorHandler(404, "Friend request not found");
     if (
-      friendRequest.user_id === friendRequestExist.dataValues.friend2_id &&
-      (friendRequest.status === "ACCEPTED" ||
-        friendRequest.status === "REJECTED")
+      friendRequest.user_id !== friendRequestExist.dataValues.friend2_id ||
+      friendRequest.status === "PENDING"
     ) {
-      const friendRequestUpdate = await FriendDb.updateFriends(
-        { status },
-        conversation_id,
-      );
-      return friendRequestUpdate;
+      throw new ErrorHandler(400, "Invalid request");
     }
-    throw new ErrorHandler(400, "Invalid request");
+    const friendRequestUpdate = await FriendDb.updateFriends(
+      { status },
+      conversation_id,
+    );
+    return friendRequestUpdate;
   };
 
   // Service to withdraw friend request
@@ -110,16 +109,16 @@ class FriendService {
     if (!friendRequestExist)
       throw new ErrorHandler(404, "Friend request not found");
     if (
-      friendRequest.user_id === friendRequestExist.dataValues.friend1_id &&
-      friendRequestExist.dataValues.status === "PENDING"
+      friendRequest.user_id !== friendRequestExist.dataValues.friend1_id ||
+      friendRequestExist.dataValues.status !== "PENDING"
     ) {
-      const friendRequestDelete = await FriendDb.withdrawFriendRequest(
-        friendRequest,
-        friendRequestExist,
-      );
-      return friendRequestDelete;
+      throw new ErrorHandler(400, "Invalid request");
     }
-    throw new ErrorHandler(400, "Invalid request");
+    const friendRequestDelete = await FriendDb.withdrawFriendRequest(
+      friendRequest,
+      friendRequestExist,
+    );
+    return friendRequestDelete;
   };
 
   // Service for archiving/blocking or unarchiving/unblocking a friend
@@ -156,14 +155,14 @@ class FriendService {
         throw new ErrorHandler(400, "Invalid status field");
       }
     }
-    if (parseFloat(friendExist.dataValues.balance_amount) === 0) {
-      const friendUpdate = await FriendDb.updateFriends(
-        { [statusField]: newStatus },
-        conversation_id,
-      );
-      return friendUpdate;
+    if (parseFloat(friendExist.dataValues.balance_amount) !== 0) {
+      throw new ErrorHandler(400, "Settle up before this action!");
     }
-    throw new ErrorHandler(400, "Settle up before this action!");
+    const friendUpdate = await FriendDb.updateFriends(
+      { [statusField]: newStatus },
+      conversation_id,
+    );
+    return friendUpdate;
   };
 
   // Service to save messages in db
@@ -180,12 +179,12 @@ class FriendService {
   };
 
   // Service to fetch all the messages of a particular conversation
-  static getMessages = async (conversation_id, page = 1, pageSize = 10) => {
+  static getMessages = async (conversation_id, page, pageSize) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend doesn't exist");
     if (friendExist.dataValues.status === "REJECTED")
       throw new ErrorHandler(
-        404,
+        403,
         "You are not allowed to message in this chat.",
       );
     const messages = await FriendDb.getMessages(
@@ -218,6 +217,15 @@ class FriendService {
       friendExist.block_status !== "NONE"
     ) {
       throw new ErrorHandler(403, "This action is not allowed.");
+    }
+    if (
+      expenseData.payer_id !== friendExist.friend1_id &&
+      expenseData.payer_id !== friendExist.friend2_id
+    ) {
+      throw new ErrorHandler(
+        400,
+        "You are not allowed to add expense in this chat.",
+      );
     }
     const transaction = await sequelize.transaction();
     try {
@@ -268,25 +276,24 @@ class FriendService {
   static getExpenses = async (conversation_id, page, pageSize, fetchAll) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");
-    if (friendExist.status !== "REJECTED") {
-      const expenses = await FriendDb.getExpenses(
-        conversation_id,
-        page,
-        pageSize,
-        fetchAll,
-      );
-      const expensesToSend = expenses.map((expense) => expense.toJSON());
-      return expensesToSend.map((expense) => ({
-        ...expense,
-        payer:
-          `${expense.payer.first_name} ${expense.payer.last_name || ""}`.trim(),
-      }));
-    } else {
+    if (friendExist.status === "REJECTED") {
       throw new ErrorHandler(
         403,
         "You are not allowed to view this conversation.",
       );
     }
+    const expenses = await FriendDb.getExpenses(
+      conversation_id,
+      page,
+      pageSize,
+      fetchAll,
+    );
+    const expensesToSend = expenses.map((expense) => expense.toJSON());
+    return expensesToSend.map((expense) => ({
+      ...expense,
+      payer:
+        `${expense.payer.first_name} ${expense.payer.last_name || ""}`.trim(),
+    }));
   };
 
   // Service to update a friend expense
@@ -414,45 +421,69 @@ class FriendService {
     const existingExpense = await FriendDb.getExpense(friend_expense_id);
     if (!existingExpense) throw new ErrorHandler(404, "Expense not found");
 
-    if (
-      (existingExpense.payer_id === friendExist.friend1_id &&
-        existingExpense.debtor_id === friendExist.friend2_id) ||
-      (existingExpense.payer_id === friendExist.friend2_id &&
-        existingExpense.debtor_id === friendExist.friend1_id)
-    ) {
-      const transaction = await sequelize.transaction();
-      try {
-        // Delete the expense
-        const { affectedRows } = await FriendDb.deleteExpense(
-          friend_expense_id,
-          transaction,
-        );
-        if (affectedRows === 0) {
-          throw new ErrorHandler(400, "Failed to delete expense");
-        }
-        // Update the balance in the friends table
-        await FriendDb.updateFriends(
-          {
-            balance_amount:
-              existingExpense.payer_id === friendExist.friend1_id
-                ? parseFloat(friendExist.balance_amount) -
-                  parseFloat(existingExpense.debtor_amount)
-                : parseFloat(friendExist.balance_amount) +
-                  parseFloat(existingExpense.debtor_amount),
-          },
-          conversation_id,
-          transaction,
-        );
-        // Commit the transaction
-        await transaction.commit();
-        return { message: "Expense deleted successfully" };
-      } catch (error) {
-        await transaction.rollback();
-        throw error;
-      }
-    } else {
+    if (friendExist.conversation_id !== existingExpense.conversation_id) {
       throw new ErrorHandler(403, "You are not allowed to delete this expense");
     }
+    const transaction = await sequelize.transaction();
+    try {
+      // Delete the expense
+      const { affectedRows } = await FriendDb.deleteExpense(
+        friend_expense_id,
+        transaction,
+      );
+      if (affectedRows === 0) {
+        throw new ErrorHandler(400, "Failed to delete expense");
+      }
+      // Update the balance in the friends table
+      await FriendDb.updateFriends(
+        {
+          balance_amount:
+            existingExpense.payer_id === friendExist.friend1_id
+              ? parseFloat(friendExist.balance_amount) -
+                parseFloat(existingExpense.debtor_amount)
+              : parseFloat(friendExist.balance_amount) +
+                parseFloat(existingExpense.debtor_amount),
+        },
+        conversation_id,
+        transaction,
+      );
+      // Commit the transaction
+      await transaction.commit();
+      return { message: "Expense deleted successfully" };
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  };
+
+  // Service to fetch both expenses and messages together
+  static getBoth = async (conversation_id, page = 1, pageSize = 20) => {
+    const totalMessages = await FriendDb.countMessages(conversation_id);
+    const totalExpenses = await FriendDb.countExpenses(conversation_id);
+    const totalItems = totalMessages + totalExpenses;
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const offset = (page - 1) * pageSize;
+
+    // Check if the page request is valid
+    if (offset >= totalItems) {
+      return {
+        data: [],
+        currentPage: page,
+        totalPages,
+        totalItems,
+        message: "No more data available.",
+      };
+    }
+
+    const messages = await this.getMessages(conversation_id, 1, pageSize * 2);
+    const expenses = await this.getExpenses(conversation_id, 1, pageSize * 2);
+    const messagesAndExpenses = [...messages, ...expenses];
+    messagesAndExpenses.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    const paginatedResult = messagesAndExpenses.slice(
+      offset,
+      offset + pageSize,
+    );
+    return paginatedResult;
   };
 }
 

@@ -91,4 +91,12 @@ friendRouter.delete(
   FriendController.deleteExpense,
 );
 
+friendRouter.get(
+  "/getboth/:conversation_id",
+  authenticateToken,
+  validateParams,
+  validatePagination,
+  FriendController.getBoth,
+);
+
 export default friendRouter;

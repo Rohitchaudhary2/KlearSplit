@@ -11,8 +11,8 @@ const uuidParamValidation = Joi.object({
 
 // Validation for the query parameters in getAllFriends
 const paginationValidation = Joi.object({
-  page: Joi.number().integer().min(1).default(1).label("Page"),
-  pageSize: Joi.number().integer().min(1).default(10).label("Page Size"),
+  page: Joi.number().integer().min(1).label("Page"),
+  pageSize: Joi.number().integer().min(1).label("Page Size"),
   fetchAll: Joi.boolean().optional(),
 });
 

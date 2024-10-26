@@ -14,11 +14,14 @@ import { HttpParams } from '@angular/common/http';
 import { FriendData } from '../friend.model';
 import { CurrencyPipe } from '@angular/common';
 import { FriendsService } from '../friends.service';
+import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog.component';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule, TooltipPosition } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-friends-list',
   standalone: true,
-  imports: [FormsModule, CurrencyPipe],
+  imports: [FormsModule, CurrencyPipe, MatIconModule, MatTooltipModule],
   templateUrl: './friends-list.component.html',
   styleUrl: '../friends.component.css',
 })
@@ -27,6 +30,14 @@ export class FriendsListComponent implements OnInit {
   private toastr = inject(ToastrService);
   private friendsService = inject(FriendsService);
   searchTerm = signal('');
+  positionOptions: TooltipPosition[] = [
+    'after',
+    'before',
+    'above',
+    'below',
+    'left',
+    'right',
+  ];
 
   private friendRequests = signal<FriendData[]>([]);
   requests = signal(this.friendRequests());
@@ -116,16 +127,26 @@ export class FriendsListComponent implements OnInit {
   }
 
   onWithdrawRequest(id: string) {
-    this.friendsService.withdrawRequest(id).subscribe({
-      next: () => {
-        this.onSelectUser(undefined);
-        this.toastr.success(`Request deleted Successfully`, 'Success', {
-          timeOut: 3000,
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      data: 'Are you sure you want to withdraw this request?',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.friendsService.withdrawRequest(id).subscribe({
+          next: () => {
+            this.onSelectUser(undefined);
+            this.toastr.success(`Request deleted Successfully`, 'Success', {
+              timeOut: 3000,
+            });
+            this.requests.set(
+              this.requests().filter(
+                (request) => request.conversation_id !== id,
+              ),
+            );
+          },
         });
-        this.requests.set(
-          this.requests().filter((request) => request.conversation_id !== id),
-        );
-      },
+      }
     });
   }
 

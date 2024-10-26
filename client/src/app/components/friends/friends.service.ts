@@ -9,7 +9,7 @@ import {
   SearchedUser,
   SettlementData,
 } from './friend.model';
-import { concatMap, map } from 'rxjs';
+import { concatMap, map, of } from 'rxjs';
 import { API_URLS } from '../../constants/api-urls';
 
 @Injectable({
@@ -18,26 +18,42 @@ import { API_URLS } from '../../constants/api-urls';
 export class FriendsService {
   private httpClient = inject(HttpClient);
 
-  fetchMessagesAndExpenses(conversationId: string) {
-    return this.httpClient
-      .get<Message>(`${API_URLS.getMessages}/${conversationId}`, {
-        withCredentials: true,
-      })
-      .pipe(
-        concatMap((messages) => {
-          messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
-          return this.httpClient
-            .get<Expense>(`${API_URLS.getExpenses}/${conversationId}`, {
-              withCredentials: true,
-            })
-            .pipe(
-              map((expenses) => ({
-                messages: messages.data,
-                expenses: expenses.data,
-              })),
-            );
-        }),
-      );
+  fetchMessagesAndExpenses(
+    conversationId: string,
+    loadMessages: boolean,
+    loadExpenses: boolean,
+    page: number,
+    pageSize: number,
+  ) {
+    const messagesUrl = `${API_URLS.getMessages}/${conversationId}?page=${page}&pageSize=${pageSize}`;
+    const expensesUrl = `${API_URLS.getExpenses}/${conversationId}?page=${page}&pageSize=${pageSize}`;
+    if (loadMessages && loadExpenses) {
+      return this.httpClient
+        .get<Message>(messagesUrl, { withCredentials: true })
+        .pipe(
+          concatMap((messages) => {
+            messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+            return this.httpClient
+              .get<Expense>(expensesUrl, { withCredentials: true })
+              .pipe(
+                map((expenses) => ({
+                  messages: messages.data,
+                  expenses: expenses.data,
+                })),
+              );
+          }),
+        );
+    } else if (loadMessages) {
+      return this.httpClient
+        .get<Message>(messagesUrl, { withCredentials: true })
+        .pipe(map((messages) => ({ messages: messages.data, expenses: [] })));
+    } else if (loadExpenses) {
+      return this.httpClient
+        .get<Expense>(expensesUrl, { withCredentials: true })
+        .pipe(map((expenses) => ({ messages: [], expenses: expenses.data })));
+    } else {
+      return of({ messages: [], expenses: [] }); // No data to load
+    }
   }
 
   addExpense(

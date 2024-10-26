@@ -108,6 +108,7 @@
 
         <div
           #messageContainer
+          (scroll)="onScroll($event)"
           class="message-body flex-grow-1 row p-0 m-0"
           style="max-height: 57vh; overflow-y: auto"
         >

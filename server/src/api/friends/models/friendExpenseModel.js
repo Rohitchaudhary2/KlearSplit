@@ -1,4 +1,5 @@
 import { DataTypes } from "sequelize";
+import { ErrorHandler } from "../../middlewares/errorHandler.js";
 
 export default (sequelize) => {
   const FriendExpense = sequelize.define(
@@ -71,6 +72,19 @@ export default (sequelize) => {
       receipt_url: {
         type: DataTypes.STRING(255),
         allowNull: true,
+      },
+      is_deleted: {
+        type: DataTypes.SMALLINT,
+        allowNull: false,
+        defaultValue: 0,
+        validate: {
+          isInRange(value) {
+            if (![0, 1, 2].includes(value)) {
+              throw new ErrorHandler("is_deleted value must be 0, 1, or 2");
+            }
+          },
+        },
+        comment: "0 = Not deleted, 1 = Deleted by system, 2 = Deleted by user",
       },
     },
     {

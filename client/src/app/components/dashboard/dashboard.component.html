@@ -3,4 +3,42 @@
 } @else {
   <p>Welcome, {{ authService.currentUser()?.first_name }}</p>
 }
-<p>dashboard works!</p>
+<!-- chart-dashboard.component.html -->
+<div class="chart-container">
+  <div class="row">
+    <div class="col">
+      <canvas
+        baseChart
+        [data]="pieChartData1"
+        [type]="'pie'"
+        [options]="chartOptions"
+      ></canvas>
+    </div>
+    <div class="col">
+      <canvas
+        baseChart
+        [data]="pieChartData2"
+        [type]="'pie'"
+        [options]="chartOptions"
+      ></canvas>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <canvas
+        baseChart
+        [data]="pieChartData3"
+        [type]="'pie'"
+        [options]="chartOptions"
+      ></canvas>
+    </div>
+    <div class="col">
+      <canvas
+        baseChart
+        [data]="barChartData"
+        [type]="'bar'"
+        [options]="chartOptions"
+      ></canvas>
+    </div>
+  </div>
+</div>

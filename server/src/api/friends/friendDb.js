@@ -129,6 +129,14 @@ class FriendDb {
     });
   };
 
+  // DB query for counting messages
+  static countMessages = async (conversation_id) =>
+    await FriendMessage.count({
+      where: {
+        conversation_id: conversation_id,
+      },
+    });
+
   // DB query for add expenses
   static addExpense = async (expenseData, transaction) =>
     await FriendExpense.create(expenseData, { transaction });
@@ -162,6 +170,14 @@ class FriendDb {
 
     return await FriendExpense.findAll(options);
   };
+
+  //  DB query for counting expenses
+  static countExpenses = async (conversation_id) =>
+    await FriendExpense.count({
+      where: {
+        conversation_id: conversation_id,
+      },
+    });
 
   // DB query to fetch a single expense
   static getExpense = async (friend_expense_id) =>

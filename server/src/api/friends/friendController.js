@@ -105,7 +105,7 @@ class FriendController {
   static getMessages = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
-      const { page = 1, pageSize = 10 } = req.validatedPagination;
+      const { page, pageSize } = req.validatedPagination;
       const messages = await FriendService.getMessages(
         conversation_id,
         parseInt(page),
@@ -162,9 +162,11 @@ class FriendController {
   static updateExpense = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
+      const { friend_expense_id } = req.body;
       const updatedExpense = await FriendService.updateExpense(
         req.validatedExpense,
         conversation_id,
+        friend_expense_id,
       );
       responseHandler(res, 200, "Expense updated successfully", updatedExpense);
     } catch (error) {
@@ -182,6 +184,27 @@ class FriendController {
         friend_expense_id,
       );
       responseHandler(res, 200, "Expense deleted successfully", deletedExpense);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // controller for fetching both messages and expenses
+  static getBoth = async (req, res, next) => {
+    try {
+      const { conversation_id } = req.validatedParams;
+      const { page, pageSize } = req.validatedPagination;
+      const messagesAndExpenses = await FriendService.getBoth(
+        conversation_id,
+        page,
+        pageSize,
+      );
+      responseHandler(
+        res,
+        200,
+        "Messages and expenses fetched successfully",
+        messagesAndExpenses,
+      );
     } catch (error) {
       next(error);
     }

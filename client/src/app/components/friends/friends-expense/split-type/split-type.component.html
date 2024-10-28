@@ -62,7 +62,12 @@
 </div>
 
 <div mat-dialog-actions class="d-flex justify-content-end gap-2 p-3">
-  <button mat-button class="custom-mat-button" (click)="onCancel()">
+  <button
+    mat-button
+    class="custom-mat-button"
+    color="warn"
+    (click)="onCancel()"
+  >
     Cancel
   </button>
   <button mat-button class="custom-mat-button" (click)="sendSplitType()">

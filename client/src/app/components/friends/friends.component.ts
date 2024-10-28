@@ -72,14 +72,17 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   charCount = 0;
   charCountExceeded = false;
 
-  isLoaded = false;
+  isImageLoaded = false;
   page = 1;
   pageSize = 10;
   loading = false;
-  allLoaded = false;
+  allMessagesLoaded = false;
+  allExpensesLoaded = false;
+  allCombinedLoaded = false;
+  scrollPosition = 0;
 
-  onLoad() {
-    this.isLoaded = true; // Set loaded state to true
+  onImageLoad() {
+    this.isImageLoaded = true; // Set loaded state to true
   }
 
   ngOnDestroy(): void {
@@ -97,7 +100,8 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   onScroll(event: Event) {
     const element = event.target as HTMLElement;
     if (element.scrollTop === 0 && !this.loading) {
-      // this.loadItems();
+      this.scrollPosition = element.scrollHeight;
+      this.loadItems(element);
     }
   }
 
@@ -107,15 +111,20 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
       // Remove the existing 'onNewMessage' listener
       this.socketService.removeNewMessageListener();
+      this.messages.set([]);
+      this.expenses.set([]);
+      this.combinedView.set([]);
+      this.page = 1;
+      this.messageInput = '';
+      this.allMessagesLoaded = false;
+      this.allExpensesLoaded = false;
+      this.allCombinedLoaded = false;
     }
 
     this.selectedUser.set(friend);
 
     if (this.selectedUser()) {
-      if (this.showMessages() === 'All') this.onLoadBoth();
-      else if (this.showMessages() === 'Messages') this.onLoadMessages();
-      else this.onLoadExpenses();
-
+      this.fetchMessagesAndExpenses(true, true, true, null);
       // Join the room for the new conversation
       this.socketService.joinRoom(this.selectedUser()!.conversation_id);
 
@@ -132,38 +141,66 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     }
   }
 
-  loadItems() {
-    if (this.showMessages() === 'All') this.onLoadBoth();
-    else if (this.showMessages() === 'Messages') this.onLoadMessages();
-    else this.onLoadExpenses();
+  loadItems(element: HTMLElement) {
+    if (this.showMessages() === 'All') this.onLoadAll(element);
+    else if (this.showMessages() === 'Messages') this.onLoadMessages(element);
+    else this.onLoadExpenses(element);
   }
 
-  onLoadMessages() {
-    this.fetchMessagesAndExpenses(true, false); // Load only messages
+  onLoadMessages(element: HTMLElement) {
+    this.fetchMessagesAndExpenses(true, false, false, element); // Load only messages
   }
 
-  onLoadExpenses() {
-    this.fetchMessagesAndExpenses(false, true); // Load only expenses
+  onLoadExpenses(element: HTMLElement) {
+    this.fetchMessagesAndExpenses(false, true, false, element); // Load only expenses
   }
 
-  onLoadBoth() {
-    this.fetchMessagesAndExpenses(true, true); // Load both messages and expenses
+  onLoadCombined(element: HTMLElement) {
+    this.fetchMessagesAndExpenses(false, false, true, element); // Load both messages and expenses
   }
 
-  fetchMessagesAndExpenses(loadMessages: boolean, loadExpenses: boolean) {
-    // if (this.loading || this.allLoaded) return;
+  onLoadAll(element: HTMLElement) {
+    this.fetchMessagesAndExpenses(true, true, true, element); // Load both messages and expenses
+  }
 
-    // this.loading = true;
+  fetchMessagesAndExpenses(
+    loadMessages: boolean,
+    loadExpenses: boolean,
+    loadCombined: boolean,
+    element: HTMLElement | null,
+  ) {
+    if (this.loading) return;
+    if (
+      (loadMessages && this.allMessagesLoaded) ||
+      (loadExpenses && this.allExpensesLoaded) ||
+      (loadCombined && this.allCombinedLoaded)
+    )
+      return;
+
+    this.loading = true;
     this.friendsService
       .fetchMessagesAndExpenses(
         this.selectedUser()!.conversation_id,
         loadMessages,
         loadExpenses,
+        loadCombined,
         this.page,
         this.pageSize,
       )
       .subscribe({
         next: ({ messages, expenses }) => {
+          if (
+            !this.allMessagesLoaded &&
+            loadMessages &&
+            messages.length < this.pageSize
+          )
+            this.allMessagesLoaded = true;
+          if (
+            !this.allExpensesLoaded &&
+            loadExpenses &&
+            expenses.length < this.pageSize
+          )
+            this.allExpensesLoaded = true;
           this.messages.set([...messages, ...this.messages()]);
           expenses.sort((a: ExpenseData, b: ExpenseData) =>
             a.createdAt < b.createdAt ? -1 : 1,
@@ -174,12 +211,22 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             messages,
             expenses,
           );
-          this.combinedView.set(combinedData);
+          this.combinedView.set([...combinedData, ...this.combinedView()]);
 
-          this.cdr.detectChanges();
-          this.scrollToBottom();
-          // this.page++;
-          // this.loading = false;
+          if (this.page === 1) {
+            this.cdr.detectChanges();
+            this.scrollToBottom();
+          } else {
+            this.cdr.detectChanges();
+            // After loading new items, calculate the new scroll position
+            const newScrollHeight = element!.scrollHeight;
+
+            // Adjust the scroll position to keep the view consistent
+            const scrollDiff = newScrollHeight! - this.scrollPosition;
+            element!.scrollTop = element!.scrollTop + scrollDiff - 100;
+          }
+          this.page++;
+          this.loading = false;
         },
       });
   }
@@ -194,7 +241,6 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     messages: MessageData[],
     expenses: ExpenseData[],
   ): (CombinedMessage | CombinedExpense)[] {
-    // Create a new array with timestamps
     const combined = [
       ...messages.map((m) => ({ ...m, type: 'message' })),
       ...expenses.map((e) => ({ ...e, type: 'expense' })),

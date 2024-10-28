@@ -22,6 +22,7 @@ export class FriendsService {
     conversationId: string,
     loadMessages: boolean,
     loadExpenses: boolean,
+    loadCombined: boolean,
     page: number,
     pageSize: number,
   ) {
@@ -46,14 +47,40 @@ export class FriendsService {
     } else if (loadMessages) {
       return this.httpClient
         .get<Message>(messagesUrl, { withCredentials: true })
-        .pipe(map((messages) => ({ messages: messages.data, expenses: [] })));
+        .pipe(
+          map((messages) => {
+            messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+            return { messages: messages.data, expenses: [] };
+          }),
+        );
     } else if (loadExpenses) {
       return this.httpClient
         .get<Expense>(expensesUrl, { withCredentials: true })
-        .pipe(map((expenses) => ({ messages: [], expenses: expenses.data })));
+        .pipe(
+          map((expenses) => {
+            expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+            return { messages: [], expenses: expenses.data };
+          }),
+        );
     } else {
       return of({ messages: [], expenses: [] }); // No data to load
     }
+  }
+
+  fetchAllExpenses(conversationId: string) {
+    const params = new HttpParams().set('fetchAll', true);
+
+    return this.httpClient
+      .get<Expense>(`${API_URLS.getExpenses}/${conversationId}`, {
+        params,
+        withCredentials: true,
+      })
+      .pipe(
+        map((expenses) => {
+          expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+          return expenses.data;
+        }),
+      );
   }
 
   addExpense(

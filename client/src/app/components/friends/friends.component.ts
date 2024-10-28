@@ -73,8 +73,12 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   charCountExceeded = false;
 
   isImageLoaded = false;
-  page = 1;
-  pageSize = 10;
+  pageMessage = 1;
+  pageSizeMessage = 10;
+  pageExpense = 1;
+  pageSizeExpense = 10;
+  pageCombined = 1;
+  pageSizeCombined = 20;
   loading = false;
   allMessagesLoaded = false;
   allExpensesLoaded = false;
@@ -114,7 +118,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       this.messages.set([]);
       this.expenses.set([]);
       this.combinedView.set([]);
-      this.page = 1;
+      this.pageMessage = 1;
+      this.pageExpense = 1;
+      this.pageCombined = 1;
       this.messageInput = '';
       this.allMessagesLoaded = false;
       this.allExpensesLoaded = false;
@@ -156,11 +162,11 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   }
 
   onLoadCombined(element: HTMLElement) {
-    this.fetchMessagesAndExpenses(false, false, true, element); // Load both messages and expenses
+    this.fetchMessagesAndExpenses(false, false, true, element); // Load combined view
   }
 
   onLoadAll(element: HTMLElement) {
-    this.fetchMessagesAndExpenses(true, true, true, element); // Load both messages and expenses
+    this.fetchMessagesAndExpenses(true, true, true, element); // Load all
   }
 
   fetchMessagesAndExpenses(
@@ -184,36 +190,42 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         loadMessages,
         loadExpenses,
         loadCombined,
-        this.page,
-        this.pageSize,
+        this.pageMessage,
+        this.pageSizeMessage,
+        this.pageExpense,
+        this.pageSizeExpense,
+        this.pageCombined,
+        this.pageSizeCombined,
       )
       .subscribe({
-        next: ({ messages, expenses }) => {
+        next: ({ messages, expenses, combined }) => {
           if (
             !this.allMessagesLoaded &&
             loadMessages &&
-            messages.length < this.pageSize
+            messages.length < this.pageSizeMessage
           )
             this.allMessagesLoaded = true;
           if (
             !this.allExpensesLoaded &&
             loadExpenses &&
-            expenses.length < this.pageSize
+            expenses.length < this.pageSizeExpense
           )
             this.allExpensesLoaded = true;
+          if (
+            !this.allCombinedLoaded &&
+            loadCombined &&
+            combined.length < this.pageSizeCombined
+          )
+            this.allCombinedLoaded = true;
           this.messages.set([...messages, ...this.messages()]);
-          expenses.sort((a: ExpenseData, b: ExpenseData) =>
-            a.createdAt < b.createdAt ? -1 : 1,
-          );
           this.expenses.set([...expenses, ...this.expenses()]);
+          this.combinedView.set([...combined, ...this.combinedView()]);
 
-          const combinedData = this.combineMessagesAndExpenses(
-            messages,
-            expenses,
-          );
-          this.combinedView.set([...combinedData, ...this.combinedView()]);
-
-          if (this.page === 1) {
+          if (
+            this.pageSizeMessage === 1 ||
+            this.pageSizeExpense === 1 ||
+            this.pageSizeCombined === 1
+          ) {
             this.cdr.detectChanges();
             this.scrollToBottom();
           } else {
@@ -225,7 +237,10 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             const scrollDiff = newScrollHeight! - this.scrollPosition;
             element!.scrollTop = element!.scrollTop + scrollDiff - 100;
           }
-          this.page++;
+          if (loadMessages) this.pageMessage++;
+          if (loadExpenses) this.pageExpense++;
+          if (loadCombined) this.pageCombined++;
+
           this.loading = false;
         },
       });

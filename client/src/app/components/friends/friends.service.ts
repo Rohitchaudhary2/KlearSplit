@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
+  CombinedView,
   Expense,
   ExpenseInput,
   ExpenseResponse,
@@ -23,24 +24,42 @@ export class FriendsService {
     loadMessages: boolean,
     loadExpenses: boolean,
     loadCombined: boolean,
-    page: number,
-    pageSize: number,
+    pageMessage: number,
+    pageSizeMessage: number,
+    pageExpense: number,
+    pageSizeExpense: number,
+    pageCombined: number,
+    pageSizeCombined: number,
   ) {
-    const messagesUrl = `${API_URLS.getMessages}/${conversationId}?page=${page}&pageSize=${pageSize}`;
-    const expensesUrl = `${API_URLS.getExpenses}/${conversationId}?page=${page}&pageSize=${pageSize}`;
+    const messagesUrl = `${API_URLS.getMessages}/${conversationId}?page=${pageMessage}&pageSize=${pageSizeMessage}`;
+    const expensesUrl = `${API_URLS.getExpenses}/${conversationId}?page=${pageExpense}&pageSize=${pageSizeExpense}`;
+    const combinedUrl = `${API_URLS.getCombined}/${conversationId}?page=${pageCombined}&pageSize=${pageSizeCombined}`;
     if (loadMessages && loadExpenses) {
       return this.httpClient
         .get<Message>(messagesUrl, { withCredentials: true })
         .pipe(
           concatMap((messages) => {
+            // Sort messages by createdAt
             messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+
+            // First request completed, now make the second request
             return this.httpClient
               .get<Expense>(expensesUrl, { withCredentials: true })
               .pipe(
-                map((expenses) => ({
-                  messages: messages.data,
-                  expenses: expenses.data,
-                })),
+                concatMap((expenses) => {
+                  expenses.data.sort((a, b) =>
+                    a.createdAt < b.createdAt ? -1 : 1,
+                  );
+                  return this.httpClient
+                    .get<CombinedView>(combinedUrl, { withCredentials: true })
+                    .pipe(
+                      map((combined) => ({
+                        messages: messages.data,
+                        expenses: expenses.data,
+                        combined: combined.data, // Combine results
+                      })),
+                    );
+                }),
               );
           }),
         );
@@ -50,7 +69,7 @@ export class FriendsService {
         .pipe(
           map((messages) => {
             messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
-            return { messages: messages.data, expenses: [] };
+            return { messages: messages.data, expenses: [], combined: [] };
           }),
         );
     } else if (loadExpenses) {
@@ -59,11 +78,20 @@ export class FriendsService {
         .pipe(
           map((expenses) => {
             expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
-            return { messages: [], expenses: expenses.data };
+            return { messages: [], expenses: expenses.data, combined: [] };
+          }),
+        );
+    } else if (loadCombined) {
+      return this.httpClient
+        .get<CombinedView>(combinedUrl, { withCredentials: true })
+        .pipe(
+          map((combined) => {
+            combined.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+            return { messages: [], expenses: [], combined: combined.data };
           }),
         );
     } else {
-      return of({ messages: [], expenses: [] }); // No data to load
+      return of({ messages: [], expenses: [], combined: [] }); // No data to load
     }
   }
 

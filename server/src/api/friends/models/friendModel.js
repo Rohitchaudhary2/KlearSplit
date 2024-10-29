@@ -1,4 +1,4 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Op } from "sequelize";
 import { FriendExpense, FriendMessage } from "../../../config/db.connection.js";
 
 export default (sequelize) => {
@@ -79,10 +79,10 @@ export default (sequelize) => {
       },
     );
     await FriendExpense.update(
-      { deletedAt: new Date() },
+      { deletedAt: new Date(), is_deleted: 1 },
       {
         where: {
-          conversation_id,
+          [Op.and]: [{ conversation_id }, { is_deleted: 0 }],
         },
         transaction,
       },
@@ -105,10 +105,10 @@ export default (sequelize) => {
       },
     );
     await FriendExpense.update(
-      { deletedAt: null },
+      { deletedAt: null, is_deleted: 0 },
       {
         where: {
-          conversation_id,
+          [Op.and]: [{ conversation_id }, { is_deleted: 1 }],
         },
         transaction,
         paranoid: false,

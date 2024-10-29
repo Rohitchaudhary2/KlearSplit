@@ -223,7 +223,7 @@ class FriendService {
       expenseData.payer_id !== friendExist.friend2_id
     ) {
       throw new ErrorHandler(
-        400,
+        403,
         "You are not allowed to add expense in this chat.",
       );
     }
@@ -426,6 +426,13 @@ class FriendService {
     }
     const transaction = await sequelize.transaction();
     try {
+      // Update the is_deleted field
+      await FriendDb.updateExpense(
+        { is_deleted: 2 },
+        friend_expense_id,
+        transaction,
+      );
+
       // Delete the expense
       const { affectedRows } = await FriendDb.deleteExpense(
         friend_expense_id,

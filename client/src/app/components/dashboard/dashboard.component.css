@@ -1,0 +1,27 @@
+/* chart-dashboard.component.css */
+.chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 1rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.col {
+  flex: 1;
+  max-width: 45%; /* Adjust based on your needs */
+  margin: 10px;
+}
+
+canvas {
+  width: 100%;
+  height: 300px; /* Set a reasonable height */
+}

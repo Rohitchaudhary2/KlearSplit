@@ -1,7 +1,9 @@
 @if (authService.currentUser() === null) {
   <p>Please Login or Register to move further!</p>
 } @else {
-  <p>Welcome, {{ authService.currentUser()?.first_name }}</p>
+  <p class="fs-2 justify-content-center align-items-center d-flex">
+    Welcome, {{ authService.currentUser()?.first_name }}
+  </p>
 }
 <!-- chart-dashboard.component.html -->
 <div class="chart-container">
@@ -11,7 +13,7 @@
         baseChart
         [data]="pieChartData1"
         [type]="'pie'"
-        [options]="chartOptions"
+        [options]="pieChartOptions1"
       ></canvas>
     </div>
     <div class="col">
@@ -19,7 +21,7 @@
         baseChart
         [data]="pieChartData2"
         [type]="'pie'"
-        [options]="chartOptions"
+        [options]="pieChartOptions2"
       ></canvas>
     </div>
   </div>
@@ -29,7 +31,7 @@
         baseChart
         [data]="pieChartData3"
         [type]="'pie'"
-        [options]="chartOptions"
+        [options]="pieChartOptions3"
       ></canvas>
     </div>
     <div class="col">
@@ -37,7 +39,7 @@
         baseChart
         [data]="barChartData"
         [type]="'bar'"
-        [options]="chartOptions"
+        [options]="barChartOptions"
       ></canvas>
     </div>
   </div>

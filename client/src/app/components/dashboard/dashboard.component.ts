@@ -1,6 +1,5 @@
 import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
-
 import { AuthService } from '../auth/auth.service';
 import { ChartDataset, ChartOptions } from 'chart.js';
 import { FriendsService } from '../friends/friends.service';
@@ -73,8 +72,86 @@ export class DashboardComponent implements OnInit {
     ],
   };
 
-  // Properly typed ChartOptions
-  chartOptions: ChartOptions<'pie' | 'bar'> = {
+  // Centralized base ChartOptions configuration
+  private baseChartOptions: ChartOptions<'pie' | 'bar'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      tooltip: {
+        enabled: true,
+      },
+    },
+    animations: {
+      tension: {
+        duration: 1000,
+        easing: 'easeInOutQuad',
+        from: 0.3,
+        to: 0.5,
+        loop: true,
+      },
+    },
+    hover: {
+      mode: 'nearest',
+      intersect: true,
+    },
+  };
+
+  // Specific options for each chart, extending the base configuration
+  pieChartOptions1: ChartOptions<'pie'> = {
+    ...this.baseChartOptions,
+    plugins: {
+      ...this.baseChartOptions.plugins,
+      title: {
+        display: true,
+        text: 'Expense Distribution by Amount Range', // Title for the first pie chart
+        font: {
+          size: 18,
+        },
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
+      },
+    },
+  };
+
+  pieChartOptions2: ChartOptions<'pie'> = {
+    ...this.baseChartOptions,
+    plugins: {
+      ...this.baseChartOptions.plugins,
+      title: {
+        display: true,
+        text: 'Category Distribution', // Title for the second pie chart
+        font: {
+          size: 18,
+        },
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
+      },
+    },
+  };
+
+  pieChartOptions3: ChartOptions<'pie'> = {
+    ...this.baseChartOptions,
+    plugins: {
+      ...this.baseChartOptions.plugins,
+      title: {
+        display: true,
+        text: 'Category Distribution', // Title for the second pie chart
+        font: {
+          size: 18,
+        },
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
+      },
+    },
+  };
+
+  barChartOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -114,7 +191,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // Helper function to dynamically generate labels based on the data
   private getLabelsForData(data: number[]): string[] {
     const labels = [];
     if (data[0] > 0) {

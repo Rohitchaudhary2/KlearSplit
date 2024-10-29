@@ -84,6 +84,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   allExpensesLoaded = false;
   allCombinedLoaded = false;
   scrollPosition = 0;
+  errorNumber = 0;
+
+  addExpenseLoader = false;
 
   onImageLoad() {
     this.isImageLoaded = true; // Set loaded state to true
@@ -148,7 +151,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   }
 
   loadItems(element: HTMLElement) {
-    if (this.showMessages() === 'All') this.onLoadAll(element);
+    if (this.showMessages() === 'All') this.onLoadCombined(element);
     else if (this.showMessages() === 'Messages') this.onLoadMessages(element);
     else this.onLoadExpenses(element);
   }
@@ -163,10 +166,6 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
   onLoadCombined(element: HTMLElement) {
     this.fetchMessagesAndExpenses(false, false, true, element); // Load combined view
-  }
-
-  onLoadAll(element: HTMLElement) {
-    this.fetchMessagesAndExpenses(true, true, true, element); // Load all
   }
 
   fetchMessagesAndExpenses(
@@ -222,9 +221,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           this.combinedView.set([...combined, ...this.combinedView()]);
 
           if (
-            this.pageSizeMessage === 1 ||
-            this.pageSizeExpense === 1 ||
-            this.pageSizeCombined === 1
+            this.pageMessage === 1 ||
+            this.pageExpense === 1 ||
+            this.pageCombined === 1
           ) {
             this.cdr.detectChanges();
             this.scrollToBottom();
@@ -497,8 +496,22 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       enterAnimationDuration: '200ms',
       exitAnimationDuration: '200ms',
     });
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe((data) => {
+      const result = data.formData;
+      const expenseData = data.expenseData;
+
       if (result) {
+        this.addExpenseLoader = true;
+        this.expenses.set([
+          ...this.expenses(),
+          { ...expenseData, friend_expense_id: `adding` },
+        ]);
+        this.combinedView.set([
+          ...this.combinedView(),
+          { ...expenseData, friend_expense_id: `adding` },
+        ]);
+        this.cdr.detectChanges();
+        this.scrollToBottom();
         this.friendsService
           .addExpense(this.selectedUser()!.conversation_id, result)
           .subscribe({
@@ -507,12 +520,16 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
                 response.data.payer = this.user_name;
               else
                 response.data.payer = `${this.selectedUser()?.friend.first_name}${this.selectedUser()?.friend.last_name || ''}`;
-              this.expenses.set([...this.expenses(), response.data]);
-              const combinedData = [
-                ...this.combinedView(),
-                { ...response.data, type: 'message' },
-              ];
-              this.combinedView.set(combinedData);
+              const currExpenses = this.expenses();
+              currExpenses.pop();
+              this.expenses.set([...currExpenses, response.data]);
+              const currCombined = this.combinedView();
+              currCombined.pop();
+              this.combinedView.set([
+                ...currCombined,
+                { ...response.data, type: 'expense' },
+              ]);
+              this.addExpenseLoader = false;
               this.cdr.detectChanges();
               this.scrollToBottom();
               if (response.data.payer_id === this.user?.user_id) {
@@ -528,8 +545,112 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
               }
               this.toastr.success('Expense Created successfully', 'Success');
             },
+            error: () => {
+              const currExpenses = this.expenses();
+              currExpenses[currExpenses.length - 1].friend_expense_id =
+                `error${this.errorNumber}`;
+              this.expenses.set(currExpenses);
+              const combinedView = this.combinedView();
+              let combinedViewSize = combinedView.length;
+              while (true) {
+                if (
+                  this.isCombinedExpense(combinedView[combinedViewSize - 1])
+                ) {
+                  const expense = combinedView[
+                    combinedViewSize - 1
+                  ] as CombinedExpense;
+                  expense.friend_expense_id = `error${this.errorNumber}`;
+                  break;
+                }
+                combinedViewSize--;
+              }
+              this.errorNumber++;
+              this.addExpenseLoader = false;
+            },
           });
       }
     });
+  }
+
+  onRetryExpenseAddition(id: string) {
+    this.addExpenseLoader = true;
+    const expense = this.expenses().filter(
+      (expense) => expense.friend_expense_id === id,
+    );
+    expense[0].friend_expense_id = `retrying${this.errorNumber}`;
+    const combinedExpense = this.combinedView().filter((expense) => {
+      if (this.isCombinedExpense(expense)) {
+        return expense.friend_expense_id === id;
+      }
+      return false;
+    });
+    const combined = combinedExpense[0] as CombinedExpense;
+    combined.friend_expense_id = `retrying${this.errorNumber}`;
+    this.cdr.detectChanges();
+    const { friend_expense_id, ...expenseData } = expense[0];
+    const formData = Object.entries(expenseData).reduce(
+      (formData, [key, value]) => {
+        if (value) {
+          formData.append(key, value);
+        }
+        return formData;
+      },
+      new FormData(),
+    );
+    this.friendsService
+      .addExpense(this.selectedUser()!.conversation_id, formData)
+      .subscribe({
+        next: (response: ExpenseResponse) => {
+          if (response.data.payer_id === this.user?.user_id)
+            response.data.payer = this.user_name;
+          else
+            response.data.payer = `${this.selectedUser()?.friend.first_name}${this.selectedUser()?.friend.last_name || ''}`;
+          const updatedExpenses = this.expenses().map((expense) => {
+            return expense.friend_expense_id === friend_expense_id
+              ? response.data
+              : expense;
+          });
+          this.expenses.set(updatedExpenses);
+          const updatedCombinedView = this.combinedView().map((item) => {
+            return this.isCombinedExpense(item) &&
+              item.friend_expense_id === friend_expense_id
+              ? { ...response.data, type: 'expense' }
+              : item;
+          });
+          this.combinedView.set(updatedCombinedView);
+          this.addExpenseLoader = false;
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+          if (response.data.payer_id === this.user?.user_id) {
+            this.selectedUser()!.balance_amount = JSON.stringify(
+              parseFloat(this.selectedUser()!.balance_amount) +
+                parseFloat(response.data.debtor_amount),
+            );
+          } else {
+            this.selectedUser()!.balance_amount = JSON.stringify(
+              parseFloat(this.selectedUser()!.balance_amount) -
+                parseFloat(response.data.debtor_amount),
+            );
+          }
+          this.toastr.success('Expense Created successfully', 'Success');
+        },
+        error: () => {
+          const updatedExpenses = this.expenses().map((expense) => {
+            return expense.friend_expense_id === friend_expense_id
+              ? { ...expense, friend_expense_id: `error${this.errorNumber}` }
+              : expense;
+          });
+          this.expenses.set(updatedExpenses);
+          const updatedCombinedView = this.combinedView().map((item) => {
+            return this.isCombinedExpense(item) &&
+              item.friend_expense_id === friend_expense_id
+              ? { ...item, friend_expense_id: `error${this.errorNumber}` }
+              : item;
+          });
+          this.combinedView.set(updatedCombinedView);
+          this.errorNumber++;
+          this.addExpenseLoader = false;
+        },
+      });
   }
 }

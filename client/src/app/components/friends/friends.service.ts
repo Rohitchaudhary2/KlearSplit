@@ -53,11 +53,16 @@ export class FriendsService {
                   return this.httpClient
                     .get<CombinedView>(combinedUrl, { withCredentials: true })
                     .pipe(
-                      map((combined) => ({
-                        messages: messages.data,
-                        expenses: expenses.data,
-                        combined: combined.data, // Combine results
-                      })),
+                      map((combined) => {
+                        combined.data.sort((a, b) =>
+                          a.createdAt < b.createdAt ? -1 : 1,
+                        );
+                        return {
+                          messages: messages.data,
+                          expenses: expenses.data,
+                          combined: combined.data,
+                        };
+                      }),
                     );
                 }),
               );
@@ -113,7 +118,7 @@ export class FriendsService {
 
   addExpense(
     conversationId: string,
-    expenseData: SettlementData | ExpenseInput,
+    expenseData: SettlementData | ExpenseInput | FormData,
   ) {
     return this.httpClient.post<ExpenseResponse>(
       `${API_URLS.addExpense}/${conversationId}`,

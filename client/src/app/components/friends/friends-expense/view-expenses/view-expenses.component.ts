@@ -27,11 +27,14 @@ export class ViewExpensesComponent implements OnInit {
     debtor_amount: string;
   }>();
   totalExpenses = signal<ExpenseData[] | []>([]);
+  loading = false;
 
   ngOnInit() {
+    this.loading = true;
     this.friendsService.fetchAllExpenses(this.conversation_id).subscribe({
       next: (expenses) => {
         this.totalExpenses.set(expenses);
+        this.loading = false;
       },
     });
   }

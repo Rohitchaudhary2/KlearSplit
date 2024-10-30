@@ -40,9 +40,11 @@
             <tr
               (click)="onSelectUser(request)"
               class="row equal-height-row d-flex justify-content-between m-0"
+              [ngClass]="selectedFriend() === request ? 'active' : ''"
               style="cursor: pointer"
             >
               <td
+                [ngClass]="selectedFriend() === request ? 'active' : ''"
                 class="col-md-3 col-lg-2 col-sm-3"
                 style="
                   flex: 0 0 auto;
@@ -57,7 +59,11 @@
                     alt="Image"
                 /></span>
               </td>
-              <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
+              <td
+                class="col-md-4 col-lg-4 col-sm-3"
+                [ngClass]="selectedFriend() === request ? 'active' : ''"
+                style="flex: 1 1 0"
+              >
                 <div class="d-flex justify-content-between align-items-center">
                   <span
                     >{{ request.friend.first_name }}
@@ -146,6 +152,7 @@
           @for (friend of friendList(); track $index) {
             <tr
               class="row equal-height-row d-flex justify-content-between m-0"
+              [ngClass]="selectedFriend() === friend ? 'active' : ''"
               style="cursor: pointer"
               (click)="onSelectUser(friend)"
             >

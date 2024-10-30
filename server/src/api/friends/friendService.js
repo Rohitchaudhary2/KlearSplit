@@ -468,18 +468,19 @@ class FriendService {
     const totalMessages = await FriendDb.countMessages(conversation_id);
     const totalExpenses = await FriendDb.countExpenses(conversation_id);
     const totalItems = totalMessages + totalExpenses;
-    const totalPages = Math.ceil(totalItems / pageSize);
+    // const totalPages = Math.ceil(totalItems / pageSize);
     const offset = (page - 1) * pageSize;
 
     // Check if the page request is valid
     if (offset >= totalItems) {
-      return {
-        data: [],
-        currentPage: page,
-        totalPages,
-        totalItems,
-        message: "No more data available.",
-      };
+      return [];
+      // return {
+      //   data: [],
+      //   currentPage: page,
+      //   totalPages,
+      //   totalItems,
+      //   message: "No more data available.",
+      // };
     }
 
     const messages = await this.getMessages(conversation_id, 1, pageSize * 2);

@@ -65,7 +65,7 @@ export class DashboardComponent implements OnInit {
     labels: ['January', 'February', 'March'],
     datasets: [
       {
-        label: 'Monthly Sales',
+        label: 'Monthly Expense',
         data: [55, 49, 72],
         backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
       },

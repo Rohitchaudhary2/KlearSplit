@@ -3,7 +3,6 @@ import AuthService from "../auth/authServices.js";
 import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import { ErrorHandler } from "./errorHandler.js";
 import UserService from "../users/userServices.js";
-import { sequelize } from "../../config/db.connection.js";
 
 const handleAccessToken = (req) => {
   if (!req.cookies["accessToken"]) {
@@ -28,8 +27,10 @@ const handleRefreshToken = async (req, res, next) => {
     // Verify the refresh token
     const userId = jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY);
 
+    req.user = await UserService.getUser(userId.id, next);
+
     // Check if the refresh token exists in the database
-    const refreshTokenDb = await AuthService.getRefreshToken(refreshToken);
+    const refreshTokenDb = await AuthService.getRefreshToken(req.user.email);
     if (!refreshTokenDb)
       throw new ErrorHandler(401, "Access Denied. Invalid Token");
 
@@ -37,21 +38,7 @@ const handleRefreshToken = async (req, res, next) => {
     const { accessToken, refreshToken: newRefreshToken } =
       generateAccessAndRefereshTokens(userId.id);
 
-    const transaction = await sequelize.transaction();
-    await AuthService.createRefreshToken(
-      {
-        token: newRefreshToken,
-        user_id: userId.id,
-      },
-      transaction,
-    );
-
-    // Commit the transaction
-    await transaction.commit();
-
-    await AuthService.deleteRefreshToken(refreshToken);
-
-    req.user = await UserService.getUser(userId.id, next);
+    await AuthService.createRefreshToken(newRefreshToken, req.user.email);
 
     res
       .cookie("accessToken", accessToken, {
@@ -77,6 +64,24 @@ const handleRefreshToken = async (req, res, next) => {
   }
 };
 
+// Function to check whether it's less than 60 seconds in expiration of access token
+function generateNewTokens(accessToken) {
+  // Decode the token to get the payload
+  const decoded = jwt.decode(accessToken);
+
+  if (!decoded || !decoded.exp) {
+    throw new Error("Invalid token or token has no expiration");
+  }
+
+  // Get the current time in seconds
+  const currentTimeInSeconds = Math.floor(Date.now() / 1000);
+
+  // Calculate remaining time in seconds
+  const remainingTime = decoded.exp - currentTimeInSeconds;
+
+  return remainingTime > 60 ? false : true; // Return remaining time less than 60 seconds or not
+}
+
 // Middleware to check access and refresh token's authenticity and expiry
 export const authenticateToken = async (req, res, next) => {
   try {
@@ -84,6 +89,24 @@ export const authenticateToken = async (req, res, next) => {
     // Verify the access token
     const user = jwt.verify(accessToken, process.env.ACCESS_SECRET_KEY);
     req.user = await UserService.getUser(user.id, next);
+    if (generateNewTokens(accessToken)) {
+      const { accessToken, refreshToken: newRefreshToken } =
+        generateAccessAndRefereshTokens(user.id);
+
+      await AuthService.createRefreshToken(newRefreshToken, req.user.email);
+
+      res
+        .cookie("accessToken", accessToken, {
+          httpOnly: true,
+          sameSite: "strict",
+          maxAge: 10 * 24 * 60 * 60 * 1000,
+        })
+        .cookie("refreshToken", newRefreshToken, {
+          httpOnly: true,
+          sameSite: "strict",
+          maxAge: 10 * 24 * 60 * 60 * 1000,
+        });
+    }
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {

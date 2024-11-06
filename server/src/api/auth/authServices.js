@@ -84,7 +84,7 @@ class AuthService {
     // Storing refresh token in the datbase
     await redis.setex(
       `refreshToken:${email}`,
-      process.env.REFRESH_EXPIRY_IN_MS,
+      process.env.REFRESH_EXPIRY_IN_SECONDS,
       refreshToken,
     );
   };

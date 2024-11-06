@@ -193,6 +193,9 @@
             <div class="custom-width">
               <button
                 [disabled]="addExpenseLoader"
+                [ngClass]="
+                  getBlockLabel() === 'Unblock' ? 'disabled-pointer' : ''
+                "
                 class="btn btn-success w-100"
                 (click)="openAddExpenseDialog()"
               >

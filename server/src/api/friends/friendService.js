@@ -218,15 +218,15 @@ class FriendService {
     ) {
       throw new ErrorHandler(403, "This action is not allowed.");
     }
-    if (
-      expenseData.payer_id !== friendExist.friend1_id &&
-      expenseData.payer_id !== friendExist.friend2_id
-    ) {
-      throw new ErrorHandler(
-        403,
-        "You are not allowed to add expense in this chat.",
-      );
-    }
+    // if (
+    //   expenseData.payer_id !== friendExist.friend1_id &&
+    //   expenseData.payer_id !== friendExist.friend2_id
+    // ) {
+    //   throw new ErrorHandler(
+    //     403,
+    //     "You are not allowed to add expense in this chat.",
+    //   );
+    // }
     const transaction = await sequelize.transaction();
     try {
       const debtorAmount = calculateDebtorAmount(expenseData);
@@ -247,6 +247,16 @@ class FriendService {
 
       if (expenseData.payer_id === expenseData.debtor_id) {
         throw new ErrorHandler(400, "You cannot add an expense with yourself");
+      }
+
+      if (
+        expenseData.payer_id !== friendExist.friend1_id &&
+        expenseData.payer_id !== friendExist.friend2_id
+      ) {
+        throw new ErrorHandler(
+          403,
+          "You are not allowed to add expense in this chat.",
+        );
       }
 
       const expense = await FriendDb.addExpense(expenseData, transaction);

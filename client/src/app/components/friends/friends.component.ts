@@ -430,46 +430,31 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     }
   }
 
-  getArchiveStatus(): string {
-    const user = this.selectedUser();
-    if (
-      user?.archival_status === 'BOTH' ||
-      (user?.status === 'SENDER' && user?.archival_status === 'FRIEND1') ||
-      (user?.status === 'RECEIVER' && user?.archival_status === 'FRIEND2')
-    ) {
-      return 'Unarchived';
-    }
-    return 'Archived';
-  }
-
   getArchiveLabel(): string {
-    const user = this.selectedUser();
-    return user?.archival_status === 'BOTH' ||
-      (user?.status === 'SENDER' && user?.archival_status === 'FRIEND1') ||
-      (user?.status === 'RECEIVER' && user?.archival_status === 'FRIEND2')
-      ? 'Unarchive'
-      : 'Archive';
-  }
-
-  getBlockStatus(): string {
-    const user = this.selectedUser();
-    if (
-      user?.block_status === 'BOTH' ||
-      (user?.status === 'SENDER' && user?.block_status === 'FRIEND1') ||
-      (user?.status === 'RECEIVER' && user?.block_status === 'FRIEND2')
-    ) {
-      return 'Unblocked';
-    }
-    return 'Blocked';
+    return this.getStatusLabel('archival_status', 'Archive', 'Unarchive');
   }
 
   getBlockLabel(): string {
+    return this.getStatusLabel('block_status', 'Block', 'Unblock');
+  }
+
+  private getStatusLabel(
+    statusField: 'archival_status' | 'block_status',
+    defaultLabel: string,
+    alternateLabel: string,
+  ): string {
     const user = this.selectedUser();
-    return user?.block_status === 'BOTH' ||
-      (user?.status === 'SENDER' && user?.block_status === 'FRIEND1') ||
-      (user?.status === 'RECEIVER' && user?.block_status === 'FRIEND2')
-      ? 'Unblock'
-      : 'Block';
+
+    // Check conditions for unblocking/unarchiving based on block_status or archival_status
+    if (
+      user?.[statusField] === 'BOTH' ||
+      (user?.status === 'SENDER' && user?.[statusField] === 'FRIEND1') ||
+      (user?.status === 'RECEIVER' && user?.[statusField] === 'FRIEND2')
+    ) {
+      return alternateLabel;
+    }
+
+    return defaultLabel;
   }
 
   archiveBlock(id: string, type: string) {
@@ -477,14 +462,33 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       next: () => {
         if (type === 'archived') {
           this.toastr.success(
-            `${this.getArchiveStatus()} Successfully`,
+            `${this.getArchiveLabel()}d Successfully`,
             'Success',
           );
         } else {
           this.toastr.success(
-            `${this.getBlockStatus()} Successfully`,
+            `${this.getBlockLabel()}ed Successfully`,
             'Success',
           );
+          if (this.getBlockLabel() === 'Block') {
+            if (this.selectedUser()?.block_status !== 'NONE') {
+              this.selectedUser()!.block_status = 'BOTH';
+            } else {
+              this.selectedUser()!.block_status =
+                this.selectedUser()?.status === 'SENDER'
+                  ? 'FRIEND1'
+                  : 'FRIEND2';
+            }
+          } else {
+            if (this.selectedUser()?.block_status !== 'BOTH') {
+              this.selectedUser()!.block_status = 'NONE';
+            } else {
+              this.selectedUser()!.block_status =
+                this.selectedUser()?.status === 'SENDER'
+                  ? 'FRIEND2'
+                  : 'FRIEND1';
+            }
+          }
         }
       },
     });

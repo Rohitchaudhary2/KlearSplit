@@ -22,4 +22,5 @@ export const API_URLS = {
   getExpenses: `${environment.apiBaseUrl}/friends/getexpenses`,
   deleteExpense: `${environment.apiBaseUrl}/friends/deleteexpense`,
   getCombined: `${environment.apiBaseUrl}/friends/getboth`,
+  refreshAccessToken: `${environment.apiBaseUrl}/auth/refreshtoken`,
 };

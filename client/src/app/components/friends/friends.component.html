@@ -110,6 +110,7 @@
           #messageContainer
           (scroll)="onScroll($event)"
           class="message-body flex-grow-1 row p-0 m-0"
+          [ngClass]="loading ? 'loading' : ''"
           style="max-height: 57vh; overflow-y: auto"
         >
           <div
@@ -193,9 +194,6 @@
             <div class="custom-width">
               <button
                 [disabled]="addExpenseLoader"
-                [ngClass]="
-                  getBlockLabel() === 'Unblock' ? 'disabled-pointer' : ''
-                "
                 class="btn btn-success w-100"
                 (click)="openAddExpenseDialog()"
               >

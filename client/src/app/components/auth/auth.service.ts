@@ -182,4 +182,10 @@ export class AuthService {
         }),
       );
   }
+
+  refreshAccessToken() {
+    return this.httpClient.get(`${API_URLS.refreshAccessToken}`, {
+      withCredentials: true,
+    });
+  }
 }

@@ -175,39 +175,18 @@ export class DashboardComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadExpenseData('10170e12-5aaf-4f0f-8a28-384901a49e3e');
+    this.loadExpenseData('3de5115e-4d6f-4327-8e41-69dd34ba03c6');
   }
 
   private loadExpenseData(conversationId: string): void {
     this.friendService.fetchExpensesByRange(conversationId).subscribe({
       next: (response) => {
         this.pieChartData1.datasets[0].data = response;
-        this.pieChartData1.labels = this.getLabelsForData(response);
         this.chart?.update();
       },
       error: () => {
         this.toastrService.error('Error fetching the expense data', 'Error');
       },
     });
-  }
-
-  private getLabelsForData(data: number[]): string[] {
-    const labels = [];
-    if (data[0] > 0) {
-      labels.push('1-1000');
-    }
-    if (data[1] > 0) {
-      labels.push('1001-5000');
-    }
-    if (data[2] > 0) {
-      labels.push('5001-10000');
-    }
-    if (data[3] > 0) {
-      labels.push('10001-15000');
-    }
-    if (data[4] > 0) {
-      labels.push('>15000');
-    }
-    return labels;
   }
 }

@@ -1,9 +1,16 @@
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  QueryList,
+  signal,
+  ViewChildren,
+} from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { AuthService } from '../auth/auth.service';
 import { ChartDataset, ChartOptions } from 'chart.js';
-import { FriendsService } from '../friends/friends.service';
 import { ToastrService } from 'ngx-toastr';
+import { DashboardService } from './dashboard.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,10 +21,11 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
-  private friendService = inject(FriendsService);
   private toastrService = inject(ToastrService);
+  private dashboardService = inject(DashboardService);
+  balanceAmount = signal<number>(0);
 
-  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+  @ViewChildren(BaseChartDirective) charts?: QueryList<BaseChartDirective>;
 
   pieChartData1: {
     labels: string[];
@@ -39,23 +47,32 @@ export class DashboardComponent implements OnInit {
     ],
   };
 
-  pieChartData2 = {
-    labels: ['Category A', 'Category B', 'Category C'],
+  pieChartData2: {
+    labels: string[];
+    datasets: ChartDataset<'pie'>[];
+  } = {
+    labels: ['Amount Lent', 'Amount Borrowed'],
     datasets: [
       {
-        data: [40, 30, 30],
-        backgroundColor: ['#4BC0C0', '#FF6384', '#36A2EB'],
+        data: [],
+        backgroundColor: ['#2E7D32', '#F44336'],
         hoverOffset: 20,
       },
     ],
   };
 
   pieChartData3 = {
-    labels: ['Segment 1', 'Segment 2', 'Segment 3'],
+    labels: ['Friend 1', 'Friend 2', 'Friend 3', 'Friend 4', 'Friend 5'],
     datasets: [
       {
-        data: [25, 45, 30],
-        backgroundColor: ['#FF9F40', '#9966FF', '#4BC0C0'],
+        data: [2],
+        backgroundColor: [
+          '#FF9F40',
+          '#9966FF',
+          '#4BC0C0',
+          '#2E7D32',
+          '#36A2EB',
+        ],
         hoverOffset: 20,
       },
     ],
@@ -65,7 +82,7 @@ export class DashboardComponent implements OnInit {
     labels: ['January', 'February', 'March'],
     datasets: [
       {
-        label: 'Monthly Sales',
+        label: 'Monthly Expense',
         data: [55, 49, 72],
         backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
       },
@@ -77,6 +94,17 @@ export class DashboardComponent implements OnInit {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
+      legend: {
+        position: 'right',
+        align: 'end',
+        labels: {
+          font: {
+            size: 14,
+          },
+          padding: 20,
+          boxWidth: 20,
+        },
+      },
       tooltip: {
         enabled: true,
       },
@@ -103,7 +131,7 @@ export class DashboardComponent implements OnInit {
       ...this.baseChartOptions.plugins,
       title: {
         display: true,
-        text: 'Expense Distribution by Amount Range', // Title for the first pie chart
+        text: 'Number of Expenses by Amount Range', // Title for the first pie chart
         font: {
           size: 18,
         },
@@ -117,11 +145,17 @@ export class DashboardComponent implements OnInit {
 
   pieChartOptions2: ChartOptions<'pie'> = {
     ...this.baseChartOptions,
+    elements: {
+      arc: {
+        offset: [10, 10], // Adjust this array for consistent spacing
+        borderRadius: 5,
+      },
+    },
     plugins: {
       ...this.baseChartOptions.plugins,
       title: {
         display: true,
-        text: 'Category Distribution', // Title for the second pie chart
+        text: `Balance Amount: ${this.balanceAmount()}`,
         font: {
           size: 18,
         },
@@ -131,6 +165,7 @@ export class DashboardComponent implements OnInit {
         },
       },
     },
+    cutout: '40%',
   };
 
   pieChartOptions3: ChartOptions<'pie'> = {
@@ -139,7 +174,7 @@ export class DashboardComponent implements OnInit {
       ...this.baseChartOptions.plugins,
       title: {
         display: true,
-        text: 'Category Distribution', // Title for the second pie chart
+        text: 'Top Friends',
         font: {
           size: 18,
         },
@@ -175,39 +210,32 @@ export class DashboardComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadExpenseData('10170e12-5aaf-4f0f-8a28-384901a49e3e');
+    this.loadAllExpenses();
   }
 
-  private loadExpenseData(conversationId: string): void {
-    this.friendService.fetchExpensesByRange(conversationId).subscribe({
+  private loadAllExpenses() {
+    this.dashboardService.getAllExpenses().subscribe({
       next: (response) => {
-        this.pieChartData1.datasets[0].data = response;
-        this.pieChartData1.labels = this.getLabelsForData(response);
-        this.chart?.update();
-      },
-      error: () => {
-        this.toastrService.error('Error fetching the expense data', 'Error');
+        this.pieChartData1.datasets[0].data = response.expensesRange;
+        this.pieChartData2.datasets[0].data = response.balanceAmounts;
+        this.balanceAmount.set(
+          response.balanceAmounts[0] - response.balanceAmounts[1],
+        );
+        this.pieChartOptions2 = {
+          ...this.pieChartOptions2,
+          plugins: {
+            ...this.pieChartOptions2.plugins,
+            title: {
+              ...this.pieChartOptions2.plugins?.title,
+              text: `Balance Amount: ${Math.abs(this.balanceAmount())}`,
+              color: this.balanceAmount() < 0 ? '#F44336' : '#2E7D32',
+            },
+          },
+        };
+        // this.pieChartData2.datasets[0].data = response.topFriends.amount
+        this.pieChartData3.datasets[0].data = [56445, 300, 200, 100, 50];
+        this.charts?.forEach((chart) => chart?.chart?.update());
       },
     });
-  }
-
-  private getLabelsForData(data: number[]): string[] {
-    const labels = [];
-    if (data[0] > 0) {
-      labels.push('1-1000');
-    }
-    if (data[1] > 0) {
-      labels.push('1001-5000');
-    }
-    if (data[2] > 0) {
-      labels.push('5001-10000');
-    }
-    if (data[3] > 0) {
-      labels.push('10001-15000');
-    }
-    if (data[4] > 0) {
-      labels.push('>15000');
-    }
-    return labels;
   }
 }

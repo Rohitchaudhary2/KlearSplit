@@ -218,15 +218,15 @@ class FriendService {
     ) {
       throw new ErrorHandler(403, "This action is not allowed.");
     }
-    if (
-      expenseData.payer_id !== friendExist.friend1_id &&
-      expenseData.payer_id !== friendExist.friend2_id
-    ) {
-      throw new ErrorHandler(
-        403,
-        "You are not allowed to add expense in this chat.",
-      );
-    }
+    // if (
+    //   expenseData.payer_id !== friendExist.friend1_id &&
+    //   expenseData.payer_id !== friendExist.friend2_id
+    // ) {
+    //   throw new ErrorHandler(
+    //     403,
+    //     "You are not allowed to add expense in this chat.",
+    //   );
+    // }
     const transaction = await sequelize.transaction();
     try {
       const debtorAmount = calculateDebtorAmount(expenseData);
@@ -247,6 +247,16 @@ class FriendService {
 
       if (expenseData.payer_id === expenseData.debtor_id) {
         throw new ErrorHandler(400, "You cannot add an expense with yourself");
+      }
+
+      if (
+        expenseData.payer_id !== friendExist.friend1_id &&
+        expenseData.payer_id !== friendExist.friend2_id
+      ) {
+        throw new ErrorHandler(
+          403,
+          "You are not allowed to add expense in this chat.",
+        );
       }
 
       const expense = await FriendDb.addExpense(expenseData, transaction);
@@ -468,18 +478,19 @@ class FriendService {
     const totalMessages = await FriendDb.countMessages(conversation_id);
     const totalExpenses = await FriendDb.countExpenses(conversation_id);
     const totalItems = totalMessages + totalExpenses;
-    const totalPages = Math.ceil(totalItems / pageSize);
+    // const totalPages = Math.ceil(totalItems / pageSize);
     const offset = (page - 1) * pageSize;
 
     // Check if the page request is valid
     if (offset >= totalItems) {
-      return {
-        data: [],
-        currentPage: page,
-        totalPages,
-        totalItems,
-        message: "No more data available.",
-      };
+      return [];
+      // return {
+      //   data: [],
+      //   currentPage: page,
+      //   totalPages,
+      //   totalItems,
+      //   message: "No more data available.",
+      // };
     }
 
     const messages = await this.getMessages(conversation_id, 1, pageSize * 2);

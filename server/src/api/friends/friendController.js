@@ -199,6 +199,7 @@ class FriendController {
         page,
         pageSize,
       );
+
       responseHandler(
         res,
         200,

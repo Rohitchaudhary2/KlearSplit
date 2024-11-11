@@ -3,7 +3,6 @@ import { Sequelize } from "sequelize";
 import { database, host, password, username } from "./db.config.js";
 import logger from "../api/utils/logger.js";
 import initializeUser from "../api/users/models/userModel.js";
-import initializeRefreshToken from "../api/auth/refreshTokenModel.js";
 import initializeFriend from "../api/friends/models/friendModel.js";
 import initializeFriendMessage from "../api/friends/models/friendMessageModel.js";
 import initializeFriendExpense from "../api/friends/models/friendExpenseModel.js";
@@ -23,7 +22,6 @@ const sequelize = new Sequelize(database, username, password, {
 
 // Associations for the models
 const User = initializeUser(sequelize);
-const RefreshToken = initializeRefreshToken(sequelize);
 const Friend = initializeFriend(sequelize);
 const FriendMessage = initializeFriendMessage(sequelize);
 const FriendExpense = initializeFriendExpense(sequelize);
@@ -70,4 +68,4 @@ try {
   });
 }
 
-export { sequelize, User, RefreshToken, Friend, FriendMessage, FriendExpense };
+export { sequelize, User, Friend, FriendMessage, FriendExpense };

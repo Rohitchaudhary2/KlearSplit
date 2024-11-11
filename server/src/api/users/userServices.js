@@ -88,13 +88,7 @@ class UserService {
       );
 
       // Store the refresh token in the database
-      await AuthService.createRefreshToken(
-        {
-          token: refreshToken,
-          user_id: createdUser.user_id,
-        },
-        transaction,
-      );
+      await AuthService.createRefreshToken(refreshToken, user.email);
 
       // Commit the transaction
       await transaction.commit();
@@ -179,13 +173,7 @@ class UserService {
       );
 
       // Store the refresh token in the database
-      await AuthService.createRefreshToken(
-        {
-          token: refreshToken,
-          user_id: restoredUser.user_id,
-        },
-        transaction,
-      );
+      await AuthService.createRefreshToken(refreshToken, user.email);
 
       // Commit the transaction
       await transaction.commit();

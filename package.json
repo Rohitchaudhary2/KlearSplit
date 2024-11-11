@@ -25,5 +25,9 @@
     "concurrently": "^9.0.1",
     "husky": "^8.0.0",
     "lint-staged": "^15.2.10"
+  },
+  "dependencies": {
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4"
   }
 }

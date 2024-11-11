@@ -100,6 +100,12 @@ export interface CombinedExpense extends ExpenseData {
   type: string;
 }
 
+export interface CombinedView {
+  success: string;
+  message: string;
+  data: (CombinedExpense | CombinedMessage)[];
+}
+
 export interface ExpenseDeletedEvent {
   id: string;
   payer_id: string;

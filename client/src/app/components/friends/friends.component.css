@@ -224,3 +224,7 @@ td {
     max-height: 100vh !important;
   }
 }
+
+.loading {
+  box-shadow: 0 -5px 0px rgba(89, 108, 228, 0.5);
+}

@@ -13,6 +13,7 @@ import authRouter from "./api/auth/authRoutes.js";
 import { errorMiddleware } from "./api/middlewares/errorHandler.js";
 import { loggerMiddleware } from "./api/middlewares/loggerMiddleware.js";
 import friendRouter from "./api/friends/friendRoutes.js";
+import dashboardRouter from "./api/dashboard/dashboardRoutes.js";
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use(loggerMiddleware);
 app.use("/api/users", userRouter); // User-related routes
 app.use("/api/auth", authRouter); // Authentication related routes
 app.use("/api/friends", friendRouter); // Friend-related routes
+app.use("/api/dashboard", dashboardRouter); // Dashboard-related routes
 
 // ErrorMiddleware to handle any errors that occur during request processing
 app.use(errorMiddleware);

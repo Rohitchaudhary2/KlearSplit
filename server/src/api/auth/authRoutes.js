@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import passport from "../middlewares/googleStrategy.js";
-import { login, logout } from "./authController.js";
+import { login, logout, refreshToken } from "./authController.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import logger from "../utils/logger.js";
 
@@ -58,5 +58,6 @@ authRouter.get("/google/callback", (req, res, next) => {
 });
 
 authRouter.get("/logout", authenticateToken, logout);
+authRouter.get("/refreshtoken", refreshToken);
 
 export default authRouter;

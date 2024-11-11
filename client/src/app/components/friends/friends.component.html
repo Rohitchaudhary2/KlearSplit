@@ -110,6 +110,7 @@
           #messageContainer
           (scroll)="onScroll($event)"
           class="message-body flex-grow-1 row p-0 m-0"
+          [ngClass]="loading ? 'loading' : ''"
           style="max-height: 57vh; overflow-y: auto"
         >
           <div
@@ -135,6 +136,7 @@
                 @for (expense of expenses(); track expense.friend_expense_id) {
                   <app-expense
                     [expense]="{
+                      expense_id: expense.friend_expense_id,
                       expense_name: expense.expense_name,
                       total_amount: expense.total_amount,
                       debtor_amount: expense.debtor_amount,
@@ -149,7 +151,7 @@
                 }
               } @else {
                 @for (item of combinedView(); track $index) {
-                  @if (item.type === "message" && !isCombinedExpense(item)) {
+                  @if (!isCombinedExpense(item)) {
                     <app-message
                       [message]="{
                         sender_id: item.sender_id,
@@ -163,7 +165,9 @@
                     </app-message>
                   } @else if (isCombinedExpense(item)) {
                     <app-expense
+                      (onRetry)="onRetryExpenseAddition($event)"
                       [expense]="{
+                        expense_id: item.friend_expense_id,
                         expense_name: item.expense_name,
                         total_amount: item.total_amount,
                         debtor_amount: item.debtor_amount,
@@ -189,6 +193,7 @@
           >
             <div class="custom-width">
               <button
+                [disabled]="addExpenseLoader"
                 class="btn btn-success w-100"
                 (click)="openAddExpenseDialog()"
               >
@@ -251,8 +256,8 @@
           </h1>
           <img
             class="chat-box-image"
-            (load)="onLoad()"
-            [class.visible]="isLoaded"
+            (load)="onImageLoad()"
+            [class.visible]="isImageLoaded"
             src="robot.gif"
             alt="robot"
           />

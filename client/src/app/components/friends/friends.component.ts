@@ -72,14 +72,24 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   charCount = 0;
   charCountExceeded = false;
 
-  isLoaded = false;
-  page = 1;
-  pageSize = 10;
+  isImageLoaded = false;
+  pageMessage = 1;
+  pageSizeMessage = 10;
+  pageExpense = 1;
+  pageSizeExpense = 10;
+  pageCombined = 1;
+  pageSizeCombined = 20;
   loading = false;
-  allLoaded = false;
+  allMessagesLoaded = false;
+  allExpensesLoaded = false;
+  allCombinedLoaded = false;
+  scrollPosition = 0;
+  errorNumber = 0;
 
-  onLoad() {
-    this.isLoaded = true; // Set loaded state to true
+  addExpenseLoader = false;
+
+  onImageLoad() {
+    this.isImageLoaded = true; // Set loaded state to true
   }
 
   ngOnDestroy(): void {
@@ -97,7 +107,8 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   onScroll(event: Event) {
     const element = event.target as HTMLElement;
     if (element.scrollTop === 0 && !this.loading) {
-      // this.loadItems();
+      this.scrollPosition = element.scrollHeight;
+      this.loadItems(element);
     }
   }
 
@@ -107,15 +118,22 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
       // Remove the existing 'onNewMessage' listener
       this.socketService.removeNewMessageListener();
+      this.messages.set([]);
+      this.expenses.set([]);
+      this.combinedView.set([]);
+      this.pageMessage = 1;
+      this.pageExpense = 1;
+      this.pageCombined = 1;
+      this.messageInput = '';
+      this.allMessagesLoaded = false;
+      this.allExpensesLoaded = false;
+      this.allCombinedLoaded = false;
     }
 
     this.selectedUser.set(friend);
 
     if (this.selectedUser()) {
-      if (this.showMessages() === 'All') this.onLoadBoth();
-      else if (this.showMessages() === 'Messages') this.onLoadMessages();
-      else this.onLoadExpenses();
-
+      this.fetchMessagesAndExpenses(true, true, true, null);
       // Join the room for the new conversation
       this.socketService.joinRoom(this.selectedUser()!.conversation_id);
 
@@ -132,54 +150,97 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     }
   }
 
-  loadItems() {
-    if (this.showMessages() === 'All') this.onLoadBoth();
-    else if (this.showMessages() === 'Messages') this.onLoadMessages();
-    else this.onLoadExpenses();
+  loadItems(element: HTMLElement) {
+    if (this.showMessages() === 'All') this.onLoadCombined(element);
+    else if (this.showMessages() === 'Messages') this.onLoadMessages(element);
+    else this.onLoadExpenses(element);
   }
 
-  onLoadMessages() {
-    this.fetchMessagesAndExpenses(true, false); // Load only messages
+  onLoadMessages(element: HTMLElement) {
+    this.fetchMessagesAndExpenses(true, false, false, element); // Load only messages
   }
 
-  onLoadExpenses() {
-    this.fetchMessagesAndExpenses(false, true); // Load only expenses
+  onLoadExpenses(element: HTMLElement) {
+    this.fetchMessagesAndExpenses(false, true, false, element); // Load only expenses
   }
 
-  onLoadBoth() {
-    this.fetchMessagesAndExpenses(true, true); // Load both messages and expenses
+  onLoadCombined(element: HTMLElement) {
+    this.fetchMessagesAndExpenses(false, false, true, element); // Load combined view
   }
 
-  fetchMessagesAndExpenses(loadMessages: boolean, loadExpenses: boolean) {
-    // if (this.loading || this.allLoaded) return;
+  fetchMessagesAndExpenses(
+    loadMessages: boolean,
+    loadExpenses: boolean,
+    loadCombined: boolean,
+    element: HTMLElement | null,
+  ) {
+    if (this.loading) return;
+    if (
+      (loadMessages && this.allMessagesLoaded) ||
+      (loadExpenses && this.allExpensesLoaded) ||
+      (loadCombined && this.allCombinedLoaded)
+    )
+      return;
 
-    // this.loading = true;
+    this.loading = true;
     this.friendsService
       .fetchMessagesAndExpenses(
         this.selectedUser()!.conversation_id,
         loadMessages,
         loadExpenses,
-        this.page,
-        this.pageSize,
+        loadCombined,
+        this.pageMessage,
+        this.pageSizeMessage,
+        this.pageExpense,
+        this.pageSizeExpense,
+        this.pageCombined,
+        this.pageSizeCombined,
       )
       .subscribe({
-        next: ({ messages, expenses }) => {
+        next: ({ messages, expenses, combined }) => {
+          if (
+            !this.allMessagesLoaded &&
+            loadMessages &&
+            messages.length < this.pageSizeMessage
+          )
+            this.allMessagesLoaded = true;
+          if (
+            !this.allExpensesLoaded &&
+            loadExpenses &&
+            expenses.length < this.pageSizeExpense
+          )
+            this.allExpensesLoaded = true;
+          if (
+            !this.allCombinedLoaded &&
+            loadCombined &&
+            combined.length < this.pageSizeCombined
+          )
+            this.allCombinedLoaded = true;
           this.messages.set([...messages, ...this.messages()]);
-          expenses.sort((a: ExpenseData, b: ExpenseData) =>
-            a.createdAt < b.createdAt ? -1 : 1,
-          );
           this.expenses.set([...expenses, ...this.expenses()]);
+          this.combinedView.set([...combined, ...this.combinedView()]);
 
-          const combinedData = this.combineMessagesAndExpenses(
-            messages,
-            expenses,
-          );
-          this.combinedView.set(combinedData);
+          if (
+            this.pageMessage === 1 ||
+            this.pageExpense === 1 ||
+            this.pageCombined === 1
+          ) {
+            this.cdr.detectChanges();
+            this.scrollToBottom();
+          } else {
+            this.cdr.detectChanges();
+            // After loading new items, calculate the new scroll position
+            const newScrollHeight = element!.scrollHeight;
 
-          this.cdr.detectChanges();
-          this.scrollToBottom();
-          // this.page++;
-          // this.loading = false;
+            // Adjust the scroll position to keep the view consistent
+            const scrollDiff = newScrollHeight! - this.scrollPosition;
+            element!.scrollTop = element!.scrollTop + scrollDiff - 100;
+          }
+          if (loadMessages) this.pageMessage++;
+          if (loadExpenses) this.pageExpense++;
+          if (loadCombined) this.pageCombined++;
+
+          this.loading = false;
         },
       });
   }
@@ -194,7 +255,6 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     messages: MessageData[],
     expenses: ExpenseData[],
   ): (CombinedMessage | CombinedExpense)[] {
-    // Create a new array with timestamps
     const combined = [
       ...messages.map((m) => ({ ...m, type: 'message' })),
       ...expenses.map((e) => ({ ...e, type: 'expense' })),
@@ -370,46 +430,31 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     }
   }
 
-  getArchiveStatus(): string {
-    const user = this.selectedUser();
-    if (
-      user?.archival_status === 'BOTH' ||
-      (user?.status === 'SENDER' && user?.archival_status === 'FRIEND1') ||
-      (user?.status === 'RECEIVER' && user?.archival_status === 'FRIEND2')
-    ) {
-      return 'Unarchived';
-    }
-    return 'Archived';
-  }
-
   getArchiveLabel(): string {
-    const user = this.selectedUser();
-    return user?.archival_status === 'BOTH' ||
-      (user?.status === 'SENDER' && user?.archival_status === 'FRIEND1') ||
-      (user?.status === 'RECEIVER' && user?.archival_status === 'FRIEND2')
-      ? 'Unarchive'
-      : 'Archive';
-  }
-
-  getBlockStatus(): string {
-    const user = this.selectedUser();
-    if (
-      user?.block_status === 'BOTH' ||
-      (user?.status === 'SENDER' && user?.block_status === 'FRIEND1') ||
-      (user?.status === 'RECEIVER' && user?.block_status === 'FRIEND2')
-    ) {
-      return 'Unblocked';
-    }
-    return 'Blocked';
+    return this.getStatusLabel('archival_status', 'Archive', 'Unarchive');
   }
 
   getBlockLabel(): string {
+    return this.getStatusLabel('block_status', 'Block', 'Unblock');
+  }
+
+  private getStatusLabel(
+    statusField: 'archival_status' | 'block_status',
+    defaultLabel: string,
+    alternateLabel: string,
+  ): string {
     const user = this.selectedUser();
-    return user?.block_status === 'BOTH' ||
-      (user?.status === 'SENDER' && user?.block_status === 'FRIEND1') ||
-      (user?.status === 'RECEIVER' && user?.block_status === 'FRIEND2')
-      ? 'Unblock'
-      : 'Block';
+
+    // Check conditions for unblocking/unarchiving based on block_status or archival_status
+    if (
+      user?.[statusField] === 'BOTH' ||
+      (user?.status === 'SENDER' && user?.[statusField] === 'FRIEND1') ||
+      (user?.status === 'RECEIVER' && user?.[statusField] === 'FRIEND2')
+    ) {
+      return alternateLabel;
+    }
+
+    return defaultLabel;
   }
 
   archiveBlock(id: string, type: string) {
@@ -417,14 +462,33 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       next: () => {
         if (type === 'archived') {
           this.toastr.success(
-            `${this.getArchiveStatus()} Successfully`,
+            `${this.getArchiveLabel()}d Successfully`,
             'Success',
           );
         } else {
           this.toastr.success(
-            `${this.getBlockStatus()} Successfully`,
+            `${this.getBlockLabel()}ed Successfully`,
             'Success',
           );
+          if (this.getBlockLabel() === 'Block') {
+            if (this.selectedUser()?.block_status !== 'NONE') {
+              this.selectedUser()!.block_status = 'BOTH';
+            } else {
+              this.selectedUser()!.block_status =
+                this.selectedUser()?.status === 'SENDER'
+                  ? 'FRIEND1'
+                  : 'FRIEND2';
+            }
+          } else {
+            if (this.selectedUser()?.block_status !== 'BOTH') {
+              this.selectedUser()!.block_status = 'NONE';
+            } else {
+              this.selectedUser()!.block_status =
+                this.selectedUser()?.status === 'SENDER'
+                  ? 'FRIEND2'
+                  : 'FRIEND1';
+            }
+          }
         }
       },
     });
@@ -436,8 +500,22 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       enterAnimationDuration: '200ms',
       exitAnimationDuration: '200ms',
     });
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe((data) => {
+      const result = data.formData;
+      const expenseData = data.expenseData;
+
       if (result) {
+        this.addExpenseLoader = true;
+        this.expenses.set([
+          ...this.expenses(),
+          { ...expenseData, friend_expense_id: `adding` },
+        ]);
+        this.combinedView.set([
+          ...this.combinedView(),
+          { ...expenseData, friend_expense_id: `adding` },
+        ]);
+        this.cdr.detectChanges();
+        this.scrollToBottom();
         this.friendsService
           .addExpense(this.selectedUser()!.conversation_id, result)
           .subscribe({
@@ -446,12 +524,16 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
                 response.data.payer = this.user_name;
               else
                 response.data.payer = `${this.selectedUser()?.friend.first_name}${this.selectedUser()?.friend.last_name || ''}`;
-              this.expenses.set([...this.expenses(), response.data]);
-              const combinedData = [
-                ...this.combinedView(),
-                { ...response.data, type: 'message' },
-              ];
-              this.combinedView.set(combinedData);
+              const currExpenses = this.expenses();
+              currExpenses.pop();
+              this.expenses.set([...currExpenses, response.data]);
+              const currCombined = this.combinedView();
+              currCombined.pop();
+              this.combinedView.set([
+                ...currCombined,
+                { ...response.data, type: 'expense' },
+              ]);
+              this.addExpenseLoader = false;
               this.cdr.detectChanges();
               this.scrollToBottom();
               if (response.data.payer_id === this.user?.user_id) {
@@ -467,8 +549,112 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
               }
               this.toastr.success('Expense Created successfully', 'Success');
             },
+            error: () => {
+              const currExpenses = this.expenses();
+              currExpenses[currExpenses.length - 1].friend_expense_id =
+                `error${this.errorNumber}`;
+              this.expenses.set(currExpenses);
+              const combinedView = this.combinedView();
+              let combinedViewSize = combinedView.length;
+              while (true) {
+                if (
+                  this.isCombinedExpense(combinedView[combinedViewSize - 1])
+                ) {
+                  const expense = combinedView[
+                    combinedViewSize - 1
+                  ] as CombinedExpense;
+                  expense.friend_expense_id = `error${this.errorNumber}`;
+                  break;
+                }
+                combinedViewSize--;
+              }
+              this.errorNumber++;
+              this.addExpenseLoader = false;
+            },
           });
       }
     });
+  }
+
+  onRetryExpenseAddition(id: string) {
+    this.addExpenseLoader = true;
+    const expense = this.expenses().filter(
+      (expense) => expense.friend_expense_id === id,
+    );
+    expense[0].friend_expense_id = `retrying${this.errorNumber}`;
+    const combinedExpense = this.combinedView().filter((expense) => {
+      if (this.isCombinedExpense(expense)) {
+        return expense.friend_expense_id === id;
+      }
+      return false;
+    });
+    const combined = combinedExpense[0] as CombinedExpense;
+    combined.friend_expense_id = `retrying${this.errorNumber}`;
+    this.cdr.detectChanges();
+    const { friend_expense_id, ...expenseData } = expense[0];
+    const formData = Object.entries(expenseData).reduce(
+      (formData, [key, value]) => {
+        if (value) {
+          formData.append(key, value);
+        }
+        return formData;
+      },
+      new FormData(),
+    );
+    this.friendsService
+      .addExpense(this.selectedUser()!.conversation_id, formData)
+      .subscribe({
+        next: (response: ExpenseResponse) => {
+          if (response.data.payer_id === this.user?.user_id)
+            response.data.payer = this.user_name;
+          else
+            response.data.payer = `${this.selectedUser()?.friend.first_name}${this.selectedUser()?.friend.last_name || ''}`;
+          const updatedExpenses = this.expenses().map((expense) => {
+            return expense.friend_expense_id === friend_expense_id
+              ? response.data
+              : expense;
+          });
+          this.expenses.set(updatedExpenses);
+          const updatedCombinedView = this.combinedView().map((item) => {
+            return this.isCombinedExpense(item) &&
+              item.friend_expense_id === friend_expense_id
+              ? { ...response.data, type: 'expense' }
+              : item;
+          });
+          this.combinedView.set(updatedCombinedView);
+          this.addExpenseLoader = false;
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+          if (response.data.payer_id === this.user?.user_id) {
+            this.selectedUser()!.balance_amount = JSON.stringify(
+              parseFloat(this.selectedUser()!.balance_amount) +
+                parseFloat(response.data.debtor_amount),
+            );
+          } else {
+            this.selectedUser()!.balance_amount = JSON.stringify(
+              parseFloat(this.selectedUser()!.balance_amount) -
+                parseFloat(response.data.debtor_amount),
+            );
+          }
+          this.toastr.success('Expense Created successfully', 'Success');
+        },
+        error: () => {
+          const updatedExpenses = this.expenses().map((expense) => {
+            return expense.friend_expense_id === friend_expense_id
+              ? { ...expense, friend_expense_id: `error${this.errorNumber}` }
+              : expense;
+          });
+          this.expenses.set(updatedExpenses);
+          const updatedCombinedView = this.combinedView().map((item) => {
+            return this.isCombinedExpense(item) &&
+              item.friend_expense_id === friend_expense_id
+              ? { ...item, friend_expense_id: `error${this.errorNumber}` }
+              : item;
+          });
+          this.combinedView.set(updatedCombinedView);
+          this.errorNumber++;
+          this.addExpenseLoader = false;
+        },
+      });
   }
 }

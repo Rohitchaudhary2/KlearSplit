@@ -1,10 +1,5 @@
 import bcrypt from "bcryptjs";
 import UserDb from "../users/userDb.js";
-import {
-  createRefreshTokenDb,
-  deleteRefreshTokenDb,
-  getRefreshTokenDb,
-} from "./tokenDb.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import sendMail from "../utils/sendMail.js";
@@ -73,43 +68,33 @@ class AuthService {
     );
 
     // Storing refresh token in the database
-    this.createRefreshToken({
-      token: refreshToken,
-      user_id: user.user_id,
-    });
+    await this.createRefreshToken(refreshToken, user.email);
 
     return { user, accessToken, refreshToken };
   };
 
   // Service for handling logout functionality
   static logout = async (req) => {
-    const refreshToken = req.cookies["refreshToken"];
-
     // Deleting the refresh token from the database when user log out
-    const isDeleted = await deleteRefreshTokenDb(refreshToken);
-
-    return isDeleted;
+    await this.deleteRefreshToken(req.user.email);
   };
 
   // Service for creating refresh token
-  static createRefreshToken = async (refreshToken, transaction) => {
+  static createRefreshToken = async (refreshToken, email) => {
     // Storing refresh token in the datbase
-    const createdRefreshToken = await createRefreshTokenDb(
+    await redis.setex(
+      `refreshToken:${email}`,
+      process.env.REFRESH_EXPIRY_IN_SECONDS,
       refreshToken,
-      transaction,
     );
-    if (!createdRefreshToken)
-      throw new ErrorHandler(500, "Error while generating refresh token");
-    return createdRefreshToken;
   };
 
   // Service to get refresh token from the database
-  static getRefreshToken = async (req) => await getRefreshTokenDb(req);
+  static getRefreshToken = async (email) =>
+    await redis.get(`refreshToken:${email}`);
 
-  static deleteRefreshToken = async (req) => {
-    const isDeleted = await deleteRefreshTokenDb(req);
-    if (!isDeleted)
-      throw new ErrorHandler(503, "Error while deleting refresh token");
+  static deleteRefreshToken = async (email) => {
+    await redis.del(`refreshToken:${email}`);
   };
 }
 

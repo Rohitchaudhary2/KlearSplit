@@ -17,11 +17,11 @@
 
 .col {
   flex: 1;
-  max-width: 45%; /* Adjust based on your needs */
+  max-width: 30%; /* Adjust based on your needs */
   margin: 10px;
 }
 
 canvas {
   width: 100%;
-  height: 300px; /* Set a reasonable height */
+  height: 300px;
 }

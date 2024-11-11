@@ -250,6 +250,16 @@ class FriendService {
         );
       }
 
+      if (
+        expenseData.payer_id !== friendExist.friend1_id &&
+        expenseData.payer_id !== friendExist.friend2_id
+      ) {
+        throw new ErrorHandler(
+          403,
+          "You are not allowed to add expense in this chat.",
+        );
+      }
+
       const expense = await FriendDb.addExpense(expenseData, transaction);
       const balanceAmount = calculateNewBalance(
         currentBalance,

@@ -12,7 +12,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { HttpParams } from '@angular/common/http';
 import { FriendData } from '../friend.model';
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, NgClass } from '@angular/common';
 import { FriendsService } from '../friends.service';
 import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog.component';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,7 +21,13 @@ import { MatTooltipModule, TooltipPosition } from '@angular/material/tooltip';
 @Component({
   selector: 'app-friends-list',
   standalone: true,
-  imports: [FormsModule, CurrencyPipe, MatIconModule, MatTooltipModule],
+  imports: [
+    FormsModule,
+    CurrencyPipe,
+    MatIconModule,
+    MatTooltipModule,
+    NgClass,
+  ],
   templateUrl: './friends-list.component.html',
   styleUrl: '../friends.component.css',
 })
@@ -46,6 +52,7 @@ export class FriendsListComponent implements OnInit {
   friendList = signal(this.friends());
 
   selectedUser = output<FriendData | undefined>();
+  selectedFriend = signal<FriendData | undefined>(undefined);
 
   balanceAmount = input<string>();
 
@@ -151,6 +158,7 @@ export class FriendsListComponent implements OnInit {
   }
 
   onSelectUser(friend: FriendData | undefined) {
+    this.selectedFriend.set(friend);
     this.selectedUser.emit(friend);
   }
 }

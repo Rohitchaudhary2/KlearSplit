@@ -5,7 +5,6 @@
     Welcome, {{ authService.currentUser()?.first_name }}
   </p>
 }
-<!-- chart-dashboard.component.html -->
 <div class="chart-container">
   <div class="row">
     <div class="col">
@@ -22,6 +21,14 @@
         [data]="pieChartData2"
         [type]="'pie'"
         [options]="pieChartOptions2"
+      ></canvas>
+    </div>
+    <div class="col">
+      <canvas
+        baseChart
+        [data]="pieChartData3"
+        [type]="'pie'"
+        [options]="pieChartOptions3"
       ></canvas>
     </div>
   </div>

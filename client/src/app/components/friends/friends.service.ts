@@ -3,7 +3,6 @@ import { inject, Injectable } from '@angular/core';
 import {
   CombinedView,
   Expense,
-  ExpenseData,
   ExpenseInput,
   ExpenseResponse,
   Friend,
@@ -11,7 +10,7 @@ import {
   SearchedUser,
   SettlementData,
 } from './friend.model';
-import { concatMap, map, Observable, of } from 'rxjs';
+import { concatMap, map, of } from 'rxjs';
 import { API_URLS } from '../../constants/api-urls';
 
 @Injectable({
@@ -177,34 +176,5 @@ export class FriendsService {
     return this.httpClient.get<SearchedUser>(`${API_URLS.getUsers}/${query}`, {
       withCredentials: true,
     });
-  }
-
-  // expense.service.ts
-  fetchExpensesByRange(conversationId: string): Observable<number[]> {
-    const expensesUrl = `${API_URLS.getExpenses}/${conversationId}`;
-    return this.httpClient
-      .get<{ data: ExpenseData[] }>(expensesUrl, { withCredentials: true })
-      .pipe(
-        map((response) => {
-          const counts = [0, 0, 0, 0, 0];
-
-          response.data.forEach((expense) => {
-            const amount = parseFloat(expense.total_amount);
-            if (amount >= 1 && amount <= 1000) {
-              counts[0]++;
-            } else if (amount >= 1001 && amount <= 5000) {
-              counts[1]++;
-            } else if (amount >= 5001 && amount <= 10000) {
-              counts[2]++;
-            } else if (amount >= 10001 && amount <= 15000) {
-              counts[3]++;
-            } else if (amount > 15000) {
-              counts[4]++;
-            }
-          });
-
-          return counts;
-        }),
-      );
   }
 }

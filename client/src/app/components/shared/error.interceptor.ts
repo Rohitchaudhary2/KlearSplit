@@ -28,12 +28,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       switchMap(() => {
         return next(req);
       }),
-      catchError(() => {
-        // Handle any error that occurred during token refresh (e.g., refresh token expired)
-        router.navigate(['/login']);
-        tokenService.removeUserId();
-        return throwError(() => new Error('Session expired'));
-      }),
+      // catchError(() => {
+      //   // Handle any error that occurred during token refresh (e.g., refresh token expired)
+      //   router.navigate(['/login']);
+      //   tokenService.removeUserId();
+      //   return throwError(() => new Error('Session expired'));
+      // }),
     );
   }
 

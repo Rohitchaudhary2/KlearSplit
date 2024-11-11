@@ -5,6 +5,7 @@ export interface AllExpenses {
     expensesRange: number[];
     balanceAmounts: number[];
     topFriends: TopFriend[];
+    monthlyExpense: number[];
   };
 }
 

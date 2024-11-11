@@ -61,30 +61,70 @@ export class DashboardComponent implements OnInit {
     ],
   };
 
-  pieChartData3 = {
-    labels: ['Friend 1', 'Friend 2', 'Friend 3', 'Friend 4', 'Friend 5'],
+  pieChartData3: {
+    labels: string[];
+    datasets: ChartDataset<'pie'>[];
+  } = {
+    labels: ['Friend 1', 'Friend 2', 'Friend 3', 'Friend 4', 'Others'],
     datasets: [
       {
-        data: [2],
-        backgroundColor: [
-          '#FF9F40',
-          '#9966FF',
-          '#4BC0C0',
-          '#2E7D32',
-          '#36A2EB',
-        ],
+        data: [],
+        backgroundColor: ['#FF9F40', '#9966FF', '#4BC0C0', '#2E7D32', 'grey'],
         hoverOffset: 20,
       },
     ],
   };
 
-  barChartData = {
-    labels: ['January', 'February', 'March'],
+  pieChartData4: {
+    labels: string[];
+    datasets: ChartDataset<'pie'>[];
+  } = {
+    labels: ['Group 1', 'Group 2', 'Group 3', 'Group 4', 'Others'],
+    datasets: [
+      {
+        data: [1000, 950, 900, 850, 800],
+        backgroundColor: ['#FF9F40', '#9966FF', '#4BC0C0', '#2E7D32', 'grey'],
+        hoverOffset: 20,
+      },
+    ],
+  };
+
+  barChartData: {
+    labels: string[];
+    datasets: ChartDataset<'bar'>[];
+  } = {
+    labels: [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ],
     datasets: [
       {
         label: 'Monthly Expense',
-        data: [55, 49, 72],
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+        data: [],
+        backgroundColor: [
+          '#FF0000',
+          '#00FF00',
+          '#0000FF',
+          '#FFFF00',
+          '#800080',
+          '#00FFFF',
+          '#FF00FF',
+          '#FFA500',
+          '#FFC0CB',
+          '#A52A2A',
+          '#808080',
+          '#000000',
+        ],
       },
     ],
   };
@@ -174,7 +214,25 @@ export class DashboardComponent implements OnInit {
       ...this.baseChartOptions.plugins,
       title: {
         display: true,
-        text: 'Top Friends',
+        text: 'Top Cash Flow Partners',
+        font: {
+          size: 18,
+        },
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
+      },
+    },
+  };
+
+  pieChartOptions4: ChartOptions<'pie'> = {
+    ...this.baseChartOptions,
+    plugins: {
+      ...this.baseChartOptions.plugins,
+      title: {
+        display: true,
+        text: 'Top Cash Flow Groups',
         font: {
           size: 18,
         },
@@ -232,8 +290,9 @@ export class DashboardComponent implements OnInit {
             },
           },
         };
-        // this.pieChartData2.datasets[0].data = response.topFriends.amount
-        this.pieChartData3.datasets[0].data = [56445, 300, 200, 100, 50];
+        this.pieChartData3.datasets[0].data = response.topFriends;
+        this.pieChartData3.labels = response.topFriendsName;
+        this.barChartData.datasets[0].data = response.monthlyExpense;
         this.charts?.forEach((chart) => chart?.chart?.update());
       },
     });

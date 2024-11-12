@@ -548,54 +548,56 @@ const calculateDebtorAmount = (expenseData, existingExpense = null) => {
 const calculateNewBalance = (
   currentBalance,
   debtorAmount,
-  payerId,
+  newPayerId,
   friendExist,
   type,
   existingExpense = null,
   isUpdate = false,
 ) => {
   if (!isUpdate) {
-    // If the payer is friend1, add the debtor amount, otherwise subtract it
+    // Handle the case for new entries
     if (type !== "SETTLEMENT") {
-      const newBalance =
-        payerId === friendExist.friend1_id
-          ? currentBalance + debtorAmount
-          : currentBalance - debtorAmount;
-      return newBalance;
+      return newPayerId === friendExist.friend1_id
+        ? currentBalance + debtorAmount
+        : currentBalance - debtorAmount;
     } else {
-      const newBalance =
-        currentBalance > 0
-          ? currentBalance - debtorAmount
-          : currentBalance + debtorAmount;
-
-      return newBalance;
+      return currentBalance > 0
+        ? currentBalance - debtorAmount
+        : currentBalance + debtorAmount;
     }
   } else {
-    if (type !== "SETTLEMENT") {
-      const newBalance =
-        payerId === existingExpense.debtor_id
-          ? payerId === friendExist.friend1_id
-            ? currentBalance + debtorAmount * 2
-            : currentBalance - debtorAmount * 2
-          : payerId === friendExist.friend1_id
-            ? currentBalance +
-              debtorAmount -
-              parseFloat(existingExpense.debtor_amount)
-            : currentBalance -
-              debtorAmount +
-              parseFloat(existingExpense.debtor_amount);
-      return newBalance;
-    } else {
-      const newBalance =
-        currentBalance > 0
-          ? currentBalance -
-            debtorAmount +
-            parseFloat(existingExpense.debtor_amount)
-          : currentBalance +
-            debtorAmount -
-            parseFloat(existingExpense.debtor_amount);
-      return newBalance;
+    // First, handle the swap if payer_id and debtor_id are interchanged
+    if (
+      newPayerId !== existingExpense.payer_id &&
+      existingExpense.debtor_id === newPayerId
+    ) {
+      // Reverse the old impact of the existing expense
+      currentBalance +=
+        existingExpense.payer_id === friendExist.friend1_id
+          ? -parseFloat(existingExpense.debtor_amount)
+          : parseFloat(existingExpense.debtor_amount);
+
+      // Apply the new impact of the swapped payer and debtor
+      currentBalance +=
+        newPayerId === friendExist.friend1_id
+          ? parseFloat(existingExpense.debtor_amount)
+          : -parseFloat(existingExpense.debtor_amount);
     }
+
+    // Handle changes in other balance-affecting fields after the swap
+    if (type !== "SETTLEMENT") {
+      currentBalance +=
+        newPayerId === friendExist.friend1_id
+          ? debtorAmount - parseFloat(existingExpense.debtor_amount)
+          : -(debtorAmount - parseFloat(existingExpense.debtor_amount));
+    } else {
+      currentBalance +=
+        currentBalance > 0
+          ? -(debtorAmount - parseFloat(existingExpense.debtor_amount))
+          : debtorAmount - parseFloat(existingExpense.debtor_amount);
+    }
+
+    return currentBalance;
   }
 };
 

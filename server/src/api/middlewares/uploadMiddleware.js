@@ -32,7 +32,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   limits: {
-    fileSize: 2 * 1024 * 1024, // 5MB limit
+    fileSize: 2 * 1024 * 1024, // 2MB limit
   },
   fileFilter,
 }).single("receipt");

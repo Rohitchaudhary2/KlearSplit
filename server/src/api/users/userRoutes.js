@@ -40,6 +40,6 @@ userRouter.patch(
   authenticateToken,
   UserController.updateUser,
 );
-userRouter.delete("/:id", authenticateToken, UserController.deleteUser);
+userRouter.delete("/", authenticateToken, UserController.deleteUser);
 
 export default userRouter;

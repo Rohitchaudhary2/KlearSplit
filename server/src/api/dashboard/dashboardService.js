@@ -15,8 +15,8 @@ function sortFriendsByAmount(obj, field) {
   }
 
   entries = entries.slice(0, 4);
-
-  entries.push(["others", { amount: othersAmount, friend: "others" }]);
+  if (entries.length > 4)
+    entries.push(["others", { amount: othersAmount, friend: "others" }]);
 
   // Rebuilding the object with sorted entries
   const sortedObj = {};
@@ -42,7 +42,9 @@ class DashboardService {
             : { expenseAmount: debtAmount, index: 1 };
 
         if (expense.split_type !== "SETTLEMENT") {
+          // Monthly Expense according to index to months.
           acc.monthlyExpense[expense.createdAt.getMonth()] += expenseAmount;
+          // Expense count according to user's money involved in that expense.
           if (expenseAmount >= 1 && expenseAmount <= 1000) {
             acc.expensesRange[0]++;
           } else if (expenseAmount >= 1001 && expenseAmount <= 5000) {
@@ -56,8 +58,10 @@ class DashboardService {
           }
         }
 
+        // Amount lent or borrowed
         acc.balanceAmounts[index] += debtAmount;
 
+        // Top friends with highest cash flow
         acc.topFriends[expense.conversation_id]
           ? (acc.topFriends[expense.conversation_id].amount += debtAmount)
           : (acc.topFriends[expense.conversation_id] = {

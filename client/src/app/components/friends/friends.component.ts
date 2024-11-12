@@ -319,7 +319,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       top: '5%',
     };
     const dialogRef = this.dialog.open(ViewExpensesComponent, {
-      data: [expenses, this.selectedUser()?.conversation_id],
+      data: [expenses, this.user, this.selectedUser()],
       maxWidth: '91vw',
       maxHeight: '85vh',
       height: '85%',
@@ -496,7 +496,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
   openAddExpenseDialog() {
     const dialogRef = this.dialog.open(FriendsExpenseComponent, {
-      data: [this.user, this.selectedUser()],
+      data: ['Add Expense', this.user, this.selectedUser()],
       enterAnimationDuration: '200ms',
       exitAnimationDuration: '200ms',
     });

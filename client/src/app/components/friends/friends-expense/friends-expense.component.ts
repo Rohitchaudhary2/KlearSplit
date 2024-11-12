@@ -39,10 +39,82 @@ export class FriendsExpenseComponent implements OnInit {
   dialogRef = inject(MatDialogRef<FriendsExpenseComponent>);
   data = inject(MAT_DIALOG_DATA);
   showAdditionalFields = signal<boolean>(false);
-  participants = [this.data[0], this.data[1].friend];
+  participants;
   private dialog = inject(MatDialog);
   imageName = signal<string>('Upload Bill Receipt');
   splitType = 'EQUAL';
+
+  constructor() {
+    if (this.data[0] === 'Add Expense') {
+      this.participants = [this.data[1], this.data[2].friend];
+      this.form.patchValue({
+        payer_id: this.participants[0]?.user_id,
+      });
+    } else {
+      this.participants = [this.data[2], this.data[3].friend];
+      this.splitType =
+        this.data[1].split_type !== 'PERCENTAGE'
+          ? this.data[1].split_type
+          : 'PERCENT';
+      let participant1_share = '';
+      let participant2_share = '';
+      if (this.splitType === 'UNEQUAL') {
+        if (this.data[1].payer_id === this.participants[0].user_id) {
+          participant1_share = JSON.stringify(
+            parseFloat(this.data[1].total_amount) -
+              parseFloat(this.data[1].debtor_amount),
+          );
+          participant2_share = JSON.stringify(
+            parseFloat(this.data[1].debtor_amount),
+          );
+        } else {
+          participant1_share = JSON.stringify(
+            parseFloat(this.data[1].debtor_amount),
+          );
+          participant2_share = JSON.stringify(
+            parseFloat(this.data[1].total_amount) -
+              parseFloat(this.data[1].debtor_amount),
+          );
+        }
+      } else if (this.splitType === 'PERCENT') {
+        if (this.data[1].payer_id === this.participants[0].user_id) {
+          participant1_share = JSON.stringify(
+            ((parseFloat(this.data[1].total_amount) -
+              parseFloat(this.data[1].debtor_amount)) /
+              parseFloat(this.data[1].total_amount)) *
+              100,
+          );
+          participant2_share = JSON.stringify(
+            (parseFloat(this.data[1].debtor_amount) /
+              parseFloat(this.data[1].total_amount)) *
+              100,
+          );
+        } else {
+          participant1_share = JSON.stringify(
+            (parseFloat(this.data[1].debtor_amount) /
+              parseFloat(this.data[1].total_amount)) *
+              100,
+          );
+          participant2_share = JSON.stringify(
+            ((parseFloat(this.data[1].total_amount) -
+              parseFloat(this.data[1].debtor_amount)) /
+              parseFloat(this.data[1].total_amount)) *
+              100,
+          );
+        }
+      }
+      this.form.patchValue({
+        expense_name: this.data[1].expense_name,
+        total_amount: this.data[1].total_amount,
+        description: this.data[1].description || '',
+        payer_id: this.data[1].payer_id,
+        split_type: this.data[1].split_type,
+        receipt: this.data[1].receipt || '',
+        participant1_share,
+        participant2_share,
+      });
+    }
+  }
 
   form = new FormGroup({
     expense_name: new FormControl('', {
@@ -58,7 +130,7 @@ export class FriendsExpenseComponent implements OnInit {
     description: new FormControl('', {
       validators: [Validators.maxLength(150)],
     }),
-    payer_id: new FormControl(`${this.participants[0].user_id}`, {
+    payer_id: new FormControl('', {
       validators: [Validators.required],
     }),
     participant1_share: new FormControl(''),
@@ -222,10 +294,16 @@ export class FriendsExpenseComponent implements OnInit {
   }
 
   openSplitTypeDialog(): void {
+    const expenseData = {
+      total_amount: this.form.value.total_amount,
+      split_type: this.form.value.split_type,
+      participant1_share: this.form.value.participant1_share,
+      participant2_share: this.form.value.participant2_share,
+    };
     const dialogRef = this.dialog.open(SplitTypeComponent, {
       panelClass: 'second-dialog',
       width: '30%',
-      data: [this.participants, this.form.value.total_amount],
+      data: [this.participants, expenseData],
       backdropClass: 'dialog-bg-trans',
       position: {
         right: '7%',

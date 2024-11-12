@@ -63,6 +63,7 @@ export interface ExpenseData {
   debtor_amount: string;
   debtor_id: string;
   deletedAt: string | null;
+  conversation_id: string;
   description: string;
   expense_name: string;
   friend_expense_id: string;

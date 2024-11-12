@@ -19,10 +19,17 @@ export class SplitTypeComponent implements OnInit {
   dialogRef = inject(MatDialogRef<SplitTypeComponent>);
   data = inject(MAT_DIALOG_DATA);
   participants = this.data[0];
-  total_amount = this.data[1];
+  expenseData = this.data[1];
   activeItem = 'EQUAL'; // Default active item
   cdr = inject(ChangeDetectorRef);
   private updating = false;
+
+  // Variables to store the share values for UNEQUAL and PERCENTAGE modes
+  private unequalParticipant1Share: number | null = null;
+  private unequalParticipant2Share: number | null = null;
+
+  private percentageParticipant1Share: number | null = null;
+  private percentageParticipant2Share: number | null = null;
 
   form = new FormGroup({
     participant1_share: new FormControl(0, {
@@ -35,45 +42,83 @@ export class SplitTypeComponent implements OnInit {
 
   inputFieldControls() {
     if (this.activeItem === 'EQUAL') {
-      const halfAmount = parseFloat(this.total_amount) / 2;
+      const halfAmount = parseFloat(this.expenseData.total_amount) / 2;
       this.form.get('participant1_share')?.setValue(halfAmount);
       this.form.get('participant2_share')?.setValue(halfAmount);
       this.form.get('participant1_share')?.disable(); // Disable the first input
       this.form.get('participant2_share')?.disable(); // Disable the second input
     } else if (this.activeItem === 'PERCENTAGE') {
-      this.form.get('participant1_share')?.setValue(50);
-      this.form.get('participant2_share')?.setValue(50);
+      const percentage1 = this.percentageParticipant1Share ?? 50;
+      const percentage2 = this.percentageParticipant2Share ?? 50;
+      this.form.get('participant1_share')?.setValue(percentage1);
+      this.form.get('participant2_share')?.setValue(percentage2);
       this.form.get('participant1_share')?.enable(); // Enable the first input
       this.form.get('participant2_share')?.enable(); // Enable the second input
     } else {
-      const halfAmount = parseFloat(this.total_amount) / 2;
-      this.form.get('participant1_share')?.setValue(halfAmount);
-      this.form.get('participant2_share')?.setValue(halfAmount);
+      const unequal1 =
+        this.unequalParticipant1Share ??
+        parseFloat(this.expenseData.total_amount) / 2;
+      const unequal2 =
+        this.unequalParticipant2Share ??
+        parseFloat(this.expenseData.total_amount) / 2;
+      this.form.get('participant1_share')?.setValue(unequal1);
+      this.form.get('participant2_share')?.setValue(unequal2);
       this.form.get('participant1_share')?.enable(); // Enable the first input
       this.form.get('participant2_share')?.enable();
     }
   }
 
   setActive(item: string) {
+    // Before switching to another mode, store the current share values for UNEQUAL or PERCENTAGE
+    if (this.activeItem === 'UNEQUAL') {
+      this.unequalParticipant1Share =
+        this.form.get('participant1_share')?.value ?? null;
+      this.unequalParticipant2Share =
+        this.form.get('participant2_share')?.value ?? null;
+    } else if (this.activeItem === 'PERCENTAGE') {
+      this.percentageParticipant1Share =
+        this.form.get('participant1_share')?.value ?? null;
+      this.percentageParticipant2Share =
+        this.form.get('participant2_share')?.value ?? null;
+    }
+
     this.activeItem = item; // Set the active item
+
     this.inputFieldControls();
   }
 
   ngOnInit(): void {
     this.dialogRef.updateSize('25%');
+    this.activeItem = this.expenseData.split_type;
+    if (this.activeItem === 'UNEQUAL') {
+      this.unequalParticipant1Share = parseFloat(
+        this.expenseData.participant1_share,
+      );
+      this.unequalParticipant2Share = parseFloat(
+        this.expenseData.participant2_share,
+      );
+    } else if (this.activeItem === 'PERCENTAGE') {
+      this.percentageParticipant1Share = parseFloat(
+        this.expenseData.participant1_share,
+      );
+      this.percentageParticipant2Share = parseFloat(
+        this.expenseData.participant2_share,
+      );
+    }
     this.inputFieldControls();
 
     this.form.get('participant1_share')?.valueChanges.subscribe((value) => {
       if (
         this.activeItem === 'UNEQUAL' &&
-        (value! > this.total_amount || value! < 0)
+        (value! > this.expenseData.total_amount || value! < 0)
       ) {
-        if (value! > this.total_amount) value = this.total_amount;
+        if (value! > this.expenseData.total_amount)
+          value = this.expenseData.total_amount;
         else if (value! < 0) value = 0;
         this.form.get('participant1_share')?.setValue(value);
       } else if (
         this.activeItem === 'PERCENTAGE' &&
-        (value! > this.total_amount || value! < 0)
+        (value! > 100 || value! < 0)
       ) {
         if (value! > 100) value = 100;
         else if (value! < 0) value = 0;
@@ -85,16 +130,15 @@ export class SplitTypeComponent implements OnInit {
     this.form.get('participant2_share')?.valueChanges.subscribe((value) => {
       if (
         this.activeItem === 'UNEQUAL' &&
-        value! > this.total_amount &&
-        value! < 0
+        (value! > this.expenseData.total_amount || value! < 0)
       ) {
-        if (value! > this.total_amount) value = this.total_amount;
+        if (value! > this.expenseData.total_amount)
+          value = this.expenseData.total_amount;
         else if (value! < 0) value = 0;
         this.form.get('participant2_share')?.setValue(value);
       } else if (
         this.activeItem === 'PERCENTAGE' &&
-        value! > 100 &&
-        value! < 0
+        (value! > 100 || value! < 0)
       ) {
         if (value! > 100) value = 100;
         else if (value! < 0) value = 0;
@@ -111,7 +155,7 @@ export class SplitTypeComponent implements OnInit {
     if (this.activeItem === 'UNEQUAL')
       this.form
         .get('participant1_share')
-        ?.setValue(this.total_amount - participant2Share);
+        ?.setValue(this.expenseData.total_amount - participant2Share);
     else if (this.activeItem === 'PERCENTAGE')
       this.form.get('participant1_share')?.setValue(100 - participant2Share);
     this.updating = false;
@@ -124,7 +168,7 @@ export class SplitTypeComponent implements OnInit {
     if (this.activeItem === 'UNEQUAL')
       this.form
         .get('participant2_share')
-        ?.setValue(this.total_amount - participant1Share);
+        ?.setValue(this.expenseData.total_amount - participant1Share);
     else if (this.activeItem === 'PERCENTAGE')
       this.form.get('participant2_share')?.setValue(100 - participant1Share);
     this.updating = false;

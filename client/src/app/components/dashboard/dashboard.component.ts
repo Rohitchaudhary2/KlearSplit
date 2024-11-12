@@ -139,9 +139,9 @@ export class DashboardComponent implements OnInit {
         align: 'end',
         labels: {
           font: {
-            size: 14,
+            size: 10,
           },
-          padding: 20,
+          padding: 10,
           boxWidth: 20,
         },
       },

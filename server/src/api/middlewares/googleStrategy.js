@@ -6,9 +6,13 @@ import { generatePassword } from "../utils/passwordGenerator.js";
 import { hashedPassword } from "./../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
 import AuthService from "../auth/authServices.js";
-import sequelize from "../../config/db.connection.js";
+import { sequelize } from "../../config/db.connection.js";
 import UserDb from "../users/userDb.js";
 import { ErrorHandler } from "./errorHandler.js";
+import Redis from "ioredis";
+import logger from "../utils/logger.js";
+
+const redis = new Redis();
 
 passport.use(
   new GoogleStrategy(
@@ -23,7 +27,7 @@ passport.use(
         // Check if the user already exists in the database
         let user = await UserDb.getUserByEmail(profile._json.email);
 
-        if (!user) {
+        if (!user || (user && user.dataValues.is_invited)) {
           const newUser = {};
           newUser.email = profile._json.email;
           newUser.first_name = profile._json.given_name;
@@ -31,7 +35,18 @@ passport.use(
             newUser.last_name = profile._json.family_name;
           const password = generatePassword();
           newUser.password = await hashedPassword(password);
-          user = await UserDb.createUser(newUser, transaction);
+          newUser.is_invited = false;
+          if (!user) {
+            user = await UserDb.createUser(newUser, transaction);
+            user = user.dataValues;
+          } else {
+            user = await UserDb.updateUser(
+              newUser,
+              user.dataValues.user_id,
+              transaction,
+            );
+            user = user[0].dataValues;
+          }
 
           const options = {
             email: user.email,
@@ -48,8 +63,10 @@ passport.use(
           });
         }
 
-        const currentTime = new Date();
-        if (user.lockoutUntil && user.lockoutUntil > currentTime) {
+        const failedAttemptsKey = `failedAttempts:${user.email}`;
+        let failedAttempts = (await redis.get(failedAttemptsKey)) || 0;
+        failedAttempts = parseInt(failedAttempts);
+        if (failedAttempts >= 3) {
           return done(
             new ErrorHandler(
               403,
@@ -63,18 +80,9 @@ passport.use(
           user.user_id,
         );
 
-        await AuthService.createRefreshToken(
-          {
-            token: refreshToken,
-            user_id: user.user_id,
-          },
-          transaction,
-        );
+        await AuthService.createRefreshToken(refreshToken, user.email);
 
-        await UserDb.updateUser({ failedAttempts: 0 }, user.user_id);
-
-        user.failedAttempts = 0;
-        await user.save();
+        await redis.del(failedAttemptsKey);
 
         // Commit the transaction
         await transaction.commit();
@@ -82,6 +90,11 @@ passport.use(
         return done(null, { user, accessToken, refreshToken });
       } catch (error) {
         await transaction.rollback();
+        logger.log({
+          level: "error",
+          statusCode: error.statusCode,
+          message: error.message,
+        });
         return done(error);
       }
     },

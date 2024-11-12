@@ -1,25 +1,49 @@
-import { Component, inject, OnInit, output, signal } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AddFriendComponent } from '../add-friend/add-friend.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Friend, FriendData } from '../friend.model';
-import { API_URLS } from '../../../constants/api-urls';
-import { CurrencyPipe } from '@angular/common';
+import { HttpParams } from '@angular/common/http';
+import { FriendData } from '../friend.model';
+import { CurrencyPipe, NgClass } from '@angular/common';
+import { FriendsService } from '../friends.service';
+import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog.component';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule, TooltipPosition } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-friends-list',
   standalone: true,
-  imports: [FormsModule, CurrencyPipe],
+  imports: [
+    FormsModule,
+    CurrencyPipe,
+    MatIconModule,
+    MatTooltipModule,
+    NgClass,
+  ],
   templateUrl: './friends-list.component.html',
   styleUrl: '../friends.component.css',
 })
 export class FriendsListComponent implements OnInit {
   private dialog = inject(MatDialog);
   private toastr = inject(ToastrService);
-  private httpClient = inject(HttpClient);
+  private friendsService = inject(FriendsService);
   searchTerm = signal('');
+  positionOptions: TooltipPosition[] = [
+    'after',
+    'before',
+    'above',
+    'below',
+    'left',
+    'right',
+  ];
 
   private friendRequests = signal<FriendData[]>([]);
   requests = signal(this.friendRequests());
@@ -27,33 +51,31 @@ export class FriendsListComponent implements OnInit {
   private friends = signal<FriendData[]>([]);
   friendList = signal(this.friends());
 
-  selectedUser = output<FriendData>();
+  selectedUser = output<FriendData | undefined>();
+  selectedFriend = signal<FriendData | undefined>(undefined);
+
+  balanceAmount = input<string>();
 
   fetchFriendRequests() {
     const params = new HttpParams().set('status', 'PENDING');
-
-    this.httpClient
-      .get<Friend>(`${API_URLS.getFriends}`, { params, withCredentials: true })
-      .subscribe({
-        next: (response) => {
-          this.friendRequests.set(response.data);
-          this.requests.set(this.friendRequests());
-        },
-      });
+    this.friendsService.getFriends(params).subscribe({
+      next: (response) => {
+        this.friendRequests.set(response.data);
+        this.requests.set(this.friendRequests());
+      },
+    });
   }
 
   ngOnInit() {
     this.fetchFriendRequests();
 
     const params = new HttpParams().set('status', 'ACCEPTED');
-    this.httpClient
-      .get<Friend>(`${API_URLS.getFriends}`, { params, withCredentials: true })
-      .subscribe({
-        next: (response) => {
-          this.friends.set(response.data);
-          this.friendList.set(this.friends());
-        },
-      });
+    this.friendsService.getFriends(params).subscribe({
+      next: (response) => {
+        this.friends.set(response.data);
+        this.friendList.set(this.friends());
+      },
+    });
   }
 
   getBalanceAsNumber(balanceAmount: string): number {
@@ -79,91 +101,64 @@ export class FriendsListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.httpClient
-          .post(API_URLS.appFriend, result, {
-            withCredentials: true,
-          })
-          .subscribe({
-            next: () => {
-              this.toastr.success('Request Sent Successfully', 'Success', {
-                timeOut: 3000,
-              });
-              this.fetchFriendRequests();
-            },
-            error: (err) => {
-              this.toastr.error(
-                err?.error?.message || 'Request Failed!',
-                'Error',
-              );
-            },
-          });
+        this.friendsService.addFriend(result).subscribe({
+          next: () => {
+            this.toastr.success('Request Sent Successfully', 'Success', {
+              timeOut: 3000,
+            });
+            this.fetchFriendRequests();
+          },
+        });
       }
     });
   }
 
   onAcceptReject(id: string, status: string) {
-    this.httpClient
-      .patch(
-        `${API_URLS.acceptRejectRequest}/${id}`,
-        { status },
-        { withCredentials: true },
-      )
-      .subscribe({
-        next: () => {
-          this.toastr.success(`Request ${status} Successfully`, 'Success', {
-            timeOut: 3000,
+    this.friendsService.acceptRejectRequest(id, status).subscribe({
+      next: () => {
+        this.toastr.success(`Request ${status} Successfully`, 'Success', {
+          timeOut: 3000,
+        });
+        if (status === 'ACCEPTED') {
+          this.friendList().unshift({
+            ...this.requests().filter(
+              (request) => request.conversation_id === id,
+            )[0],
           });
-          if (status === 'ACCEPTED') {
-            this.friendList().unshift({
-              ...this.requests().filter(
-                (request) => request.conversation_id === id,
-              )[0],
-              balance_amount: '0',
+        }
+        this.requests.set(
+          this.requests().filter((request) => request.conversation_id !== id),
+        );
+      },
+    });
+  }
+
+  onWithdrawRequest(id: string) {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      data: 'Are you sure you want to withdraw this request?',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.friendsService.withdrawRequest(id).subscribe({
+          next: () => {
+            this.onSelectUser(undefined);
+            this.toastr.success(`Request deleted Successfully`, 'Success', {
+              timeOut: 3000,
             });
             this.requests.set(
               this.requests().filter(
                 (request) => request.conversation_id !== id,
               ),
             );
-          } else {
-            this.requests.set(
-              this.requests().filter(
-                (request) => request.conversation_id !== id,
-              ),
-            );
-          }
-        },
-        error: (err) => {
-          this.toastr.error(
-            err?.error?.message || `${status} Request Failed!`,
-            'Error',
-          );
-        },
-      });
+          },
+        });
+      }
+    });
   }
 
-  onWithdrawRequest(id: string) {
-    this.httpClient
-      .delete(`${API_URLS.withdrawRequest}/${id}`, { withCredentials: true })
-      .subscribe({
-        next: () => {
-          this.toastr.success(`Request deleted Successfully`, 'Success', {
-            timeOut: 3000,
-          });
-          this.requests.set(
-            this.requests().filter((request) => request.conversation_id !== id),
-          );
-        },
-        error: (err) => {
-          this.toastr.error(
-            err?.error?.message || `Deletion Request Failed!`,
-            'Error',
-          );
-        },
-      });
-  }
-
-  onSelectUser(friend: FriendData) {
+  onSelectUser(friend: FriendData | undefined) {
+    this.selectedFriend.set(friend);
     this.selectedUser.emit(friend);
   }
 }

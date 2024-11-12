@@ -1,14 +1,16 @@
 import { Op } from "sequelize";
-import Friend from "./models/friendModel.js";
-import User from "../users/models/userModel.js";
-import FriendMessage from "./models/friendMessageModel.js";
-import FriendExpense from "./models/friendExpenseModel.js";
+import {
+  User,
+  Friend,
+  FriendMessage,
+  FriendExpense,
+} from "../../config/db.connection.js";
 
 class FriendDb {
   static addFriend = async (friendData) => await Friend.create(friendData);
 
-  static checkFriendExist = async (friendData) => {
-    const result = await Friend.findAll({
+  static checkFriendExist = async (friendData, flag = true) =>
+    await Friend.scope("withDeletedAt").findOne({
       where: {
         [Op.or]: [
           {
@@ -21,9 +23,11 @@ class FriendDb {
           },
         ],
       },
+      paranoid: flag,
     });
-    return result.length > 0;
-  };
+
+  // DB query to restore friend
+  static restoreFriend = async (friend) => await friend.restore();
 
   // DB query for fetching all the friend
   static getAllFriends = async (userId, filters) => {
@@ -98,8 +102,8 @@ class FriendDb {
     });
 
   // DB query for withdrawing friend request
-  static withdrawFriendRequest = async (friendRequest) => {
-    const result = await Friend.destroy({
+  static withdrawFriendRequest = async (friendRequest, friend) => {
+    const result = await friend.destroy({
       where: {
         conversation_id: friendRequest.conversation_id,
       },
@@ -112,16 +116,96 @@ class FriendDb {
     await FriendMessage.create(messageData);
 
   // Db query to fetch all the messages of a particular conversation
-  static getMessages = async (conversation_id) =>
-    await FriendMessage.findAll({
+  static getMessages = async (conversation_id, page = 1, pageSize = 10) => {
+    const offset = (page - 1) * pageSize;
+
+    return await FriendMessage.findAll({
       where: {
         conversation_id,
+      },
+      order: [["createdAt", "DESC"]],
+      limit: pageSize,
+      offset,
+    });
+  };
+
+  // DB query for counting messages
+  static countMessages = async (conversation_id) =>
+    await FriendMessage.count({
+      where: {
+        conversation_id: conversation_id,
       },
     });
 
   // DB query for add expenses
   static addExpense = async (expenseData, transaction) =>
     await FriendExpense.create(expenseData, { transaction });
+
+  // DB query for fetching all the expenses of a particular conversation
+  static getExpenses = async (
+    conversation_id,
+    page = 1,
+    pageSize = 10,
+    fetchAll = false,
+  ) => {
+    const offset = (page - 1) * pageSize;
+    const options = {
+      where: {
+        conversation_id,
+      },
+      include: [
+        {
+          model: User,
+          as: "payer",
+          attributes: ["first_name", "last_name"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    };
+
+    if (!fetchAll) {
+      options.limit = pageSize;
+      options.offset = offset;
+    }
+
+    return await FriendExpense.findAll(options);
+  };
+
+  //  DB query for counting expenses
+  static countExpenses = async (conversation_id) =>
+    await FriendExpense.count({
+      where: {
+        conversation_id: conversation_id,
+      },
+    });
+
+  // DB query to fetch a single expense
+  static getExpense = async (friend_expense_id) =>
+    await FriendExpense.findByPk(friend_expense_id);
+
+  // DB query to update friends expenses
+  static updateExpense = async (
+    updatedExpenseData,
+    friend_expense_id,
+    transaction = null,
+  ) => {
+    const [affectedRows, [updatedExpense]] = await FriendExpense.update(
+      updatedExpenseData,
+      {
+        where: { friend_expense_id },
+        transaction,
+        returning: true,
+      },
+    );
+    return { affectedRows, updatedExpense };
+  };
+
+  // DB query to delete friends expenses
+  static deleteExpense = async (friend_expense_id, transaction) =>
+    await FriendExpense.destroy({
+      where: { friend_expense_id },
+      transaction,
+    });
 }
 
 export default FriendDb;

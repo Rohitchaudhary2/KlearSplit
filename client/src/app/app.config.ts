@@ -17,6 +17,7 @@ import { routes } from './app.routes';
 // import { authInterceptor } from './components/auth/auth.interceptor';
 import { errorInterceptor } from './components/shared/error.interceptor';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -36,8 +37,10 @@ export const appConfig: ApplicationConfig = {
         preventDuplicates: true,
         timeOut: 3000,
         progressBar: true,
+        easing: 'ease-out',
       }),
     ),
     provideAnimationsAsync(),
+    provideCharts(withDefaultRegisterables()),
   ],
 };

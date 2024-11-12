@@ -9,7 +9,7 @@
       "npm --prefix server run format",
       "npm --prefix server run lint"
     ],
-    "client/**/*.ts": [
+    "client/**/*.{ts,html,css}": [
       "npm --prefix client run format",
       "npm --prefix client run lint"
     ]
@@ -25,5 +25,9 @@
     "concurrently": "^9.0.1",
     "husky": "^8.0.0",
     "lint-staged": "^15.2.10"
+  },
+  "dependencies": {
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4"
   }
 }

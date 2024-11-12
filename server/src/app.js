@@ -6,13 +6,14 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 
 import socketHandler from "./api/socket/socket.js";
-import sequelize from "./config/db.connection.js";
+import { sequelize } from "./config/db.connection.js";
 import passport from "./api/middlewares/googleStrategy.js";
 import userRouter from "./api/users/userRoutes.js";
 import authRouter from "./api/auth/authRoutes.js";
 import { errorMiddleware } from "./api/middlewares/errorHandler.js";
 import { loggerMiddleware } from "./api/middlewares/loggerMiddleware.js";
 import friendRouter from "./api/friends/friendRoutes.js";
+import dashboardRouter from "./api/dashboard/dashboardRoutes.js";
 
 const app = express();
 
@@ -30,6 +31,7 @@ const io = new Server(server, {
 socketHandler(io);
 
 app.use(express.json()); // Parse incoming JSON requests and make the data available under req.body
+app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
 app.use(cors(corsOptions)); // Enable Cross-Origin Resource Sharing (CORS) to allow requests from different origins
@@ -45,6 +47,7 @@ app.use(loggerMiddleware);
 app.use("/api/users", userRouter); // User-related routes
 app.use("/api/auth", authRouter); // Authentication related routes
 app.use("/api/friends", friendRouter); // Friend-related routes
+app.use("/api/dashboard", dashboardRouter); // Dashboard-related routes
 
 // ErrorMiddleware to handle any errors that occur during request processing
 app.use(errorMiddleware);

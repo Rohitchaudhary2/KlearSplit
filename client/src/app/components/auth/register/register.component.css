@@ -1,7 +1,7 @@
 /* Custom styling for mat-button*/
 .custom-mat-button {
   background-color: #1995ad; /* Primary button color */
-  color: white; /* Button text color */
+  color: white !important; /* Button text color */
   font-size: 1.1rem; /* Slightly larger font size for better readability */
   font-weight: 500; /* Make text slightly bold */
   padding: 12px 0; /* Padding for a comfortable button height */

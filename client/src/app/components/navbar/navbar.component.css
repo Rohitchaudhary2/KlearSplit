@@ -1,0 +1,23 @@
+.nav-link:not(.dropdown-toggle) {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-link:not(.dropdown-toggle)::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 50%;
+  background-color: #007bff; /* Change to your desired color */
+  transition:
+    width 0.3s ease-in-out,
+    left 0.3s ease-in-out;
+  transform: translateX(-50%);
+}
+
+.nav-link:not(.dropdown-toggle):hover::after,
+.nav-link:not(.dropdown-toggle).active::after {
+  width: 90%;
+}

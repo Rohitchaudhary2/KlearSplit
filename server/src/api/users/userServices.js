@@ -2,13 +2,15 @@ import { generatePassword } from "../utils/passwordGenerator.js";
 import UserDb from "./userDb.js";
 import { generateAccessAndRefereshTokens } from "../utils/tokenGenerator.js";
 import AuthService from "../auth/authServices.js";
-import sequelize from "../../config/db.connection.js";
+import { sequelize } from "../../config/db.connection.js";
 import { hashedPassword } from "../utils/hashPassword.js";
 import sendMail from "../utils/sendMail.js";
-import { createOtpDb, getOtpDb } from "./otpDb.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import { otpGenrator } from "../utils/otpGenerator.js";
 import FriendService from "../friends/friendService.js";
+import Redis from "ioredis";
+
+const redis = new Redis();
 
 class UserService {
   static verifyUser = async (user) => {
@@ -17,21 +19,18 @@ class UserService {
     // If email or phone already exists in database then checking whether user has deleted account
     if (isUserExists && isUserExists.dataValues.deletedAt)
       throw new ErrorHandler(
-        400,
+        410,
         "Looks like you had an account. Please restore it.",
       );
-    else if (isUserExists) throw new ErrorHandler(400, "Email already exists.");
+    else if (isUserExists && !isUserExists.dataValues.is_invited)
+      throw new ErrorHandler(400, "Account already exist for provided Email.");
 
     // send otp
-    const { otp, otpExpiresAt } = otpGenrator();
+    const otp = otpGenrator();
 
-    await createOtpDb({
-      email: user.email,
-      otp,
-      otp_expiry_time: otpExpiresAt,
-    });
+    await redis.setex(`otp:${user.email}`, 300, otp);
 
-    await sendMail(
+    sendMail(
       {
         email: user.email,
         subject: "Otp for sign up in KlearSplit",
@@ -49,12 +48,14 @@ class UserService {
     const userOtp = user.otp;
     delete user.otp;
 
-    const otp = await getOtpDb(user.email, userOtp);
+    const otp = await redis.get(`otp:${user.email}`);
+    if (otp === userOtp) {
+      await redis.del(`otp:${user.email}`);
+    } else {
+      throw new ErrorHandler(400, "Invalid or Expired Otp.");
+    }
 
-    if (!otp) throw new ErrorHandler(400, "Invalid Otp.");
-
-    if (new Date() >= otp.otp_expiry_time)
-      throw new ErrorHandler(400, "Otp has been expired.");
+    const isUserExists = await UserDb.getUserByEmail(user.email, false);
 
     //Generating random password
     const password = generatePassword();
@@ -65,8 +66,21 @@ class UserService {
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
-      // Creating new user in the database
-      const createdUser = await UserDb.createUser(user, transaction);
+      let createdUser;
+      if (!isUserExists) {
+        // Creating new user in the database
+        createdUser = await UserDb.createUser(user, transaction);
+      } else if (isUserExists && isUserExists.dataValues.is_invited) {
+        createdUser = await UserDb.updateUser(
+          { ...user, is_invited: false },
+          isUserExists.dataValues.user_id,
+          transaction,
+        );
+        createdUser = createdUser[0].dataValues;
+        if (!createdUser) {
+          throw new ErrorHandler(400, "Error while Registering");
+        }
+      }
 
       // Generate access and refresh tokens
       const { accessToken, refreshToken } = generateAccessAndRefereshTokens(
@@ -74,13 +88,7 @@ class UserService {
       );
 
       // Store the refresh token in the database
-      await AuthService.createRefreshToken(
-        {
-          token: refreshToken,
-          user_id: createdUser.user_id,
-        },
-        transaction,
-      );
+      await AuthService.createRefreshToken(refreshToken, user.email);
 
       // Commit the transaction
       await transaction.commit();
@@ -90,7 +98,7 @@ class UserService {
         subject: "Password for Sign in for KlearSplit",
       };
 
-      await sendMail(options, "passwordTemplate", {
+      sendMail(options, "passwordTemplate", {
         name: user.first_name,
         heading: "Welcome to Our Service",
         email: user.email,
@@ -118,18 +126,14 @@ class UserService {
       isEmailExists.dataValues &&
       !isEmailExists.dataValues.deletedAt
     ) {
-      throw new ErrorHandler(400, "Account already exists for this Email.");
+      throw new ErrorHandler(400, "Account for this Email is active.");
     }
 
-    const { otp, otpExpiresAt } = otpGenrator();
+    const otp = otpGenrator();
 
-    await createOtpDb({
-      email: user.email,
-      otp,
-      otp_expiry_time: otpExpiresAt,
-    });
+    await redis.setex(`otp:${user.email}`, 300, otp);
 
-    await sendMail(
+    sendMail(
       {
         email: user.email,
         subject: "Otp for restoring your account for KlearSplit",
@@ -147,20 +151,20 @@ class UserService {
     const isEmailExists = await UserDb.getUserByEmail(user.email, false);
     if (!isEmailExists) throw new ErrorHandler(400, "User not found");
     if (!isEmailExists.dataValues.deletedAt)
-      throw new ErrorHandler(400, "Account for this Email is active.");
+      throw new ErrorHandler(400, "Account for this Email is already active.");
 
-    const otp = await getOtpDb(user.email, user.otp);
-
-    if (!otp) throw new ErrorHandler(400, "Invalid Otp.");
-
-    if (new Date() >= otp.otp_expiry_time)
-      throw new ErrorHandler(400, "Otp has been expired.");
+    const otp = await redis.get(`otp:${user.email}`);
+    if (otp === user.otp) {
+      await redis.del(`otp:${user.email}`);
+    } else {
+      throw new ErrorHandler(400, "Invalid or Expired Otp.");
+    }
 
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
       // Restoring user in the database
-      await UserDb.restoreUser(user.email, transaction);
+      await UserDb.restoreUser(isEmailExists, transaction);
       const restoredUser = isEmailExists.dataValues;
 
       // Generate access and refresh tokens
@@ -169,13 +173,7 @@ class UserService {
       );
 
       // Store the refresh token in the database
-      await AuthService.createRefreshToken(
-        {
-          token: refreshToken,
-          user_id: restoredUser.user_id,
-        },
-        transaction,
-      );
+      await AuthService.createRefreshToken(refreshToken, user.email);
 
       // Commit the transaction
       await transaction.commit();
@@ -200,15 +198,11 @@ class UserService {
       );
     }
 
-    const { otp, otpExpiresAt } = otpGenrator();
+    const otp = otpGenrator();
 
-    await createOtpDb({
-      email: user.email,
-      otp,
-      otp_expiry_time: otpExpiresAt,
-    });
+    await redis.setex(`otp:${user.email}`, 300, otp);
 
-    await sendMail(
+    sendMail(
       {
         email: user.email,
         subject: "Otp for changing password for KlearSplit",
@@ -226,12 +220,13 @@ class UserService {
     const user = await UserDb.getUserByEmail(userData.email);
     if (!user) throw new ErrorHandler(400, "Email does not exist");
 
-    const otp = await getOtpDb(user.email, userData.otp);
-
-    if (!otp) throw new ErrorHandler(400, "Invalid Otp.");
-
-    if (new Date() >= otp.otp_expiry_time)
-      throw new ErrorHandler(400, "Otp has been expired.");
+    const otp = await redis.get(`otp:${user.email}`);
+    if (otp === userData.otp) {
+      await redis.del(`otp:${user.email}`);
+      await redis.del(`failedAttempts:${user.email}`);
+    } else {
+      throw new ErrorHandler(400, "Invalid or Expired Otp.");
+    }
 
     const password = generatePassword();
     const hashPassword = await hashedPassword(password);
@@ -246,7 +241,7 @@ class UserService {
       subject: "Password Reset Confirmation",
     };
 
-    await sendMail(options, "passwordTemplate", {
+    sendMail(options, "passwordTemplate", {
       name: user.first_name,
       email: user.email,
       heading: "Password Successfully Changed",
@@ -299,9 +294,17 @@ class UserService {
   // Service for deleting user in the database
   static deleteUser = async (req) => {
     const id = req.params.id;
-    await this.getUser(id);
+    const user = await this.getUser(id);
+    const transaction = await sequelize.transaction();
 
-    return await UserDb.deleteUser(id);
+    try {
+      await UserDb.deleteUser(user);
+      await transaction.commit();
+      return { message: "User deleted successfully" };
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   };
 }
 

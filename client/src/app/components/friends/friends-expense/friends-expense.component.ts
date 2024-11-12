@@ -16,6 +16,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { NgClass } from '@angular/common';
 import { PayerComponent } from './payer/payer.component';
+import { SplitTypeComponent } from './split-type/split-type.component';
+import { FormErrorMessageService } from '../../shared/form-error-message.service';
+import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-friends-expense',
@@ -32,18 +35,25 @@ import { PayerComponent } from './payer/payer.component';
   styleUrl: './friends-expense.component.css',
 })
 export class FriendsExpenseComponent implements OnInit {
+  private formErrorMessages = inject(FormErrorMessageService);
   dialogRef = inject(MatDialogRef<FriendsExpenseComponent>);
   data = inject(MAT_DIALOG_DATA);
   showAdditionalFields = signal<boolean>(false);
   participants = [this.data[0], this.data[1].friend];
   private dialog = inject(MatDialog);
+  imageName = signal<string>('Upload Bill Receipt');
+  splitType = 'EQUAL';
 
   form = new FormGroup({
     expense_name: new FormControl('', {
-      validators: [Validators.required],
+      validators: [Validators.required, Validators.maxLength(50)],
     }),
     total_amount: new FormControl('', {
-      validators: [Validators.required],
+      validators: [
+        Validators.required,
+        Validators.min(0.1),
+        Validators.max(999999999999.99),
+      ],
     }),
     description: new FormControl('', {
       validators: [Validators.maxLength(150)],
@@ -58,6 +68,10 @@ export class FriendsExpenseComponent implements OnInit {
     }),
     receipt: new FormControl<File | null>(null),
   });
+
+  getFormErrors(field: string): string | null {
+    return this.formErrorMessages.getErrorMessage(this.form, field);
+  }
 
   ngOnInit(): void {
     this.form.get('split_type')!.valueChanges.subscribe((value) => {
@@ -79,19 +93,70 @@ export class FriendsExpenseComponent implements OnInit {
       this.form.get('participant2_share')?.updateValueAndValidity();
     });
 
-    this.dialogRef.updateSize('30%', '65%');
+    this.dialogRef.updateSize('30%');
+  }
+
+  trimInput(controlName: string) {
+    const control = this.form.get(controlName);
+    if (control) {
+      const trimmedValue = control.value.trim();
+      control.setValue(trimmedValue, { emitEvent: false });
+    }
   }
 
   selectImage(event: Event): void {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files.length > 0) {
       const file = target.files[0];
-      this.form.value.receipt = file;
+      this.form.get('receipt')?.setValue(file);
+      this.imageName.set(file.name);
     }
   }
 
   onAdd(): void {
+    if (this.form.value.split_type === 'EQUAL') {
+      this.form
+        .get('participant1_share')
+        ?.setValue(
+          JSON.stringify(parseFloat(this.form.value.total_amount!) / 2),
+        );
+      this.form
+        .get('participant2_share')
+        ?.setValue(
+          JSON.stringify(parseFloat(this.form.value.total_amount!) / 2),
+        );
+    }
     if (this.form.valid) {
+      const formData = new FormData();
+      formData.append(
+        'expense_name',
+        this.form.get('expense_name')?.value as string,
+      );
+      formData.append(
+        'total_amount',
+        this.form.get('total_amount')?.value as string,
+      );
+      if (this.form.get('description')?.value)
+        formData.append(
+          'description',
+          this.form.get('description')?.value as string,
+        );
+      formData.append(
+        'split_type',
+        this.form.get('split_type')?.value as string,
+      );
+      formData.append('payer_id', this.form.get('payer_id')?.value as string);
+      formData.append(
+        'participant1_share',
+        this.form.get('participant1_share')?.value as string,
+      );
+      formData.append(
+        'participant2_share',
+        this.form.get('participant2_share')?.value as string,
+      );
+      if (this.form.get('receipt')?.value)
+        formData.append('receipt', this.form.get('receipt')?.value as File);
+
       let debtor_share;
       if (
         this.form.value.split_type === 'UNEQUAL' ||
@@ -106,7 +171,13 @@ export class FriendsExpenseComponent implements OnInit {
         this.form.value.payer_id === this.participants[0].user_id
           ? this.participants[1].user_id
           : this.participants[0].user_id;
-      this.dialogRef.close({ ...this.form.value, debtor_share, debtor_id });
+
+      formData.append('debtor_share', debtor_share as string);
+      formData.append('debtor_id', debtor_id as string);
+      this.dialogRef.close({
+        formData: formData,
+        expenseData: { ...this.form.value, debtor_id, debtor_share },
+      });
     }
   }
 
@@ -114,27 +185,65 @@ export class FriendsExpenseComponent implements OnInit {
     const id = this.form.value.payer_id;
     if (id === this.participants[0].user_id) return 'you';
     else
-      return `${this.participants[1].first_name} ${this.participants[1].last_name[0]}.`;
+      return `${this.participants[1].first_name}${this.participants[1].last_name ? ` ${this.participants[1].last_name}` : ''}`;
   }
 
-  openSecondDialog(): void {
+  openPayerDialog(): void {
     const dialogRef = this.dialog.open(PayerComponent, {
       panelClass: 'second-dialog',
       width: '30%',
       data: this.participants,
+      backdropClass: 'dialog-bg-trans',
       position: {
-        right: '7%', // Adjust as needed
+        right: '7%',
       },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.form.value.payer_id = result.id;
+        this.form.get('payer_id')?.setValue(result.id);
       }
     });
   }
 
   onCancel(): void {
-    this.dialogRef.close(null);
+    const confirmationDialogRef = this.dialog.open(
+      ConfirmationDialogComponent,
+      {
+        data: 'Your changes would be lost. Would you like to continue?',
+      },
+    );
+
+    confirmationDialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.dialogRef.close(null);
+      }
+    });
+  }
+
+  openSplitTypeDialog(): void {
+    const dialogRef = this.dialog.open(SplitTypeComponent, {
+      panelClass: 'second-dialog',
+      width: '30%',
+      data: [this.participants, this.form.value.total_amount],
+      backdropClass: 'dialog-bg-trans',
+      position: {
+        right: '7%',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.splitType =
+          result.split_type !== 'PERCENTAGE' ? result.split_type : 'PERCENT';
+        this.form.get('split_type')?.setValue(result.split_type);
+        this.form
+          .get('participant1_share')
+          ?.setValue(JSON.stringify(result.participant1_share));
+        this.form
+          .get('participant2_share')
+          ?.setValue(JSON.stringify(result.participant2_share));
+      }
+    });
   }
 }

@@ -38,10 +38,13 @@
         <tbody>
           @for (request of requests(); track $index) {
             <tr
+              (click)="onSelectUser(request)"
               class="row equal-height-row d-flex justify-content-between m-0"
+              [ngClass]="selectedFriend() === request ? 'active' : ''"
               style="cursor: pointer"
             >
               <td
+                [ngClass]="selectedFriend() === request ? 'active' : ''"
                 class="col-md-3 col-lg-2 col-sm-3"
                 style="
                   flex: 0 0 auto;
@@ -56,43 +59,71 @@
                     alt="Image"
                 /></span>
               </td>
-              <td class="col-md-4 col-lg-4 col-sm-3" style="flex: 1 1 0">
-                <div class="d-flex justify-content-between">
+              <td
+                class="col-md-4 col-lg-4 col-sm-3"
+                [ngClass]="selectedFriend() === request ? 'active' : ''"
+                style="flex: 1 1 0"
+              >
+                <div class="d-flex justify-content-between align-items-center">
                   <span
                     >{{ request.friend.first_name }}
                     {{ request.friend.last_name }}</span
                   >
-                  <span class="text-end pe-3">
+
+                  <span class="text-end pe-3 d-flex align-items-center">
+                    <span class="text-end pe-3">
+                      @if (getBalanceAsNumber(request.balance_amount) < 0) {
+                        <span class="text-danger">{{
+                          -getBalanceAsNumber(request.balance_amount)
+                            | currency: "INR"
+                        }}</span>
+                      } @else {
+                        <span class="text-success">{{
+                          getBalanceAsNumber(request.balance_amount)
+                            | currency: "INR"
+                        }}</span>
+                      }
+                    </span>
                     @if (request.status === "RECEIVER") {
                       <span
-                        ><button
-                          class="btn btn-success btn-sm"
-                          (click)="
-                            onAcceptReject(request.conversation_id, 'ACCEPTED')
-                          "
-                        >
-                          Accept
-                        </button></span
+                        class="d-flex align-items-center border bg-success text-white"
+                        matTooltip="Accept Request"
+                        matTooltipPosition="above"
                       >
-                      <span class="ps-2"
-                        ><button
-                          class="btn btn-danger btn-sm"
+                        <mat-icon
                           (click)="
-                            onAcceptReject(request.conversation_id, 'REJECTED')
+                            onAcceptReject(request.conversation_id, 'ACCEPTED');
+                            $event.stopPropagation()
                           "
+                          >check</mat-icon
                         >
-                          Reject
-                        </button>
+                      </span>
+                      <span
+                        class="ms-2 d-flex align-items-center border bg-danger text-white"
+                        matTooltip="Reject Request"
+                        matTooltipPosition="above"
+                      >
+                        <mat-icon
+                          (click)="
+                            onAcceptReject(request.conversation_id, 'REJECTED');
+                            $event.stopPropagation()
+                          "
+                          >close</mat-icon
+                        >
                       </span>
                     } @else {
                       <span
-                        ><button
-                          class="btn btn-danger btn-sm"
-                          (click)="onWithdrawRequest(request.conversation_id)"
+                        class="d-flex align-items-center border bg-danger text-white"
+                        matTooltip="Withdraw Request"
+                        matTooltipPosition="above"
+                        ><mat-icon
+                          (click)="
+                            onWithdrawRequest(request.conversation_id);
+                            $event.stopPropagation()
+                          "
+                          >close</mat-icon
                         >
-                          Withdraw Request
-                        </button></span
-                      >
+                      </span>
                     }
                   </span>
                 </div>
@@ -121,6 +152,7 @@
           @for (friend of friendList(); track $index) {
             <tr
               class="row equal-height-row d-flex justify-content-between m-0"
+              [ngClass]="selectedFriend() === friend ? 'active' : ''"
               style="cursor: pointer"
               (click)="onSelectUser(friend)"
             >

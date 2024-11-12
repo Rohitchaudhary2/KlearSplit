@@ -1,93 +1,102 @@
 import { DataTypes } from "sequelize";
+import { ErrorHandler } from "../../middlewares/errorHandler.js";
 
-import sequelize from "../../../config/db.connection.js";
-import User from "../../users/models/userModel.js";
-
-const FriendExpense = sequelize.define(
-  "friends_expenses",
-  {
-    friend_expense_id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      allowNull: false,
-      primaryKey: true,
+export default (sequelize) => {
+  const FriendExpense = sequelize.define(
+    "friends_expenses",
+    {
+      friend_expense_id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
+        primaryKey: true,
+      },
+      expense_name: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            msg: "Expense name can't be empty.",
+          },
+        },
+      },
+      total_amount: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            msg: "Total amount can't be empty.",
+          },
+          isNumeric: {
+            msg: "Total amount must be a number.",
+          },
+        },
+      },
+      description: {
+        type: DataTypes.STRING(150),
+        allowNull: true,
+      },
+      conversation_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "friends",
+          key: "conversation_id",
+        },
+      },
+      payer_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "users",
+          key: "user_id",
+        },
+      },
+      debtor_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "users",
+          key: "user_id",
+        },
+      },
+      split_type: {
+        type: DataTypes.ENUM("EQUAL", "UNEQUAL", "PERCENTAGE", "SETTLEMENT"),
+        allowNull: false,
+        defaultValue: "EQUAL",
+      },
+      debtor_amount: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: false,
+      },
+      receipt_url: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      is_deleted: {
+        type: DataTypes.SMALLINT,
+        allowNull: false,
+        defaultValue: 0,
+        validate: {
+          isInRange(value) {
+            if (![0, 1, 2].includes(value)) {
+              throw new ErrorHandler("is_deleted value must be 0, 1, or 2");
+            }
+          },
+        },
+        comment: "0 = Not deleted, 1 = Deleted by system, 2 = Deleted by user",
+      },
     },
-    expense_name: {
-      type: DataTypes.STRING(50),
-      allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: "Expense name can't be empty.",
+    {
+      timestamps: true,
+      paranoid: true,
+      defaultScope: {
+        attributes: {
+          exclude: ["deletedAt"],
         },
       },
     },
-    total_amount: {
-      type: DataTypes.DECIMAL(12, 2),
-      allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: "Total amount can't be empty.",
-        },
-        isNumeric: {
-          msg: "Total amount must be a number.",
-        },
-      },
-    },
-    description: {
-      type: DataTypes.STRING(150),
-      allowNull: true,
-    },
-    payer_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "users",
-        key: "user_id",
-      },
-      onDelete: "CASCADE",
-    },
-    debtor_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "users",
-        key: "user_id",
-      },
-      onDelete: "CASCADE",
-    },
-    split_type: {
-      type: DataTypes.ENUM("EQUAL", "UNEQUAL", "PERCENTAGE", "SETTLEMENT"),
-      allowNull: false,
-      defaultValue: "EQUAL",
-    },
-    debtor_amount: {
-      type: DataTypes.DECIMAL(12, 2),
-      allowNull: false,
-    },
-    receipt_url: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-    },
-  },
-  {
-    timestamps: true,
-    paranoid: true,
-    defaultScope: {
-      attributes: {
-        exclude: ["createdAt", "updatedAt", "deletedAt"],
-      },
-    },
-  },
-);
+  );
 
-FriendExpense.belongsTo(User, {
-  foreignKey: "payer_id",
-  as: "payer",
-});
-
-FriendExpense.belongsTo(User, {
-  foreignKey: "debtor_id",
-  as: "debtor",
-});
-
-export default FriendExpense;
+  return FriendExpense;
+};

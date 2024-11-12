@@ -1,15 +1,41 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import {
+  HttpHandlerFn,
+  HttpInterceptorFn,
+  HttpRequest,
+} from '@angular/common/http';
 import { inject } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 import { HttpErrorResponse } from '@angular/common/http';
-import { catchError, throwError } from 'rxjs';
+import { catchError, switchMap, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { TokenService } from '../auth/token.service';
+import { StateService } from './state.service';
+import { AuthService } from '../auth/auth.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toastr = inject(ToastrService);
   const router = inject(Router);
   const tokenService = inject(TokenService);
+  const stateService = inject(StateService);
+  const authService = inject(AuthService);
+
+  function handleTokenExpiration(
+    req: HttpRequest<unknown>,
+    next: HttpHandlerFn,
+  ) {
+    // Attempt to refresh the token
+    return authService.refreshAccessToken().pipe(
+      switchMap(() => {
+        return next(req);
+      }),
+      // catchError(() => {
+      //   // Handle any error that occurred during token refresh (e.g., refresh token expired)
+      //   router.navigate(['/login']);
+      //   tokenService.removeUserId();
+      //   return throwError(() => new Error('Session expired'));
+      // }),
+    );
+  }
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -25,9 +51,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             errorMessage = error.error.message || 'Bad Request';
             break;
           case 401:
-            errorMessage = 'Unauthorized. Please log in.';
-            router.navigate(['/login']);
-            tokenService.removeUserId();
+            if (error.error.message === 'Token expired') {
+              // Handle the case where the token has expired
+              return handleTokenExpiration(req, next);
+            } else {
+              errorMessage = 'Unauthorized. Please log in.';
+              router.navigate(['/login']);
+              tokenService.removeUserId();
+            }
             break;
           case 403:
             errorMessage =
@@ -37,6 +68,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           case 404:
             errorMessage =
               error.error.message || 'The requested resource was not found.';
+            break;
+          case 410:
+            errorMessage =
+              error.error.message || 'Account deleted please restore it.';
+            stateService.setAccountDeleted(true);
             break;
           case 503:
           case 500:
@@ -50,7 +86,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // Display error message using Toastr
-      toastr.error(errorMessage, 'Error');
+      if (error.error.message !== 'Token expired')
+        toastr.error(errorMessage, 'Error');
 
       return throwError(() => new Error(errorMessage));
     }),

@@ -31,16 +31,83 @@ export interface AddedFriend {
   image_url: string;
 }
 
-export interface message {
+export interface Message {
   success: string;
   message: string;
-  data: messageData[];
+  data: MessageData[];
 }
 
-export interface messageData {
+export interface MessageData {
   message_id: string;
   conversation_id: string;
   sender_id: string;
   message: string;
   is_read: boolean;
+  createdAt: string;
+}
+
+export interface ExpenseResponse {
+  success: string;
+  message: string;
+  data: ExpenseData;
+}
+
+export interface Expense {
+  success: string;
+  message: string;
+  data: ExpenseData[];
+}
+
+export interface ExpenseData {
+  createdAt: string;
+  debtor_amount: string;
+  debtor_id: string;
+  deletedAt: string | null;
+  description: string;
+  expense_name: string;
+  friend_expense_id: string;
+  payer_id: string;
+  receipt_url: string | null;
+  split_type: string;
+  total_amount: string;
+  updatedAt: string;
+  payer: string;
+}
+
+export interface SettlementData {
+  split_type: string;
+  total_amount: string;
+}
+
+export interface ExpenseInput {
+  expense_name: string;
+  total_amount: string;
+  description?: string;
+  split_type: string;
+  payer_id: string;
+  participant1_share: string;
+  participant2_share: string;
+  receipt?: File;
+  debtor_share: string;
+  debtor_id: string;
+}
+
+export interface CombinedMessage extends MessageData {
+  type: string;
+}
+
+export interface CombinedExpense extends ExpenseData {
+  type: string;
+}
+
+export interface CombinedView {
+  success: string;
+  message: string;
+  data: (CombinedExpense | CombinedMessage)[];
+}
+
+export interface ExpenseDeletedEvent {
+  id: string;
+  payer_id: string;
+  debtor_amount: string;
 }

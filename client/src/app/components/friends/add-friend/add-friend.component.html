@@ -1,12 +1,17 @@
 <h3 mat-dialog-title class="text-center pt-2">
   Add Friends for Easier Bill Splitting
 </h3>
-<div mat-dialog-content class="d-flex flex-column align-items-center p-4 pb-0">
+<div
+  [formGroup]="form"
+  mat-dialog-content
+  class="d-flex flex-column align-items-center p-4 pb-0"
+>
   <mat-form-field appearance="outline" class="w-100" style="border: none">
-    <mat-label>Enter Email</mat-label>
+    <mat-icon matPrefix>person</mat-icon>
     <input
       matInput
-      [(ngModel)]="searchInput"
+      formControlName="searchInputControl"
+      placeholder="Search"
       (ngModelChange)="onSearchInputChange()"
       style="
         background-color: transparent;
@@ -16,36 +21,48 @@
         padding-bottom: 0 !important;
       "
     />
+    @if (getFormErrors("searchInputControl")) {
+      <mat-error>{{ getFormErrors("searchInputControl") }}</mat-error>
+    }
   </mat-form-field>
 </div>
-<div class="px-3" style="border-radius: 5px">
-  @if (loading()) {
-    <div class="px-3">Loading...</div>
-  } @else if (users().length) {
-    <table class="table table-hover">
-      <tbody>
-        @for (user of users(); track $index) {
-          <tr>
-            <td (click)="selectUser(user)">{{ user.email }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  } @else if (searchInput() && !selectedUser()) {
-    <div>No user found!</div>
-  }
-</div>
+@if (!selectedUser()) {
+  <div class="px-4" style="border-radius: 5px">
+    @if (loading()) {
+      <div class="px-2">Loading...</div>
+    } @else if (users().length) {
+      <table class="table table-hover" style="cursor: pointer">
+        <tbody>
+          @for (user of users(); track $index) {
+            <tr>
+              <td (click)="selectUser(user)">{{ user.email }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else if (searchInput() && !selectedUser()) {
+      <div class="px-2">No user found!</div>
+    }
+  </div>
+}
 
 <div mat-dialog-actions class="d-flex justify-content-end gap-2 pb-2 px-3">
   <button
     mat-button
     disableRipple
     class="custom-mat-button"
+    color="warn"
     (click)="onCancel()"
   >
     Cancel
   </button>
-  <button mat-button disableRipple class="custom-mat-button" (click)="onAdd()">
+  <button
+    mat-button
+    disableRipple
+    class="custom-mat-button"
+    [disabled]="form.invalid"
+    (click)="onAdd()"
+  >
     Add
   </button>
 </div>

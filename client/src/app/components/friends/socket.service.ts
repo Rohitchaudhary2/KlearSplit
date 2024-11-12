@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { environment } from '../../../environments/environment'; // Make sure this path is correct
-import { messageData } from './friend.model';
+import { MessageData } from './friend.model';
 
 @Injectable({
   providedIn: 'root',
@@ -18,15 +18,15 @@ export class SocketService {
     this.socket.emit('joinRoom', conversationId);
   }
 
-  sendMessage(messageData: {
+  sendMessage(MessageData: {
     conversation_id: string | null;
     sender_id: string | null;
     message: string | null;
   }): void {
-    this.socket.emit('sendMessage', messageData);
+    this.socket.emit('sendMessage', MessageData);
   }
 
-  onNewMessage(callback: (message: messageData) => void): void {
+  onNewMessage(callback: (message: MessageData) => void): void {
     this.socket.on('newMessage', callback); // Listen for 'newMessage' events
   }
 

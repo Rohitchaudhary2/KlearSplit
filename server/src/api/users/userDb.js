@@ -1,14 +1,27 @@
 import { Op } from "sequelize";
-import User from "./models/userModel.js";
+import { User } from "../../config/db.connection.js";
 
 class UserDb {
   static createUser = async (user, transaction) =>
     await User.create(user, { transaction });
 
-  static restoreUser = async (email, transaction) =>
-    await User.restore({ where: { email }, transaction });
+  static restoreUser = async (user, transaction) =>
+    await user.restore({ transaction });
 
   static getUserById = async (id) => await User.findByPk(id);
+
+  static getUsersById = async (ids) => {
+    const users = await User.findAll({
+      attributes: ["first_name", "last_name", "user_id"],
+      where: {
+        user_id: ids,
+      },
+    });
+
+    return users.sort(
+      (a, b) => ids.indexOf(a.user_id) - ids.indexOf(b.user_id),
+    );
+  };
 
   static getUserByEmail = async (email, flag = true) =>
     await User.scope("withPassword").findOne({
@@ -64,21 +77,23 @@ class UserDb {
     });
   };
 
-  static updateUser = async (user, id, transaction = null) =>
-    await User.update(user, {
+  static updateUser = async (user, id, transaction = null) => {
+    const response = await User.update(user, {
       where: {
         user_id: id,
       },
       transaction,
       returning: true,
     });
+    if (response[0] === 0) {
+      return 0;
+    }
 
-  static deleteUser = async (id) =>
-    await User.destroy({
-      where: {
-        user_id: id,
-      },
-    });
+    return response[1];
+  };
+
+  static deleteUser = async (user, transaction) =>
+    await user.destroy({ transaction });
 }
 
 export default UserDb;

@@ -350,6 +350,8 @@ class FriendService {
         if (affectedRows === 0) {
           throw new ErrorHandler(400, "Failed to update expense");
         }
+        updatedExpense.dataValues.payer =
+          `${updatedExpense.payer.first_name} ${updatedExpense.payer.last_name || ""}`.trim();
         return updatedExpense;
       }
 
@@ -413,6 +415,8 @@ class FriendService {
         // Commit the transaction
         await transaction.commit();
 
+        updatedExpense.dataValues.payer =
+          `${updatedExpense.payer.first_name} ${updatedExpense.payer.last_name || ""}`.trim();
         return updatedExpense;
       } catch (error) {
         // Rollback the transaction in case of any error

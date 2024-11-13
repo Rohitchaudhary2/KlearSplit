@@ -197,6 +197,23 @@ class FriendDb {
         returning: true,
       },
     );
+
+    // If rows were affected, fetch the updated expense with payer details
+    if (affectedRows > 0) {
+      // Fetch the updated record with the associated payer's name
+      const detailedExpense = await FriendExpense.findOne({
+        where: { friend_expense_id },
+        include: [
+          {
+            model: User,
+            as: "payer",
+            attributes: ["first_name", "last_name"],
+          },
+        ],
+        transaction,
+      });
+      return { affectedRows, updatedExpense: detailedExpense };
+    }
     return { affectedRows, updatedExpense };
   };
 

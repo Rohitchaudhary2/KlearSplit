@@ -25,13 +25,13 @@ import { ToastrService } from 'ngx-toastr';
 import { FriendsListComponent } from './friends-list/friends-list.component';
 import { SocketService } from './socket.service';
 import { DialogPosition, MatDialog } from '@angular/material/dialog';
-import { FriendsExpenseComponent } from './friends-expense/friends-expense.component';
 import { NgClass } from '@angular/common';
 import { SettlementComponent } from './friends-expense/settlement/settlement.component';
 import { ViewExpensesComponent } from './friends-expense/view-expenses/view-expenses.component';
 import { FriendsService } from './friends.service';
 import { MessageComponent } from './message/message.component';
 import { ExpenseComponent } from './expense/expense.component';
+import { FriendsExpenseComponent } from './friends-expense/friends-expense.component';
 
 @Component({
   selector: 'app-friends',
@@ -39,7 +39,6 @@ import { ExpenseComponent } from './expense/expense.component';
   imports: [
     FormsModule,
     FriendsListComponent,
-    FriendsExpenseComponent,
     NgClass,
     MessageComponent,
     ExpenseComponent,

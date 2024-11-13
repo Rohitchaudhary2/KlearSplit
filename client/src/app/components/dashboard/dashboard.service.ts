@@ -14,14 +14,18 @@ export class DashboardService {
       .get<AllExpenses>(`${API_URLS.getAllExpenses}`, { withCredentials: true })
       .pipe(
         map((response) => {
-          const topAmounts = [];
+          const topAmounts: number[] = [];
+          const friendsName: string[] = [];
           for (const item in response.data.topFriends) {
-            topAmounts.push(response.data.topFriends[item]['amount']);
+            topAmounts.push(Number(response.data.topFriends[item]['amount']));
+            friendsName.push(String(response.data.topFriends[item]['friend']));
           }
           return {
             expensesRange: response.data.expensesRange,
             balanceAmounts: response.data.balanceAmounts,
             topFriends: topAmounts,
+            topFriendsName: friendsName,
+            monthlyExpense: response.data.monthlyExpense,
           };
         }),
       );

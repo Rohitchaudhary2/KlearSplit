@@ -6,6 +6,7 @@ import initializeUser from "../api/users/models/userModel.js";
 import initializeFriend from "../api/friends/models/friendModel.js";
 import initializeFriendMessage from "../api/friends/models/friendMessageModel.js";
 import initializeFriendExpense from "../api/friends/models/friendExpenseModel.js";
+// import initializeGroup from '../api/groups/models/groupModel.js';
 
 // Creating a new Sequelize instance for connecting to the PostgreSQL database
 const sequelize = new Sequelize(database, username, password, {
@@ -25,6 +26,7 @@ const User = initializeUser(sequelize);
 const Friend = initializeFriend(sequelize);
 const FriendMessage = initializeFriendMessage(sequelize);
 const FriendExpense = initializeFriendExpense(sequelize);
+// const Group = initializeGroup(sequelize);
 
 // User model association with Friends model
 User.hasMany(Friend, { foreignKey: "friend1_id" });

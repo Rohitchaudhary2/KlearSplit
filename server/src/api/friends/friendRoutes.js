@@ -79,6 +79,7 @@ friendRouter.get(
 friendRouter.patch(
   "/updateexpense/:conversation_id",
   authenticateToken,
+  uploadMiddleware,
   validateParams,
   validateExpense,
   FriendController.updateExpense,

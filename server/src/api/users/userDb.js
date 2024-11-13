@@ -10,6 +10,19 @@ class UserDb {
 
   static getUserById = async (id) => await User.findByPk(id);
 
+  static getUsersById = async (ids) => {
+    const users = await User.findAll({
+      attributes: ["first_name", "last_name", "user_id"],
+      where: {
+        user_id: ids,
+      },
+    });
+
+    return users.sort(
+      (a, b) => ids.indexOf(a.user_id) - ids.indexOf(b.user_id),
+    );
+  };
+
   static getUserByEmail = async (email, flag = true) =>
     await User.scope("withPassword").findOne({
       where: {

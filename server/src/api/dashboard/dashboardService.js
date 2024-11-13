@@ -1,8 +1,9 @@
+import UserDb from "../users/userDb.js";
 import DashboardDb from "./dashboardDb.js";
 
 function sortFriendsByAmount(obj, field) {
   // Convert the object into an array of key-value pairs
-  const entries = Object.entries(obj);
+  let entries = Object.entries(obj);
 
   // Sort the array by the field amount
   entries.sort((a, b) => b[1][field] - a[1][field]); // Descending order
@@ -13,9 +14,9 @@ function sortFriendsByAmount(obj, field) {
     othersAmount += entries[i][1].amount;
   }
 
-  entries
-    .slice(0, 4)
-    .push(["others", { amount: othersAmount, friend_id: "others" }]);
+  entries = entries.slice(0, 4);
+  if (entries.length > 4)
+    entries.push(["others", { amount: othersAmount, friend: "others" }]);
 
   // Rebuilding the object with sorted entries
   const sortedObj = {};
@@ -32,28 +33,40 @@ class DashboardService {
     const result = expenses.reduce(
       (acc, expense) => {
         const amount = parseFloat(expense.total_amount);
+        const debtAmount = parseFloat(expense.debtor_amount);
+        const paidAmount = amount - debtAmount;
 
-        if (amount >= 1 && amount <= 1000) {
-          acc.expensesRange[0]++;
-        } else if (amount >= 1001 && amount <= 5000) {
-          acc.expensesRange[1]++;
-        } else if (amount >= 5001 && amount <= 10000) {
-          acc.expensesRange[2]++;
-        } else if (amount >= 10001 && amount <= 15000) {
-          acc.expensesRange[3]++;
-        } else if (amount > 15000) {
-          acc.expensesRange[4]++;
+        const { expenseAmount, index } =
+          expense.payer_id === user_id
+            ? { expenseAmount: paidAmount, index: 0 }
+            : { expenseAmount: debtAmount, index: 1 };
+
+        if (expense.split_type !== "SETTLEMENT") {
+          // Monthly Expense according to index to months.
+          acc.monthlyExpense[expense.createdAt.getMonth()] += expenseAmount;
+          // Expense count according to user's money involved in that expense.
+          if (expenseAmount >= 1 && expenseAmount <= 1000) {
+            acc.expensesRange[0]++;
+          } else if (expenseAmount >= 1001 && expenseAmount <= 5000) {
+            acc.expensesRange[1]++;
+          } else if (expenseAmount >= 5001 && expenseAmount <= 10000) {
+            acc.expensesRange[2]++;
+          } else if (expenseAmount >= 10001 && expenseAmount <= 15000) {
+            acc.expensesRange[3]++;
+          } else if (expenseAmount > 15000) {
+            acc.expensesRange[4]++;
+          }
         }
 
-        const debtAmount = parseFloat(expense.debtor_amount);
-        const index = expense.payer_id === user_id ? 0 : 1;
+        // Amount lent or borrowed
         acc.balanceAmounts[index] += debtAmount;
 
+        // Top friends with highest cash flow
         acc.topFriends[expense.conversation_id]
-          ? (acc.topFriends[expense.conversation_id].amount += amount)
+          ? (acc.topFriends[expense.conversation_id].amount += debtAmount)
           : (acc.topFriends[expense.conversation_id] = {
-              amount: amount,
-              friend_id:
+              amount: debtAmount,
+              friend:
                 expense.payer_id === user_id
                   ? expense.debtor_id
                   : expense.payer_id,
@@ -65,12 +78,31 @@ class DashboardService {
         expensesRange: [0, 0, 0, 0, 0],
         balanceAmounts: [0, 0],
         topFriends: {},
+        monthlyExpense: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       },
     );
 
     result.topFriends = sortFriendsByAmount(result.topFriends, "amount");
+    const topFourFriendsId = [];
+    Object.entries(result.topFriends)
+      .slice(0, 4)
+      .map((value) => {
+        topFourFriendsId.push(value[1].friend);
+      });
 
-    return { ...result };
+    let topFourFriendsName = await UserDb.getUsersById(topFourFriendsId);
+
+    topFourFriendsName = topFourFriendsName.map((user) => {
+      const name = `${user.first_name}${user.last_name ? ` ${user.last_name}` : ""}`;
+      return name;
+    });
+    Object.keys(result.topFriends)
+      .slice(0, 4)
+      .forEach((key, index) => {
+        result.topFriends[key].friend = topFourFriendsName[index];
+      });
+
+    return result;
   }
 }
 

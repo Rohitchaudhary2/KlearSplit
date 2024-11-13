@@ -1,12 +1,18 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, OnInit, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialog,
+  MatDialogRef,
+} from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { ExpenseData } from '../../friend.model';
+import { ExpenseData, ExpenseResponse } from '../../friend.model';
 import { FriendsService } from '../../friends.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { FriendsExpenseComponent } from '../friends-expense.component';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-view-expenses',
@@ -19,7 +25,8 @@ export class ViewExpensesComponent implements OnInit {
   dialogRef = inject(MatDialogRef<ViewExpensesComponent>);
   data = inject(MAT_DIALOG_DATA);
   expenses = signal(this.data[0]);
-  conversation_id = this.data[1];
+  user = this.data[1];
+  selectedUser = this.data[2];
   private friendsService = inject(FriendsService);
   expenseDeleted = output<{
     id: string;
@@ -28,27 +35,70 @@ export class ViewExpensesComponent implements OnInit {
   }>();
   totalExpenses = signal<ExpenseData[] | []>([]);
   loading = false;
+  private dialog = inject(MatDialog);
+  private toastr = inject(ToastrService);
+  updatedExpense = output<{
+    expenses: ExpenseData[];
+    updatedExpense: ExpenseData;
+  }>();
 
   ngOnInit() {
     this.loading = true;
-    this.friendsService.fetchAllExpenses(this.conversation_id).subscribe({
-      next: (expenses) => {
-        this.totalExpenses.set(expenses);
-        this.loading = false;
-      },
-    });
+    this.friendsService
+      .fetchAllExpenses(this.selectedUser.conversation_id)
+      .subscribe({
+        next: (expenses) => {
+          this.totalExpenses.set(expenses);
+          this.loading = false;
+        },
+      });
   }
 
   onDeleteExpense(id: string, payer_id: string, debtor_amount: string) {
-    this.friendsService.deleteExpense(this.conversation_id, id).subscribe({
-      next: () => {
-        const updatedExpenses = this.expenses().filter(
-          (expense: ExpenseData) => expense.friend_expense_id !== id,
-        );
-        this.expenses.set(updatedExpenses);
-      },
-    });
+    this.friendsService
+      .deleteExpense(this.selectedUser.conversation_id, id)
+      .subscribe({
+        next: () => {
+          const updatedExpenses = this.totalExpenses().filter(
+            (expense: ExpenseData) => expense.friend_expense_id !== id,
+          );
+          this.totalExpenses.set(updatedExpenses);
+        },
+      });
     this.expenseDeleted.emit({ id, payer_id, debtor_amount });
+  }
+
+  onUpdateExpense(expense: ExpenseData) {
+    const dialogRef = this.dialog.open(FriendsExpenseComponent, {
+      data: ['Update Expense', expense, this.user, this.selectedUser],
+      enterAnimationDuration: '200ms',
+      exitAnimationDuration: '200ms',
+    });
+    dialogRef.afterClosed().subscribe((data) => {
+      const result = data.formData;
+      result.append('friend_expense_id', expense.friend_expense_id);
+      if (result) {
+        this.friendsService
+          .updateExpense(this.selectedUser.conversation_id, result)
+          .subscribe({
+            next: (response: ExpenseResponse) => {
+              const expenses = this.totalExpenses();
+              const updatedExpenses = expenses.map((expenseData) => {
+                return expenseData.friend_expense_id ===
+                  expense.friend_expense_id
+                  ? response.data
+                  : expenseData;
+              });
+              this.totalExpenses.set(updatedExpenses);
+              this.updatedExpense.emit({
+                expenses: this.totalExpenses(),
+                updatedExpense: response.data,
+              });
+              this.toastr.success('Expense Updated successfully', 'Success');
+            },
+          });
+      }
+    });
   }
 
   downloadExpenses() {

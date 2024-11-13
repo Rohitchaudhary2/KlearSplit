@@ -110,7 +110,6 @@ export class FriendsService {
       })
       .pipe(
         map((expenses) => {
-          expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
           return expenses.data;
         }),
       );
@@ -122,6 +121,17 @@ export class FriendsService {
   ) {
     return this.httpClient.post<ExpenseResponse>(
       `${API_URLS.addExpense}/${conversationId}`,
+      expenseData,
+      { withCredentials: true },
+    );
+  }
+
+  updateExpense(
+    conversationId: string,
+    expenseData: ExpenseInput | SettlementData | FormData,
+  ) {
+    return this.httpClient.patch<ExpenseResponse>(
+      `${API_URLS.updateExpense}/${conversationId}`,
       expenseData,
       { withCredentials: true },
     );

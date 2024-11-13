@@ -293,7 +293,7 @@ class UserService {
 
   // Service for deleting user in the database
   static deleteUser = async (req) => {
-    const id = req.params.id;
+    const id = req.user.user_id;
     const user = await this.getUser(id);
     const transaction = await sequelize.transaction();
 

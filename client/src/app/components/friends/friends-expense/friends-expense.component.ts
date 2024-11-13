@@ -244,7 +244,7 @@ export class FriendsExpenseComponent implements OnInit {
           ? this.participants[1].user_id
           : this.participants[0].user_id;
 
-      formData.append('debtor_share', debtor_share as string);
+      if (debtor_share) formData.append('debtor_share', debtor_share as string);
       formData.append('debtor_id', debtor_id as string);
       this.dialogRef.close({
         formData: formData,

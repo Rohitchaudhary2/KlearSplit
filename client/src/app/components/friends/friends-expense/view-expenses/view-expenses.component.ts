@@ -37,6 +37,10 @@ export class ViewExpensesComponent implements OnInit {
   loading = false;
   private dialog = inject(MatDialog);
   private toastr = inject(ToastrService);
+  updatedExpense = output<{
+    expenses: ExpenseData[];
+    updatedExpense: ExpenseData;
+  }>();
 
   ngOnInit() {
     this.loading = true;
@@ -72,6 +76,7 @@ export class ViewExpensesComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe((data) => {
       const result = data.formData;
+      result.append('friend_expense_id', expense.friend_expense_id);
       if (result) {
         this.friendsService
           .updateExpense(this.selectedUser.conversation_id, result)
@@ -85,6 +90,10 @@ export class ViewExpensesComponent implements OnInit {
                   : expenseData;
               });
               this.totalExpenses.set(updatedExpenses);
+              this.updatedExpense.emit({
+                expenses: this.totalExpenses(),
+                updatedExpense: response.data,
+              });
               this.toastr.success('Expense Updated successfully', 'Success');
             },
           });

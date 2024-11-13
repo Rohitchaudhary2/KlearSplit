@@ -333,6 +333,11 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         this.onDeleteExpense({ id, payer_id, debtor_amount });
       },
     );
+    dialogRef.componentInstance.updatedExpense.subscribe(
+      ({ expenses, updatedExpense }) => {
+        this.onUpdateExpense(expenses, updatedExpense);
+      },
+    );
     dialogRef.afterClosed().subscribe();
   }
 
@@ -355,6 +360,49 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       (item: CombinedMessage | CombinedExpense) => {
         if (this.isCombinedExpense(item)) return item.friend_expense_id !== id;
         else return true;
+      },
+    );
+    this.combinedView.set(updatedCombinedView);
+  }
+
+  onUpdateExpense(expenses: ExpenseData[], updatedExpense: ExpenseData) {
+    const previousExpense = this.expenses().filter((expense) => {
+      return expense.friend_expense_id === updatedExpense.friend_expense_id;
+    })[0];
+    const totalExpenses = expenses.slice();
+    totalExpenses.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+    this.allExpensesLoaded = true;
+    this.expenses.set(totalExpenses);
+
+    if (previousExpense.payer_id === this.user?.user_id) {
+      this.selectedUser()!.balance_amount = JSON.stringify(
+        parseFloat(this.selectedUser()!.balance_amount) -
+          parseFloat(previousExpense.debtor_amount),
+      );
+    } else {
+      this.selectedUser()!.balance_amount = JSON.stringify(
+        parseFloat(this.selectedUser()!.balance_amount) +
+          parseFloat(previousExpense.debtor_amount),
+      );
+    }
+    if (updatedExpense.payer_id === this.user?.user_id) {
+      this.selectedUser()!.balance_amount = JSON.stringify(
+        parseFloat(this.selectedUser()!.balance_amount) +
+          parseFloat(updatedExpense.debtor_amount),
+      );
+    } else {
+      this.selectedUser()!.balance_amount = JSON.stringify(
+        parseFloat(this.selectedUser()!.balance_amount) -
+          parseFloat(updatedExpense.debtor_amount),
+      );
+    }
+    const updatedCombinedView = this.combinedView().map(
+      (item: CombinedMessage | CombinedExpense) => {
+        if (this.isCombinedExpense(item))
+          return item.friend_expense_id === updatedExpense.friend_expense_id
+            ? { ...updatedExpense, type: 'expense' }
+            : item;
+        else return item;
       },
     );
     this.combinedView.set(updatedCombinedView);

@@ -162,11 +162,14 @@ class FriendController {
   static updateExpense = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
-      const { friend_expense_id } = req.body;
+      const updatedExpenseData = req.validatedExpense;
+      // Access file data if a file is uploaded
+      if (req.file) {
+        updatedExpenseData.receipt_url = req.file.path; // Save the file path in the database
+      }
       const updatedExpense = await FriendService.updateExpense(
-        req.validatedExpense,
+        updatedExpenseData,
         conversation_id,
-        friend_expense_id,
       );
       responseHandler(res, 200, "Expense updated successfully", updatedExpense);
     } catch (error) {

@@ -126,7 +126,10 @@ export class FriendsService {
     );
   }
 
-  updateExpense(conversationId: string, expenseData: Partial<ExpenseInput>) {
+  updateExpense(
+    conversationId: string,
+    expenseData: ExpenseInput | SettlementData | FormData,
+  ) {
     return this.httpClient.patch<ExpenseResponse>(
       `${API_URLS.updateExpense}/${conversationId}`,
       expenseData,

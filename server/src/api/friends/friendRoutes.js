@@ -62,7 +62,7 @@ friendRouter.get(
 friendRouter.post(
   "/addexpense/:conversation_id",
   authenticateToken,
-  uploadMiddleware,
+  uploadMiddleware("receipts", "receipt"),
   validateParams,
   validateExpense,
   FriendController.addExpense,
@@ -79,7 +79,7 @@ friendRouter.get(
 friendRouter.patch(
   "/updateexpense/:conversation_id",
   authenticateToken,
-  uploadMiddleware,
+  uploadMiddleware("receipts", "receipt"),
   validateParams,
   validateExpense,
   FriendController.updateExpense,

@@ -277,9 +277,8 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   getSettleUpStatus() {
     if (parseFloat(this.selectedUser()!.balance_amount) === 0) {
       return 'All Settled';
-    } else {
-      return 'Settle up';
     }
+    return 'Settle up';
   }
 
   toggleView(filter: 'Messages' | 'Expenses' | 'All') {
@@ -289,22 +288,24 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   }
 
   scrollToBottom() {
-    if (this.messageContainer()) {
-      const container = this.messageContainer()?.nativeElement;
-      container.scrollTop = container.scrollHeight;
+    if (!this.messageContainer()) {
+      return;
     }
+    const container = this.messageContainer()?.nativeElement;
+    container.scrollTop = container.scrollHeight;
   }
 
   sendMessage(): void {
-    if (this.messageInput.trim()) {
-      const messageData = {
-        conversation_id: this.selectedUser()!.conversation_id,
-        sender_id: this.tokenService.getUserId(),
-        message: this.messageInput,
-      };
-      this.socketService.sendMessage(messageData);
-      this.messageInput = '';
+    if (!this.messageInput.trim()) {
+      return;
     }
+    const messageData = {
+      conversation_id: this.selectedUser()!.conversation_id,
+      sender_id: this.tokenService.getUserId(),
+      message: this.messageInput,
+    };
+    this.socketService.sendMessage(messageData);
+    this.messageInput = '';
   }
 
   viewExpense() {
@@ -358,7 +359,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     const updatedCombinedView = this.combinedView().filter(
       (item: CombinedMessage | CombinedExpense) => {
         if (this.isCombinedExpense(item)) return item.friend_expense_id !== id;
-        else return true;
+        return true;
       },
     );
     this.combinedView.set(updatedCombinedView);

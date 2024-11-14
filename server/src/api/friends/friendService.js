@@ -206,6 +206,12 @@ class FriendService {
   };
 
   // Service to add expenses in a particular conversation
+  /**
+   *
+   * @param {*} expenseData
+   * @param {*} conversation_id
+   * @returns
+   */
   static addExpense = async (expenseData, conversation_id) => {
     const friendExist = await FriendDb.getFriend(conversation_id);
     if (!friendExist) throw new ErrorHandler(404, "Friend not found");

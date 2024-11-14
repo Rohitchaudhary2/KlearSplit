@@ -29,8 +29,7 @@ const socketHandler = (io) => {
       } catch (error) {
         logger.log({
           level: "error",
-          statusCode: 500,
-          message: error.message,
+          message: JSON.stringify({ statusCode: 500, message: error.message }),
         });
 
         socket.emit("messageError", {

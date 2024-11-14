@@ -91,8 +91,10 @@ passport.use(
         await transaction.rollback();
         logger.log({
           level: "error",
-          statusCode: error.statusCode,
-          message: error.message,
+          message: JSON.stringify({
+            statusCode: error.statusCode,
+            message: error.message,
+          }),
         });
         return done(error);
       }

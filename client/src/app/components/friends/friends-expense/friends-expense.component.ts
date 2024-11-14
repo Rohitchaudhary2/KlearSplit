@@ -14,7 +14,6 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { NgClass } from '@angular/common';
 import { PayerComponent } from './payer/payer.component';
 import { SplitTypeComponent } from './split-type/split-type.component';
 import { FormErrorMessageService } from '../../shared/form-error-message.service';
@@ -29,7 +28,6 @@ import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmat
     MatSelectModule,
     MatInputModule,
     MatButtonModule,
-    NgClass,
   ],
   templateUrl: './friends-expense.component.html',
   styleUrl: './friends-expense.component.css',

@@ -59,14 +59,18 @@ try {
   await sequelize.authenticate(); // Attempting to authenticate the connection to the database
   logger.log({
     level: "info",
-    statusCode: 200,
-    message: "Connection has been established successfully.",
+    message: JSON.stringify({
+      statusCode: 200,
+      message: "Connection has been established successfully.",
+    }),
   });
 } catch {
   logger.log({
     level: "error",
-    statusCode: 503,
-    message: "Service unavailable. Unable to connect to the database.",
+    message: JSON.stringify({
+      statusCode: 503,
+      message: "Service unavailable. Unable to connect to the database.",
+    }),
   });
 }
 

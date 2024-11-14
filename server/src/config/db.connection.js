@@ -55,6 +55,8 @@ FriendExpense.belongsTo(Friend, {
   as: "conversation",
 });
 
+// Group.hasMany(User, { foreignKey: "" })
+
 try {
   await sequelize.authenticate(); // Attempting to authenticate the connection to the database
   logger.log({

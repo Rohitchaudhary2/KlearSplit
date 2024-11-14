@@ -175,6 +175,22 @@ export class SplitTypeComponent implements OnInit {
   }
 
   sendSplitType() {
+    if (
+      this.activeItem === 'UNEQUAL' &&
+      this.form.value.participant1_share! +
+        this.form.value.participant2_share! !==
+        parseFloat(this.expenseData.total_amount)
+    ) {
+      return;
+    }
+    if (
+      this.activeItem === 'PERCENTAGE' &&
+      this.form.value.participant1_share! +
+        this.form.value.participant2_share! !==
+        100
+    ) {
+      return;
+    }
     this.dialogRef.close({
       split_type: this.activeItem,
       participant1_share: this.form.value.participant1_share,

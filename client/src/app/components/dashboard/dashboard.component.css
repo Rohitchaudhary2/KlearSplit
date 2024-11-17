@@ -10,7 +10,7 @@
 .row {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
+  justify-content: space-between;
   width: 100%;
   margin-bottom: 20px;
 }
@@ -19,9 +19,12 @@
   flex: 1;
   max-width: 30%; /* Adjust based on your needs */
   margin: 10px;
+  padding-bottom: 10px;
+  border: 2px solid black;
 }
 
 canvas {
   width: 100%;
   height: 300px;
+  padding-bottom: 10px;
 }

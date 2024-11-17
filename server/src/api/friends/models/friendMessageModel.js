@@ -1,8 +1,9 @@
 import { DataTypes } from "sequelize";
 
 export default (sequelize) => {
+  // Define the FriendMessage model
   const FriendMessage = sequelize.define(
-    "friends_messages",
+    "friends_messages", // Table name in the database
     {
       message_id: {
         type: DataTypes.UUID,
@@ -43,7 +44,7 @@ export default (sequelize) => {
       paranoid: true,
       defaultScope: {
         attributes: {
-          exclude: ["deletedAt"],
+          exclude: ["deletedAt"], // Exclude the 'deletedAt' field from the default queries
         },
       },
     },

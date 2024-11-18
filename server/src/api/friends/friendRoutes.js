@@ -14,6 +14,13 @@ import uploadMiddleware from "../middlewares/uploadMiddleware.js";
 
 const friendRouter = Router();
 
+// Common Middlewares
+// -authenticateToken: Ensures that the user is authenticated
+// -validateParams: Validates the `conversation_id` parameter
+
+// Route to send a friend request
+// Middleware:
+//  - validateEmail: Ensures the provided email is in a valid format
 friendRouter.post(
   "/addfriend",
   authenticateToken,
@@ -21,6 +28,9 @@ friendRouter.post(
   FriendController.addFriend,
 );
 
+// Route to retrieve all friends for the authenticated user
+// Middleware:
+//  - validateGetFriends: Validates the filters or parameters for fetching friends
 friendRouter.get(
   "/getallfriends",
   authenticateToken,
@@ -28,6 +38,9 @@ friendRouter.get(
   FriendController.getAllFriends,
 );
 
+// Route to accept or reject a friend request
+// Middleware:
+//  - validateFriendRequest: Ensures the request has valid acceptance/rejection status
 friendRouter.patch(
   "/acceptrejectfriend/:conversation_id",
   authenticateToken,
@@ -36,6 +49,7 @@ friendRouter.patch(
   FriendController.acceptRejectFriendRequest,
 );
 
+// Route to withdraw a pending friend request
 friendRouter.delete(
   "/withdrawfriendrequest/:conversation_id",
   authenticateToken,
@@ -43,6 +57,9 @@ friendRouter.delete(
   FriendController.withdrawFriendRequest,
 );
 
+// Route to archive or block a friend
+// Middleware:
+//  - validateArchiveBlockFriend: Validates input for archiving/blocking
 friendRouter.patch(
   "/archiveblockfriend/:conversation_id",
   authenticateToken,
@@ -51,6 +68,9 @@ friendRouter.patch(
   FriendController.archiveBlockFriend,
 );
 
+// Route to get messages in a conversation
+// Middleware:
+//  - validatePagination: Validates pagination parameters
 friendRouter.get(
   "/getmessages/:conversation_id",
   authenticateToken,
@@ -59,6 +79,10 @@ friendRouter.get(
   FriendController.getMessages,
 );
 
+// Route to add an expense to a conversation
+// Middleware:
+//  - uploadMiddleware: Handles file uploads for receipts
+//  - validateExpense: Validates the expense data
 friendRouter.post(
   "/addexpense/:conversation_id",
   authenticateToken,
@@ -68,6 +92,7 @@ friendRouter.post(
   FriendController.addExpense,
 );
 
+// Route to get all expenses in a conversation
 friendRouter.get(
   "/getexpenses/:conversation_id",
   authenticateToken,
@@ -76,6 +101,7 @@ friendRouter.get(
   FriendController.getExpenses,
 );
 
+// Route to update an expense in a conversation
 friendRouter.patch(
   "/updateexpense/:conversation_id",
   authenticateToken,
@@ -85,6 +111,7 @@ friendRouter.patch(
   FriendController.updateExpense,
 );
 
+// Route to delete an expense from a conversation
 friendRouter.delete(
   "/deleteexpense/:conversation_id",
   authenticateToken,
@@ -92,6 +119,7 @@ friendRouter.delete(
   FriendController.deleteExpense,
 );
 
+// Route to get both messages and expenses in a conversation
 friendRouter.get(
   "/getboth/:conversation_id",
   authenticateToken,

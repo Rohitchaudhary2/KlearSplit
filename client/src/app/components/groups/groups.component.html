@@ -17,7 +17,7 @@
             <span
               ><img
                 class="profile-image"
-                [src]="selectedUser()?.friend?.image_url || '/profile.png'"
+                [src]="selectedUser()?.friend?.image_url"
                 alt="image"
             /></span>
             <span class="ms-3 fs-4" style="vertical-align: middle"
@@ -33,7 +33,7 @@
                 id="dropdownMenuButton2"
                 data-bs-toggle="dropdown"
               >
-                {{ currentView() }}
+                {{ showMessages() }}
               </button>
               <ul class="dropdown-menu">
                 <li>
@@ -118,7 +118,7 @@
             style="height: 100%"
           >
             <ul class="message-body list-unstyled text-white m-0">
-              @if (currentView() === "Messages") {
+              @if (showMessages() === "Messages") {
                 @for (message of messages(); track message.message_id) {
                   <app-message
                     [message]="{
@@ -132,7 +132,7 @@
                   >
                   </app-message>
                 }
-              } @else if (currentView() === "Expenses") {
+              } @else if (showMessages() === "Expenses") {
                 @for (expense of expenses(); track expense.friend_expense_id) {
                   <app-expense
                     [expense]="{

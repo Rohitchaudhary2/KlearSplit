@@ -32,6 +32,7 @@ const socketHandler = (io) => {
           message: JSON.stringify({ statusCode: 500, message: error.message }),
         });
 
+        // Notify the client about the error while sending the message
         socket.emit("messageError", {
           message: "Failed to send the message. Please try again.",
         });

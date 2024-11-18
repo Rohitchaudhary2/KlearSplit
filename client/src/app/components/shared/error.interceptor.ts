@@ -19,33 +19,37 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const stateService = inject(StateService);
   const authService = inject(AuthService);
 
+  /**
+   * This function handles token expiration errors.
+   * If the error indicates that the token has expired, it attempts to refresh the token.
+   *
+   * @param req - The HTTP request that is being made.
+   * @param next - The next HTTP handler to pass the request to.
+   * @returns An observable that will retry the request after the token has been refreshed.
+   */
   function handleTokenExpiration(
     req: HttpRequest<unknown>,
     next: HttpHandlerFn,
   ) {
     // Attempt to refresh the token
     return authService.refreshAccessToken().pipe(
+      // If the token is refreshed successfully, retry the original request
       switchMap(() => {
         return next(req);
       }),
-      // catchError(() => {
-      //   // Handle any error that occurred during token refresh (e.g., refresh token expired)
-      //   router.navigate(['/login']);
-      //   tokenService.removeUserId();
-      //   return throwError(() => new Error('Session expired'));
-      // }),
     );
   }
 
   return next(req).pipe(
+    // Handling any errors that occur during the HTTP request
     catchError((error: HttpErrorResponse) => {
       let errorMessage = 'An unexpected error occurred';
 
+      // Check if the error is a client-side error (e.g., network issues)
       if (error.error instanceof ErrorEvent) {
-        // Client-side error
         errorMessage = `Client-side error: ${error.error.message}`;
       } else {
-        // Server-side error
+        // Handle different types of server-side errors based on the HTTP status code
         switch (error.status) {
           case 400:
             errorMessage = error.error.message || 'Bad Request';
@@ -72,6 +76,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           case 410:
             errorMessage =
               error.error.message || 'Account deleted please restore it.';
+            // Set the account deleted state to true in the StateService
             stateService.setAccountDeleted(true);
             break;
           case 503:
@@ -85,7 +90,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
-      // Display error message using Toastr
+      // Display error message using Toastr unless it's a token expired error
       if (error.error.message !== 'Token expired')
         toastr.error(errorMessage, 'Error');
 

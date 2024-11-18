@@ -42,9 +42,7 @@ export default (sequelize) => {
       },
       image_url: {
         type: DataTypes.STRING(255),
-        defaultValue:
-          "https://images.rawpixel.com/image_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTA1L3Y5MzctYWV3LTEzOS5qcGc.jpg",
-        allowNull: false,
+        allowNull: true,
       },
       phone: {
         type: DataTypes.STRING(10),

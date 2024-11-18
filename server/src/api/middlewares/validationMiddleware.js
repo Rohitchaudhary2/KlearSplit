@@ -15,19 +15,21 @@ import {
 } from "../users/userValidations.js";
 import { ErrorHandler } from "./errorHandler.js";
 
+// Middleware to validate user creation or update data
 export const validateData = (req, res, next) => {
   try {
-    const isUpdate = req.method === "PATCH";
-    const schema = isUpdate ? updateUserSchema : createUserSchema;
+    const isUpdate = req.method === "PATCH"; // Check if the request is an update (PATCH)
+    const schema = isUpdate ? updateUserSchema : createUserSchema; // Choose the appropriate schema
     const { error, value } = schema.validate(req.body);
     if (error) throw new ErrorHandler(400, error);
     req.validatedUser = value;
-    next();
+    next(); // Proceed to the next middleware or route handler
   } catch (error) {
-    next(error);
+    next(error); // Pass the error to the error handler middleware
   }
 };
 
+// Middleware to validate email data
 export const validateEmail = (req, res, next) => {
   try {
     const { error, value } = emailSchema.validate(req.body);
@@ -39,6 +41,7 @@ export const validateEmail = (req, res, next) => {
   }
 };
 
+// Middleware to validate restore user data
 export const validateRestoreData = (req, res, next) => {
   try {
     const { error, value } = restoreUserSchema.validate(req.body);
@@ -50,6 +53,7 @@ export const validateRestoreData = (req, res, next) => {
   }
 };
 
+// Middleware to validate URL parameters
 export const validateParams = (req, res, next) => {
   try {
     const { error, value } = uuidParamValidation.validate(req.params);
@@ -61,6 +65,7 @@ export const validateParams = (req, res, next) => {
   }
 };
 
+// Middleware to validate pagination query parameters
 export const validatePagination = (req, res, next) => {
   try {
     const { error, value } = paginationValidation.validate(req.query);
@@ -72,6 +77,7 @@ export const validatePagination = (req, res, next) => {
   }
 };
 
+// Middleware to validate query parameters for retrieving friends
 export const validateGetFriends = (req, res, next) => {
   try {
     const { error, value } = getFriendsValidation.validate(req.query);
@@ -83,6 +89,7 @@ export const validateGetFriends = (req, res, next) => {
   }
 };
 
+// Middleware to validate friend request actions (accept/reject)
 export const validateFriendRequest = (req, res, next) => {
   try {
     const { error, value } = acceptRejectFriendRequestValidation.validate(
@@ -96,6 +103,7 @@ export const validateFriendRequest = (req, res, next) => {
   }
 };
 
+// Middleware to validate archive or block friend actions
 export const validateArchiveBlockFriend = (req, res, next) => {
   try {
     const { error, value } = archiveBlockFriendValidation.validate(req.body);
@@ -107,6 +115,7 @@ export const validateArchiveBlockFriend = (req, res, next) => {
   }
 };
 
+// Middleware to validate expense-related data (add or settle expenses)
 export const validateExpense = (req, res, next) => {
   try {
     const isSettlement = req.body.split_type === "SETTLEMENT";

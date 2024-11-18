@@ -2,8 +2,9 @@ import { DataTypes } from "sequelize";
 import { ErrorHandler } from "../../middlewares/errorHandler.js";
 
 export default (sequelize) => {
+  // Define the FriendExpense model
   const FriendExpense = sequelize.define(
-    "friends_expenses",
+    "friends_expenses", // Table name in the database
     {
       friend_expense_id: {
         type: DataTypes.UUID,

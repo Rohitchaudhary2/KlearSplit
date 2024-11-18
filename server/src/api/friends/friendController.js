@@ -2,7 +2,7 @@ import FriendService from "./friendService.js";
 import { responseHandler } from "../utils/responseHandler.js";
 
 class FriendController {
-  // Controller to add friend or send friend request
+  // Controller to add a friend or send a friend request
   static addFriend = async (req, res, next) => {
     const { user_id, first_name, last_name } = req.user;
     try {
@@ -18,7 +18,7 @@ class FriendController {
     }
   };
 
-  // Controller for fetching friends
+  // Controller to fetch all friends of a user
   static getAllFriends = async (req, res, next) => {
     try {
       const { user_id } = req.user;
@@ -39,7 +39,7 @@ class FriendController {
     }
   };
 
-  // Controller to accept and reject friend request
+  // Controller to accept and reject a friend request
   static acceptRejectFriendRequest = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
@@ -59,7 +59,7 @@ class FriendController {
     }
   };
 
-  // Controller for withdrawing friend request
+  // Controller to withdraw a sent friend request
   static withdrawFriendRequest = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
@@ -79,7 +79,7 @@ class FriendController {
     }
   };
 
-  // Controller for archive/block friend
+  // Controller to archive or block a friend
   static archiveBlockFriend = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
@@ -101,7 +101,7 @@ class FriendController {
     }
   };
 
-  // Controller for get friend messages
+  // Controller to fetch messages of a conversation
   static getMessages = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
@@ -117,7 +117,7 @@ class FriendController {
     }
   };
 
-  // Controller for add expense
+  // Controller to add an expense
   static addExpense = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
@@ -141,7 +141,7 @@ class FriendController {
     }
   };
 
-  // Controller for fetching expenses
+  // Controller to fetch expenses
   static getExpenses = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
@@ -158,7 +158,7 @@ class FriendController {
     }
   };
 
-  // Controller for updating an expense
+  // Controller to update an expense
   static updateExpense = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
@@ -177,7 +177,7 @@ class FriendController {
     }
   };
 
-  // Controller for deleting an expense
+  // Controller to delete an expense
   static deleteExpense = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;
@@ -192,7 +192,7 @@ class FriendController {
     }
   };
 
-  // controller for fetching both messages and expenses
+  // controller to fetch both messages and expenses
   static getBoth = async (req, res, next) => {
     try {
       const { conversation_id } = req.validatedParams;

@@ -5,6 +5,18 @@ import { AbstractControl, FormGroup } from '@angular/forms';
   providedIn: 'root',
 })
 export class FormErrorMessageService {
+  /**
+   * Retrieves the error message for a specific field in a form group.
+   *
+   * @param form - The `FormGroup` containing the field to validate.
+   * @param field - The name of the field for which the error message is needed.
+   * @returns A string containing the error message, or `null` if there is no error.
+   *
+   * This method checks for standard validation errors like `required`, `email`,
+   * `minlength`, etc., and returns appropriate error messages. It also delegates
+   * to specific helper methods for field-specific validation, such as `password`
+   * and `phone` validation.
+   */
   getErrorMessage(form: FormGroup, field: string): string | null {
     const control: AbstractControl | null = form.get(field);
 
@@ -37,6 +49,16 @@ export class FormErrorMessageService {
     return null;
   }
 
+  /**
+   * Retrieves error messages specific to the `password` field.
+   *
+   * @param control - The form control for the `password` field.
+   * @returns A string containing the password error message, or `null` if there is no error.
+   *
+   * This method checks for a custom `pattern` error on the password field.
+   * It ensures the password contains at least one lowercase letter, one digit,
+   * and is between 8 and 20 characters long.
+   */
   private getPasswordErrorMessage(
     control: AbstractControl | null,
   ): string | null {
@@ -57,6 +79,15 @@ export class FormErrorMessageService {
     return null;
   }
 
+  /**
+   * Retrieves error messages specific to the `phone` field.
+   *
+   * @param control - The form control for the `phone` field.
+   * @returns A string containing the phone error message, or `null` if there is no error.
+   *
+   * This method checks for a custom `pattern` error on the phone field.
+   * It validates the phone number against a standard numeric pattern (e.g., US phone numbers).
+   */
   private getPhoneErrorMessage(control: AbstractControl | null): string | null {
     if (control?.hasError('pattern') && control.touched) {
       const value = control.value;

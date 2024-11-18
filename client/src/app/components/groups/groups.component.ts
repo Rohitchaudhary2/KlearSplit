@@ -1,9 +1,11 @@
 import {
+  AfterViewInit,
   ChangeDetectorRef,
   Component,
   ElementRef,
   HostListener,
   inject,
+  OnDestroy,
   signal,
   viewChild,
 } from '@angular/core';
@@ -45,7 +47,7 @@ import { SettlementComponent } from '../friends/friends-expense/settlement/settl
   templateUrl: './groups.component.html',
   styleUrl: './groups.component.css',
 })
-export class GroupsComponent {
+export class GroupsComponent implements OnDestroy, AfterViewInit {
   messageContainer = viewChild<ElementRef>('messageContainer');
   private cdr = inject(ChangeDetectorRef);
   private toastr = inject(ToastrService);

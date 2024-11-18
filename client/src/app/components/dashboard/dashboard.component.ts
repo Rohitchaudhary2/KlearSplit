@@ -25,8 +25,10 @@ export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
   balanceAmount = signal<number>(0);
 
+  // Refrences to chart components in the template for programmatic updates
   @ViewChildren(BaseChartDirective) charts?: QueryList<BaseChartDirective>;
 
+  // Data and configuration for the first pie chart (expenses by amount range)
   pieChartData1: {
     labels: string[];
     datasets: ChartDataset<'pie'>[];
@@ -47,6 +49,7 @@ export class DashboardComponent implements OnInit {
     ],
   };
 
+  // Data and configuration for the second pie chart (amount lent vs. borrowed)
   pieChartData2: {
     labels: string[];
     datasets: ChartDataset<'pie'>[];
@@ -61,6 +64,7 @@ export class DashboardComponent implements OnInit {
     ],
   };
 
+  // Data and configuration for the third pie chart (top friends by cash flow)
   pieChartData3: {
     labels: string[];
     datasets: ChartDataset<'pie'>[];
@@ -75,6 +79,7 @@ export class DashboardComponent implements OnInit {
     ],
   };
 
+  // Data and configuration for the fourth pie chart (top groups by cash flow)
   pieChartData4: {
     labels: string[];
     datasets: ChartDataset<'pie'>[];
@@ -89,6 +94,7 @@ export class DashboardComponent implements OnInit {
     ],
   };
 
+  // Data and configuration for the bar chart (monthly expenses)
   barChartData: {
     labels: string[];
     datasets: ChartDataset<'bar'>[];
@@ -129,7 +135,7 @@ export class DashboardComponent implements OnInit {
     ],
   };
 
-  // Centralized base ChartOptions configuration
+  // Centralized base ChartOptions configuration for all charts
   private baseChartOptions: ChartOptions<'pie' | 'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
@@ -271,6 +277,14 @@ export class DashboardComponent implements OnInit {
     this.loadAllExpenses();
   }
 
+  /**
+   * Fetches all expense-related data and updates the charts with the retrieved values.
+   * The data includes:
+   * - Expense ranges for the first pie chart
+   * - Balance amounts for the second pie chart
+   * - Top friends and groups for the third and fourth pie charts
+   * - Monthly expenses for the bar chart
+   */
   private loadAllExpenses() {
     this.dashboardService.getAllExpenses().subscribe({
       next: (response) => {

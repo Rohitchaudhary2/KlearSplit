@@ -30,7 +30,7 @@ export class AuthGuard implements CanActivate {
   async canActivate(route: ActivatedRouteSnapshot) {
     if (Object.keys(route.queryParams).length > 0) {
       this.tokenService.setUserId(route.queryParams['id']);
-      this.router.navigate(['/friends'], {
+      this.router.navigate(['/dashboard'], {
         queryParams: {},
         queryParamsHandling: 'merge',
         replaceUrl: true,

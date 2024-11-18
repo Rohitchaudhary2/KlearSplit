@@ -9,11 +9,34 @@ import { map } from 'rxjs';
 })
 export class DashboardService {
   private httpClient = inject(HttpClient);
+  /**
+   * Fetches all expense-related data from the server.
+   *
+   * The data includes:
+   * - Expense ranges: Distribution of expenses based on predefined ranges.
+   * - Balance amounts: Total amounts lent and borrowed.
+   * - Top friends: A list of friends with the highest cash flow activity.
+   * - Monthly expenses: Expenses categorized by month.
+   *
+   * The raw data from the server is transformed to provide a cleaner format for use in charts.
+   *
+   * @returns An observable emitting the transformed expense data.
+   */
   getAllExpenses() {
     return this.httpClient
       .get<AllExpenses>(`${API_URLS.getAllExpenses}`, { withCredentials: true })
       .pipe(
         map((response) => {
+          /**
+           * Transforming the server response:
+           * - Extracts top friends and their associated amounts from the response.
+           * - Maps the raw data into an object with separate fields for:
+           *   - `expensesRange`
+           *   - `balanceAmounts`
+           *   - `topFriends` (amounts only)
+           *   - `topFriendsName` (names only)
+           *   - `monthlyExpense`
+           */
           const topAmounts: number[] = [];
           const friendsName: string[] = [];
           for (const item in response.data.topFriends) {

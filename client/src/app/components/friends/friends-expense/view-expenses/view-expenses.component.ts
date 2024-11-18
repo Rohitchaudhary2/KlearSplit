@@ -13,6 +13,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { FriendsExpenseComponent } from '../friends-expense.component';
 import { ToastrService } from 'ngx-toastr';
+import { ConfirmationDialogComponent } from '../../../confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-view-expenses',
@@ -41,6 +42,7 @@ export class ViewExpensesComponent implements OnInit {
     expenses: ExpenseData[];
     updatedExpense: ExpenseData;
   }>();
+  updateLoader = '';
 
   ngOnInit() {
     this.loading = true;
@@ -55,17 +57,28 @@ export class ViewExpensesComponent implements OnInit {
   }
 
   onDeleteExpense(id: string, payer_id: string, debtor_amount: string) {
-    this.friendsService
-      .deleteExpense(this.selectedUser.conversation_id, id)
-      .subscribe({
-        next: () => {
-          const updatedExpenses = this.totalExpenses().filter(
-            (expense: ExpenseData) => expense.friend_expense_id !== id,
-          );
-          this.totalExpenses.set(updatedExpenses);
-        },
-      });
-    this.expenseDeleted.emit({ id, payer_id, debtor_amount });
+    const confirmationDialogRef = this.dialog.open(
+      ConfirmationDialogComponent,
+      {
+        data: 'Are you sure you want to delete this expense?',
+      },
+    );
+
+    confirmationDialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.friendsService
+          .deleteExpense(this.selectedUser.conversation_id, id)
+          .subscribe({
+            next: () => {
+              const updatedExpenses = this.totalExpenses().filter(
+                (expense: ExpenseData) => expense.friend_expense_id !== id,
+              );
+              this.totalExpenses.set(updatedExpenses);
+            },
+          });
+        this.expenseDeleted.emit({ id, payer_id, debtor_amount });
+      }
+    });
   }
 
   onUpdateExpense(expense: ExpenseData) {

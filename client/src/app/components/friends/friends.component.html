@@ -33,7 +33,7 @@
                 id="dropdownMenuButton2"
                 data-bs-toggle="dropdown"
               >
-                {{ showMessages() }}
+                {{ currentView() }}
               </button>
               <ul class="dropdown-menu">
                 <li>
@@ -118,7 +118,7 @@
             style="height: 100%"
           >
             <ul class="message-body list-unstyled text-white m-0">
-              @if (showMessages() === "Messages") {
+              @if (currentView() === "Messages") {
                 @for (message of messages(); track message.message_id) {
                   <app-message
                     [message]="{
@@ -132,7 +132,7 @@
                   >
                   </app-message>
                 }
-              } @else if (showMessages() === "Expenses") {
+              } @else if (currentView() === "Expenses") {
                 @for (expense of expenses(); track expense.friend_expense_id) {
                   <app-expense
                     [expense]="{

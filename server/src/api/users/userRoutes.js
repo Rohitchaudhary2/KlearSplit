@@ -9,8 +9,8 @@ import {
 
 const userRouter = Router();
 
-// User API routes
-userRouter.post("/verify", validateData, UserController.verifyUser);
+//User-relad API
+// Verifying User Email before creatig user.
 userRouter.post("/register", validateData, UserController.createUser);
 userRouter.post(
   "/verifyrestore",

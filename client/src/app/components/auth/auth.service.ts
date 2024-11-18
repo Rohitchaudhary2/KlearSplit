@@ -27,7 +27,7 @@ export class AuthService {
   private restoreAccountVerifyUrl = API_URLS.restoreAccountVerify; // URL to verify user for restore account
   private restoreAccountUrl = API_URLS.restoreAccount; // URL for restore account
 
-  currentUser = signal<CurrentUser | undefined | null>(undefined); // Store user data
+  currentUser = signal<CurrentUser | undefined>(undefined); // Store user data
 
   // Getter for authentication status
   isAuthenticated(): boolean {
@@ -97,7 +97,7 @@ export class AuthService {
     this.httpClient.get(this.logoutUrl, { withCredentials: true }).subscribe({
       next: () => {
         // Remove the access of user from protected routes
-        this.currentUser.set(null);
+        this.currentUser.set(undefined);
         this.tokenService.removeUserId();
         this.toastr.success('You have logged out successfully.', 'Success');
         this.router.navigate(['/login']);

@@ -37,12 +37,15 @@ function amountRangeValidator(totalAmount: number): ValidatorFn {
   styleUrl: './settlement.component.css',
 })
 export class SettlementComponent implements OnInit {
-  dialogRef = inject(MatDialogRef<SettlementComponent>);
+  private dialogRef = inject(MatDialogRef<SettlementComponent>);
+  formErrorMessages = inject(FormErrorMessageService);
+
   payer_name: string;
   debtor_name: string;
   total_amount: string;
   payer_image: string;
   debtor_image: string;
+
   constructor() {
     const data = inject(MAT_DIALOG_DATA);
     ({
@@ -54,12 +57,7 @@ export class SettlementComponent implements OnInit {
     } = data);
   }
 
-  formErrorMessages = inject(FormErrorMessageService);
-
   form: FormGroup = new FormGroup({});
-  getFormErrors(field: string): string | null {
-    return this.formErrorMessages.getErrorMessage(this.form, field);
-  }
 
   ngOnInit() {
     this.form = new FormGroup({
@@ -72,6 +70,19 @@ export class SettlementComponent implements OnInit {
     });
   }
 
+  /**
+   * Retrieves the error message for a specific form field.
+   * @param field - The name of the field for which to retrieve the error message.
+   * @returns The error message for the field or null if no errors.
+   */
+  getFormErrors(field: string): string | null {
+    return this.formErrorMessages.getErrorMessage(this.form, field);
+  }
+
+  /**
+   * Sends the settlement type and amount back to the friends-expense component when the form is valid.
+   * This method is triggered when the user confirms the settlement.
+   */
   sendSplitType() {
     if (this.form.valid) {
       this.dialogRef.close({

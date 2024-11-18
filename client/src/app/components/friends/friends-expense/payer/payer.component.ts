@@ -10,13 +10,17 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
   styleUrl: './payer.component.css',
 })
 export class PayerComponent implements OnInit {
-  dialogRef = inject(MatDialogRef<PayerComponent>);
+  private dialogRef = inject(MatDialogRef<PayerComponent>);
   participants = inject(MAT_DIALOG_DATA);
 
   ngOnInit(): void {
     this.dialogRef.updateSize('25%');
   }
 
+  /**
+   * Sends the selected payer ID back to friends-expense component.
+   * @param id The ID of the selected payer.
+   */
   sendPayer(id: string) {
     this.dialogRef.close({ id });
   }

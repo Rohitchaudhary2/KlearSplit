@@ -12,7 +12,7 @@
       matInput
       formControlName="searchInputControl"
       placeholder="Search"
-      (ngModelChange)="onSearchInputChange()"
+      (ngModelChange)="onSearchInputChange($event)"
       style="
         background-color: transparent;
         outline: none !important;
@@ -40,7 +40,7 @@
           }
         </tbody>
       </table>
-    } @else if (searchInput() && !selectedUser()) {
+    } @else if (this.form.value.searchInputControl) {
       <div class="px-2">No user found!</div>
     }
   </div>

@@ -21,29 +21,52 @@ import { ConfirmationDialogComponent } from '../../../confirmation-dialog/confir
   imports: [MatIconModule, MatButtonModule, DatePipe],
   templateUrl: './view-expenses.component.html',
   styleUrl: './view-expenses.component.css',
+  providers: [DatePipe],
 })
+
+/**
+ * The `ViewExpensesComponent` is responsible for displaying and managing the expenses
+ * between users in a specific conversation. It fetches the list of expenses related
+ * to a selected user and provides options to update or delete those expenses.
+ */
 export class ViewExpensesComponent implements OnInit {
-  dialogRef = inject(MatDialogRef<ViewExpensesComponent>);
-  data = inject(MAT_DIALOG_DATA);
-  expenses = signal(this.data[0]);
-  user = this.data[1];
-  selectedUser = this.data[2];
+  private dialogRef = inject(MatDialogRef<ViewExpensesComponent>);
+  private data = inject(MAT_DIALOG_DATA);
+  private dialog = inject(MatDialog);
+  private toastr = inject(ToastrService);
   private friendsService = inject(FriendsService);
+
+  user = this.data[0]; // Logged in user
+  selectedUser = this.data[1]; // Friend associated in expenses
+
+  totalExpenses = signal<ExpenseData[] | []>([]);
+
+  // A boolean flag to track the loading state while fetching expenses
+  loading = false;
+
+  updateLoader = '';
+
+  // Output signal that will emit the expense data when an expense is deleted.
   expenseDeleted = output<{
     id: string;
     payer_id: string;
     debtor_amount: string;
   }>();
-  totalExpenses = signal<ExpenseData[] | []>([]);
-  loading = false;
-  private dialog = inject(MatDialog);
-  private toastr = inject(ToastrService);
+
+  // Output signal that will emit updated expenses data when an expense is updated
   updatedExpense = output<{
     expenses: ExpenseData[];
     updatedExpense: ExpenseData;
   }>();
-  updateLoader = '';
 
+  constructor(private datePipe: DatePipe) {}
+
+  /**
+   * `ngOnInit` lifecycle hook. This method is called when the component is initialized.
+   * It starts by setting the `loading` flag to true, then fetches all the expenses
+   * for the selected user via the `friendsService`. The expenses are then set in the
+   * `totalExpenses` signal and the loading flag is set to false once the data is fetched.
+   */
   ngOnInit() {
     this.loading = true;
     this.friendsService
@@ -53,10 +76,22 @@ export class ViewExpensesComponent implements OnInit {
           this.totalExpenses.set(expenses);
           this.loading = false;
         },
+        error: () => {
+          this.loading = false;
+        },
       });
   }
 
+  /**
+   * Handles the deletion of an expense. Displays a confirmation dialog and
+   * proceeds with the deletion if the user confirms.
+   *
+   * @param id - The unique identifier for the expense to be deleted
+   * @param payer_id - The ID of the payer (used to update the balance)
+   * @param debtor_amount - The amount that the debtor owes (used to update the balance)
+   */
   onDeleteExpense(id: string, payer_id: string, debtor_amount: string) {
+    // Open a confirmation dialog to ask the user if they are sure they want to delete the expense
     const confirmationDialogRef = this.dialog.open(
       ConfirmationDialogComponent,
       {
@@ -65,23 +100,34 @@ export class ViewExpensesComponent implements OnInit {
     );
 
     confirmationDialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.friendsService
-          .deleteExpense(this.selectedUser.conversation_id, id)
-          .subscribe({
-            next: () => {
-              const updatedExpenses = this.totalExpenses().filter(
-                (expense: ExpenseData) => expense.friend_expense_id !== id,
-              );
-              this.totalExpenses.set(updatedExpenses);
-            },
-          });
-        this.expenseDeleted.emit({ id, payer_id, debtor_amount });
+      if (!result) {
+        return;
       }
+
+      // API call to back-end to delete the expense
+      this.friendsService
+        .deleteExpense(this.selectedUser.conversation_id, id)
+        .subscribe({
+          next: () => {
+            const updatedExpenses = this.totalExpenses().filter(
+              (expense: ExpenseData) => expense.friend_expense_id !== id,
+            );
+            this.totalExpenses.set(updatedExpenses);
+            this.toastr.success('Expense Deleted successfully', 'Success');
+          },
+        });
+      this.expenseDeleted.emit({ id, payer_id, debtor_amount });
     });
   }
 
+  /**
+   * Opens a dialog to update an existing expense. Passes the current expense data
+   * to the dialog and updates the expense after it is modified.
+   *
+   * @param expense - The expense data to be updated
+   */
   onUpdateExpense(expense: ExpenseData) {
+    // Open a dialog to allow the user to update the expense. Pass the current expense data.
     const dialogRef = this.dialog.open(FriendsExpenseComponent, {
       data: ['Update Expense', expense, this.user, this.selectedUser],
       enterAnimationDuration: '200ms',
@@ -89,34 +135,46 @@ export class ViewExpensesComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe((data) => {
       const result = data.formData;
-      result.append('friend_expense_id', expense.friend_expense_id);
-      if (result) {
-        this.friendsService
-          .updateExpense(this.selectedUser.conversation_id, result)
-          .subscribe({
-            next: (response: ExpenseResponse) => {
-              const expenses = this.totalExpenses();
-              const updatedExpenses = expenses.map((expenseData) => {
-                return expenseData.friend_expense_id ===
-                  expense.friend_expense_id
-                  ? response.data
-                  : expenseData;
-              });
-              this.totalExpenses.set(updatedExpenses);
-              this.updatedExpense.emit({
-                expenses: this.totalExpenses(),
-                updatedExpense: response.data,
-              });
-              this.toastr.success('Expense Updated successfully', 'Success');
-            },
-          });
+      if (!result) {
+        return;
       }
+
+      // Appending the original expense ID to the form data
+      result.append('friend_expense_id', expense.friend_expense_id);
+
+      // Call the service to update the expense on the server
+      this.friendsService
+        .updateExpense(this.selectedUser.conversation_id, result)
+        .subscribe({
+          next: (response: ExpenseResponse) => {
+            const expenses = this.totalExpenses();
+            const updatedExpenses = expenses.map((expenseData) => {
+              return expenseData.friend_expense_id === expense.friend_expense_id
+                ? response.data
+                : expenseData;
+            });
+            this.totalExpenses.set(updatedExpenses);
+            this.updatedExpense.emit({
+              expenses: this.totalExpenses(),
+              updatedExpense: response.data,
+            });
+            this.toastr.success('Expense Updated successfully', 'Success');
+          },
+        });
     });
   }
 
+  /**
+   * Generates a PDF report of all expenses, formatted into a table with relevant details.
+   *
+   * Dependencies:
+   * - jsPDF: For creating the PDF document.
+   * - autoTable: For rendering the table in the PDF document.
+   */
   downloadExpenses() {
     const doc = new jsPDF();
 
+    // Define the columns for the table (these will be used as headers)
     const columns = [
       { header: 'Date', dataKey: 'date' },
       { header: 'Expense Name', dataKey: 'name' },
@@ -127,20 +185,9 @@ export class ViewExpensesComponent implements OnInit {
       { header: 'Description', dataKey: 'description' },
     ];
 
-    function formatCustomDate(dateString: string): string {
-      const date = new Date(dateString);
-      const options: Intl.DateTimeFormatOptions = {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      };
-
-      // Format the date and replace the comma for the desired format
-      return date.toLocaleDateString('en-GB', options).replace(',', '');
-    }
-
+    // Map through the totalExpenses and transform the data into a format compatible with the table
     const ExtractedExpense = this.totalExpenses().map((expense) => ({
-      date: formatCustomDate(expense.createdAt),
+      date: this.datePipe.transform(expense.createdAt, 'd MMM y'),
       name: expense.expense_name,
       amount: expense.total_amount,
       payer: expense.payer,
@@ -149,17 +196,24 @@ export class ViewExpensesComponent implements OnInit {
       description: expense.description,
     }));
 
+    // Convert the array of objects (expenses) into array of arrays for the autoTable body
     const body = ExtractedExpense.map((expense) => Object.values(expense));
 
-    // Use autoTable to generate the table in the PDF
+    // Generate the table in the PDF using the autoTable
     autoTable(doc, {
       head: [columns.map((col) => col.header)],
       body,
     });
 
+    // Save the generated PDF with the filename 'expense_report.pdf'
     doc.save('expense_report.pdf');
   }
 
+  /**
+   * Closes the dialog without passing any result.
+   *
+   * This method is called when the user clicks the "Cancel" button in the dialog.
+   */
   onCancel(): void {
     this.dialogRef.close();
   }

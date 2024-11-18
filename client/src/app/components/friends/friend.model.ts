@@ -1,10 +1,10 @@
-export interface SearchedUser {
+export interface SearchedUserResponse {
   success: string;
   message: string;
-  data: User[];
+  data: SearchedUser[];
 }
 
-export interface User {
+export interface SearchedUser {
   email: string;
 }
 

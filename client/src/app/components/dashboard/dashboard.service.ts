@@ -11,7 +11,9 @@ export class DashboardService {
   private httpClient = inject(HttpClient);
   getAllExpenses() {
     return this.httpClient
-      .get<AllExpenses>(`${API_URLS.getAllExpenses}`, { withCredentials: true })
+      .get<AllExpenses>(`${API_URLS.getAllExpensesData}`, {
+        withCredentials: true,
+      })
       .pipe(
         map((response) => {
           const topAmounts: number[] = [];

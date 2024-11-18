@@ -19,7 +19,7 @@ import { ErrorHandler } from "./errorHandler.js";
 export const validateData = (req, res, next) => {
   try {
     const isUpdate = req.method === "PATCH"; // Check if the request is an update (PATCH)
-    const schema = isUpdate ? updateUserSchema : createUserSchema; // Choose the appropriate schema
+    const schema = isUpdate ? updateUserSchema : createUserSchema;
     const { error, value } = schema.validate(req.body);
     if (error) throw new ErrorHandler(400, error);
     req.validatedUser = value;

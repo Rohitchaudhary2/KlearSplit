@@ -2,14 +2,18 @@ import { Op } from "sequelize";
 import { User } from "../../config/db.connection.js";
 
 class UserDb {
+  // Creates a new user in the database
   static createUser = async (user, transaction) =>
     await User.create(user, { transaction });
 
+  // Restores a deleted user in the database
   static restoreUser = async (user, transaction) =>
     await user.restore({ transaction });
 
+  // Retreives user data with the help of user_id
   static getUserById = async (id) => await User.findByPk(id);
 
+  // Retrieves multiple users data based on the array of user_id provided in the same format in which array is provided
   static getUsersById = async (ids) => {
     const users = await User.findAll({
       attributes: ["first_name", "last_name", "user_id"],
@@ -23,6 +27,7 @@ class UserDb {
     );
   };
 
+  // Retrieves users with the help of email
   static getUserByEmail = async (email, flag = true) =>
     await User.scope("withPassword").findOne({
       where: {
@@ -31,6 +36,7 @@ class UserDb {
       paranoid: flag,
     });
 
+  // Retrieves user with the help of phone number
   static getUserByPhone = async (phone) =>
     await User.findOne({
       where: {
@@ -38,6 +44,7 @@ class UserDb {
       },
     });
 
+  // Retrieves users based on provided regex
   static getUsersByRegex = async (regex) => {
     const nameParts = regex.split(" ").filter(Boolean); // Split by space and remove empty values
 
@@ -77,12 +84,12 @@ class UserDb {
     });
   };
 
-  static updateUser = async (user, id, transaction = null) => {
+  // Updates user data
+  static updateUser = async (user, id) => {
     const response = await User.update(user, {
       where: {
         user_id: id,
       },
-      transaction,
       returning: true,
     });
     if (response[0] === 0) {
@@ -92,8 +99,8 @@ class UserDb {
     return response[1];
   };
 
-  static deleteUser = async (user, transaction) =>
-    await user.destroy({ transaction });
+  // Soft deletes user data
+  static deleteUser = async (user) => await user.destroy();
 }
 
 export default UserDb;

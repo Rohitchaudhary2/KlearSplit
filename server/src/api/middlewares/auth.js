@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { ErrorHandler } from "./errorHandler.js";
 import UserService from "../users/userServices.js";
 
+// Middleware for authenticating user
 export const authenticateToken = async (req, res, next) => {
   try {
     if (!req.cookies["accessToken"]) {

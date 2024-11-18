@@ -5,7 +5,7 @@ import {
 } from "../utils/responseHandler.js";
 
 class UserController {
-  // Controller for verifying a user
+  // Controller for verifying a user before user creation
   static verifyUser = async (req, res, next) => {
     try {
       await UserService.verifyUser(req.validatedUser);
@@ -29,7 +29,7 @@ class UserController {
     }
   };
 
-  // Controller for verifying a user
+  // Controller for verifying a user before restore.
   static verifyRestoreUser = async (req, res, next) => {
     try {
       await UserService.verifyRestoreUser(req.validatedUser);
@@ -39,7 +39,7 @@ class UserController {
     }
   };
 
-  // Controller for creating or registering a user
+  // Controller for restoring user.
   static restoreUser = async (req, res, next) => {
     try {
       const userData = await UserService.restoreUser(req.validatedUser);
@@ -49,6 +49,7 @@ class UserController {
     }
   };
 
+  // Controller for verifying email for forgot password.
   static verifyForgotPassword = async (req, res, next) => {
     try {
       await UserService.verifyForgotPassword(req.validatedUser);
@@ -58,6 +59,7 @@ class UserController {
     }
   };
 
+  // Controller for changing password for forgot password.
   static forgotPassword = async (req, res, next) => {
     try {
       await UserService.forgotPassword(req.validatedUser);

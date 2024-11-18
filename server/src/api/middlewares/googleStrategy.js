@@ -14,6 +14,9 @@ import logger from "../utils/logger.js";
 
 const redis = new Redis();
 
+/**
+ * This middleware is for google sign up and sign in
+ */
 passport.use(
   new GoogleStrategy(
     {
@@ -27,6 +30,7 @@ passport.use(
         // Check if the user already exists in the database
         let user = await UserDb.getUserByEmail(profile._json.email);
 
+        // If user is not present in the database or is been invited by someone
         if (!user || (user && user.dataValues.is_invited)) {
           const newUser = {};
           newUser.email = profile._json.email;
@@ -36,6 +40,7 @@ passport.use(
           const password = generatePassword();
           newUser.password = await hashedPassword(password);
           newUser.is_invited = false;
+          // If user is not present in database then create otherwise update the user information in the database
           if (!user) {
             user = await UserDb.createUser(newUser, transaction);
             user = user.dataValues;

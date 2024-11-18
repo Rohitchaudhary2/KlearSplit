@@ -1,35 +1,50 @@
 import UserDb from "../users/userDb.js";
 import DashboardDb from "./dashboardDb.js";
 
-function sortFriendsByAmount(obj, field) {
-  // Convert the object into an array of key-value pairs
-  let entries = Object.entries(obj);
+/**
+ * Sorts friends by the specified field (amount) in descending order, and aggregates
+ * any remaining friends into an "others" category if there are more than 4 friends.
+ * @param {Object} topFriends - An object where each key represents a conversation ID,
+ *                               and the value is an object containing `amount` and `friend` properties.
+ * @param {string} field - The field by which to sort the friends.
+ * @returns {Object} - A sorted object with the top friends based on the specified field, and "others" category.
+ */
+function sortFriendsByAmount(topFriends, field) {
+  // Converting the object into an array of key-value pairs
+  let entries = Object.entries(topFriends);
 
   // Sort the array by the field amount
   entries.sort((a, b) => b[1][field] - a[1][field]); // Descending order
 
-  let othersAmount = 0;
-
-  for (let i = 4; i < entries.length; i++) {
-    othersAmount += entries[i][1].amount;
-  }
+  const extraEntries = entries.slice(4);
+  const othersAmount = extraEntries.reduce((acc, val) => {
+    acc += val[1].amount;
+  }, 0);
 
   entries = entries.slice(0, 4);
   if (entries.length > 4)
     entries.push(["others", { amount: othersAmount, friend: "others" }]);
 
   // Rebuilding the object with sorted entries
-  const sortedObj = {};
+  const sortedTopFriends = {};
   entries.forEach(([key, value]) => {
-    sortedObj[key] = value;
+    sortedTopFriends[key] = value;
   });
 
-  return sortedObj;
+  return sortedTopFriends;
 }
 
 class DashboardService {
-  static async getAllExpenses(user_id) {
+  /**
+   * Fetches all expenses data for a user and processes it into various statistics(expensesRange, balanceAmoounts(amount lent and amount borrowed),
+   * top expense partners, and monthly expense amoount).
+   * @param {string} user_id - The ID of the user whose expense data is being fetched.
+   * @returns {Promise<Object>} - A structured object containing processed expenses data.
+   */
+  static async getAllExpensesData(user_id) {
     const expenses = await DashboardDb.getAllExpenses(user_id);
+
+    // Reduce the expenses into a summary object with categorized information
     const result = expenses.reduce(
       (acc, expense) => {
         const amount = parseFloat(expense.total_amount);
@@ -82,7 +97,10 @@ class DashboardService {
       },
     );
 
+    // Sort top friends by the amount of money involved (highest first)
     result.topFriends = sortFriendsByAmount(result.topFriends, "amount");
+
+    // user IDs of top Partners in cash flow
     const topFourFriendsId = [];
     Object.entries(result.topFriends)
       .slice(0, 4)
@@ -90,12 +108,14 @@ class DashboardService {
         topFourFriendsId.push(value[1].friend);
       });
 
+    // Names of top partners in cash flow
     let topFourFriendsName = await UserDb.getUsersById(topFourFriendsId);
-
     topFourFriendsName = topFourFriendsName.map((user) => {
       const name = `${user.first_name}${user.last_name ? ` ${user.last_name}` : ""}`;
       return name;
     });
+
+    // Replacing IDs of top partners in cash flow with their names in response
     Object.keys(result.topFriends)
       .slice(0, 4)
       .forEach((key, index) => {

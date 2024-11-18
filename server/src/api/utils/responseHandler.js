@@ -7,6 +7,7 @@ export const responseHandler = (res, statusCode, message, data) => {
   });
 };
 
+// This function will form the standardize API responses with access and refresh tokens
 export const authResponseHandler = (res, statusCode, message, userData) => {
   return res
     .status(statusCode)

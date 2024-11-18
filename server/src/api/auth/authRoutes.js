@@ -7,8 +7,10 @@ import logger from "../utils/logger.js";
 
 const authRouter = Router();
 
+// Route for authenticating the user with email and password
 authRouter.post("/login", login);
 
+// Route for authenticating user with Google
 authRouter.get(
   "/google",
   passport.authenticate("google", {
@@ -18,6 +20,7 @@ authRouter.get(
   }),
 );
 
+// After success or failure while logging in with the help of Google
 authRouter.get("/google/callback", (req, res, next) => {
   passport.authenticate("google", { session: false }, (err, user) => {
     if (err) {
@@ -57,7 +60,10 @@ authRouter.get("/google/callback", (req, res, next) => {
   })(req, res, next);
 });
 
+// Route for logout
 authRouter.get("/logout", authenticateToken, logout);
+
+// Route for generating new access and refresh token
 authRouter.get("/refreshtoken", refreshToken);
 
 export default authRouter;

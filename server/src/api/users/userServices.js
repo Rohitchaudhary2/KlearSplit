@@ -65,12 +65,11 @@ class UserService {
     delete user.otp;
 
     const otp = await redis.get(`otp:${user.email}`);
-    if (otp === userOtp) {
-      await redis.del(`otp:${user.email}`);
-    } else {
+    if (otp !== userOtp) {
       throw new ErrorHandler(400, "Invalid or Expired Otp.");
     }
 
+    await redis.del(`otp:${user.email}`);
     const isUserExists = await UserDb.getUserByEmail(user.email, false);
 
     const password = generatePassword();
@@ -191,12 +190,11 @@ class UserService {
       throw new ErrorHandler(400, "Account for this Email is already active.");
 
     const otp = await redis.get(`otp:${user.email}`);
-    if (otp === user.otp) {
-      await redis.del(`otp:${user.email}`);
-    } else {
+    if (otp !== user.otp) {
       throw new ErrorHandler(400, "Invalid or Expired Otp.");
     }
 
+    await redis.del(`otp:${user.email}`);
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
@@ -275,13 +273,12 @@ class UserService {
     if (!user) throw new ErrorHandler(400, "Email does not exist");
 
     const otp = await redis.get(`otp:${user.email}`);
-    if (otp === userData.otp) {
-      await redis.del(`otp:${user.email}`);
-      await redis.del(`failedAttempts:${user.email}`);
-    } else {
+    if (otp !== userData.otp) {
       throw new ErrorHandler(400, "Invalid or Expired Otp.");
     }
 
+    await redis.del(`otp:${user.email}`);
+    await redis.del(`failedAttempts:${user.email}`);
     const password = generatePassword();
     const hashPassword = await hashedPassword(password);
 

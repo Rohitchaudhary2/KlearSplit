@@ -41,6 +41,7 @@ export default (sequelize) => {
       },
     },
     {
+      tableName: "group_member_balance",
       timestamps: true,
       paranoid: true,
     },

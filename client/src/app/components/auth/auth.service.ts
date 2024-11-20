@@ -1,12 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { CurrentUser } from '../shared/types.model';
-import { Observable, map } from 'rxjs';
-import { ToastrService } from 'ngx-toastr';
-import { RegisterResponse, RegisterUser } from './register-types.model';
 import { Router } from '@angular/router';
-import { LoginResponse, LoginUser } from './login-types.model';
+import { ToastrService } from 'ngx-toastr';
+import { map,Observable } from 'rxjs';
+
 import { API_URLS } from '../../constants/api-urls';
+import { CurrentUser } from '../shared/types.model';
+import { LoginResponse, LoginUser } from './login-types.model';
+import { RegisterResponse, RegisterUser } from './register-types.model';
 import { TokenService } from './token.service';
 
 @Injectable({

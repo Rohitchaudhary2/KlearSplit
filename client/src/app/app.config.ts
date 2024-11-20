@@ -1,23 +1,22 @@
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
   importProvidersFrom,
   provideZoneChangeDetection,
 } from '@angular/core';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import {
   provideRouter,
   withComponentInputBinding,
   withRouterConfig,
 } from '@angular/router';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideAnimations } from '@angular/platform-browser/animations';
-
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { provideToastr, ToastrModule } from 'ngx-toastr';
 
 import { routes } from './app.routes';
 // import { authInterceptor } from './components/auth/auth.interceptor';
 import { errorInterceptor } from './components/shared/error.interceptor';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const appConfig: ApplicationConfig = {
   providers: [

@@ -1,5 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { concatMap, map } from 'rxjs';
+
+import { API_URLS } from '../../constants/api-urls';
 import {
   CombinedView,
   Expense,
@@ -10,8 +13,6 @@ import {
   SearchedUserResponse,
   SettlementData,
 } from './friend.model';
-import { concatMap, map } from 'rxjs';
-import { API_URLS } from '../../constants/api-urls';
 
 @Injectable({
   providedIn: 'root', // This makes the service available globally within the app

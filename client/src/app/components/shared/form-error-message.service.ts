@@ -8,96 +8,84 @@ export class FormErrorMessageService {
   /**
    * Retrieves the error message for a specific field in a form group.
    *
-   * @param form - The `FormGroup` containing the field to validate.
-   * @param field - The name of the field for which the error message is needed.
-   * @returns A string containing the error message, or `null` if there is no error.
-   *
-   * This method checks for standard validation errors like `required`, `email`,
-   * `minlength`, etc., and returns appropriate error messages. It also delegates
-   * to specific helper methods for field-specific validation, such as `password`
-   * and `phone` validation.
+   * @param form - The FormGroup containing the field.
+   * @param field - The name of the field.
+   * @returns The error message for the field, or `null` if no error exists.
    */
   getErrorMessage(form: FormGroup, field: string): string | null {
-    const control: AbstractControl | null = form.get(field);
+    const control = form.get(field);
+    if (!control || !control.touched) return null;
 
-    if (control?.hasError('required') && control.touched) {
-      return 'This field is required.';
-    } else if (control?.hasError('email') && control.touched) {
-      return 'Please enter a valid email.';
-    } else if (control?.hasError('minlength') && control.touched) {
-      return `Minimum length should be ${control.errors?.['minlength'].requiredLength}.`;
-    } else if (control?.hasError('maxlength') && control.touched) {
-      return `Maximum length should be ${control.errors?.['maxlength'].requiredLength}.`;
-    } else if (control?.hasError('max') && control.touched) {
-      return `Maximum amount should be ${control.errors?.['max'].max}.`;
-    } else if (control?.hasError('min') && control.touched) {
-      return `Minimum amount should be ${control.errors?.['min'].min}.`;
-    } else if (
-      control?.hasError('outOfRange') && // Check for outOfRange error
-      control.touched
-    ) {
-      return `Amount must be greater than 0 and less than or equal to ${control.errors?.['outOfRange'].max}.`;
-    }
+    const errorMessage = this.getCommonErrorMessages(control) 
+      || this.getFieldSpecificErrorMessage(field, control);
 
-    // Check for specific field types
-    if (field === 'password') {
-      return this.getPasswordErrorMessage(control);
-    } else if (field === 'phone') {
-      return this.getPhoneErrorMessage(control);
-    }
-
-    return null;
+    return errorMessage;
   }
 
   /**
-   * Retrieves error messages specific to the `password` field.
+   * Retrieves common validation error messages for a control.
    *
-   * @param control - The form control for the `password` field.
-   * @returns A string containing the password error message, or `null` if there is no error.
-   *
-   * This method checks for a custom `pattern` error on the password field.
-   * It ensures the password contains at least one lowercase letter, one digit,
-   * and is between 8 and 20 characters long.
+   * @param control - The form control to check for errors.
+   * @returns The error message, or `null` if no error exists.
    */
-  private getPasswordErrorMessage(
-    control: AbstractControl | null,
-  ): string | null {
-    if (control?.hasError('pattern') && control.touched) {
-      const value = control.value;
+  private getCommonErrorMessages(control: AbstractControl): string | null {
+    const errorMap: Record<string, string | (() => string)> = {
+      required: 'This field is required.',
+      email: 'Please enter a valid email.',
+      minlength: () => `Minimum length should be ${control.errors?.['minlength']?.requiredLength}.`,
+      maxlength: () => `Maximum length should be ${control.errors?.['maxlength']?.requiredLength}.`,
+      max: () => `Maximum amount should be ${control.errors?.['max']?.max}.`,
+      min: () => `Minimum amount should be ${control.errors?.['min']?.min}.`,
+      outOfRange: () => `Amount must be greater than 0 and less than or equal to ${control.errors?.['outOfRange']?.max}.`,
+    };
 
-      // Check for multiple password patterns
-      if (!/[a-z]/.test(value)) {
-        return 'Password must contain at least one lowercase letter.';
-      }
-      if (!/[0-9]/.test(value)) {
-        return 'Password must contain at least one digit.';
-      }
-      if (value.length < 8 || value.length > 20) {
-        return 'Password must be between 8 and 20 characters long.';
-      }
-    }
-    return null;
+    const errorMessage = Object.entries(errorMap).find(([key]) => control.hasError(key))?.[1];
+
+    return errorMessage ? typeof errorMessage === 'function' ? errorMessage() : errorMessage : null;
   }
 
   /**
-   * Retrieves error messages specific to the `phone` field.
+   * Retrieves field-specific error messages for known fields.
    *
-   * @param control - The form control for the `phone` field.
-   * @returns A string containing the phone error message, or `null` if there is no error.
-   *
-   * This method checks for a custom `pattern` error on the phone field.
-   * It validates the phone number against a standard numeric pattern (e.g., US phone numbers).
+   * @param field - The name of the field.
+   * @param control - The form control to check for errors.
+   * @returns The error message, or `null` if no error exists.
    */
-  private getPhoneErrorMessage(control: AbstractControl | null): string | null {
-    if (control?.hasError('pattern') && control.touched) {
-      const value = control.value;
+  private getFieldSpecificErrorMessage(field: string, control: AbstractControl): string | null {
+    const fieldErrorHandlers: Record<string, (control: AbstractControl) => string | null> = {
+      password: this.getPasswordErrorMessage,
+      phone: this.getPhoneErrorMessage,
+    };
 
-      // Phone number pattern (example for US phone numbers)
-      const phonePattern = /^[0-9]{10}$/;
-      if (!phonePattern.test(value)) {
-        return 'Please enter a valid phone number.';
-      }
-    }
-    return null;
+    return fieldErrorHandlers[field]?.(control) || null;
+  }
+
+  /**
+   * Retrieves the error message for password-specific validation.
+   *
+   * @param control - The form control for the password field.
+   * @returns The password-specific error message, or `null` if no error exists.
+   */
+  private getPasswordErrorMessage(control: AbstractControl): string | null {
+    if (!control.hasError('pattern')) return null;
+
+    const value = control.value;
+    const errors = [
+      !/[a-z]/.test(value) && 'at least one lowercase letter',
+      !/[0-9]/.test(value) && 'at least one digit',
+      (value.length < 8 || value.length > 20) && 'be between 8 and 20 characters long',
+    ].filter(Boolean);
+
+    return errors.length ? `Password must ${errors.join(', and ')}.` : null;
+  }
+
+  /**
+   * Retrieves the error message for phone-specific validation.
+   *
+   * @param control - The form control for the phone field.
+   * @returns The phone-specific error message, or `null` if no error exists.
+   */
+  private getPhoneErrorMessage(control: AbstractControl): string | null {
+    return control.hasError('pattern') ? 'Please enter a valid phone number.' : null;
   }
 }

@@ -1,8 +1,9 @@
-import { inject, Injectable } from '@angular/core';
-import { API_URLS } from '../../constants/api-urls';
 import { HttpClient } from '@angular/common/http';
-import { AllExpenses } from './dashboard.model';
+import { inject, Injectable } from '@angular/core';
 import { map } from 'rxjs';
+
+import { API_URLS } from '../../constants/api-urls';
+import { AllExpenses } from './dashboard.model';
 
 @Injectable({
   providedIn: 'root',

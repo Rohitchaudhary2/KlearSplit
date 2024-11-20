@@ -196,15 +196,15 @@ export class SplitTypeComponent implements OnInit {
    * @param {string} item - The new split type to be activated (either 'UNEQUAL' or 'PERCENTAGE').
    */
   setActive(item: string) {
-    const participant1_share = this.form.get('participant1_share')?.value;
-    const participant2_share = this.form.get('participant2_share')?.value;
+    const participant1Share = this.form.get('participant1_share')?.value;
+    const participant2Share = this.form.get('participant2_share')?.value;
     // Before switching to another mode, store the current share values for UNEQUAL or PERCENTAGE
     if (this.activeItem === 'UNEQUAL') {
-      this.unequalParticipant1Share = participant1_share ?? null;
-      this.unequalParticipant2Share = participant2_share ?? null;
+      this.unequalParticipant1Share = participant1Share ?? null;
+      this.unequalParticipant2Share = participant2Share ?? null;
     } else if (this.activeItem === 'PERCENTAGE') {
-      this.percentageParticipant1Share = participant1_share ?? null;
-      this.percentageParticipant2Share = participant2_share ?? null;
+      this.percentageParticipant1Share = participant1Share ?? null;
+      this.percentageParticipant2Share = participant2Share ?? null;
     }
 
     this.activeItem = item;
@@ -222,14 +222,14 @@ export class SplitTypeComponent implements OnInit {
    * If the validation passes, it closes the dialog with the split information.
    */
   sendSplitType() {
-    const participant1_share = this.form.value.participant1_share!;
-    const participant2_share = this.form.value.participant2_share!;
+    const participant1Share = this.form.value.participant1_share!;
+    const participant2Share = this.form.value.participant2_share!;
     if (
       (this.activeItem === 'UNEQUAL' &&
-        participant1_share + participant2_share !==
+        participant1Share + participant2Share !==
           parseFloat(this.expenseData.total_amount)) ||
       (this.activeItem === 'PERCENTAGE' &&
-        participant1_share + participant2_share !== 100)
+        participant1Share + participant2Share !== 100)
     ) {
       return;
     }
@@ -237,8 +237,8 @@ export class SplitTypeComponent implements OnInit {
     // If validation is successful, close the dialog and pass the selected split data
     this.dialogRef.close({
       split_type: this.activeItem,
-      participant1_share,
-      participant2_share,
+      participant1Share,
+      participant2Share,
     });
   }
 

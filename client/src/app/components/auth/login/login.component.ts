@@ -1,3 +1,4 @@
+import { NgClass } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import {
   FormControl,
@@ -5,18 +6,17 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
-import { NgClass } from '@angular/common';
+import { MatInputModule } from '@angular/material/input';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
-import { FormErrorMessageService } from '../../shared/form-error-message.service';
-import { LoginUser } from '../login-types.model';
-import { AuthService } from '../auth.service';
 import { API_URLS } from '../../../constants/api-urls';
+import { FormErrorMessageService } from '../../shared/form-error-message.service';
+import { AuthService } from '../auth.service';
+import { LoginUser } from '../login-types.model';
 
 @Component({
   selector: 'app-login',

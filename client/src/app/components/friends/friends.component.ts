@@ -1,15 +1,22 @@
+import { NgClass } from '@angular/common';
 import {
+  AfterViewInit,
+  ChangeDetectorRef,
   Component,
   ElementRef,
+  HostListener,
   inject,
+  OnDestroy,
   signal,
   viewChild,
-  OnDestroy,
-  ChangeDetectorRef,
-  AfterViewInit,
-  HostListener,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DialogPosition, MatDialog } from '@angular/material/dialog';
+import { ToastrService } from 'ngx-toastr';
+
+import { AuthService } from '../auth/auth.service';
+import { CurrentUser } from '../shared/types.model';
+import { ExpenseComponent } from './expense/expense.component';
 import {
   AddedFriend,
   CombinedExpense,
@@ -20,19 +27,13 @@ import {
   FriendData,
   MessageData,
 } from './friend.model';
-import { AuthService } from '../auth/auth.service';
-import { ToastrService } from 'ngx-toastr';
-import { FriendsListComponent } from './friends-list/friends-list.component';
-import { SocketService } from './socket.service';
-import { DialogPosition, MatDialog } from '@angular/material/dialog';
-import { NgClass } from '@angular/common';
+import { FriendsService } from './friends.service';
+import { FriendsExpenseComponent } from './friends-expense/friends-expense.component';
 import { SettlementComponent } from './friends-expense/settlement/settlement.component';
 import { ViewExpensesComponent } from './friends-expense/view-expenses/view-expenses.component';
-import { FriendsService } from './friends.service';
+import { FriendsListComponent } from './friends-list/friends-list.component';
 import { MessageComponent } from './message/message.component';
-import { ExpenseComponent } from './expense/expense.component';
-import { FriendsExpenseComponent } from './friends-expense/friends-expense.component';
-import { CurrentUser } from '../shared/types.model';
+import { SocketService } from './socket.service';
 
 @Component({
   selector: 'app-friends',
@@ -399,8 +400,8 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       exitAnimationDuration: '200ms',
     });
     dialogRef.componentInstance.expenseDeleted.subscribe(
-      ({ id, payer_id, debtor_amount }) => {
-        this.onDeleteExpense({ id, payer_id, debtor_amount });
+      ({ id, payerId, debtorAmount }) => {
+        this.onDeleteExpense({ id, payerId, debtorAmount });
       },
     );
     dialogRef.componentInstance.updatedExpense.subscribe(
@@ -423,13 +424,13 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    * @returns void
    * Updates the balance for the conversation and removes the expense from the list and combined view.
    */
-  onDeleteExpense({ id, payer_id, debtor_amount }: ExpenseDeletedEvent) {
+  onDeleteExpense({ id, payerId, debtorAmount }: ExpenseDeletedEvent) {
     const balanceAmount = parseFloat(this.selectedUser()!.balance_amount);
-    const debtorAmount = parseFloat(debtor_amount);
+    const debtAmount = parseFloat(debtorAmount);
     this.selectedUser()!.balance_amount =
-      this.user?.user_id === payer_id
-        ? JSON.stringify(balanceAmount - debtorAmount)
-        : JSON.stringify(balanceAmount + debtorAmount);
+      this.user?.user_id === payerId
+        ? JSON.stringify(balanceAmount - debtAmount)
+        : JSON.stringify(balanceAmount + debtAmount);
     const updatedExpenses = this.expenses().filter(
       (expense: ExpenseData) => expense.friend_expense_id !== id,
     );
@@ -521,7 +522,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     if (parseFloat(this.selectedUser()!.balance_amount) === 0) {
       return;
     }
-    const total_amount = Math.abs(
+    const totalAmount = Math.abs(
       parseFloat(this.selectedUser()!.balance_amount),
     );
 
@@ -529,22 +530,22 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     const isUserPayer = parseFloat(this.selectedUser()!.balance_amount) > 0;
 
     // Assign payer and debtor details using destructuring
-    const { fullName: payer_name, imageUrl: payer_image } = isUserPayer
+    const { fullName: payerName, imageUrl: payerImage } = isUserPayer
       ? this.getFullNameAndImage(this.user) // User is the payer
       : this.getFullNameAndImage(this.selectedUser()?.friend); // Friend is the payer
 
-    const { fullName: debtor_name, imageUrl: debtor_image } = isUserPayer
+    const { fullName: debtorName, imageUrl: debtorImage } = isUserPayer
       ? this.getFullNameAndImage(this.selectedUser()?.friend) // Friend is the debtor
       : this.getFullNameAndImage(this.user); // User is the debtor
 
     // Open a dialog for the user for the settlement
     const dialogRef = this.dialog.open(SettlementComponent, {
       data: {
-        payer_name,
-        debtor_name,
-        total_amount,
-        debtor_image,
-        payer_image,
+        payerName,
+        debtorName,
+        totalAmount,
+        debtorImage,
+        payerImage,
       },
       enterAnimationDuration: '200ms',
       exitAnimationDuration: '200ms',
@@ -798,26 +799,26 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.addExpenseLoader = true;
     // Find the expense by its friend_expense_id
     const expense = this.expenses().filter(
-      (expense) => expense.friend_expense_id === id,
+      (expenseData) => expenseData.friend_expense_id === id,
     )[0];
     // Update the expense's friend_expense_id to indicate retry state
     expense.friend_expense_id = `retrying${this.errorNumber}`;
-    const combinedExpense = this.combinedView().filter((expense) => {
-      if (this.isCombinedExpense(expense)) {
-        return expense.friend_expense_id === id;
+    const combinedExpense = this.combinedView().filter((expenseData) => {
+      if (this.isCombinedExpense(expenseData)) {
+        return expenseData.friend_expense_id === id;
       }
       return false;
     });
     const combined = combinedExpense[0] as CombinedExpense;
     combined.friend_expense_id = `retrying${this.errorNumber}`;
     this.cdr.detectChanges();
-    const { friend_expense_id, ...expenseData } = expense;
+    const { "friend_expense_id": friendExpenseId, ...expenseData } = expense;
     const formData = Object.entries(expenseData).reduce(
-      (formData, [key, value]) => {
+      (newFormData, [key, value]) => {
         if (value) {
-          formData.append(key, value);
+          newFormData.append(key, value);
         }
-        return formData;
+        return newFormData;
       },
       new FormData(),
     );
@@ -833,15 +834,15 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             response.data.payer = this.getFullNameAndImage(
               this.selectedUser()?.friend,
             ).fullName;
-          const updatedExpenses = this.expenses().map((expense) => {
-            return expense.friend_expense_id === friend_expense_id
+          const updatedExpenses = this.expenses().map((expenseDetails) => {
+            return expenseDetails.friend_expense_id === friendExpenseId
               ? response.data
-              : expense;
+              : expenseDetails;
           });
           this.expenses.set(updatedExpenses);
           const updatedCombinedView = this.combinedView().map((item) => {
             return this.isCombinedExpense(item) &&
-              item.friend_expense_id === friend_expense_id
+              item.friend_expense_id === friendExpenseId
               ? { ...response.data, type: 'expense' }
               : item;
           });
@@ -859,15 +860,15 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         },
         error: () => {
           // If error occurs, mark the expense and combined view as failed
-          const updatedExpenses = this.expenses().map((expense) => {
-            return expense.friend_expense_id === friend_expense_id
-              ? { ...expense, friend_expense_id: `error${this.errorNumber}` }
-              : expense;
+          const updatedExpenses = this.expenses().map((expenseDetails) => {
+            return expenseDetails.friend_expense_id === friendExpenseId
+              ? { ...expenseDetails, friend_expense_id: `error${this.errorNumber}` }
+              : expenseDetails;
           });
           this.expenses.set(updatedExpenses);
           const updatedCombinedView = this.combinedView().map((item) => {
             return this.isCombinedExpense(item) &&
-              item.friend_expense_id === friend_expense_id
+              item.friend_expense_id === friendExpenseId
               ? { ...item, friend_expense_id: `error${this.errorNumber}` }
               : item;
           });

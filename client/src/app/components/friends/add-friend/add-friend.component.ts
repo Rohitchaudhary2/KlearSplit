@@ -9,11 +9,12 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { debounceTime, of, Subject, switchMap } from 'rxjs';
-import { SearchedUser } from '../friend.model';
-import { MatIconModule } from '@angular/material/icon';
+
 import { FormErrorMessageService } from '../../shared/form-error-message.service';
+import { SearchedUser } from '../friend.model';
 import { FriendsService } from '../friends.service';
 
 @Component({

@@ -1,9 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
+
+import { UserService } from '../user.service';
 import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
-import { UserService } from '../user.service';
-import { lastValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',

@@ -22,12 +22,7 @@ class FriendController {
   static getAllFriends = async (req, res, next) => {
     try {
       const { user_id } = req.user;
-      const { status, archival_status, block_status } = req.validatedFriends;
-      const friendData = await FriendService.getAllFriends(user_id, {
-        status,
-        archival_status,
-        block_status,
-      });
+      const friendData = await FriendService.getAllFriends(user_id, req.validatedFriends);
       responseHandler(
         res,
         200,
@@ -108,8 +103,8 @@ class FriendController {
       const { page, pageSize } = req.validatedPagination;
       const messages = await FriendService.getMessages(
         conversation_id,
-        parseInt(page),
-        parseInt(pageSize),
+        page,
+        pageSize,
       );
       responseHandler(res, 200, "Messages retrieved successfully", messages);
     } catch (error) {

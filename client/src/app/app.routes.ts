@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
-import { RegisterComponent } from './components/auth/register/register.component';
-import { LoginComponent } from './components/auth/login/login.component';
-import { HomeComponent } from './components/home/home.component';
+
 import { AuthGuard } from './components/auth/auth.guard';
+import { LoginComponent } from './components/auth/login/login.component';
+import { RegisterComponent } from './components/auth/register/register.component';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { FriendsComponent } from './components/friends/friends.component';
+import { HomeComponent } from './components/home/home.component';
 import { GuestGuard } from './components/shared/guest.gaurd';
 
 export const routes: Routes = [

@@ -36,12 +36,12 @@ export class ExpenseComponent {
   /**
    * Checks if the given expense ID starts with a specific prefix.
    *
-   * @param expense_id The ID of the expense to check.
+   * @param expenseId The ID of the expense to check.
    * @param prefix The prefix to check for in the expense ID.
    * @returns {boolean} - Returns true if the expense ID starts with the specified prefix, otherwise false.
    */
-  startsWithPrefix(expense_id: string, prefix: string): boolean {
-    return expense_id.startsWith(prefix);
+  startsWithPrefix(expenseId: string, prefix: string): boolean {
+    return expenseId.startsWith(prefix);
   }
 
   /**

@@ -1,16 +1,15 @@
 import {
-  HttpHandlerFn,
   HttpInterceptorFn,
-  HttpRequest,
 } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { ToastrService } from 'ngx-toastr';
 import { HttpErrorResponse } from '@angular/common/http';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import { catchError, switchMap, throwError } from 'rxjs';
+
+import { AuthService } from '../auth/auth.service';
 import { TokenService } from '../auth/token.service';
 import { StateService } from './state.service';
-import { AuthService } from '../auth/auth.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toastr = inject(ToastrService);
@@ -27,10 +26,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
    * @param next - The next HTTP handler to pass the request to.
    * @returns An observable that will retry the request after the token has been refreshed.
    */
-  function handleTokenExpiration(
-    req: HttpRequest<unknown>,
-    next: HttpHandlerFn,
-  ) {
+  function handleTokenExpiration() {
     // Attempt to refresh the token
     return authService.refreshAccessToken().pipe(
       // If the token is refreshed successfully, retry the original request
@@ -57,7 +53,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           case 401:
             if (error.error.message === 'Token expired') {
               // Handle the case where the token has expired
-              return handleTokenExpiration(req, next);
+              return handleTokenExpiration();
             } else {
               errorMessage = 'Unauthorized. Please log in.';
               router.navigate(['/login']);

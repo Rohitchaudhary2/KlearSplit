@@ -1,3 +1,5 @@
+import { CurrencyPipe, NgClass } from '@angular/common';
+import { HttpParams } from '@angular/common/http';
 import {
   Component,
   inject,
@@ -7,16 +9,15 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AddFriendComponent } from '../add-friend/add-friend.component';
 import { MatDialog } from '@angular/material/dialog';
-import { ToastrService } from 'ngx-toastr';
-import { HttpParams } from '@angular/common/http';
-import { FriendData } from '../friend.model';
-import { CurrencyPipe, NgClass } from '@angular/common';
-import { FriendsService } from '../friends.service';
-import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { ToastrService } from 'ngx-toastr';
+
+import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog.component';
+import { AddFriendComponent } from '../add-friend/add-friend.component';
+import { FriendData } from '../friend.model';
+import { FriendsService } from '../friends.service';
 
 @Component({
   selector: 'app-friends-list',

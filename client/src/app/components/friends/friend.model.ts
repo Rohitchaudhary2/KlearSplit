@@ -109,6 +109,6 @@ export interface CombinedView {
 
 export interface ExpenseDeletedEvent {
   id: string;
-  payer_id: string;
-  debtor_amount: string;
+  payerId: string;
+  debtorAmount: string;
 }

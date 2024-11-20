@@ -7,13 +7,14 @@ import {
   MatDialogRef,
 } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { ExpenseData, ExpenseResponse } from '../../friend.model';
-import { FriendsService } from '../../friends.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { FriendsExpenseComponent } from '../friends-expense.component';
 import { ToastrService } from 'ngx-toastr';
+
 import { ConfirmationDialogComponent } from '../../../confirmation-dialog/confirmation-dialog.component';
+import { ExpenseData, ExpenseResponse } from '../../friend.model';
+import { FriendsService } from '../../friends.service';
+import { FriendsExpenseComponent } from '../friends-expense.component';
 
 @Component({
   selector: 'app-view-expenses',
@@ -49,8 +50,8 @@ export class ViewExpensesComponent implements OnInit {
   // Output signal that will emit the expense data when an expense is deleted.
   expenseDeleted = output<{
     id: string;
-    payer_id: string;
-    debtor_amount: string;
+    payerId: string;
+    debtorAmount: string;
   }>();
 
   // Output signal that will emit updated expenses data when an expense is updated
@@ -87,10 +88,10 @@ export class ViewExpensesComponent implements OnInit {
    * proceeds with the deletion if the user confirms.
    *
    * @param id - The unique identifier for the expense to be deleted
-   * @param payer_id - The ID of the payer (used to update the balance)
-   * @param debtor_amount - The amount that the debtor owes (used to update the balance)
+   * @param payerId - The ID of the payer (used to update the balance)
+   * @param debtorAmount - The amount that the debtor owes (used to update the balance)
    */
-  onDeleteExpense(id: string, payer_id: string, debtor_amount: string) {
+  onDeleteExpense(id: string, payerId: string, debtorAmount: string) {
     // Open a confirmation dialog to ask the user if they are sure they want to delete the expense
     const confirmationDialogRef = this.dialog.open(
       ConfirmationDialogComponent,
@@ -116,7 +117,7 @@ export class ViewExpensesComponent implements OnInit {
             this.toastr.success('Expense Deleted successfully', 'Success');
           },
         });
-      this.expenseDeleted.emit({ id, payer_id, debtor_amount });
+      this.expenseDeleted.emit({ id, payerId, debtorAmount });
     });
   }
 
@@ -186,7 +187,7 @@ export class ViewExpensesComponent implements OnInit {
     ];
 
     // Map through the totalExpenses and transform the data into a format compatible with the table
-    const ExtractedExpense = this.totalExpenses().map((expense) => ({
+    const extractedExpense = this.totalExpenses().map((expense) => ({
       date: this.datePipe.transform(expense.createdAt, 'd MMM y'),
       name: expense.expense_name,
       amount: expense.total_amount,
@@ -197,7 +198,7 @@ export class ViewExpensesComponent implements OnInit {
     }));
 
     // Convert the array of objects (expenses) into array of arrays for the autoTable body
-    const body = ExtractedExpense.map((expense) => Object.values(expense));
+    const body = extractedExpense.map((expense) => Object.values(expense));
 
     // Generate the table in the PDF using the autoTable
     autoTable(doc, {

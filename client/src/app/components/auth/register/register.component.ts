@@ -1,3 +1,4 @@
+import { NgClass } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import {
   FormControl,
@@ -5,17 +6,17 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+
+import { FormErrorMessageService } from '../../shared/form-error-message.service';
+import { StateService } from '../../shared/state.service';
 import { AuthService } from '../auth.service';
 import { RegisterUser } from '../register-types.model';
-import { FormErrorMessageService } from '../../shared/form-error-message.service';
-import { ToastrService } from 'ngx-toastr';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { NgClass } from '@angular/common';
-import { StateService } from '../../shared/state.service';
 
 @Component({
   selector: 'app-register',

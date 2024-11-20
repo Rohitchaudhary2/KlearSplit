@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import * as CryptoJS from 'crypto-js';
+import cryptoJS from 'crypto-js';
+
 import { config } from '../../../environments/config';
 
 @Injectable({
@@ -17,7 +18,7 @@ export class TokenService {
    * This method ensures that sensitive data is not stored in plain text.
    */
   setUserId(userId: string): void {
-    const encryptedUserId = CryptoJS.AES.encrypt(
+    const encryptedUserId = cryptoJS.AES.encrypt(
       userId,
       this.secretKey,
     ).toString();
@@ -28,16 +29,16 @@ export class TokenService {
    * Retrieves and decrypts the user ID from `localStorage`.
    *
    * This method retrieves the encrypted user ID from `localStorage`, decrypts it using the secret key,
-   * and returns the decrypted user ID if valid. If the user ID is not available or invalid, it returns `null`.
+   * and returns the decrypted user ID if valid. If the user ID is not available or invalid, it returns `undefined`.
    *
-   * @returns The decrypted user ID if available and valid, or `null` otherwise.
+   * @returns The decrypted user ID if available and valid, or `undefined` otherwise.
    */
-  getUserId(): string | null {
+  getUserId(): string | undefined {
     // Retrieve the encrypted user ID from localStorage
     const encryptedUserId = this.getEncryptedUserId();
     if (!encryptedUserId) {
-      // If no encrypted user ID is found, return null
-      return null;
+      // If no encrypted user ID is found, return undefined
+      return undefined;
     }
 
     // Decrypt and return the decrypted user ID
@@ -49,33 +50,28 @@ export class TokenService {
    *
    * This function encapsulates the logic of getting the encrypted user ID from `localStorage`.
    *
-   * @returns The encrypted user ID stored in `localStorage`, or `null` if not found.
+   * @returns The encrypted user ID stored in `localStorage`, or `undefined` if not found.
    */
-  private getEncryptedUserId(): string | null {
-    return localStorage.getItem('userId'); // Retrieve the encrypted user ID from localStorage
+  private getEncryptedUserId(): string | undefined {
+    return localStorage.getItem('userId') || undefined; // Retrieve the encrypted user ID from localStorage
   }
 
   /**
    * Helper function to decrypt the encrypted user ID.
    *
    * This function takes the encrypted user ID, decrypts it using the AES algorithm with the secret key,
-   * and returns the decrypted user ID. If decryption fails, it returns `null`.
+   * and returns the decrypted user ID. If decryption fails, it returns `undefined`.
    *
    * @param encryptedUserId - The encrypted user ID to be decrypted.
-   * @returns The decrypted user ID or `null` if decryption fails.
+   * @returns The decrypted user ID or `undefined` if decryption fails.
    */
-  private decryptUserId(encryptedUserId: string): string | null {
-    try {
-      // Decrypt the encrypted user ID using the secret key
-      const bytes = CryptoJS.AES.decrypt(encryptedUserId, this.secretKey);
-      // Convert the decrypted bytes to a UTF-8 string
-      const decryptedId = bytes.toString(CryptoJS.enc.Utf8);
-      // Return the decrypted ID or null if the decryption is empty
-      return decryptedId || null;
-    } catch {
-      // Return null if any error occurs during decryption (e.g., invalid data)
-      return null;
-    }
+  private decryptUserId(encryptedUserId: string): string | undefined {
+    // Decrypt the encrypted user ID using the secret key
+    const bytes = cryptoJS.AES.decrypt(encryptedUserId, this.secretKey);
+    // Convert the decrypted bytes to a UTF-8 string
+    const decryptedId = bytes.toString(cryptoJS.enc.Utf8);
+    // Return the decrypted ID or undefined if the decryption is empty
+    return decryptedId || undefined;
   }
 
   /**

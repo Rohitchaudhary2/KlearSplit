@@ -6,10 +6,11 @@ import {
   signal,
   ViewChildren,
 } from '@angular/core';
-import { BaseChartDirective } from 'ng2-charts';
-import { AuthService } from '../auth/auth.service';
 import { ChartDataset, ChartOptions } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
 import { ToastrService } from 'ngx-toastr';
+
+import { AuthService } from '../auth/auth.service';
 import { DashboardService } from './dashboard.service';
 
 @Component({

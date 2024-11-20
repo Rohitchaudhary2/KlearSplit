@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
+
 import { environment } from '../../../environments/environment'; // Make sure this path is correct
 import { MessageData } from './friend.model';
 
@@ -28,14 +29,10 @@ export class SocketService {
    * Sends a message to the server for a specific conversation.
    * The message is emitted through the 'sendMessage' event.
    *
-   * @param MessageData - The message data object containing conversation ID, sender ID, and message content
+   * @param messageData - The message data object containing conversation ID, sender ID, and message content
    */
-  sendMessage(MessageData: {
-    conversation_id: string | null;
-    sender_id: string | null;
-    message: string | null;
-  }): void {
-    this.socket.emit('sendMessage', MessageData);
+  sendMessage(messageData: Partial<MessageData>): void {
+    this.socket.emit('sendMessage', messageData);
   }
 
   /**

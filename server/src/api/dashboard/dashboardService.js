@@ -61,17 +61,10 @@ class DashboardService {
           // Monthly Expense according to index to months.
           acc.monthlyExpense[ expense.createdAt.getMonth() ] += expenseAmount;
           // Expense count according to user's money involved in that expense.
-          if (expenseAmount >= 1 && expenseAmount <= 1000) {
-            acc.expensesRange[ 0 ]++;
-          } else if (expenseAmount >= 1001 && expenseAmount <= 5000) {
-            acc.expensesRange[ 1 ]++;
-          } else if (expenseAmount >= 5001 && expenseAmount <= 10000) {
-            acc.expensesRange[ 2 ]++;
-          } else if (expenseAmount >= 10001 && expenseAmount <= 15000) {
-            acc.expensesRange[ 3 ]++;
-          } else if (expenseAmount > 15000) {
-            acc.expensesRange[ 4 ]++;
-          }
+          const ranges = [ 1000, 5000, 10000, 15000 ]; // Expense thresholds
+          const rangeIndex = expenseAmount > ranges[ ranges.length - 1 ] ? ranges.length : ranges.findIndex((range) => expenseAmount <= range);
+
+          acc.expensesRange[ rangeIndex ]++;
         }
 
         // Amount lent or borrowed

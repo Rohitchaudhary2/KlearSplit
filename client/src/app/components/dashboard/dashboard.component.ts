@@ -193,7 +193,7 @@ export class DashboardComponent implements OnInit {
     ...this.baseChartOptions,
     elements: {
       arc: {
-        offset: [10, 10], // Adjust this array for consistent spacing
+        offset: [10, 10],
         borderRadius: 5,
       },
     },

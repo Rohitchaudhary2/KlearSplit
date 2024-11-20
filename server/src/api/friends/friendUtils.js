@@ -1,4 +1,4 @@
-import { ErrorHandler } from "../middlewares/errorHandler";
+import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 /**
  * Helper function to format the raw friend data from the database into a client-friendly format.

@@ -10,22 +10,21 @@ import { ErrorHandler } from "../middlewares/errorHandler.js";
 const formatFriendData = (userId) => (friend) => {
   // Pick the one that's not null since depending on the logged in user one would always be null
   const matchedFriend = friend.friend1 || friend.friend2;
+
   return {
-    conversation_id: friend.conversation_id,
-    status: friend.friend1 ? "RECEIVER" : "SENDER", // Determine if user is RECEIVER or SENDER
-    balance_amount:
-      userId === friend.friend1_id
-        ? friend.balance_amount // Positive balance for friend1
-        : -friend.balance_amount, // Negative balance for friend2
-    archival_status: friend.archival_status,
-    block_status: friend.block_status,
-    friend: {
-      user_id: matchedFriend.user_id,
-      first_name: matchedFriend.first_name,
-      last_name: matchedFriend.last_name,
-      email: matchedFriend.email,
-      image_url: matchedFriend.image_url,
-    },
+    "conversation_id": friend.conversation_id,
+    "status": friend.friend1 ? "RECEIVER" : "SENDER", // Determine if user is RECEIVER or SENDER
+    "balance_amount":
+      userId === friend.friend1_id ? friend.balance_amount : -friend.balance_amount,
+    "archival_status": friend.archival_status,
+    "block_status": friend.block_status,
+    "friend": {
+      "user_id": matchedFriend.user_id,
+      "first_name": matchedFriend.first_name,
+      "last_name": matchedFriend.last_name,
+      "email": matchedFriend.email,
+      "image_url": matchedFriend.image_url
+    }
   };
 };
 
@@ -69,10 +68,9 @@ const getNewStatus = (friendTag1, friendTag2, status) => {
  * @returns {number} - The calculated debtor amount.
  */
 const calculateDebtorAmount = (expenseData, existingExpense = null) => {
-  const totalAmount =
-    parseFloat(expenseData.total_amount) || // Use new total amount if availabe
-    parseFloat(existingExpense.total_amount); // Otherwise, use the existing total amount
-  expenseData.split_type = expenseData.split_type || existingExpense.split_type;
+  const totalAmount = parseFloat(expenseData.total_amount) || parseFloat(existingExpense.total_amount);
+
+  Object.assign(expenseData, { "split_type": expenseData.split_type || existingExpense.split_type });
 
   // Handle different split types
   switch (expenseData.split_type) {
@@ -82,16 +80,12 @@ const calculateDebtorAmount = (expenseData, existingExpense = null) => {
       // Validate that participant shares add up to total amount and debtor share matches
       if (
         !(
-          parseFloat(expenseData.participant1_share) +
-            parseFloat(expenseData.participant2_share) ===
-            totalAmount &&
-          (expenseData.debtor_share === expenseData.participant1_share ||
-            expenseData.participant2_share)
+          parseFloat(expenseData.participant1_share) + parseFloat(expenseData.participant2_share) === totalAmount && (expenseData.debtor_share === expenseData.participant1_share || expenseData.participant2_share)
         )
       ) {
         throw new ErrorHandler(
           400,
-          "The debtor share and payer share do not add up to the total amount.",
+          "The debtor share and payer share do not add up to the total amount."
         );
       }
 
@@ -100,16 +94,12 @@ const calculateDebtorAmount = (expenseData, existingExpense = null) => {
       // Validate that percentages add up to 100 and debtor share matches
       if (
         !(
-          parseFloat(expenseData.participant1_share) +
-            parseFloat(expenseData.participant2_share) ===
-            100 &&
-          (expenseData.debtor_share === expenseData.participant1_share ||
-            expenseData.participant2_share)
+          parseFloat(expenseData.participant1_share) + parseFloat(expenseData.participant2_share) === 100 && (expenseData.debtor_share === expenseData.participant1_share || expenseData.participant2_share)
         )
       ) {
         throw new ErrorHandler(
           400,
-          "The debtor share and payer share do not add up to 100.",
+          "The debtor share and payer share do not add up to 100."
         );
       }
 
@@ -142,56 +132,36 @@ const calculateNewBalance = (
   friendExist,
   type,
   existingExpense = null,
-  isUpdate = false,
+  isUpdate = false
 ) => {
   if (!isUpdate) {
     // Handle the case for new entries
     if (type !== "SETTLEMENT") {
       // Adjust balance for non-settlement types
-      return newPayerId === friendExist.friend1_id
-        ? currentBalance + debtorAmount // Increment for friend1 as payer
-        : currentBalance - debtorAmount; // Decrement for friend2 as payer
-    } else {
-      // Adjust balance for settlement types
-      return currentBalance > 0
-        ? currentBalance - debtorAmount // Reduce positive balance to approach 0
-        : currentBalance + debtorAmount; // Reduce negative balance to approach 0
+      return newPayerId === friendExist.friend1_id ? currentBalance + debtorAmount : currentBalance - debtorAmount;
     }
-  } else {
-    // Handle updates to existing expenses
-    // First, handle the swap if payer_id and debtor_id are interchanged
-    if (
-      newPayerId !== existingExpense.payer_id &&
-      existingExpense.debtor_id === newPayerId
-    ) {
-      // Reverse the old impact of the existing expense
-      currentBalance +=
-        existingExpense.payer_id === friendExist.friend1_id
-          ? -parseFloat(existingExpense.debtor_amount) // Substract if friend1 was payer
-          : parseFloat(existingExpense.debtor_amount); // Add if friend2 was payer
-
-      // Apply the new impact of the swapped payer and debtor
-      currentBalance +=
-        newPayerId === friendExist.friend1_id
-          ? parseFloat(existingExpense.debtor_amount) // Add if friend1 is now payer
-          : -parseFloat(existingExpense.debtor_amount); // Substract if friend2 is now payer
-    }
-
-    // Handle changes in other balance-affecting fields after the swap
-    if (type !== "SETTLEMENT") {
-      currentBalance +=
-        newPayerId === friendExist.friend1_id
-          ? debtorAmount - parseFloat(existingExpense.debtor_amount)
-          : -(debtorAmount - parseFloat(existingExpense.debtor_amount));
-    } else {
-      currentBalance +=
-        currentBalance > 0
-          ? -(debtorAmount - parseFloat(existingExpense.debtor_amount)) // Reduce positive balance to approach 0
-          : debtorAmount - parseFloat(existingExpense.debtor_amount); // Reduce negative balance to approach 0
-    }
-
-    return currentBalance;
+    // Adjust balance for settlement types
+    return currentBalance > 0 ? currentBalance - debtorAmount : currentBalance + debtorAmount;
   }
+  // Handle updates to existing expenses
+  // First, handle the swap if payer_id and debtor_id are interchanged
+  let updatedCurrentBalance;
+
+  if (
+    newPayerId !== existingExpense.payer_id && existingExpense.debtor_id === newPayerId
+  ) {
+    // Reverse the old impact of the existing expense
+    updatedCurrentBalance = currentBalance + existingExpense.payer_id === friendExist.friend1_id ? -parseFloat(existingExpense.debtor_amount) : parseFloat(existingExpense.debtor_amount); // Add if friend2 was payer
+    // Apply the new impact of the swapped payer and debtor
+    updatedCurrentBalance = currentBalance + newPayerId === friendExist.friend1_id ? parseFloat(existingExpense.debtor_amount) : -parseFloat(existingExpense.debtor_amount); // Substract if friend2 is now payer
+  }
+  // Handle changes in other balance-affecting fields after the swap
+  if (type !== "SETTLEMENT") {
+    updatedCurrentBalance = currentBalance + newPayerId === friendExist.friend1_id ? debtorAmount - parseFloat(existingExpense.debtor_amount) : -(debtorAmount - parseFloat(existingExpense.debtor_amount));
+  } else {
+    updatedCurrentBalance = currentBalance + currentBalance > 0 ? -(debtorAmount - parseFloat(existingExpense.debtor_amount)) : debtorAmount - parseFloat(existingExpense.debtor_amount);
+  }
+  return updatedCurrentBalance;
 };
 
 /**
@@ -205,22 +175,21 @@ const validateSettlementAmount = (currentBalance, debtorAmount) => {
   if (currentBalance < 0 && debtorAmount > Math.abs(currentBalance)) {
     throw new ErrorHandler(
       400,
-      "Settlement amount cannot exceed your current debt.",
+      "Settlement amount cannot exceed your current debt."
     );
-  }
+  } else if (currentBalance > 0 && debtorAmount > currentBalance) {
   // Ensure the debtor amount does not exceed the current balance for positive balances
-  else if (currentBalance > 0 && debtorAmount > currentBalance) {
     throw new ErrorHandler(
       400,
-      "Settlement amount cannot exceed your current balance.",
+      "Settlement amount cannot exceed your current balance."
     );
   }
 };
 
 export {
-    formatFriendData,
-    getNewStatus,
-    calculateDebtorAmount,
-    calculateNewBalance,
-    validateSettlementAmount,
-}
+  formatFriendData,
+  getNewStatus,
+  calculateDebtorAmount,
+  calculateNewBalance,
+  validateSettlementAmount
+};

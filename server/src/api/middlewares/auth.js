@@ -3,16 +3,17 @@ import { ErrorHandler } from "./errorHandler.js";
 import UserService from "../users/userServices.js";
 
 // Middleware for authenticating user
-export const authenticateToken = async (req, res, next) => {
+export const authenticateToken = async(req, res, next) => {
   try {
-    if (!req.cookies["accessToken"]) {
+    if (!req.cookies.accessToken) {
       throw new ErrorHandler(401, "Access Denied. No Access token provided.");
     }
 
-    const accessToken = req.cookies["accessToken"];
+    const accessToken = req.cookies.accessToken;
 
     // Verify the access token
     const user = jwt.verify(accessToken, process.env.ACCESS_SECRET_KEY);
+
     req.user = await UserService.getUser(user.id, next);
     next();
   } catch (error) {

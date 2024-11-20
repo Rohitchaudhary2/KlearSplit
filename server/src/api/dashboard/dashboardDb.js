@@ -7,12 +7,13 @@ class DashboardDb {
    * @param {string} user_id - The ID of the user whose expense data is being fetched.
    * @returns {Promise<Array>} - A promise that resolves to an array of expense records.
    */
-  static async getAllExpenses(user_id) {
+  static async getAllExpenses(userId) {
     const result = await FriendExpense.findAll({
-      where: {
-        [Op.or]: [{ payer_id: user_id }, { debtor_id: user_id }],
-      },
+      "where": {
+        [ Op.or ]: [ { "payer_id": userId }, { "debtor_id": userId } ]
+      }
     });
+
     return result;
   }
 }

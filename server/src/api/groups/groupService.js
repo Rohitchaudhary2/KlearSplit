@@ -1,5 +1,5 @@
 class GroupService {
-  static createGroup = async (groupData) => {
+  static createGroup = async(groupData) => {
     return groupData;
   };
 }

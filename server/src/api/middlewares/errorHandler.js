@@ -19,19 +19,19 @@ export const errorMiddleware = (error, req, res, next) => {
 
   // Logging error details using the custom logger
   logger.log({
-    level: "error",
-    message: JSON.stringify({
+    "level": "error",
+    "message": JSON.stringify({
       statusCode,
-      message: error.message,
-      stack: stackTrace,
-    }),
+      "message": error.message,
+      "stack": stackTrace
+    })
   });
 
   const message = statusCode === 500 ? "Internal Server Error" : error.message;
 
   // Sending a JSON response with the status code and message
   return res.status(statusCode).json({
-    success: false,
-    message,
+    "success": false,
+    message
   });
 };

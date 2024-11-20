@@ -6,7 +6,6 @@
   },
   "lint-staged": {
     "server/**/*.js": [
-      "npm --prefix server run format",
       "npm --prefix server run lint"
     ],
     "client/**/*.{ts,html,css}": [

@@ -9,10 +9,10 @@ class DashboardController {
    * @param {Function} next - The next middleware function, used to pass errors to the error handler.
    * @returns {Promise<void>} - This function sends a response to the client or passes an error to the error handler.
    */
-  static getAllExpensesData = async (req, res, next) => {
+  static getAllExpensesData = async(req, res, next) => {
     try {
-      const { user_id } = req.user;
-      const expenses = await DashboardService.getAllExpensesData(user_id);
+      const expenses = await DashboardService.getAllExpensesData(req.user.user_id);
+
       responseHandler(res, 200, "Successfully fetched Expenses", expenses);
     } catch (error) {
       next(error);

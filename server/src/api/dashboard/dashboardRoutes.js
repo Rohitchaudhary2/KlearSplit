@@ -8,7 +8,7 @@ const dashboardRouter = Router();
 dashboardRouter.get(
   "/getallexpensesdata",
   authenticateToken,
-  DashboardController.getAllExpensesData,
+  DashboardController.getAllExpensesData
 );
 
 export default dashboardRouter;

@@ -4,7 +4,7 @@ import { authenticateToken } from "../middlewares/auth.js";
 import {
   validateData,
   validateEmail,
-  validateRestoreData,
+  validateRestoreData
 } from "../middlewares/validationMiddleware.js";
 
 const userRouter = Router();
@@ -22,7 +22,7 @@ userRouter.post("/register", validateData, UserController.createUser);
 userRouter.post(
   "/verifyrestore",
   validateEmail,
-  UserController.verifyRestoreUser,
+  UserController.verifyRestoreUser
 );
 
 // Route for restoring deleted user.
@@ -32,14 +32,14 @@ userRouter.post("/restore", validateRestoreData, UserController.restoreUser);
 userRouter.post(
   "/verifyforgotpassword",
   validateEmail,
-  UserController.verifyForgotPassword,
+  UserController.verifyForgotPassword
 );
 
 // Route for changing user password for forgot password.
 userRouter.post(
   "/forgotpassword",
   validateRestoreData,
-  UserController.forgotPassword,
+  UserController.forgotPassword
 );
 
 // Route for getting loggedin user data.
@@ -49,7 +49,7 @@ userRouter.get("/:id", authenticateToken, UserController.getUser);
 userRouter.get(
   "/getusers/:regex",
   authenticateToken,
-  UserController.getUsersByRegex,
+  UserController.getUsersByRegex
 );
 
 // Route for updating user information.
@@ -57,7 +57,7 @@ userRouter.patch(
   "/:id",
   validateData,
   authenticateToken,
-  UserController.updateUser,
+  UserController.updateUser
 );
 
 // Route for deleting user (soft deletion)

@@ -4,36 +4,36 @@ export default (sequelize) => {
   const Group = sequelize.define(
     "group",
     {
-      group_id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
-        primaryKey: true,
+      "group_id": {
+        "type": DataTypes.UUID,
+        "defaultValue": DataTypes.UUIDV4,
+        "allowNull": false,
+        "primaryKey": true
       },
-      group_name: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        validate: {
-          notEmpty: {
-            msg: "Group name can't be empty.",
-          },
-        },
+      "group_name": {
+        "type": DataTypes.STRING(100),
+        "allowNull": false,
+        "validate": {
+          "notEmpty": {
+            "msg": "Group name can't be empty."
+          }
+        }
       },
-      group_description: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
+      "group_description": {
+        "type": DataTypes.STRING(255),
+        "allowNull": true
       },
-      image_url: {
-        type: DataTypes.STRING(255),
-        defaultValue:
+      "image_url": {
+        "type": DataTypes.STRING(255),
+        "defaultValue":
           "https://www.google.com/url?sa=i&url=https%3A%2F%2Fen.silhouette-ac.com%2Fsilhouette%2F143023%2Fgroup-of-three-people&psig=AOvVaw31ToMuast5syZwRrvivnmA&ust=1731416089810000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCMCS492p1IkDFQAAAAAdAAAAABAE",
-        allowNull: false,
-      },
+        "allowNull": false
+      }
     },
     {
-      timestamps: true,
-      paranoid: true,
-    },
+      "timestamps": true,
+      "paranoid": true
+    }
   );
 
   //   Group.beforeDestroy(async (user, options) => {

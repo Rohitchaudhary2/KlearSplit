@@ -1,24 +1,24 @@
-import { Component, inject, signal } from '@angular/core';
+import { NgClass } from "@angular/common";
+import { Component, inject, signal } from "@angular/core";
 import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
-} from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../auth.service';
-import { RegisterUser } from '../register-types.model';
-import { FormErrorMessageService } from '../../shared/form-error-message.service';
-import { ToastrService } from 'ngx-toastr';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { NgClass } from '@angular/common';
-import { StateService } from '../../shared/state.service';
+} from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatIconModule } from "@angular/material/icon";
+import { MatInputModule } from "@angular/material/input";
+import { Router, RouterLink } from "@angular/router";
+import { ToastrService } from "ngx-toastr";
+
+import { FormErrorMessageService } from "../../shared/form-error-message.service";
+import { AuthService } from "../auth.service";
+import { RegisterUser } from "../register-types.model";
 
 @Component({
-  selector: 'app-register',
+  selector: "app-register",
   standalone: true,
 
   imports: [
@@ -30,15 +30,14 @@ import { StateService } from '../../shared/state.service';
     MatIconModule,
     NgClass,
   ],
-  templateUrl: './register.component.html',
-  styleUrls: ['./register.component.css'], // Fix: styleUrl -> styleUrls
+  templateUrl: "./register.component.html",
+  styleUrls: [ "./register.component.css" ], // Fix: styleUrl -> styleUrls
 })
 export class RegisterComponent {
   private router = inject(Router);
   private toastr = inject(ToastrService);
   private authService = inject(AuthService);
   private formErrorMessages = inject(FormErrorMessageService);
-  private stateService = inject(StateService);
 
   registerFailed = signal(false); // Indicates whether registration failed
   isRestoreMode = signal(false); // Indicates if the form is in "restore account" mode
@@ -62,20 +61,20 @@ export class RegisterComponent {
     restoreAccountEmail?: FormControl<string | null | undefined>;
     otp?: FormControl<string | null>;
   }>({
-    first_name: new FormControl('', {
+    first_name: new FormControl("", {
       validators: [
         Validators.required,
         Validators.minLength(2),
         Validators.maxLength(50),
       ],
     }),
-    last_name: new FormControl('', {
-      validators: [Validators.maxLength(50)],
+    last_name: new FormControl("", {
+      validators: [ Validators.maxLength(50) ],
     }),
-    email: new FormControl('', {
-      validators: [Validators.required, Validators.email],
+    email: new FormControl("", {
+      validators: [ Validators.required, Validators.email ],
     }),
-    phone: new FormControl('', {
+    phone: new FormControl("", {
       validators: [
         Validators.minLength(10),
         Validators.maxLength(10),
@@ -171,9 +170,6 @@ export class RegisterComponent {
       },
       error: () => {
         this.registerFailed.set(true);
-        if (this.stateService.accountDeleted()) {
-          this.isRestoreMode.set(true);
-        }
       },
       complete: () => {
         this.isLoading.set(false);
@@ -186,11 +182,11 @@ export class RegisterComponent {
    * Navigates to the "dashboard" page on success.
    */
   private handleOtpSubmission(userToSend: Partial<RegisterUser>) {
-    const otp = this.form.get('otp')?.value;
+    const otp = this.form.get("otp")?.value;
     this.authService.registerUserWithOtp(userToSend, { otp }).subscribe({
       next: () => {
-        this.toastr.success('User registered successfully', 'Success');
-        this.router.navigate(['/dashboard']);
+        this.toastr.success("User registered successfully", "Success");
+        this.router.navigate([ "/dashboard" ]);
         this.isLoading.set(false);
       },
     });
@@ -199,8 +195,8 @@ export class RegisterComponent {
   // Adds the OTP control to the form
   private addOtpControl() {
     this.form.addControl(
-      'otp',
-      new FormControl('', [
+      "otp",
+      new FormControl("", [
         Validators.required,
         Validators.minLength(6),
         Validators.maxLength(6),
@@ -213,16 +209,16 @@ export class RegisterComponent {
   onRestoreAccount(): void {
     this.isRestoreMode.set(true);
     this.isOtpMode.set(false);
-    this.form.removeControl('first_name');
-    this.form.removeControl('password');
+    this.form.removeControl("first_name");
+    this.form.removeControl("password");
     this.form.addControl(
-      'restoreAccountEmail',
-      new FormControl(this.form.get('email')?.value, [
+      "restoreAccountEmail",
+      new FormControl(this.form.get("email")?.value, [
         Validators.required,
         Validators.email,
       ]),
     );
-    this.form.removeControl('email');
+    this.form.removeControl("email");
   }
 
   // Sends an OTP for account restoration and updates form controls to display OTP field.
@@ -230,14 +226,14 @@ export class RegisterComponent {
     if (!this.form.valid) {
       return;
     }
-    const email = this.form.get('restoreAccountEmail')?.value;
+    const email = this.form.get("restoreAccountEmail")?.value;
     this.isLoading.set(true);
     this.authService.verifyExistingUser(email).subscribe({
       next: () => {
         this.isOtpMode.set(true);
         this.form.addControl(
-          'otp',
-          new FormControl('', [
+          "otp",
+          new FormControl("", [
             Validators.required,
             Validators.minLength(6),
             Validators.maxLength(6),
@@ -271,14 +267,14 @@ export class RegisterComponent {
   onSubmitOtp(): void {
     if (!this.form.valid) {
       this.toastr.warning(
-        'Please fill in all required fields correctly.',
-        'Warning',
+        "Please fill in all required fields correctly.",
+        "Warning",
       );
       return;
     }
 
-    const email = this.form.get('restoreAccountEmail')!.value!;
-    const otp = this.form.get('otp')!.value!;
+    const email = this.form.get("restoreAccountEmail")!.value!;
+    const otp = this.form.get("otp")!.value!;
 
     this.submitOtp(email, otp);
   }
@@ -295,8 +291,8 @@ export class RegisterComponent {
     this.isLoading.set(true);
     this.authService.restoreAccount(email, otp).subscribe({
       next: () => {
-        this.toastr.success('Account restored successfully', 'Success');
-        this.router.navigate(['/dashboard']);
+        this.toastr.success("Account restored successfully", "Success");
+        this.router.navigate([ "/dashboard" ]);
         this.isLoading.set(false);
       },
     });
@@ -314,24 +310,24 @@ export class RegisterComponent {
   private resetFormForRegistration(): void {
     this.form.reset();
     this.form.addControl(
-      'first_name',
-      new FormControl('', [
+      "first_name",
+      new FormControl("", [
         Validators.required,
         Validators.minLength(2),
         Validators.maxLength(50),
       ]),
     );
     this.form.addControl(
-      'last_name',
-      new FormControl('', [Validators.maxLength(50)]),
+      "last_name",
+      new FormControl("", [ Validators.maxLength(50) ]),
     );
     this.form.addControl(
-      'email',
-      new FormControl('', [Validators.required, Validators.email]),
+      "email",
+      new FormControl("", [ Validators.required, Validators.email ]),
     );
     this.form.addControl(
-      'phone',
-      new FormControl('', [
+      "phone",
+      new FormControl("", [
         Validators.minLength(10),
         Validators.maxLength(10),
         Validators.pattern(/^[0-9]{10}$/),
@@ -341,6 +337,6 @@ export class RegisterComponent {
 
   // Initiates Google Sign-In by redirecting to the authentication URL.
   onGoogleSignUp() {
-    window.open('http://localhost:3000/api/auth/google', '_self');
+    window.open("http://localhost:3000/api/auth/google", "_self");
   }
 }

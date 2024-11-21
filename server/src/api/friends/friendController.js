@@ -108,8 +108,8 @@ class FriendController {
       const { page, pageSize } = req.validatedPagination;
       const messages = await FriendService.getMessages(
         conversationId,
-        parseInt(page),
-        parseInt(pageSize)
+        page,
+        pageSize
       );
 
       responseHandler(res, 200, "Messages retrieved successfully", messages);

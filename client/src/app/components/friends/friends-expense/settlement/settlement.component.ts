@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from "@angular/core";
 import {
   AbstractControl,
   FormControl,
@@ -6,17 +6,18 @@ import {
   ReactiveFormsModule,
   ValidatorFn,
   Validators,
-} from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { FormErrorMessageService } from '../../../shared/form-error-message.service';
+} from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
+import { MatIconModule } from "@angular/material/icon";
+import { MatInputModule } from "@angular/material/input";
+
+import { FormErrorMessageService } from "../../../shared/form-error-message.service";
 
 function amountRangeValidator(totalAmount: number): ValidatorFn {
   return (control: AbstractControl): { outOfRange: { max: number } } | null => {
     const value = control.value;
-    if (value === null || value === '') {
+    if (value === null || value === "") {
       return null; // No error if the control is empty
     }
     const isInvalid = value <= 0 || value > totalAmount;
@@ -25,7 +26,7 @@ function amountRangeValidator(totalAmount: number): ValidatorFn {
 }
 
 @Component({
-  selector: 'app-settlement',
+  selector: "app-settlement",
   standalone: true,
   imports: [
     MatButtonModule,
@@ -33,8 +34,8 @@ function amountRangeValidator(totalAmount: number): ValidatorFn {
     MatIconModule,
     ReactiveFormsModule,
   ],
-  templateUrl: './settlement.component.html',
-  styleUrl: './settlement.component.css',
+  templateUrl: "./settlement.component.html",
+  styleUrl: "./settlement.component.css",
 })
 export class SettlementComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<SettlementComponent>);
@@ -86,7 +87,7 @@ export class SettlementComponent implements OnInit {
   sendSplitType() {
     if (this.form.valid) {
       this.dialogRef.close({
-        split_type: 'SETTLEMENT',
+        split_type: "SETTLEMENT",
         total_amount: this.form.value.settlement_amount,
       });
     }

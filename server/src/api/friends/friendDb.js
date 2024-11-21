@@ -131,7 +131,7 @@ class FriendDb {
   ) =>
     await Friend.update(updatedData, {
       "where": {
-        conversationId
+        "conversation_id": conversationId
       },
       transaction,
       "returning": true
@@ -168,7 +168,7 @@ class FriendDb {
 
     return await FriendMessage.findAll({
       "where": {
-        conversationId
+        "conversation_id": conversationId
       },
       "order": [ [ "createdAt", "DESC" ] ],
       "limit": pageSize,
@@ -214,7 +214,7 @@ class FriendDb {
     const offset = (page - 1) * pageSize;
     const options = {
       "where": {
-        conversationId
+        "conversation_id": conversationId
       },
       "include": [
         {
@@ -269,7 +269,7 @@ class FriendDb {
     const [ affectedRows, [ updatedExpense ] ] = await FriendExpense.update(
       updatedExpenseData,
       {
-        "where": { friendExpenseId },
+        "where": { "friend_expense_id": friendExpenseId },
         transaction,
         "returning": true
       }
@@ -279,7 +279,7 @@ class FriendDb {
     if (affectedRows > 0) {
       // Fetch the updated record with the associated payer's name
       const detailedExpense = await FriendExpense.findOne({
-        "where": { friendExpenseId },
+        "where": { "friend_expense_id": friendExpenseId },
         "include": [
           {
             "model": User,
@@ -303,7 +303,7 @@ class FriendDb {
    */
   static deleteExpense = async(friendExpenseId, transaction) =>
     await FriendExpense.destroy({
-      "where": { friendExpenseId },
+      "where": { "friend_expense_id": friendExpenseId },
       transaction
     });
 }

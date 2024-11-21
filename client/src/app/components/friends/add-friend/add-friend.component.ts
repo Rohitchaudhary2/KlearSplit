@@ -1,23 +1,24 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from "@angular/core";
 import {
   FormControl,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
   Validators,
-} from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { debounceTime, of, Subject, switchMap } from 'rxjs';
-import { SearchedUser } from '../friend.model';
-import { MatIconModule } from '@angular/material/icon';
-import { FormErrorMessageService } from '../../shared/form-error-message.service';
-import { FriendsService } from '../friends.service';
+} from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MatDialogRef } from "@angular/material/dialog";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatIconModule } from "@angular/material/icon";
+import { MatInputModule } from "@angular/material/input";
+import { debounceTime, of, Subject, switchMap } from "rxjs";
+
+import { FormErrorMessageService } from "../../shared/form-error-message.service";
+import { SearchedUser } from "../friend.model";
+import { FriendsService } from "../friends.service";
 
 @Component({
-  selector: 'app-add-friend',
+  selector: "app-add-friend",
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -39,7 +40,7 @@ export class AddFriendComponent implements OnInit {
   selectedUser = signal<SearchedUser | undefined>(undefined);
 
   form = new FormGroup({
-    searchInputControl: new FormControl('', [
+    searchInputControl: new FormControl("", [
       Validators.email,
       Validators.required,
     ]),
@@ -50,11 +51,11 @@ export class AddFriendComponent implements OnInit {
       .pipe(
         debounceTime(500),
         switchMap((query) => {
-          if (query.trim() === '') {
+          if (query.trim() === "") {
             this.loading.set(false);
             return of({
-              success: 'false',
-              message: 'Query is empty',
+              success: "false",
+              message: "Query is empty",
               data: [],
             });
           } else {
@@ -108,7 +109,7 @@ export class AddFriendComponent implements OnInit {
    * @param {SearchedUser} user - The user selected from the search results.
    */
   selectUser(user: SearchedUser) {
-    this.form.get('searchInputControl')!.setValue(user.email);
+    this.form.get("searchInputControl")!.setValue(user.email);
     this.users.set([]);
     this.selectedUser.set(user);
   }

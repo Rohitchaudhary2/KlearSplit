@@ -1,5 +1,5 @@
-import { NgClass } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { NgClass } from "@angular/common";
+import { Component, input } from "@angular/core";
 
 interface Message {
   sender_id: string;
@@ -7,7 +7,7 @@ interface Message {
 }
 
 @Component({
-  selector: 'app-message',
+  selector: "app-message",
   standalone: true,
   imports: [NgClass],
   templateUrl: './message.component.html',

@@ -1,4 +1,4 @@
-import { CurrentUser } from '../shared/types.model';
+import { CurrentUser } from "../shared/types.model";
 
 // Interface to represent the response structure for user log in
 export interface LoginResponse {

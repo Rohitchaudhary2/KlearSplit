@@ -1,11 +1,12 @@
-import { inject, Injectable } from '@angular/core';
-import { API_URLS } from '../../constants/api-urls';
-import { HttpClient } from '@angular/common/http';
-import { AllExpenses } from './dashboard.model';
-import { map } from 'rxjs';
+import { HttpClient } from "@angular/common/http";
+import { inject, Injectable } from "@angular/core";
+import { map } from "rxjs";
+
+import { API_URLS } from "../../constants/api-urls";
+import { AllExpenses } from "./dashboard.model";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class DashboardService {
   private httpClient = inject(HttpClient);
@@ -42,8 +43,8 @@ export class DashboardService {
           const topAmounts: number[] = [];
           const friendsName: string[] = [];
           for (const item in response.data.topFriends) {
-            topAmounts.push(Number(response.data.topFriends[item]['amount']));
-            friendsName.push(String(response.data.topFriends[item]['friend']));
+            topAmounts.push(Number(response.data.topFriends[item]["amount"]));
+            friendsName.push(String(response.data.topFriends[item]["friend"]));
           }
           return {
             expensesRange: response.data.expensesRange,

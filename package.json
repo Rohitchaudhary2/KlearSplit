@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "husky": {
     "hooks": {
       "pre-commit": "npx lint-staged"
@@ -9,7 +10,6 @@
       "npm --prefix server run lint"
     ],
     "client/**/*.{ts,html,css}": [
-      "npm --prefix client run format",
       "npm --prefix client run lint"
     ]
   },

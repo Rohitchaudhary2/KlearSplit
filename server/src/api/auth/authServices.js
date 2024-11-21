@@ -99,7 +99,7 @@ class AuthService {
     const userId = jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY);
 
     req.user = await UserService.getUser(userId.id);
-
+    
     // Check if the refresh token exists in the database
     const refreshTokenDb = await this.getRefreshToken(req.user.email);
 

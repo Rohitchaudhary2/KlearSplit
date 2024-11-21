@@ -86,7 +86,7 @@ passport.use(
           user.user_id
         );
 
-        await AuthService.createRefreshToken(refreshToken, user.email);
+        await AuthService.createRefreshToken(generatedRefreshToken, user.email);
 
         await redis.del(failedAttemptsKey);
 

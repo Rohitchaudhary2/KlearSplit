@@ -1,37 +1,37 @@
-import { Routes } from '@angular/router';
+import { Routes } from "@angular/router";
 
-import { AuthGuard } from './components/auth/auth.guard';
-import { LoginComponent } from './components/auth/login/login.component';
-import { RegisterComponent } from './components/auth/register/register.component';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
-import { FriendsComponent } from './components/friends/friends.component';
-import { HomeComponent } from './components/home/home.component';
-import { GuestGuard } from './components/shared/guest.gaurd';
+import { AuthGuard } from "./components/auth/auth.guard";
+import { LoginComponent } from "./components/auth/login/login.component";
+import { RegisterComponent } from "./components/auth/register/register.component";
+import { DashboardComponent } from "./components/dashboard/dashboard.component";
+import { FriendsComponent } from "./components/friends/friends.component";
+import { HomeComponent } from "./components/home/home.component";
+import { GuestGuard } from "./components/shared/guest.gaurd";
 
 export const routes: Routes = [
   {
-    path: '',
+    path: "",
     component: HomeComponent,
-    canActivate: [GuestGuard],
+    canActivate: [ GuestGuard ],
   },
   {
-    path: 'register',
+    path: "register",
     component: RegisterComponent,
-    canActivate: [GuestGuard],
+    canActivate: [ GuestGuard ],
   },
   {
-    path: 'login',
+    path: "login",
     component: LoginComponent,
-    canActivate: [GuestGuard],
+    canActivate: [ GuestGuard ],
   },
   {
-    path: 'dashboard',
+    path: "dashboard",
     component: DashboardComponent,
-    canActivate: [AuthGuard],
+    canActivate: [ AuthGuard ],
   },
   {
-    path: 'friends',
+    path: "friends",
     component: FriendsComponent,
-    canActivate: [AuthGuard],
+    canActivate: [ AuthGuard ],
   },
 ];

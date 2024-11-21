@@ -1,8 +1,8 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { concatMap, map } from 'rxjs';
+import { HttpClient, HttpParams } from "@angular/common/http";
+import { inject, Injectable } from "@angular/core";
+import { concatMap, map } from "rxjs";
 
-import { API_URLS } from '../../constants/api-urls';
+import { API_URLS } from "../../constants/api-urls";
 import {
   CombinedView,
   Expense,
@@ -12,10 +12,10 @@ import {
   Message,
   SearchedUserResponse,
   SettlementData,
-} from './friend.model';
+} from "./friend.model";
 
 @Injectable({
-  providedIn: 'root', // This makes the service available globally within the app
+  providedIn: "root", // This makes the service available globally within the app
 })
 export class FriendsService {
   // Injecting the HttpClient to make HTTP requests
@@ -88,9 +88,7 @@ export class FriendsService {
               );
           }),
         );
-    }
-    // If only messages need to be loaded
-    else if (loadMessages) {
+    } else if (loadMessages) {
       return this.httpClient
         .get<Message>(messagesUrl, { withCredentials: true })
         .pipe(
@@ -99,9 +97,7 @@ export class FriendsService {
             return { messages: messages.data, expenses: [], combined: [] };
           }),
         );
-    }
-    // If only expenses need to be loaded
-    else if (loadExpenses) {
+    } else if (loadExpenses) {
       return this.httpClient
         .get<Expense>(expensesUrl, { withCredentials: true })
         .pipe(
@@ -129,7 +125,7 @@ export class FriendsService {
    * @returns An observable with the list of all expenses.
    */
   fetchAllExpenses(conversationId: string) {
-    const params = new HttpParams().set('fetchAll', true);
+    const params = new HttpParams().set("fetchAll", true);
 
     return this.httpClient
       .get<Expense>(`${API_URLS.getExpenses}/${conversationId}`, {

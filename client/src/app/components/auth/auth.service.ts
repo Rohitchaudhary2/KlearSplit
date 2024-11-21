@@ -1,17 +1,17 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
-import { map,Observable } from 'rxjs';
+import { HttpClient } from "@angular/common/http";
+import { inject, Injectable, signal } from "@angular/core";
+import { Router } from "@angular/router";
+import { ToastrService } from "ngx-toastr";
+import { map, Observable } from "rxjs";
 
-import { API_URLS } from '../../constants/api-urls';
-import { CurrentUser } from '../shared/types.model';
-import { LoginResponse, LoginUser } from './login-types.model';
-import { RegisterResponse, RegisterUser } from './register-types.model';
-import { TokenService } from './token.service';
+import { API_URLS } from "../../constants/api-urls";
+import { CurrentUser } from "../shared/types.model";
+import { LoginResponse, LoginUser } from "./login-types.model";
+import { RegisterResponse, RegisterUser } from "./register-types.model";
+import { TokenService } from "./token.service";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class AuthService {
   // Dependency injection for necessary services
@@ -62,7 +62,7 @@ export class AuthService {
       .post(`${this.verifyUrl}`, user, { withCredentials: true })
       .pipe(
         map((response) => {
-          this.toastr.success('OTP sent successfully', 'Success');
+          this.toastr.success("OTP sent successfully", "Success");
           return response;
         }),
       );
@@ -130,8 +130,8 @@ export class AuthService {
         // Remove the access of user from protected routes
         this.currentUser.set(undefined);
         this.tokenService.removeUserId();
-        this.toastr.success('You have logged out successfully.', 'Success');
-        this.router.navigate(['/login']);
+        this.toastr.success("You have logged out successfully.", "Success");
+        this.router.navigate([ "/login" ]);
       },
     });
   }
@@ -154,7 +154,7 @@ export class AuthService {
       )
       .pipe(
         map((response) => {
-          this.toastr.success('OTP sent successfully', 'Success');
+          this.toastr.success("OTP sent successfully", "Success");
           return response;
         }),
       );
@@ -178,9 +178,9 @@ export class AuthService {
       )
       .pipe(
         map((response) => {
-          this.toastr.success('New Password sent successfully', 'Success');
+          this.toastr.success("New Password sent successfully", "Success");
           // Reroute to login
-          this.router.navigate(['/login']);
+          this.router.navigate([ "/login" ]);
           return response;
         }),
       );
@@ -202,7 +202,7 @@ export class AuthService {
       )
       .pipe(
         map((response) => {
-          this.toastr.success('OTP sent successfully', 'Success');
+          this.toastr.success("OTP sent successfully", "Success");
           return response;
         }),
       );

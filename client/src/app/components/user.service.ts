@@ -1,19 +1,17 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { ToastrService } from 'ngx-toastr';
-import { map } from 'rxjs';
+import { HttpClient } from "@angular/common/http";
+import { inject, Injectable } from "@angular/core";
+import { map } from "rxjs";
 
-import { API_URLS } from '../constants/api-urls';
-import { AuthService } from './auth/auth.service';
-import { TokenService } from './auth/token.service';
-import { FetchResponse } from './shared/types.model';
+import { API_URLS } from "../constants/api-urls";
+import { AuthService } from "./auth/auth.service";
+import { TokenService } from "./auth/token.service";
+import { FetchResponse } from "./shared/types.model";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class UserService {
   private httpClient = inject(HttpClient);
-  private toastr = inject(ToastrService);
 
   private tokenService = inject(TokenService);
   private authService = inject(AuthService);
@@ -32,7 +30,9 @@ export class UserService {
             this.authService.setAuthenticatedUser(response.data);
             this.tokenService.setUserId(response.data?.user_id);
             return true;
-          } else return false;
+          } else {
+            return false;
+          };
         }),
       );
   }

@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
-import { io, Socket } from 'socket.io-client';
+import { Injectable } from "@angular/core";
+import { io, Socket } from "socket.io-client";
 
-import { environment } from '../../../environments/environment'; // Make sure this path is correct
-import { MessageData } from './friend.model';
+import { environment } from "../../../environments/environment"; // Make sure this path is correct
+import { MessageData } from "./friend.model";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class SocketService {
   private socket: Socket;
@@ -22,7 +22,7 @@ export class SocketService {
    * @param conversationId - The ID of the conversation room to join
    */
   joinRoom(conversationId: string): void {
-    this.socket.emit('joinRoom', conversationId); // Emit 'joinRoom' event to the server
+    this.socket.emit("joinRoom", conversationId); // Emit 'joinRoom' event to the server
   }
 
   /**
@@ -32,7 +32,7 @@ export class SocketService {
    * @param messageData - The message data object containing conversation ID, sender ID, and message content
    */
   sendMessage(messageData: Partial<MessageData>): void {
-    this.socket.emit('sendMessage', messageData);
+    this.socket.emit("sendMessage", messageData);
   }
 
   /**
@@ -42,7 +42,7 @@ export class SocketService {
    * @param callback - The function to call with the new message data when a new message arrives
    */
   onNewMessage(callback: (message: MessageData) => void): void {
-    this.socket.on('newMessage', callback); // Listen for 'newMessage' events
+    this.socket.on("newMessage", callback); // Listen for 'newMessage' events
   }
 
   /**
@@ -60,7 +60,7 @@ export class SocketService {
    */
   leaveRoom(conversationId: string): void {
     if (this.socket) {
-      this.socket.emit('leaveRoom', conversationId);
+      this.socket.emit("leaveRoom", conversationId);
     }
   }
 
@@ -69,6 +69,6 @@ export class SocketService {
    * This is called when user goes from one conversation to the other.
    */
   removeNewMessageListener(): void {
-    this.socket.off('newMessage');
+    this.socket.off("newMessage");
   }
 }

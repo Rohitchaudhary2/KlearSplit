@@ -1,17 +1,19 @@
+export interface SearchedUser {
+  email: string;
+}
+
 export interface SearchedUserResponse {
   success: string;
   message: string;
   data: SearchedUser[];
 }
 
-export interface SearchedUser {
+export interface AddedFriend {
+  user_id: string;
+  first_name: string;
+  last_name: string;
   email: string;
-}
-
-export interface Friend {
-  success: string;
-  message: string;
-  data: FriendData[];
+  image_url: string;
 }
 
 export interface FriendData {
@@ -23,18 +25,10 @@ export interface FriendData {
   friend: AddedFriend;
 }
 
-export interface AddedFriend {
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  image_url: string;
-}
-
-export interface Message {
+export interface Friend {
   success: string;
   message: string;
-  data: MessageData[];
+  data: FriendData[];
 }
 
 export interface MessageData {
@@ -46,16 +40,10 @@ export interface MessageData {
   createdAt: string;
 }
 
-export interface ExpenseResponse {
+export interface Message {
   success: string;
   message: string;
-  data: ExpenseData;
-}
-
-export interface Expense {
-  success: string;
-  message: string;
-  data: ExpenseData[];
+  data: MessageData[];
 }
 
 export interface ExpenseData {
@@ -73,6 +61,18 @@ export interface ExpenseData {
   total_amount: string;
   updatedAt: string;
   payer: string;
+}
+
+export interface ExpenseResponse {
+  success: string;
+  message: string;
+  data: ExpenseData;
+}
+
+export interface Expense {
+  success: string;
+  message: string;
+  data: ExpenseData[];
 }
 
 export interface SettlementData {

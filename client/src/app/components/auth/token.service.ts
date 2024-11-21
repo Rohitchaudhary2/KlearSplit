@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
-import cryptoJS from 'crypto-js';
+import { Injectable } from "@angular/core";
+import cryptoJS from "crypto-js";
 
-import { config } from '../../../environments/config';
+import { config } from "../../../environments/config";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class TokenService {
   // Secret key used for encryption and decryption
@@ -22,7 +22,7 @@ export class TokenService {
       userId,
       this.secretKey,
     ).toString();
-    localStorage.setItem('userId', encryptedUserId);
+    localStorage.setItem("userId", encryptedUserId);
   }
 
   /**
@@ -53,7 +53,7 @@ export class TokenService {
    * @returns The encrypted user ID stored in `localStorage`, or `undefined` if not found.
    */
   private getEncryptedUserId(): string | undefined {
-    return localStorage.getItem('userId') || undefined; // Retrieve the encrypted user ID from localStorage
+    return localStorage.getItem("userId") ?? undefined; // Retrieve the encrypted user ID from localStorage
   }
 
   /**
@@ -82,6 +82,6 @@ export class TokenService {
    */
   removeUserId(): void {
     // Remove the encrypted user ID from localStorage
-    localStorage.removeItem('userId');
+    localStorage.removeItem("userId");
   }
 }

@@ -1,25 +1,25 @@
-import { NgClass } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { NgClass } from "@angular/common";
+import { Component, inject, signal } from "@angular/core";
 import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
-} from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
+} from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatIconModule } from "@angular/material/icon";
+import { MatInputModule } from "@angular/material/input";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { ToastrService } from "ngx-toastr";
 
-import { API_URLS } from '../../../constants/api-urls';
-import { FormErrorMessageService } from '../../shared/form-error-message.service';
-import { AuthService } from '../auth.service';
-import { LoginUser } from '../login-types.model';
+import { API_URLS } from "../../../constants/api-urls";
+import { FormErrorMessageService } from "../../shared/form-error-message.service";
+import { AuthService } from "../auth.service";
+import { LoginUser } from "../login-types.model";
 
 @Component({
-  selector: 'app-login',
+  selector: "app-login",
   standalone: true,
   imports: [
     RouterLink,
@@ -30,8 +30,8 @@ import { LoginUser } from '../login-types.model';
     MatIconModule,
     NgClass,
   ],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.css',
+  templateUrl: "./login.component.html",
+  styleUrl: "./login.component.css",
 })
 export class LoginComponent {
   private formErrorMessages = inject(FormErrorMessageService);
@@ -61,7 +61,7 @@ export class LoginComponent {
     if (Object.keys(this.route.snapshot.queryParams).length > 0) {
       const { error } = this.route.snapshot.queryParams;
       const errorMessage = decodeURIComponent(error);
-      this.toastr.error(errorMessage, 'Error');
+      this.toastr.error(errorMessage, "Error");
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: {},
@@ -76,13 +76,13 @@ export class LoginComponent {
     forgotPasswordEmail?: FormControl<string | null | undefined>;
     otp?: FormControl<string | null>;
   }>({
-    email: new FormControl('', {
-      validators: [Validators.required, Validators.email],
+    email: new FormControl("", {
+      validators: [ Validators.required, Validators.email ],
     }),
-    password: new FormControl('', {
+    password: new FormControl("", {
       validators: [
         Validators.required,
-        Validators.pattern(new RegExp('^(?=.*[a-z])(?=.*[0-9]).{8,20}$')),
+        Validators.pattern(new RegExp("^(?=.*[a-z])(?=.*[0-9]).{8,20}$")),
       ],
     }),
   });
@@ -129,8 +129,8 @@ export class LoginComponent {
     this.authService.login(user).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.toastr.success('User logged in successfully', 'Success');
-        this.router.navigate(['/dashboard']);
+        this.toastr.success("User logged in successfully", "Success");
+        this.router.navigate([ "/dashboard" ]);
       },
       error: () => {
         this.loginFailed.set(true);
@@ -143,15 +143,15 @@ export class LoginComponent {
   onForgotPassword(): void {
     this.isForgotPasswordMode.set(true);
     this.isOtpMode.set(false);
-    this.form.removeControl('password');
+    this.form.removeControl("password");
     this.form.addControl(
-      'forgotPasswordEmail',
-      new FormControl(this.form.get('email')?.value, [
+      "forgotPasswordEmail",
+      new FormControl(this.form.get("email")?.value, [
         Validators.required,
         Validators.email,
       ]),
     );
-    this.form.removeControl('email');
+    this.form.removeControl("email");
   }
 
   /**
@@ -160,7 +160,9 @@ export class LoginComponent {
    */
   onSendOtp(): void {
     const email = this.getEmailForOtp();
-    if (!email) return;
+    if (!email) {
+      return;
+    }
     this.isLoading.set(true);
     this.authService.verifyForgotPasswordUser(email).subscribe({
       next: () => this.activateOtpMode(),
@@ -173,17 +175,17 @@ export class LoginComponent {
    */
   private getEmailForOtp(): string {
     return this.isForgotPasswordMode()
-      ? this.form.get('forgotPasswordEmail')!.value!
-      : this.form.get('email')!.value!;
+      ? this.form.get("forgotPasswordEmail")!.value!
+      : this.form.get("email")!.value!;
   }
 
   // Activates OTP mode by updating the form and enabling the countdown timer.
   private activateOtpMode(): void {
     this.isOtpMode.set(true);
-    if (!this.form.contains('otp')) {
+    if (!this.form.contains("otp")) {
       this.form.addControl(
-        'otp',
-        new FormControl('', [
+        "otp",
+        new FormControl("", [
           Validators.required,
           Validators.minLength(6),
           Validators.maxLength(6),
@@ -202,14 +204,14 @@ export class LoginComponent {
   onSubmitOtp(): void {
     if (!this.form.valid) {
       this.toastr.warning(
-        'Please fill in all required fields correctly.',
-        'Warning',
+        "Please fill in all required fields correctly.",
+        "Warning",
       );
       return;
     }
 
-    const email = this.form.get('forgotPasswordEmail')?.value;
-    const otp = this.form.get('otp')?.value;
+    const email = this.form.get("forgotPasswordEmail")?.value;
+    const otp = this.form.get("otp")?.value;
     this.isLoading.set(true);
     if (email && otp) {
       this.authService.forgotPassword(email, otp).subscribe({
@@ -225,17 +227,17 @@ export class LoginComponent {
   onBackToLogin(): void {
     this.isForgotPasswordMode.set(false);
     this.isOtpMode.set(false);
-    this.form.removeControl('forgotPasswordEmail');
-    this.form.removeControl('otp');
+    this.form.removeControl("forgotPasswordEmail");
+    this.form.removeControl("otp");
     this.form.addControl(
-      'email',
-      new FormControl('', [Validators.required, Validators.email]),
+      "email",
+      new FormControl("", [ Validators.required, Validators.email ]),
     );
     this.form.addControl(
-      'password',
-      new FormControl('', [
+      "password",
+      new FormControl("", [
         Validators.required,
-        Validators.pattern(new RegExp('^(?=.*[a-z])(?=.*[0-9]).{8,20}$')),
+        Validators.pattern(new RegExp("^(?=.*[a-z])(?=.*[0-9]).{8,20}$")),
       ]),
     );
     this.isLoading.set(false);
@@ -243,6 +245,6 @@ export class LoginComponent {
 
   // Initiates Google Sign-In by redirecting to the authentication URL.
   onGoogleSignIn() {
-    window.open(this.googleAuthUrl, '_self');
+    window.open(this.googleAuthUrl, "_self");
   }
 }

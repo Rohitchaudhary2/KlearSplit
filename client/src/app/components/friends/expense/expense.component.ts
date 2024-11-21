@@ -1,5 +1,5 @@
-import { NgClass } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { NgClass } from "@angular/common";
+import { Component, input, output } from "@angular/core";
 
 interface Expense {
   expense_id: string;
@@ -10,11 +10,11 @@ interface Expense {
 }
 
 @Component({
-  selector: 'app-expense',
+  selector: "app-expense",
   standalone: true,
-  imports: [NgClass],
-  templateUrl: './expense.component.html',
-  styleUrl: './expense.component.css',
+  imports: [ NgClass ],
+  templateUrl: "./expense.component.html",
+  styleUrl: "./expense.component.css",
 })
 export class ExpenseComponent {
   expense = input<Expense>();

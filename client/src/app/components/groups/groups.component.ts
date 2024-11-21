@@ -1,4 +1,4 @@
-import { NgClass } from '@angular/common';
+import { NgClass } from "@angular/common";
 import {
   AfterViewInit,
   ChangeDetectorRef,
@@ -9,26 +9,27 @@ import {
   OnDestroy,
   signal,
   viewChild,
-} from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { DialogPosition, MatDialog } from '@angular/material/dialog';
-import { ToastrService } from 'ngx-toastr';
+} from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { DialogPosition, MatDialog } from "@angular/material/dialog";
+import { ToastrService } from "ngx-toastr";
 
-import { AuthService } from '../auth/auth.service';
-import { ExpenseComponent } from '../friends/expense/expense.component';
-import { AddedFriend, CombinedExpense, CombinedMessage, ExpenseData, ExpenseDeletedEvent, ExpenseResponse, FriendData, MessageData } 
-  from '../friends/friend.model';
-import { FriendsService } from '../friends/friends.service';
-import { FriendsExpenseComponent } from '../friends/friends-expense/friends-expense.component';
-import { SettlementComponent } from '../friends/friends-expense/settlement/settlement.component';
-import { ViewExpensesComponent } from '../friends/friends-expense/view-expenses/view-expenses.component';
-import { FriendsListComponent } from '../friends/friends-list/friends-list.component';
-import { MessageComponent } from '../friends/message/message.component';
-import { SocketService } from '../friends/socket.service';
-import { CurrentUser } from '../shared/types.model';
+import { AuthService } from "../auth/auth.service";
+import { ExpenseComponent } from "../friends/expense/expense.component";
+import { AddedFriend, CombinedExpense, CombinedMessage, ExpenseData, ExpenseDeletedEvent, ExpenseResponse, FriendData, MessageData }
+  from "../friends/friend.model";
+import { FriendsService } from "../friends/friends.service";
+import { FriendsExpenseComponent } from "../friends/friends-expense/friends-expense.component";
+import { SettlementComponent } from "../friends/friends-expense/settlement/settlement.component";
+import { ViewExpensesComponent } from "../friends/friends-expense/view-expenses/view-expenses.component";
+import { FriendsListComponent } from "../friends/friends-list/friends-list.component";
+import { MessageComponent } from "../friends/message/message.component";
+import { SocketService } from "../friends/socket.service";
+import { CurrentUser } from "../shared/types.model";
+
 
 @Component({
-  selector: 'app-friends',
+  selector: "app-friends",
   standalone: true,
   imports: [
     FormsModule,
@@ -37,12 +38,12 @@ import { CurrentUser } from '../shared/types.model';
     MessageComponent,
     ExpenseComponent,
   ],
-  templateUrl: './friends.component.html',
-  styleUrl: './friends.component.css',
+  templateUrl: "./friends.component.html",
+  styleUrl: "./friends.component.css",
 })
 export class FriendsComponent implements OnDestroy, AfterViewInit {
   // Reference to the message container element, accessed via ViewChild
-  messageContainer = viewChild<ElementRef>('messageContainer');
+  messageContainer = viewChild<ElementRef>("messageContainer");
   private cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
   // Injecting services needed by the component
   private toastr = inject(ToastrService);
@@ -57,10 +58,10 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
   // Signal to hold the selected user/friend data
   selectedUser = signal<FriendData | undefined>(undefined);
-  messageInput = '';
+  messageInput = "";
 
   // Signal to control the visibility of message, expenses, or combined data
-  currentView = signal<'Messages' | 'Expenses' | 'All'>('All');
+  currentView = signal<"Messages" | "Expenses" | "All">("All");
 
   messages = signal<MessageData[]>([]);
   expenses = signal<ExpenseData[] | []>([]);
@@ -123,7 +124,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    *
    * @param event - The scroll event
    */
-  @HostListener('scroll', ['$event'])
+  @HostListener("scroll", [ "$event" ])
   onScroll(event: Event) {
     const element = event.target as HTMLElement;
     // Check if the user has scrolled to the top and if loading is not in progress
@@ -156,7 +157,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       this.pageMessage = 1;
       this.pageExpense = 1;
       this.pageCombined = 1;
-      this.messageInput = '';
+      this.messageInput = "";
       // Reset flags to indicate whether all messages, expenses, and combined data are loaded
       this.allMessagesLoaded = false;
       this.allExpensesLoaded = false;
@@ -177,10 +178,10 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
     // Listen for new messages from the server for the new room
     this.socketService.onNewMessage((message: MessageData) => {
-      this.messages.set([...this.messages(), message]);
+      this.messages.set([ ...this.messages(), message ]);
       this.combinedView.set([
         ...this.combinedView(),
-        { ...message, type: 'message' },
+        { ...message, type: "message" },
       ]);
       this.cdr.detectChanges();
       this.scrollToBottom();
@@ -190,15 +191,22 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   // Method to load the appropriate data based on the current view
   loadItems(element: HTMLElement) {
     switch (this.currentView()) {
-      case 'All':
+      case "All":
         this.fetchMessagesAndExpenses(false, false, true, element); // Load combined view
         break;
-      case 'Messages':
+      case "Messages":
         this.fetchMessagesAndExpenses(true, false, false, element); // Load only messages
         break;
-      case 'Expenses':
+      case "Expenses":
         this.fetchMessagesAndExpenses(false, true, false, element); // Load only expenses
         break;
+    }
+  }
+
+  checkAndSetLoaded(loadedKey: "allMessagesLoaded" | "allExpensesLoaded" |"allCombinedLoaded", loadCondition: boolean,
+    items: (ExpenseData | MessageData | CombinedExpense | CombinedMessage)[], pageSize: number) {
+    if (!this[loadedKey] && loadCondition && items.length < pageSize) {
+      this[loadedKey] = true;
     }
   }
 
@@ -210,15 +218,12 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     element: HTMLElement | null,
   ) {
     // Prevent making multiple requests if one is already in progress
-    if (this.loading) return;
-
-    // Check if all data has already been loaded for the current view
-    if (
+    if (this.loading ||
       (loadMessages && this.allMessagesLoaded) ||
       (loadExpenses && this.allExpensesLoaded) ||
-      (loadCombined && this.allCombinedLoaded)
-    )
+      (loadCombined && this.allCombinedLoaded)) {
       return;
+    }
 
     // Set loading to true to prevent subsequent requests until this one is complete
     this.loading = true;
@@ -239,28 +244,13 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       .subscribe({
         next: ({ messages, expenses, combined }) => {
           // Check if all data has already been loaded for the current view and set the flag accordingly
-          if (
-            !this.allMessagesLoaded &&
-            loadMessages &&
-            messages.length < this.pageSizeMessage
-          )
-            this.allMessagesLoaded = true;
-          if (
-            !this.allExpensesLoaded &&
-            loadExpenses &&
-            expenses.length < this.pageSizeExpense
-          )
-            this.allExpensesLoaded = true;
-          if (
-            !this.allCombinedLoaded &&
-            loadCombined &&
-            combined.length < this.pageSizeCombined
-          )
-            this.allCombinedLoaded = true;
+          this.checkAndSetLoaded("allMessagesLoaded", loadMessages, messages, this.pageSizeMessage);
+          this.checkAndSetLoaded("allExpensesLoaded", loadExpenses, expenses, this.pageSizeExpense);
+          this.checkAndSetLoaded("allCombinedLoaded", loadCombined, combined, this.pageSizeCombined);
 
-          this.messages.set([...messages, ...this.messages()]);
-          this.expenses.set([...expenses, ...this.expenses()]);
-          this.combinedView.set([...combined, ...this.combinedView()]);
+          this.messages.set([ ...messages, ...this.messages() ]);
+          this.expenses.set([ ...expenses, ...this.expenses() ]);
+          this.combinedView.set([ ...combined, ...this.combinedView() ]);
 
           // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
           if (
@@ -281,9 +271,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           }
 
           // Increment the page number for the next data fetch
-          if (loadMessages) this.pageMessage++;
-          if (loadExpenses) this.pageExpense++;
-          if (loadCombined) this.pageCombined++;
+          this.pageMessage += Number(loadMessages);
+          this.pageExpense += Number(loadExpenses);
+          this.pageCombined += Number(loadCombined);
 
           // Reset loading state to allow future requests
           this.loading = false;
@@ -323,9 +313,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    */
   getSettleUpStatus() {
     if (parseFloat(this.selectedUser()!.balance_amount) === 0) {
-      return 'All Settled';
+      return "All Settled";
     }
-    return 'Settle up';
+    return "Settle up";
   }
 
   /**
@@ -333,7 +323,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    *
    * @param filter - The filter that determines which view to display. Can be 'Messages', 'Expenses', or 'All'.
    */
-  toggleView(filter: 'Messages' | 'Expenses' | 'All') {
+  toggleView(filter: "Messages" | "Expenses" | "All") {
     this.currentView.set(filter);
     this.cdr.detectChanges();
     this.scrollToBottom();
@@ -367,7 +357,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       message: this.messageInput,
     };
     this.socketService.sendMessage(messageData);
-    this.messageInput = '';
+    this.messageInput = "";
   }
 
   /**
@@ -379,17 +369,17 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    */
   viewExpense() {
     const dialogPosition: DialogPosition = {
-      top: '5%',
+      top: "5%",
     };
     const dialogRef = this.dialog.open(ViewExpensesComponent, {
-      data: [this.user, this.selectedUser()],
-      maxWidth: '91vw',
-      maxHeight: '85vh',
-      height: '85%',
-      width: '100%',
+      data: [ this.user, this.selectedUser() ],
+      maxWidth: "91vw",
+      maxHeight: "85vh",
+      height: "85%",
+      width: "100%",
       position: dialogPosition,
-      enterAnimationDuration: '200ms',
-      exitAnimationDuration: '200ms',
+      enterAnimationDuration: "200ms",
+      exitAnimationDuration: "200ms",
     });
     dialogRef.componentInstance.expenseDeleted.subscribe(
       ({ id, payerId, debtorAmount }) => {
@@ -429,7 +419,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.expenses.set(updatedExpenses);
     const updatedCombinedView = this.combinedView().filter(
       (item: CombinedMessage | CombinedExpense) => {
-        if (this.isCombinedExpense(item)) return item.friend_expense_id !== id;
+        if (this.isCombinedExpense(item)) {
+          return item.friend_expense_id !== id;
+        }
         return true;
       },
     );
@@ -448,9 +440,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    * Updates the selected user's balance.
    */
   onUpdateExpense(expenses: ExpenseData[], updatedExpense: ExpenseData) {
-    const previousExpense = this.expenses().filter((expense) => {
+    const previousExpense = this.expenses().find((expense) => {
       return expense.friend_expense_id === updatedExpense.friend_expense_id;
-    })[0];
+    })!;
 
     // Create a copy of the expenses list and sort by creation date
     const totalExpenses = expenses.slice();
@@ -475,11 +467,13 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
     const updatedCombinedView = this.combinedView().map(
       (item: CombinedMessage | CombinedExpense) => {
-        if (this.isCombinedExpense(item))
+        if (this.isCombinedExpense(item)) {
           return item.friend_expense_id === updatedExpense.friend_expense_id
-            ? { ...updatedExpense, type: 'expense' }
+            ? { ...updatedExpense, type: "expense" }
             : item;
-        else return item;
+        } else {
+          return item;
+        }
       },
     );
     this.combinedView.set(updatedCombinedView);
@@ -539,8 +533,8 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         debtorImage,
         payerImage,
       },
-      enterAnimationDuration: '200ms',
-      exitAnimationDuration: '200ms',
+      enterAnimationDuration: "200ms",
+      exitAnimationDuration: "200ms",
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (!result) {
@@ -550,17 +544,17 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         .addExpense(this.selectedUser()!.conversation_id, result)
         .subscribe({
           next: (response: ExpenseResponse) => {
-            if (response.data.payer_id === this.user?.user_id)
+            if (response.data.payer_id === this.user?.user_id) {
               response.data.payer = this.user_name;
-            else {
+            } else {
               response.data.payer = this.getFullNameAndImage(
                 this.selectedUser()?.friend,
               ).fullName;
             }
-            this.expenses.set([...this.expenses(), response.data]);
+            this.expenses.set([ ...this.expenses(), response.data ]);
             const combinedData = [
               ...this.combinedView(),
-              { ...response.data, type: 'message' },
+              { ...response.data, type: "message" },
             ];
             this.combinedView.set(combinedData);
             this.cdr.detectChanges();
@@ -570,7 +564,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
               parseFloat(response.data.debtor_amount),
               response.data.payer_id === this.user?.user_id,
             );
-            this.toastr.success('Settled up successfully', 'Success');
+            this.toastr.success("Settled up successfully", "Success");
           },
         });
     });
@@ -587,7 +581,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    */
   getFullNameAndImage(user: CurrentUser | AddedFriend | undefined) {
     return {
-      fullName: `${user?.first_name}${user?.last_name ? ` ${user?.last_name}` : ''}`,
+      fullName: `${user?.first_name}${user?.last_name ? ` ${user?.last_name}` : ""}`,
       imageUrl: user?.image_url,
     };
   }
@@ -601,7 +595,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    * @returns A string representing the appropriate label for the archive action, either "Archive" or "Unarchive".
    */
   getArchiveLabel(): string {
-    return this.getStatusLabel('archival_status', 'Archive', 'Unarchive');
+    return this.getStatusLabel("archival_status", "Archive", "Unarchive");
   }
 
   /**
@@ -614,7 +608,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    *          either "Block" or "Unblock".
    */
   getBlockLabel(): string {
-    return this.getStatusLabel('block_status', 'Block', 'Unblock');
+    return this.getStatusLabel("block_status", "Block", "Unblock");
   }
 
   /**
@@ -631,7 +625,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    * @returns A string representing the appropriate label based on the current status.
    */
   private getStatusLabel(
-    statusField: 'archival_status' | 'block_status',
+    statusField: "archival_status" | "block_status",
     defaultLabel: string,
     alternateLabel: string,
   ): string {
@@ -639,9 +633,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
     // Check if the user meets any of the conditions for the alternate label ("Unarchive", "Unblock")
     if (
-      user?.[statusField] === 'BOTH' ||
-      (user?.status === 'SENDER' && user?.[statusField] === 'FRIEND1') ||
-      (user?.status === 'RECEIVER' && user?.[statusField] === 'FRIEND2')
+      user?.[statusField] === "BOTH" ||
+      (user!.status === "SENDER" && user?.[statusField] === "FRIEND1") ||
+      (user!.status === "RECEIVER" && user?.[statusField] === "FRIEND2")
     ) {
       return alternateLabel;
     }
@@ -661,33 +655,33 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   archiveBlock(conversationId: string, type: string) {
     this.friendsService.archiveBlockRequest(conversationId, type).subscribe({
       next: () => {
-        if (type === 'archived') {
+        if (type === "archived") {
           this.toastr.success(
             `${this.getArchiveLabel()}d Successfully`,
-            'Success',
+            "Success",
           );
         } else {
           this.toastr.success(
             `${this.getBlockLabel()}ed Successfully`,
-            'Success',
+            "Success",
           );
           const currentStatus = this.selectedUser()?.block_status;
-          const isSender = this.selectedUser()?.status === 'SENDER';
-          if (this.getBlockLabel() === 'Block') {
-            if (currentStatus !== 'NONE') {
-              this.selectedUser()!.block_status = 'BOTH';
+          const isSender = this.selectedUser()?.status === "SENDER";
+          if (this.getBlockLabel() === "Block") {
+            if (currentStatus !== "NONE") {
+              this.selectedUser()!.block_status = "BOTH";
             } else {
               this.selectedUser()!.block_status = isSender
-                ? 'FRIEND1'
-                : 'FRIEND2';
+                ? "FRIEND1"
+                : "FRIEND2";
             }
           } else {
-            if (currentStatus !== 'BOTH') {
-              this.selectedUser()!.block_status = 'NONE';
+            if (currentStatus !== "BOTH") {
+              this.selectedUser()!.block_status = "NONE";
             } else {
               this.selectedUser()!.block_status = isSender
-                ? 'FRIEND2'
-                : 'FRIEND1';
+                ? "FRIEND2"
+                : "FRIEND1";
             }
           }
         }
@@ -701,9 +695,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    */
   openAddExpenseDialog() {
     const dialogRef = this.dialog.open(FriendsExpenseComponent, {
-      data: ['Add Expense', this.user, this.selectedUser()],
-      enterAnimationDuration: '200ms',
-      exitAnimationDuration: '200ms',
+      data: [ "Add Expense", this.user, this.selectedUser() ],
+      enterAnimationDuration: "200ms",
+      exitAnimationDuration: "200ms",
     });
     // Subscribe to the dialog close event and process the data returned when the dialog is closed.
     dialogRef.afterClosed().subscribe((data) => {
@@ -717,11 +711,11 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       // Temporarily add the new expense to the local view with a unique friend_expense_id ('adding') to indicate that it's being processed.
       this.expenses.set([
         ...this.expenses(),
-        { ...expenseData, friend_expense_id: `adding` },
+        { ...expenseData, friend_expense_id: "adding" },
       ]);
       this.combinedView.set([
         ...this.combinedView(),
-        { ...expenseData, friend_expense_id: `adding` },
+        { ...expenseData, friend_expense_id: "adding" },
       ]);
       this.cdr.detectChanges();
       this.scrollToBottom();
@@ -731,24 +725,25 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         .addExpense(this.selectedUser()!.conversation_id, result)
         .subscribe({
           next: (response: ExpenseResponse) => {
-            if (response.data.payer_id === this.user?.user_id)
+            if (response.data.payer_id === this.user?.user_id) {
               response.data.payer = this.user_name;
-            else
+            } else {
               response.data.payer = this.getFullNameAndImage(
                 this.selectedUser()?.friend,
               ).fullName;
+            }
 
             // Update the expenses list by replacing the temporary 'adding' entry with the actual response data.
             const currExpenses = this.expenses();
             currExpenses.pop();
-            this.expenses.set([...currExpenses, response.data]);
+            this.expenses.set([ ...currExpenses, response.data ]);
 
             // Update the combined view by replacing the temporary 'adding' entry.
             const currCombined = this.combinedView();
             currCombined.pop();
             this.combinedView.set([
               ...currCombined,
-              { ...response.data, type: 'expense' },
+              { ...response.data, type: "expense" },
             ]);
             this.addExpenseLoader = false;
             this.cdr.detectChanges();
@@ -759,7 +754,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
               parseFloat(response.data.debtor_amount),
               response.data.payer_id === this.user?.user_id,
             );
-            this.toastr.success('Expense Created successfully', 'Success');
+            this.toastr.success("Expense Created successfully", "Success");
           },
           error: () => {
             // If the API call fails, mark the expense as 'error' in the local view, and provide Retry functionality.
@@ -767,9 +762,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             currExpenses[currExpenses.length - 1].friend_expense_id =
               `error${this.errorNumber}`;
             this.expenses.set(currExpenses);
-            const expense = [...this.combinedView()]
+            const expense = [ ...this.combinedView() ]
               .reverse()
-              .find((item) => this.isCombinedExpense(item)) as CombinedExpense;
+              .find((item) => this.isCombinedExpense(item))!;
             if (expense) {
               expense.friend_expense_id = `error${this.errorNumber}`;
             }
@@ -790,9 +785,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   onRetryExpenseAddition(id: string) {
     this.addExpenseLoader = true;
     // Find the expense by its friend_expense_id
-    const expense = this.expenses().filter(
+    const expense = this.expenses().find(
       (expenseData) => expenseData.friend_expense_id === id,
-    )[0];
+    )!;
     // Update the expense's friend_expense_id to indicate retry state
     expense.friend_expense_id = `retrying${this.errorNumber}`;
     const combinedExpense = this.combinedView().filter((expenseData) => {
@@ -804,9 +799,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     const combined = combinedExpense[0] as CombinedExpense;
     combined.friend_expense_id = `retrying${this.errorNumber}`;
     this.cdr.detectChanges();
-    const { friend_expense_id: friendExpenseId, ...expenseData } = expense;
+    const { "friend_expense_id": friendExpenseId, ...expenseData } = expense;
     const formData = Object.entries(expenseData).reduce(
-      (newFormData, [key, value]) => {
+      (newFormData, [ key, value ]) => {
         if (value) {
           newFormData.append(key, value);
         }
@@ -820,12 +815,13 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       .addExpense(this.selectedUser()!.conversation_id, formData)
       .subscribe({
         next: (response: ExpenseResponse) => {
-          if (response.data.payer_id === this.user?.user_id)
+          if (response.data.payer_id === this.user?.user_id) {
             response.data.payer = this.user_name;
-          else
+          } else {
             response.data.payer = this.getFullNameAndImage(
               this.selectedUser()?.friend,
             ).fullName;
+          }
           const updatedExpenses = this.expenses().map((expenseDetails) => {
             return expenseDetails.friend_expense_id === friendExpenseId
               ? response.data
@@ -835,7 +831,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           const updatedCombinedView = this.combinedView().map((item) => {
             return this.isCombinedExpense(item) &&
               item.friend_expense_id === friendExpenseId
-              ? { ...response.data, type: 'expense' }
+              ? { ...response.data, type: "expense" }
               : item;
           });
           this.combinedView.set(updatedCombinedView);
@@ -848,16 +844,13 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             parseFloat(response.data.debtor_amount),
             response.data.payer_id === this.user?.user_id,
           );
-          this.toastr.success('Expense Created successfully', 'Success');
+          this.toastr.success("Expense Created successfully", "Success");
         },
         error: () => {
           // If error occurs, mark the expense and combined view as failed
           const updatedExpenses = this.expenses().map((expenseDetails) => {
             return expenseDetails.friend_expense_id === friendExpenseId
-              ? {
-                  ...expenseDetails,
-                  friend_expense_id: `error${this.errorNumber}`,
-                }
+              ? { ...expenseDetails, friend_expense_id: `error${this.errorNumber}` }
               : expenseDetails;
           });
           this.expenses.set(updatedExpenses);

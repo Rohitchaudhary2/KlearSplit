@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
-import { AbstractControl, FormGroup } from '@angular/forms';
+import { Injectable } from "@angular/core";
+import { AbstractControl, FormGroup } from "@angular/forms";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class FormErrorMessageService {
   /**
@@ -14,10 +14,12 @@ export class FormErrorMessageService {
    */
   getErrorMessage(form: FormGroup, field: string): string | null {
     const control = form.get(field);
-    if (!control || !control.touched) return null;
+    if (!control?.touched) {
+      return null;
+    }
 
-    const errorMessage = this.getCommonErrorMessages(control) 
-      || this.getFieldSpecificErrorMessage(field, control);
+    const errorMessage = this.getCommonErrorMessages(control)
+      ?? this.getFieldSpecificErrorMessage(field, control);
 
     return errorMessage;
   }
@@ -30,18 +32,18 @@ export class FormErrorMessageService {
    */
   private getCommonErrorMessages(control: AbstractControl): string | null {
     const errorMap: Record<string, string | (() => string)> = {
-      required: 'This field is required.',
-      email: 'Please enter a valid email.',
-      minlength: () => `Minimum length should be ${control.errors?.['minlength']?.requiredLength}.`,
-      maxlength: () => `Maximum length should be ${control.errors?.['maxlength']?.requiredLength}.`,
-      max: () => `Maximum amount should be ${control.errors?.['max']?.max}.`,
-      min: () => `Minimum amount should be ${control.errors?.['min']?.min}.`,
-      outOfRange: () => `Amount must be greater than 0 and less than or equal to ${control.errors?.['outOfRange']?.max}.`,
+      required: "This field is required.",
+      email: "Please enter a valid email.",
+      minlength: () => `Minimum length should be ${control.errors?.["minlength"]?.requiredLength}.`,
+      maxlength: () => `Maximum length should be ${control.errors?.["maxlength"]?.requiredLength}.`,
+      max: () => `Maximum amount should be ${control.errors?.["max"]?.max}.`,
+      min: () => `Minimum amount should be ${control.errors?.["min"]?.min}.`,
+      outOfRange: () => `Amount must be greater than 0 and less than or equal to ${control.errors?.["outOfRange"]?.max}.`,
     };
 
-    const errorMessage = Object.entries(errorMap).find(([key]) => control.hasError(key))?.[1];
+    const errorMessage = Object.entries(errorMap).find(([ key ]) => control.hasError(key))?.[1];
 
-    return errorMessage ? typeof errorMessage === 'function' ? errorMessage() : errorMessage : null;
+    return errorMessage ? typeof errorMessage === "function" ? errorMessage() : errorMessage : null;
   }
 
   /**
@@ -57,7 +59,7 @@ export class FormErrorMessageService {
       phone: this.getPhoneErrorMessage,
     };
 
-    return fieldErrorHandlers[field]?.(control) || null;
+    return fieldErrorHandlers[field]?.(control) ?? null;
   }
 
   /**
@@ -67,16 +69,18 @@ export class FormErrorMessageService {
    * @returns The password-specific error message, or `null` if no error exists.
    */
   private getPasswordErrorMessage(control: AbstractControl): string | null {
-    if (!control.hasError('pattern')) return null;
+    if (!control.hasError("pattern")) {
+      return null;
+    }
 
     const value = control.value;
     const errors = [
-      !/[a-z]/.test(value) && 'at least one lowercase letter',
-      !/[0-9]/.test(value) && 'at least one digit',
-      (value.length < 8 || value.length > 20) && 'be between 8 and 20 characters long',
+      !/[a-z]/.test(value) && "at least one lowercase letter",
+      !/[0-9]/.test(value) && "at least one digit",
+      (value.length < 8 || value.length > 20) && "be between 8 and 20 characters long",
     ].filter(Boolean);
 
-    return errors.length ? `Password must ${errors.join(', and ')}.` : null;
+    return errors.length ? `Password must ${errors.join(", and ")}.` : null;
   }
 
   /**
@@ -86,6 +90,6 @@ export class FormErrorMessageService {
    * @returns The phone-specific error message, or `null` if no error exists.
    */
   private getPhoneErrorMessage(control: AbstractControl): string | null {
-    return control.hasError('pattern') ? 'Please enter a valid phone number.' : null;
+    return control.hasError("pattern") ? "Please enter a valid phone number." : null;
   }
 }

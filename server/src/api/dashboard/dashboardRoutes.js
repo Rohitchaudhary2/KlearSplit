@@ -4,10 +4,11 @@ import { authenticateToken } from "../middlewares/auth.js";
 
 const dashboardRouter = Router();
 
+// Retrieves stats for expenses required to be displayed on dashboard
 dashboardRouter.get(
-  "/getallexpenses",
+  "/getallexpensesdata",
   authenticateToken,
-  DashboardController.getAllExpenses,
+  DashboardController.getAllExpensesData
 );
 
 export default dashboardRouter;

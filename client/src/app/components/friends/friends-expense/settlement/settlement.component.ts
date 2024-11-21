@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from "@angular/core";
 import {
   AbstractControl,
   FormControl,
@@ -6,17 +6,18 @@ import {
   ReactiveFormsModule,
   ValidatorFn,
   Validators,
-} from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { FormErrorMessageService } from '../../../shared/form-error-message.service';
+} from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
+import { MatIconModule } from "@angular/material/icon";
+import { MatInputModule } from "@angular/material/input";
+
+import { FormErrorMessageService } from "../../../shared/form-error-message.service";
 
 function amountRangeValidator(totalAmount: number): ValidatorFn {
   return (control: AbstractControl): { outOfRange: { max: number } } | null => {
     const value = control.value;
-    if (value === null || value === '') {
+    if (value === null || value === "") {
       return null; // No error if the control is empty
     }
     const isInvalid = value <= 0 || value > totalAmount;
@@ -25,7 +26,7 @@ function amountRangeValidator(totalAmount: number): ValidatorFn {
 }
 
 @Component({
-  selector: 'app-settlement',
+  selector: "app-settlement",
   standalone: true,
   imports: [
     MatButtonModule,
@@ -33,16 +34,19 @@ function amountRangeValidator(totalAmount: number): ValidatorFn {
     MatIconModule,
     ReactiveFormsModule,
   ],
-  templateUrl: './settlement.component.html',
-  styleUrl: './settlement.component.css',
+  templateUrl: "./settlement.component.html",
+  styleUrl: "./settlement.component.css",
 })
 export class SettlementComponent implements OnInit {
-  dialogRef = inject(MatDialogRef<SettlementComponent>);
+  private dialogRef = inject(MatDialogRef<SettlementComponent>);
+  formErrorMessages = inject(FormErrorMessageService);
+
   payer_name: string;
   debtor_name: string;
   total_amount: string;
   payer_image: string;
   debtor_image: string;
+
   constructor() {
     const data = inject(MAT_DIALOG_DATA);
     ({
@@ -54,12 +58,7 @@ export class SettlementComponent implements OnInit {
     } = data);
   }
 
-  formErrorMessages = inject(FormErrorMessageService);
-
   form: FormGroup = new FormGroup({});
-  getFormErrors(field: string): string | null {
-    return this.formErrorMessages.getErrorMessage(this.form, field);
-  }
 
   ngOnInit() {
     this.form = new FormGroup({
@@ -72,10 +71,23 @@ export class SettlementComponent implements OnInit {
     });
   }
 
+  /**
+   * Retrieves the error message for a specific form field.
+   * @param field - The name of the field for which to retrieve the error message.
+   * @returns The error message for the field or null if no errors.
+   */
+  getFormErrors(field: string): string | null {
+    return this.formErrorMessages.getErrorMessage(this.form, field);
+  }
+
+  /**
+   * Sends the settlement type and amount back to the friends-expense component when the form is valid.
+   * This method is triggered when the user confirms the settlement.
+   */
   sendSplitType() {
     if (this.form.valid) {
       this.dialogRef.close({
-        split_type: 'SETTLEMENT',
+        split_type: "SETTLEMENT",
         total_amount: this.form.value.settlement_amount,
       });
     }

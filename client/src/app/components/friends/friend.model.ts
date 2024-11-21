@@ -1,17 +1,19 @@
 export interface SearchedUser {
-  success: string;
-  message: string;
-  data: User[];
-}
-
-export interface User {
   email: string;
 }
 
-export interface Friend {
+export interface SearchedUserResponse {
   success: string;
   message: string;
-  data: FriendData[];
+  data: SearchedUser[];
+}
+
+export interface AddedFriend {
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  image_url: string;
 }
 
 export interface FriendData {
@@ -23,18 +25,10 @@ export interface FriendData {
   friend: AddedFriend;
 }
 
-export interface AddedFriend {
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  image_url: string;
-}
-
-export interface Message {
+export interface Friend {
   success: string;
   message: string;
-  data: MessageData[];
+  data: FriendData[];
 }
 
 export interface MessageData {
@@ -44,6 +38,29 @@ export interface MessageData {
   message: string;
   is_read: boolean;
   createdAt: string;
+}
+
+export interface Message {
+  success: string;
+  message: string;
+  data: MessageData[];
+}
+
+export interface ExpenseData {
+  createdAt: string;
+  debtor_amount: string;
+  debtor_id: string;
+  deletedAt: string | null;
+  conversation_id: string;
+  description: string;
+  expense_name: string;
+  friend_expense_id: string;
+  payer_id: string;
+  receipt_url: string | null;
+  split_type: string;
+  total_amount: string;
+  updatedAt: string;
+  payer: string;
 }
 
 export interface ExpenseResponse {
@@ -56,22 +73,6 @@ export interface Expense {
   success: string;
   message: string;
   data: ExpenseData[];
-}
-
-export interface ExpenseData {
-  createdAt: string;
-  debtor_amount: string;
-  debtor_id: string;
-  deletedAt: string | null;
-  description: string;
-  expense_name: string;
-  friend_expense_id: string;
-  payer_id: string;
-  receipt_url: string | null;
-  split_type: string;
-  total_amount: string;
-  updatedAt: string;
-  payer: string;
 }
 
 export interface SettlementData {
@@ -108,6 +109,6 @@ export interface CombinedView {
 
 export interface ExpenseDeletedEvent {
   id: string;
-  payer_id: string;
-  debtor_amount: string;
+  payerId: string;
+  debtorAmount: string;
 }

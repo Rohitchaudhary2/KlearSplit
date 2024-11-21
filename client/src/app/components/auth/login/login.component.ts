@@ -1,25 +1,25 @@
-import { Component, inject, signal } from '@angular/core';
+import { NgClass } from "@angular/common";
+import { Component, inject, signal } from "@angular/core";
 import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
-} from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatIconModule } from '@angular/material/icon';
-import { NgClass } from '@angular/common';
+} from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatIconModule } from "@angular/material/icon";
+import { MatInputModule } from "@angular/material/input";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { ToastrService } from "ngx-toastr";
 
-import { FormErrorMessageService } from '../../shared/form-error-message.service';
-import { LoginUser } from '../login-types.model';
-import { AuthService } from '../auth.service';
-import { API_URLS } from '../../../constants/api-urls';
+import { API_URLS } from "../../../constants/api-urls";
+import { FormErrorMessageService } from "../../shared/form-error-message.service";
+import { AuthService } from "../auth.service";
+import { LoginUser } from "../login-types.model";
 
 @Component({
-  selector: 'app-login',
+  selector: "app-login",
   standalone: true,
   imports: [
     RouterLink,
@@ -30,8 +30,8 @@ import { API_URLS } from '../../../constants/api-urls';
     MatIconModule,
     NgClass,
   ],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.css',
+  templateUrl: "./login.component.html",
+  styleUrl: "./login.component.css",
 })
 export class LoginComponent {
   private formErrorMessages = inject(FormErrorMessageService);
@@ -48,17 +48,20 @@ export class LoginComponent {
   isForgotPasswordMode = signal(false);
   isOtpMode = signal(false);
   isResendDisabled = signal(true);
+  isLoading = signal(false);
   countdown = 30;
 
   constructor() {
+    // Reset the loginFailed state whenever the form value changes
     this.form.valueChanges.subscribe(() => {
       this.loginFailed.set(false);
     });
 
+    // Check for query parameters and display an error message if any
     if (Object.keys(this.route.snapshot.queryParams).length > 0) {
       const { error } = this.route.snapshot.queryParams;
       const errorMessage = decodeURIComponent(error);
-      this.toastr.error(errorMessage, 'Error');
+      this.toastr.error(errorMessage, "Error");
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: {},
@@ -73,21 +76,28 @@ export class LoginComponent {
     forgotPasswordEmail?: FormControl<string | null | undefined>;
     otp?: FormControl<string | null>;
   }>({
-    email: new FormControl('', {
-      validators: [Validators.required, Validators.email],
+    email: new FormControl("", {
+      validators: [ Validators.required, Validators.email ],
     }),
-    password: new FormControl('', {
+    password: new FormControl("", {
       validators: [
         Validators.required,
-        Validators.pattern(new RegExp('^(?=.*[a-z])(?=.*[0-9]).{8,20}$')),
+        Validators.pattern(new RegExp("^(?=.*[a-z])(?=.*[0-9]).{8,20}$")),
       ],
     }),
   });
 
+  /**
+   * Returns the validation error message for a specific form field.
+   *
+   * @param field The name of the form field
+   * @returns The error message string or 'null' if no error exists
+   */
   getFormErrors(field: string): string | null {
     return this.formErrorMessages.getErrorMessage(this.form, field);
   }
 
+  // Starts a countdown timer to enable the "Resend OTP" button after a delay.
   startCountdown(): void {
     this.isResendDisabled.set(true);
     const interval = setInterval(() => {
@@ -100,106 +110,141 @@ export class LoginComponent {
     }, 1000);
   }
 
+  // resends the OTP and restarts the countdown timer.
   resendOtp(): void {
     this.onSendOtp();
-
-    // Restart the countdown timer after resending the OTP
     this.startCountdown();
   }
 
+  /**
+   * Handles the form submission for login.
+   * If the form is valid, triggers the login process via the AuthService.
+   */
   onSubmit() {
-    if (this.form.valid) {
-      const user: LoginUser = this.form.value as LoginUser;
-      this.authService.login(user).subscribe({
-        next: () => {
-          this.toastr.success('User logged in successfully', 'Success');
-          this.router.navigate(['/friends']);
-        },
-        error: () => {
-          this.loginFailed.set(true);
-        },
-      });
+    if (!this.form.valid) {
+      return;
     }
+    const user: LoginUser = this.form.value as LoginUser;
+    this.isLoading.set(true);
+    this.authService.login(user).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.toastr.success("User logged in successfully", "Success");
+        this.router.navigate([ "/dashboard" ]);
+      },
+      error: () => {
+        this.loginFailed.set(true);
+        this.isLoading.set(false);
+      },
+    });
   }
 
-  // Method to handle "Forgot Password" click
+  // Switches the form to "Forgot Password" mode by updating form controls.
   onForgotPassword(): void {
     this.isForgotPasswordMode.set(true);
     this.isOtpMode.set(false);
-    this.form.removeControl('password');
+    this.form.removeControl("password");
     this.form.addControl(
-      'forgotPasswordEmail',
-      new FormControl(this.form.get('email')?.value, [
+      "forgotPasswordEmail",
+      new FormControl(this.form.get("email")?.value, [
         Validators.required,
         Validators.email,
       ]),
     );
-    this.form.removeControl('email');
+    this.form.removeControl("email");
   }
 
-  // Method to handle OTP field display after submit
+  /**
+   * Sends an OTP to the user's email for password recovery.
+   * Activates OTP mode and disables the resend button temporarily.
+   */
   onSendOtp(): void {
-    if (
-      this.isForgotPasswordMode()
-        ? this.form.controls.forgotPasswordEmail?.valid
-        : this.form.valid
-    ) {
-      const email = this.form.get('forgotPasswordEmail')?.value;
-      this.authService.verifyForgotPasswordUser(email).subscribe({
-        next: () => {
-          this.isOtpMode.set(true);
-          this.form.addControl(
-            'otp',
-            new FormControl('', [
-              Validators.required,
-              Validators.minLength(6),
-              Validators.maxLength(6),
-              Validators.pattern(/^[0-9]{6}$/),
-            ]),
-          );
-          this.startCountdown();
-        },
-      });
+    const email = this.getEmailForOtp();
+    if (!email) {
+      return;
     }
+    this.isLoading.set(true);
+    this.authService.verifyForgotPasswordUser(email).subscribe({
+      next: () => this.activateOtpMode(),
+    });
   }
 
-  onSubmitOtp(): void {
-    if (this.form.valid) {
-      const email = this.form.get('forgotPasswordEmail')?.value;
-      const otp = this.form.get('otp')?.value;
+  /**
+   * Retrieves the appropriate email value based on the current form mode.
+   * @returns Email string or null if not available.
+   */
+  private getEmailForOtp(): string {
+    return this.isForgotPasswordMode()
+      ? this.form.get("forgotPasswordEmail")!.value!
+      : this.form.get("email")!.value!;
+  }
 
-      this.authService.forgotPassword(email, otp).subscribe({
-        next: () => {
-          this.onBackToLogin();
-        },
-      });
-    } else {
-      this.toastr.warning(
-        'Please fill in all required fields correctly.',
-        'Warning',
+  // Activates OTP mode by updating the form and enabling the countdown timer.
+  private activateOtpMode(): void {
+    this.isOtpMode.set(true);
+    if (!this.form.contains("otp")) {
+      this.form.addControl(
+        "otp",
+        new FormControl("", [
+          Validators.required,
+          Validators.minLength(6),
+          Validators.maxLength(6),
+          Validators.pattern(/^[0-9]{6}$/),
+        ]),
       );
     }
+    this.isLoading.set(false);
+    this.startCountdown();
   }
 
+  /**
+   * Handles the submission of the OTP for password recovery.
+   * Validates the form and calls the AuthService to verify the OTP.
+   */
+  onSubmitOtp(): void {
+    if (!this.form.valid) {
+      this.toastr.warning(
+        "Please fill in all required fields correctly.",
+        "Warning",
+      );
+      return;
+    }
+
+    const email = this.form.get("forgotPasswordEmail")?.value;
+    const otp = this.form.get("otp")?.value;
+    this.isLoading.set(true);
+    if (email && otp) {
+      this.authService.forgotPassword(email, otp).subscribe({
+        next: () => this.onBackToLogin(),
+      });
+    }
+  }
+
+  /**
+   * Resets the form back to the login state.
+   * Removes controls for "Forgot Password" and OTP modes, and restores login controls.
+   */
   onBackToLogin(): void {
     this.isForgotPasswordMode.set(false);
     this.isOtpMode.set(false);
-    this.form.removeControl('forgotPasswordEmail');
-    this.form.removeControl('otp');
+    this.form.removeControl("forgotPasswordEmail");
+    this.form.removeControl("otp");
     this.form.addControl(
-      'email',
-      new FormControl('', [Validators.required, Validators.email]),
+      "email",
+      new FormControl("", [ Validators.required, Validators.email ]),
     );
     this.form.addControl(
-      'password',
-      new FormControl('', [
+      "password",
+      new FormControl("", [
         Validators.required,
-        Validators.pattern(new RegExp('^(?=.*[a-z])(?=.*[0-9]).{8,20}$')),
+        Validators.pattern(new RegExp("^(?=.*[a-z])(?=.*[0-9]).{8,20}$")),
       ]),
     );
+    this.isLoading.set(false);
   }
 
+  // Initiates Google Sign-In by redirecting to the authentication URL.
   onGoogleSignIn() {
-    window.open(this.googleAuthUrl, '_self');
+    window.open(this.googleAuthUrl, "_self");
   }
 }

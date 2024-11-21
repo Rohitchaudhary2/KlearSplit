@@ -2,98 +2,106 @@ import { Op } from "sequelize";
 import { User } from "../../config/db.connection.js";
 
 class UserDb {
-  static createUser = async (user, transaction) =>
+  // Creates a new user in the database
+  static createUser = async(user, transaction) =>
     await User.create(user, { transaction });
 
-  static restoreUser = async (user, transaction) =>
+  // Restores a deleted user in the database
+  static restoreUser = async(user, transaction) =>
     await user.restore({ transaction });
 
-  static getUserById = async (id) => await User.findByPk(id);
+  // Retreives user data with the help of user_id
+  static getUserById = async(id) => await User.findByPk(id);
 
-  static getUsersById = async (ids) => {
+  // Retrieves multiple users data based on the array of user_id provided in the same format in which array is provided
+  static getUsersById = async(ids) => {
     const users = await User.findAll({
-      attributes: ["first_name", "last_name", "user_id"],
-      where: {
-        user_id: ids,
-      },
+      "attributes": [ "first_name", "last_name", "user_id" ],
+      "where": {
+        "user_id": ids
+      }
     });
 
     return users.sort(
-      (a, b) => ids.indexOf(a.user_id) - ids.indexOf(b.user_id),
+      (a, b) => ids.indexOf(a.user_id) - ids.indexOf(b.user_id)
     );
   };
 
-  static getUserByEmail = async (email, flag = true) =>
+  // Retrieves users with the help of email
+  static getUserByEmail = async(email, flag = true) =>
     await User.scope("withPassword").findOne({
-      where: {
-        email,
+      "where": {
+        email
       },
-      paranoid: flag,
+      "paranoid": flag
     });
 
-  static getUserByPhone = async (phone) =>
+  // Retrieves user with the help of phone number
+  static getUserByPhone = async(phone) =>
     await User.findOne({
-      where: {
-        phone,
-      },
+      "where": {
+        phone
+      }
     });
 
-  static getUsersByRegex = async (regex) => {
+  // Retrieves users based on provided regex
+  static getUsersByRegex = async(regex) => {
     const nameParts = regex.split(" ").filter(Boolean); // Split by space and remove empty values
 
     let whereCondition;
 
     if (nameParts.length > 1) {
-      const [firstNameRegex, lastNameRegex] = nameParts;
+      const [ firstNameRegex, lastNameRegex ] = nameParts;
 
       whereCondition = {
-        [Op.or]: [
-          { email: { [Op.iLike]: `%${regex}%` } },
+        [ Op.or ]: [
+          { "email": { [ Op.iLike ]: `%${regex}%` } },
           {
-            [Op.and]: [
+            [ Op.and ]: [
               // Try to match both first_name and last_name
-              { first_name: { [Op.iLike]: `%${firstNameRegex}%` } },
-              { last_name: { [Op.iLike]: `%${lastNameRegex}%` } },
-            ],
+              { "first_name": { [ Op.iLike ]: `%${firstNameRegex}%` } },
+              { "last_name": { [ Op.iLike ]: `%${lastNameRegex}%` } }
+            ]
           },
-          { first_name: { [Op.iLike]: `%${regex}%` } },
-          { last_name: { [Op.iLike]: `%${regex}%` } },
-        ],
+          { "first_name": { [ Op.iLike ]: `%${regex}%` } },
+          { "last_name": { [ Op.iLike ]: `%${regex}%` } }
+        ]
       };
     } else {
       // If only one part (either first name or last name or email)
       whereCondition = {
-        [Op.or]: [
-          { email: { [Op.iLike]: `%${regex}%` } },
-          { first_name: { [Op.iLike]: `%${regex}%` } },
-          { last_name: { [Op.iLike]: `%${regex}%` } },
-        ],
+        [ Op.or ]: [
+          { "email": { [ Op.iLike ]: `%${regex}%` } },
+          { "first_name": { [ Op.iLike ]: `%${regex}%` } },
+          { "last_name": { [ Op.iLike ]: `%${regex}%` } }
+        ]
       };
     }
 
     return await User.findAll({
-      where: whereCondition,
-      attributes: ["user_id", "email", "first_name", "last_name"],
+      "where": whereCondition,
+      "attributes": [ "user_id", "email", "first_name", "last_name" ]
     });
   };
 
-  static updateUser = async (user, id, transaction = null) => {
+  // Updates user data
+  static updateUser = async(user, id) => {
     const response = await User.update(user, {
-      where: {
-        user_id: id,
+      "where": {
+        "user_id": id
       },
-      transaction,
-      returning: true,
+      "returning": true
     });
-    if (response[0] === 0) {
+
+    if (response[ 0 ] === 0) {
       return 0;
     }
 
-    return response[1];
+    return response[ 1 ];
   };
 
-  static deleteUser = async (user, transaction) =>
-    await user.destroy({ transaction });
+  // Soft deletes user data
+  static deleteUser = async(user) => await user.destroy();
 }
 
 export default UserDb;

@@ -13,70 +13,85 @@ import Redis from "ioredis";
 const redis = new Redis();
 
 class UserService {
-  static verifyUser = async (user) => {
+  /**
+   * Verifies the user during the sign-up process by checking if the email already exists in the database
+   * and sending an OTP if the user is new or if they are eligible to restore their deleted account.
+   *
+   * @param {Object} user - The user object containing user information.
+   * @throws {ErrorHandler} Throws an error if the user account already exists, or if the user has a deleted account.
+   */
+  static verifyUser = async(user) => {
     const isUserExists = await UserDb.getUserByEmail(user.email, false);
 
-    // If email or phone already exists in database then checking whether user has deleted account
-    if (isUserExists && isUserExists.dataValues.deletedAt)
+    // If the user exists and has a deleted account, throw an error asking to restore the account
+    if (isUserExists && isUserExists.dataValues.deletedAt) {
       throw new ErrorHandler(
         410,
-        "Looks like you had an account. Please restore it.",
+        "Looks like you had an account. Please restore it."
       );
-    else if (isUserExists && !isUserExists.dataValues.is_invited)
+    }
+      
+    // If the user exists but was not invited, throw an error indicating account already exists
+    if (isUserExists && !isUserExists.dataValues.is_invited) {
       throw new ErrorHandler(400, "Account already exist for provided Email.");
-
-    // send otp
+    }
+    
     const otp = otpGenrator();
 
     await redis.setex(`otp:${user.email}`, 300, otp);
 
     sendMail(
       {
-        email: user.email,
-        subject: "Otp for sign up in KlearSplit",
+        "email": user.email,
+        "subject": "Otp for sign up in KlearSplit"
       },
       "otpTemplate",
       {
-        name: user.first_name,
+        "name": user.first_name,
         otp,
-        message: "Thank you for registering with us.",
-      },
+        "message": "Thank you for registering with us."
+      }
     );
   };
 
-  static createUser = async (user) => {
-    const userOtp = user.otp;
-    delete user.otp;
-
+  /**
+   * Creates a new user or updates an existing user in the system after OTP validation.
+   * The user is also assigned a random password, hashed, and then registered in the database.
+   * Access and refresh tokens are generated, and a welcome email with the password is sent.
+   *
+   * @param {Object} user - The user object containing user information.
+   * @throws {ErrorHandler} Throws an error if OTP is invalid, expired, or if there are issues during user creation or update.
+   * @returns {Object} Returns an object containing the created or updated user data and access & refresh tokens.
+   */
+  static createUser = async(user) => {
     const otp = await redis.get(`otp:${user.email}`);
-    if (otp === userOtp) {
-      await redis.del(`otp:${user.email}`);
-    } else {
+
+    if (otp !== user.otp) {
       throw new ErrorHandler(400, "Invalid or Expired Otp.");
     }
 
+    delete user.otp;
+    await redis.del(`otp:${user.email}`);
     const isUserExists = await UserDb.getUserByEmail(user.email, false);
 
-    //Generating random password
     const password = generatePassword();
 
-    //Hashing the password
     user.password = await hashedPassword(password);
 
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
       let createdUser;
+
       if (!isUserExists) {
         // Creating new user in the database
         createdUser = await UserDb.createUser(user, transaction);
       } else if (isUserExists && isUserExists.dataValues.is_invited) {
         createdUser = await UserDb.updateUser(
-          { ...user, is_invited: false },
+          { ...user, "is_invited": false },
           isUserExists.dataValues.user_id,
-          transaction,
-        );
-        createdUser = createdUser[0].dataValues;
+          transaction
+        )[ 0 ].dataValues;
         if (!createdUser) {
           throw new ErrorHandler(400, "Error while Registering");
         }
@@ -84,7 +99,7 @@ class UserService {
 
       // Generate access and refresh tokens
       const { accessToken, refreshToken } = generateAccessAndRefereshTokens(
-        createdUser.user_id,
+        createdUser.user_id
       );
 
       // Store the refresh token in the database
@@ -94,19 +109,19 @@ class UserService {
       await transaction.commit();
 
       const options = {
-        email: user.email,
-        subject: "Password for Sign in for KlearSplit",
+        "email": user.email,
+        "subject": "Password for Sign in for KlearSplit"
       };
 
       sendMail(options, "passwordTemplate", {
-        name: user.first_name,
-        heading: "Welcome to Our Service",
-        email: user.email,
+        "name": user.first_name,
+        "heading": "Welcome to Our Service",
+        "email": user.email,
         password,
-        message: "Thank you for registering with us.",
+        "message": "Thank you for registering with us."
       });
 
-      return { user: createdUser, accessToken, refreshToken };
+      return { "user": createdUser, accessToken, refreshToken };
     } catch (error) {
       // Rollback the transaction in case of error
       await transaction.rollback();
@@ -114,18 +129,24 @@ class UserService {
     }
   };
 
-  static verifyRestoreUser = async (user) => {
+  /**
+   * Verifies a user's email for account restoration by generating and sending an OTP.
+   *
+   * @param {Object} user - The user object containing the email for restoration.
+   *
+   * @throws {ErrorHandler} Throws an error if:
+   *   - No user record is found with the provided email.
+   *   - The user account is active and not deleted.
+   */
+  static verifyRestoreUser = async(user) => {
     const isEmailExists = await UserDb.getUserByEmail(user.email, false);
 
     if (!isEmailExists) {
       throw new ErrorHandler(
         400,
-        "No Record found. Please Create new account.",
+        "No Record found. Please Create new account."
       );
-    } else if (
-      isEmailExists.dataValues &&
-      !isEmailExists.dataValues.deletedAt
-    ) {
+    } else if (isEmailExists.dataValues && !isEmailExists.dataValues.deletedAt) {
       throw new ErrorHandler(400, "Account for this Email is active.");
     }
 
@@ -135,31 +156,49 @@ class UserService {
 
     sendMail(
       {
-        email: user.email,
-        subject: "Otp for restoring your account for KlearSplit",
+        "email": user.email,
+        "subject": "Otp for restoring your account for KlearSplit"
       },
       "otpTemplate",
       {
-        name: isEmailExists.dataValues.first_name,
+        "name": isEmailExists.dataValues.first_name,
         otp,
-        message: "We received a request to restore access to your account.",
-      },
+        "message": "We received a request to restore access to your account."
+      }
     );
   };
 
-  static restoreUser = async (user) => {
+  /**
+   * Restores a user account that was previously deleted, given a valid OTP.
+   *
+   * @param {Object} user - The user object containing the necessary information for account restoration.
+   * @param {string} user.email - The email address of the user whose account is to be restored.
+   * @param {string} user.otp - The OTP provided by the user to verify the account restoration.
+   *
+   * @throws {ErrorHandler} Throws an error if:
+   *   - The email is not found in the database.
+   *   - The account is already active (not deleted).
+   *   - The OTP is invalid or expired.
+   *
+   * @returns {Object} Returns the restored user and the generated tokens.
+   */
+  static restoreUser = async(user) => {
     const isEmailExists = await UserDb.getUserByEmail(user.email, false);
-    if (!isEmailExists) throw new ErrorHandler(400, "User not found");
-    if (!isEmailExists.dataValues.deletedAt)
+
+    if (!isEmailExists) {
+      throw new ErrorHandler(400, "User not found");
+    }
+    if (!isEmailExists.dataValues.deletedAt) {
       throw new ErrorHandler(400, "Account for this Email is already active.");
+    }
 
     const otp = await redis.get(`otp:${user.email}`);
-    if (otp === user.otp) {
-      await redis.del(`otp:${user.email}`);
-    } else {
+
+    if (otp !== user.otp) {
       throw new ErrorHandler(400, "Invalid or Expired Otp.");
     }
 
+    await redis.del(`otp:${user.email}`);
     const transaction = await sequelize.transaction(); // Starting a new transaction
 
     try {
@@ -169,7 +208,7 @@ class UserService {
 
       // Generate access and refresh tokens
       const { accessToken, refreshToken } = generateAccessAndRefereshTokens(
-        restoredUser.user_id,
+        restoredUser.user_id
       );
 
       // Store the refresh token in the database
@@ -178,7 +217,7 @@ class UserService {
       // Commit the transaction
       await transaction.commit();
 
-      return { user: restoredUser, accessToken, refreshToken };
+      return { "user": restoredUser, accessToken, refreshToken };
     } catch (error) {
       // Rollback the transaction in case of error
       await transaction.rollback();
@@ -186,7 +225,17 @@ class UserService {
     }
   };
 
-  static verifyForgotPassword = async (user) => {
+  /**
+   * Verifies the user's request to change the password by generating and sending an OTP.
+   *
+   * @param {Object} user - The user object containing the email for password reset.
+   * @param {string} user.email - The email address of the user requesting to reset their password.
+   *
+   * @throws {ErrorHandler} Throws an error if:
+   *   - No user record is found with the provided email.
+   *   - The account for the provided email is deactivated (i.e., deleted).
+   */
+  static verifyForgotPassword = async(user) => {
     const isEmailExists = await UserDb.getUserByEmail(user.email, false);
 
     if (!isEmailExists) {
@@ -194,7 +243,7 @@ class UserService {
     } else if (isEmailExists.dataValues && isEmailExists.dataValues.deletedAt) {
       throw new ErrorHandler(
         400,
-        "Account for this email is deactivated. Please restore it.",
+        "Account for this email is deactivated. Please restore it."
       );
     }
 
@@ -204,107 +253,128 @@ class UserService {
 
     sendMail(
       {
-        email: user.email,
-        subject: "Otp for changing password for KlearSplit",
+        "email": user.email,
+        "subject": "Otp for changing password for KlearSplit"
       },
       "otpTemplate",
       {
-        name: isEmailExists.dataValues.first_name,
+        "name": isEmailExists.dataValues.first_name,
         otp,
-        message: "We received a request to reset your password.",
-      },
+        "message": "We received a request to reset your password."
+      }
     );
   };
 
-  static forgotPassword = async (userData) => {
+  /**
+   * Handles the password reset process for a user.
+   * @param {Object} userData - The data sent by the user requesting the password reset.
+   * @param {string} userData.email - The user's email address.
+   * @param {string} userData.otp - The one-time password (OTP) provided by the user to verify their identity.
+   * @throws {ErrorHandler} Throws an error if the email does not exist, or the OTP is invalid or expired.
+   */
+  static forgotPassword = async(userData) => {
     const user = await UserDb.getUserByEmail(userData.email);
-    if (!user) throw new ErrorHandler(400, "Email does not exist");
+
+    if (!user) {
+      throw new ErrorHandler(400, "Email does not exist");
+    }
 
     const otp = await redis.get(`otp:${user.email}`);
-    if (otp === userData.otp) {
-      await redis.del(`otp:${user.email}`);
-      await redis.del(`failedAttempts:${user.email}`);
-    } else {
+
+    if (otp !== userData.otp) {
       throw new ErrorHandler(400, "Invalid or Expired Otp.");
     }
 
+    await redis.del(`otp:${user.email}`);
+    await redis.del(`failedAttempts:${user.email}`);
     const password = generatePassword();
     const hashPassword = await hashedPassword(password);
 
     await UserDb.updateUser(
-      { password: hashPassword, failedAttempts: 0, lockoutUntil: null },
-      user.user_id,
+      { "password": hashPassword, "failedAttempts": 0, "lockoutUntil": null },
+      user.user_id
     );
 
     const options = {
-      email: user.email,
-      subject: "Password Reset Confirmation",
+      "email": user.email,
+      "subject": "Password Reset Confirmation"
     };
 
     sendMail(options, "passwordTemplate", {
-      name: user.first_name,
-      email: user.email,
-      heading: "Password Successfully Changed",
+      "name": user.first_name,
+      "email": user.email,
+      "heading": "Password Successfully Changed",
       password,
-      message: "Your password has been successfully reset.",
+      "message": "Your password has been successfully reset."
     });
   };
 
   // Service to get user from database
-  static getUser = async (id) => {
+  static getUser = async(id) => {
     const user = await UserDb.getUserById(id);
-    if (!user) throw new ErrorHandler(404, "User not found.");
+
+    if (!user) {
+      throw new ErrorHandler(404, "User not found.");
+    }
     return user;
   };
 
-  // Service to get users by a regular expression
-  static getUsersByRegex = async (data) => {
+  /**
+   * Retrieves users based on a regular expression search and filters out friends.
+   * @param {Object} data - The input data for fetching users based on regex search.
+   * @param {string} data.regex - The regular expression pattern to search for users (e.g., a username or email pattern).
+   * @param {string} data.user_id - The ID of the currently logged-in user (to filter out their existing friends).
+   * @returns {Promise<Array>} - A filtered list of users who match the regex but are not friends with the logged-in user.
+   */
+  static getUsersByRegex = async(data) => {
     const users = await UserDb.getUsersByRegex(data.regex);
     const filteredUsers = await Promise.all(
       users
         .filter((user) => user.user_id !== data.user_id) // Filter out the current user
-        .map(async (user) => {
+        .map(async(user) => {
           const newFriendData = {
-            friend1_id: data.user_id, // Assuming logged-in user's ID
-            friend2_id: user.user_id,
+            "friend1_id": data.user_id, // Assuming logged-in user's ID
+            "friend2_id": user.user_id
           };
 
           // Check if the friend relationship exists
-          const friendExist =
-            await FriendService.checkFriendExist(newFriendData);
+          const friendExist = await FriendService.checkFriendExist(newFriendData);
 
           // Return user if not a friend, otherwise null
           return friendExist ? null : user;
-        }),
+        })
     );
 
     // Remove null values (users who are already friends)
     return filteredUsers.filter((user) => user !== null);
   };
 
-  // Service for updating user in the database
-  static updateUser = async (req) => {
+  /**
+   * Updates the user information in the database.
+   * @param {Object} req - The request object containing the user data and parameters.
+   * @param {Object} req.validatedUser - The validated user object with the updated user data.
+   * @returns {Promise<Object>} - The result of the update operation (updated user data).
+   */
+  static updateUser = async(req) => {
     const user = req.validatedUser;
-    const id = req.params.id;
+    const id = req.user.user_id;
+
     await this.getUser(id);
 
     return await UserDb.updateUser(user, id);
   };
 
-  // Service for deleting user in the database
-  static deleteUser = async (req) => {
-    const id = req.params.id;
+  /**
+   * Deletes a user from the database.
+   * @param {Object} req - The request object containing the user data.
+   * @param {Object} req.user - The user object for the currently authenticated user.
+   * @returns {Promise<Object>} - A message indicating the result of the deletion operation.
+   */
+  static deleteUser = async(req) => {
+    const id = req.user.user_id;
     const user = await this.getUser(id);
-    const transaction = await sequelize.transaction();
 
-    try {
-      await UserDb.deleteUser(user);
-      await transaction.commit();
-      return { message: "User deleted successfully" };
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
-    }
+    return await UserDb.deleteUser(user);
   };
 }
 

@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "husky": {
     "hooks": {
       "pre-commit": "npx lint-staged"
@@ -6,11 +7,9 @@
   },
   "lint-staged": {
     "server/**/*.js": [
-      "npm --prefix server run format",
       "npm --prefix server run lint"
     ],
     "client/**/*.{ts,html,css}": [
-      "npm --prefix client run format",
       "npm --prefix client run lint"
     ]
   },
@@ -24,7 +23,8 @@
   "devDependencies": {
     "concurrently": "^9.0.1",
     "husky": "^8.0.0",
-    "lint-staged": "^15.2.10"
+    "lint-staged": "^15.2.10",
+    "sonar-scanner": "^3.1.0"
   },
   "dependencies": {
     "jspdf": "^2.5.2",

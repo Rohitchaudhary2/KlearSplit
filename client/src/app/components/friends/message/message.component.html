@@ -7,7 +7,7 @@
 >
   @if (!isCurrentUserMessage()) {
     <img
-      [src]="friendImageUrl()"
+      [src]="friendImageUrl() || '/profile.png'"
       alt="avatar"
       class="rounded-circle d-inline-flex align-self-end me-3 shadow-1-strong"
       width="40"
@@ -48,7 +48,7 @@
 
   @if (isCurrentUserMessage()) {
     <img
-      [src]="currentUserImageUrl()"
+      [src]="currentUserImageUrl() || '/profile.png'"
       alt="avatar"
       class="rounded-circle d-inline-flex align-self-end ms-3 shadow-1-strong"
       width="40"

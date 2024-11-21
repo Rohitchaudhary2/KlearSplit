@@ -32,7 +32,12 @@
             <td class="col-2">{{ expense.debtor_amount }}</td>
             <td class="col-5">{{ expense.description || "-" }}</td>
             <td class="col-1">
-              <mat-icon matPrefix class="hover me-2">edit</mat-icon>
+              <mat-icon
+                matPrefix
+                class="hover me-2"
+                (click)="onUpdateExpense(expense)"
+                >edit</mat-icon
+              >
               <mat-icon
                 matPrefix
                 class="hover"

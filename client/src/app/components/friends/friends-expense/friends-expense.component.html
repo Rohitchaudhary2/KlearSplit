@@ -1,5 +1,5 @@
 <h2 mat-dialog-title class="text-center bg-success text-white py-2">
-  Add an Expense
+  {{ data[0] }}
 </h2>
 <div mat-dialog-content class="d-flex flex-column align-items-center px-4 pt-4">
   <form [formGroup]="form" class="w-100">
@@ -100,6 +100,6 @@
     (click)="onAdd()"
     [disabled]="form.invalid"
   >
-    Add
+    Submit
   </button>
 </div>

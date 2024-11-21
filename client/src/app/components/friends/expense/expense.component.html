@@ -7,7 +7,7 @@
 >
   @if (!isCurrentUserPayer()) {
     <img
-      [src]="friendImageUrl()"
+      [src]="friendImageUrl() || '/profile.png'"
       alt="avatar"
       class="rounded-circle d-inline-flex align-self-end me-3 shadow-1-strong"
       width="40"
@@ -27,14 +27,14 @@
       box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
     "
   >
-    @if (startsWithAdding(expense()!.expense_id)) {
+    @if (startsWithPrefix(expense()!.expense_id, "adding")) {
       <div
         class="d-flex align-items-center justify-content-center"
         style="width: 15vw; height: 10vh; color: black; border-radius: 2em"
       >
         <p>Adding Expense...</p>
       </div>
-    } @else if (startsWithError(expense()!.expense_id)) {
+    } @else if (startsWithPrefix(expense()!.expense_id, "error")) {
       <div
         class="d-flex align-items-center justify-content-around p-3 text-black"
         style="
@@ -80,7 +80,7 @@
           </div>
         </div>
       </div>
-    } @else if (startsWithRetry(expense()!.expense_id)) {
+    } @else if (startsWithPrefix(expense()!.expense_id, "retry")) {
       <div
         class="d-flex align-items-center justify-content-center"
         style="width: 15vw; height: 10vh; color: black"
@@ -133,7 +133,7 @@
 
   @if (isCurrentUserPayer()) {
     <img
-      [src]="currentUserImageUrl()"
+      [src]="currentUserImageUrl() || '/profile.png'"
       alt="avatar"
       class="rounded-circle d-inline-flex align-self-end ms-3 shadow-1-strong"
       width="40"

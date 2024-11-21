@@ -8,7 +8,7 @@
         type="text"
         [(ngModel)]="searchTerm"
         (input)="onSearchChange()"
-        placeholder="Search"
+        placeholder="Search using email"
       />
       <button type="submit" class="search-button">
         <i class="fa fa-search"></i>
@@ -55,7 +55,7 @@
                 <span
                   ><img
                     class="profile-image"
-                    [src]="request.friend.image_url"
+                    [src]="request.friend.image_url || '/profile.png'"
                     alt="Image"
                 /></span>
               </td>
@@ -167,7 +167,7 @@
                 <span
                   ><img
                     class="profile-image"
-                    [src]="friend.friend.image_url"
+                    [src]="friend.friend.image_url || '/profile.png'"
                     alt="Image"
                 /></span>
               </td>

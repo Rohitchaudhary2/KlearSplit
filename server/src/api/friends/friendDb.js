@@ -3,164 +3,227 @@ import {
   User,
   Friend,
   FriendMessage,
-  FriendExpense,
+  FriendExpense
 } from "../../config/db.connection.js";
 
 class FriendDb {
-  static addFriend = async (friendData) => await Friend.create(friendData);
+  /**
+   * Adds a new friend entry to the database.
+   * @param {Object} friendData - The data for the friend to be created.
+   * @returns {Promise<Object>} - The created friend entry.
+   */
+  static addFriend = async(friendData) => await Friend.create(friendData);
 
-  static checkFriendExist = async (friendData, flag = true) =>
+  /**
+   * Checks if a friendship already exists, optionally including soft-deleted entries.
+   * @param {Object} friendData - The data of the friends to check.
+   * @param {boolean} [flag=true] - Whether to include soft-deleted records.
+   * @returns {Promise<Object|null>} - The found friend entry or null if none exists.
+   */
+  static checkFriendExist = async(friendData, flag = true) =>
     await Friend.scope("withDeletedAt").findOne({
-      where: {
-        [Op.or]: [
+      "where": {
+        [ Op.or ]: [
           {
-            friend1_id: friendData.friend1_id,
-            friend2_id: friendData.friend2_id,
+            "friend1_id": friendData.friend1_id,
+            "friend2_id": friendData.friend2_id
           },
           {
-            friend1_id: friendData.friend2_id,
-            friend2_id: friendData.friend1_id,
-          },
-        ],
+            "friend1_id": friendData.friend2_id,
+            "friend2_id": friendData.friend1_id
+          }
+        ]
       },
-      paranoid: flag,
+      "paranoid": flag
     });
 
-  // DB query to restore friend
-  static restoreFriend = async (friend) => await friend.restore();
+  /**
+   * Restores a soft-deleted friend entry.
+   * @param {Object} friend - The friend entry to be restored.
+   * @returns {Promise<void>} - Resolves when the friend is restored.
+   */
+  static restoreFriend = async(friend) => await friend.restore();
 
-  // DB query for fetching all the friend
-  static getAllFriends = async (userId, filters) => {
-    const { status, archival_status, block_status } = filters;
-
-    const whereCondition = {
-      [Op.or]: [{ friend1_id: userId }, { friend2_id: userId }],
+  /**
+   * Fetches all friends of a user, applying optional filters.
+   * @param {UUID} userId - The ID of the user whose friends are to be fetched.
+   * @param {Object} filters - Filters to apply (status, archival_status, block_status).
+   * @returns {Promise<Array<Object>>} - The list of friends matching the criteria.
+   */
+  static getAllFriends = async(
+    userId,
+    { status, "archival_status": archivalStatus, "block_status": blockStatus }
+  ) => {
+    const friendQueryConditions = {
+      [ Op.or ]: [ { "friend1_id": userId }, { "friend2_id": userId } ]
     };
 
-    // Add filters if provided
-    if (status) whereCondition.status = status;
-    if (archival_status) whereCondition.archival_status = archival_status;
-    if (block_status) whereCondition.block_status = block_status;
+    if (status) {
+      friendQueryConditions.status = status;
+    }
+    if (archivalStatus) {
+      Object.assign(friendQueryConditions, { "archival_status": archivalStatus });
+    }
+    if (blockStatus) {
+      Object.assign(friendQueryConditions, { "block_status": blockStatus });
+    }
 
     return await Friend.findAll({
-      where: whereCondition,
-      include: [
+      "where": friendQueryConditions,
+      "include": [
         {
-          model: User,
-          as: "friend1",
-          attributes: [
+          "model": User,
+          "as": "friend1",
+          "attributes": [
             "user_id",
             "first_name",
             "last_name",
             "email",
-            "image_url",
+            "image_url"
           ],
-          where: {
-            user_id: {
-              [Op.ne]: userId,
-            },
+          "where": {
+            "user_id": {
+              [ Op.ne ]: userId
+            }
           },
-          required: false,
+          "required": false
         },
         {
-          model: User,
-          as: "friend2",
-          attributes: [
+          "model": User,
+          "as": "friend2",
+          "attributes": [
             "user_id",
             "first_name",
             "last_name",
             "email",
-            "image_url",
+            "image_url"
           ],
-          where: {
-            user_id: {
-              [Op.ne]: userId,
-            },
+          "where": {
+            "user_id": {
+              [ Op.ne ]: userId
+            }
           },
-          required: false,
-        },
-      ],
+          "required": false
+        }
+      ]
     });
   };
 
-  // DB query for fetching friend request
-  static getFriend = async (conversation_id) =>
-    await Friend.findByPk(conversation_id);
+  /**
+   * Fetches a friend request by conversation ID.
+   * @param {UUID} conversationId - The ID of the conversation.
+   * @returns {Promise<Object|null>} - The friend request entry or null if not found.
+   */
+  static getFriend = async(conversationId) =>
+    await Friend.findByPk(conversationId);
 
-  // DB query to update friend
-  static updateFriends = async (
+  /**
+   * Updates a friend entry with new data.
+   * @param {Object} updatedData - The data to update in the friend entry.
+   * @param {UUID} conversationId - The ID of the conversation to be updated.
+   * @param {Object} [transaction=null] - Optional transaction for the update.
+   * @returns {Promise<Array>} - An array with the number of affected rows and the updated entries.
+   */
+  static updateFriends = async(
     updatedData,
-    conversation_id,
-    transaction = null,
+    conversationId,
+    transaction = null
   ) =>
     await Friend.update(updatedData, {
-      where: {
-        conversation_id,
+      "where": {
+        "conversation_id": conversationId
       },
       transaction,
-      returning: true,
+      "returning": true
     });
 
-  // DB query for withdrawing friend request
-  static withdrawFriendRequest = async (friendRequest, friend) => {
-    const result = await friend.destroy({
-      where: {
-        conversation_id: friendRequest.conversation_id,
-      },
-    });
+  /**
+   * Withdraws a friend request by deleting the entry.
+   * @param {Object} friend - The friend entry to be deleted.
+   * @returns {Promise<boolean>} - True if the deletion was successful, false otherwise.
+   */
+  static withdrawFriendRequest = async(friend) => {
+    const result = await friend.destroy();
+
     return result > 0;
   };
 
-  // DB query to add messages
-  static addMessage = async (messageData) =>
+  /**
+   * Adds a message to the friend messages table.
+   * @param {Object} messageData - The data for the message to be added.
+   * @returns {Promise<Object>} - The created message entry.
+   */
+  static addMessage = async(messageData) =>
     await FriendMessage.create(messageData);
 
-  // Db query to fetch all the messages of a particular conversation
-  static getMessages = async (conversation_id, page = 1, pageSize = 10) => {
+  /**
+   * Retrieves all messages for a given conversation, with support for pagination.
+   * @param {UUID} conversationId - The ID of the conversation.
+   * @param {number} [page=1] - The page number for pagination.
+   * @param {number} [pageSize=10] - The number of messages per page.
+   * @returns {Promise<Array>} - A promise that resolves to an array of messages.
+   */
+  static getMessages = async(conversationId, page = 1, pageSize = 10) => {
     const offset = (page - 1) * pageSize;
 
     return await FriendMessage.findAll({
-      where: {
-        conversation_id,
+      "where": {
+        "conversation_id": conversationId
       },
-      order: [["createdAt", "DESC"]],
-      limit: pageSize,
-      offset,
+      "order": [ [ "createdAt", "DESC" ] ],
+      "limit": pageSize,
+      offset
     });
   };
 
-  // DB query for counting messages
-  static countMessages = async (conversation_id) =>
+  /**
+   * Counts the total number of messages in a specific conversation.
+   * @param {UUID} conversationId - The ID of the conversation.
+   * @returns {Promise<number>} - A promise that resolves to the count of messages.
+   */
+  static countMessages = async(conversationId) =>
     await FriendMessage.count({
-      where: {
-        conversation_id: conversation_id,
-      },
+      "where": {
+        "conversation_id": conversationId
+      }
     });
 
-  // DB query for add expenses
-  static addExpense = async (expenseData, transaction) =>
+  /**
+   * Adds a new expense record to the database.
+   * @param {Object} expenseData - The data for the new expense.
+   * @param {Object} transaction - Optional transaction object for database consistency.
+   * @returns {Promise<Object>} - A promise that resolves to the created expense.
+   */
+  static addExpense = async(expenseData, transaction) =>
     await FriendExpense.create(expenseData, { transaction });
 
-  // DB query for fetching all the expenses of a particular conversation
-  static getExpenses = async (
-    conversation_id,
+  /**
+   * Retrieves all or paginated expenses for a given conversation, including payer details.
+   * @param {UUID} conversationId - The ID of the conversation.
+   * @param {number} [page=1] - The page number for pagination.
+   * @param {number} [pageSize=10] - The number of expenses per page.
+   * @param {boolean} [fetchAll=false] - Whether to fetch all expenses or use pagination.
+   * @returns {Promise<Array>} - A promise that resolves to an array of expenses.
+   */
+  static getExpenses = async(
+    conversationId,
     page = 1,
     pageSize = 10,
-    fetchAll = false,
+    fetchAll = false
   ) => {
     const offset = (page - 1) * pageSize;
     const options = {
-      where: {
-        conversation_id,
+      "where": {
+        "conversation_id": conversationId
       },
-      include: [
+      "include": [
         {
-          model: User,
-          as: "payer",
-          attributes: ["first_name", "last_name"],
-        },
+          "model": User,
+          "as": "payer",
+          "attributes": [ "first_name", "last_name" ]
+        }
       ],
-      order: [["createdAt", "DESC"]],
+      "order": [ [ "createdAt", "DESC" ] ]
     };
 
     if (!fetchAll) {
@@ -171,40 +234,77 @@ class FriendDb {
     return await FriendExpense.findAll(options);
   };
 
-  //  DB query for counting expenses
-  static countExpenses = async (conversation_id) =>
+  /**
+   * Counts the total number of expenses in a specific conversation.
+   * @param {UUID} conversationId - The ID of the conversation.
+   * @returns {Promise<number>} - A promise that resolves to the count of expenses.
+   */
+  static countExpenses = async(conversationId) =>
     await FriendExpense.count({
-      where: {
-        conversation_id: conversation_id,
-      },
+      "where": {
+        "conversation_id": conversationId
+      }
     });
 
-  // DB query to fetch a single expense
-  static getExpense = async (friend_expense_id) =>
-    await FriendExpense.findByPk(friend_expense_id);
+  /**
+   * Retrieves a single expense record by its unique ID.
+   * @param {UUID} friendExpenseId - The ID of the expense to fetch.
+   * @returns {Promise<Object|null>} - A promise that resolves to the expense or null if not found.
+   */
+  static getExpense = async(friendExpenseId) =>
+    await FriendExpense.findByPk(friendExpenseId);
 
-  // DB query to update friends expenses
-  static updateExpense = async (
+  /**
+   * Updates an existing expense record and returns the updated record with payer details.
+   * @param {Object} updatedExpenseData - The data to update the expense with.
+   * @param {UUID} friendExpenseId - The ID of the expense to update.
+   * @param {Object} [transaction=null] - Optional transaction object for database consistency.
+   * @returns {Promise<Object>} - A promise that resolves to an object containing affected rows and the updated expense.
+   */
+  static updateExpense = async(
     updatedExpenseData,
-    friend_expense_id,
-    transaction = null,
+    friendExpenseId,
+    transaction = null
   ) => {
-    const [affectedRows, [updatedExpense]] = await FriendExpense.update(
+    const [ affectedRows, [ updatedExpense ] ] = await FriendExpense.update(
       updatedExpenseData,
       {
-        where: { friend_expense_id },
+        "where": { "friend_expense_id": friendExpenseId },
         transaction,
-        returning: true,
-      },
+        "returning": true
+      }
     );
+
+    // If rows were affected, fetch the updated expense with payer details
+    if (affectedRows > 0) {
+      // Fetch the updated record with the associated payer's name
+      const detailedExpense = await FriendExpense.findOne({
+        "where": { "friend_expense_id": friendExpenseId },
+        "include": [
+          {
+            "model": User,
+            "as": "payer",
+            "attributes": [ "first_name", "last_name" ]
+          }
+        ],
+        transaction
+      });
+
+      return { affectedRows, "updatedExpense": detailedExpense };
+    }
     return { affectedRows, updatedExpense };
   };
 
-  // DB query to delete friends expenses
-  static deleteExpense = async (friend_expense_id, transaction) =>
+  /**
+   * Deletes an expense record by its unique ID.
+   * @param {UUID} friendExpenseId - The ID of the expense to delete.
+   * @param {Object} transaction - Optional transaction object for database consistency.
+   * @returns {Promise<number>} - A promise that resolves to the number of affected rows.
+   */
+  static deleteExpense = async(friendExpenseId, transaction) =>
     await FriendExpense.destroy({
-      where: { friend_expense_id },
-      transaction,
+      "where": { "friend_expense_id": friendExpenseId },
+      transaction
     });
 }
 

@@ -12,9 +12,8 @@ interface Expense {
 @Component({
   selector: "app-expense",
   standalone: true,
-  imports: [ NgClass ],
-  templateUrl: "./expense.component.html",
-  styleUrl: "./expense.component.css",
+  imports: [NgClass],
+  templateUrl: './expense.component.html',
 })
 export class ExpenseComponent {
   expense = input<Expense>();

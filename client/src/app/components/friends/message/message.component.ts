@@ -11,7 +11,6 @@ interface Message {
   standalone: true,
   imports: [NgClass],
   templateUrl: './message.component.html',
-  styleUrl: './message.component.css',
 })
 export class MessageComponent {
   // Input properties to pass data from parent components

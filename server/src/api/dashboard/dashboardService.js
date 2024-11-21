@@ -106,7 +106,7 @@ class DashboardService {
     let topFourFriendsName = await UserDb.getUsersById(topFourFriendsId);
 
     topFourFriendsName = topFourFriendsName.map((user) => {
-      const name = `${user.first_name}${user.last_name ? ` ${user.last_name}` : ""}`;
+      const name = `${user.first_name}${ user.last_name || ""}`;
 
       return name;
     });

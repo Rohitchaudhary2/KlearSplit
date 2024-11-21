@@ -28,7 +28,6 @@ import { FriendsService } from '../friends.service';
     MatIconModule,
   ],
   templateUrl: './add-friend.component.html',
-  styleUrl: './add-friend.component.css',
 })
 export class AddFriendComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<AddFriendComponent>);

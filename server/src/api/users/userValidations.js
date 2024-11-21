@@ -17,7 +17,7 @@ const commonFields = {
 const optionalCommonFields = {
   "phone": Joi.string()
     .trim()
-    .pattern(/^[0-9]+$/)
+    .pattern(/^\d+$/)
     .length(10)
     .optional()
     .messages({

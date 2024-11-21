@@ -41,8 +41,8 @@ authRouter.get("/google/callback", (req, res, next) => {
     // If authentication is successful
     const userData = {
       "user": user.user,
-      "accessToken": user.accessToken,
-      "refreshToken": user.refreshToken
+      "accessToken": user.generatedAccessToken,
+      "refreshToken": user.generatedRefreshToken
     };
 
     res

@@ -256,7 +256,7 @@ export class FriendsExpenseComponent implements OnInit {
    *
    * @returns {string} The name of the payer (either 'you' or the second participant's full name).
    */
-  getPayerName() {
+  getPayerName(): string {
     const id = this.form.value.payer_id;
     if (id === this.participants[0].user_id) return 'you';
     else

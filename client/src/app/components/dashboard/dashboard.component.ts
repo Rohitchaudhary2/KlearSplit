@@ -8,7 +8,6 @@ import {
 } from "@angular/core";
 import { ChartDataset, ChartOptions } from "chart.js";
 import { BaseChartDirective } from "ng2-charts";
-import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../auth/auth.service";
 import { DashboardService } from "./dashboard.service";
@@ -22,8 +21,7 @@ import { DashboardService } from "./dashboard.service";
 })
 export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
-  private toastrService = inject(ToastrService);
-  private dashboardService = inject(DashboardService);
+  private readonly dashboardService = inject(DashboardService);
   balanceAmount = signal<number>(0);
 
   // Refrences to chart components in the template for programmatic updates
@@ -137,7 +135,7 @@ export class DashboardComponent implements OnInit {
     };
 
   // Centralized base ChartOptions configuration for all charts
-  private baseChartOptions: ChartOptions<"pie" | "bar"> = {
+  private readonly baseChartOptions: ChartOptions<"pie" | "bar"> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {

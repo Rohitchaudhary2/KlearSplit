@@ -10,7 +10,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
   styleUrl: "./payer.component.css",
 })
 export class PayerComponent implements OnInit {
-  private dialogRef = inject(MatDialogRef<PayerComponent>);
+  private readonly dialogRef = inject(MatDialogRef<PayerComponent>);
   participants = inject(MAT_DIALOG_DATA);
 
   ngOnInit(): void {

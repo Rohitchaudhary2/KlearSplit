@@ -16,9 +16,9 @@ class FriendService {
    *
    * @param {Object} friendData - The data of the user sending the friend request.
    * @param {string} friendData.email - The email of the user being invited as a friend.
-   * @param {string} friendData.first_name - The first name of the user sending the request.
-   * @param {string} friendData.last_name - The last name of the user sending the request.
-   * @param {UUID} friendData.user_id - The ID of the user sending the request.
+   * @param {string} friendData.firstName - The first name of the user sending the request.
+   * @param {string} friendData.lastName - The last name of the user sending the request.
+   * @param {UUID} friendData.userId - The ID of the user sending the request.
    *
    * @returns {Promise<Object>} - The friend relationship object, or restores an existing deleted friend request.
    */
@@ -44,17 +44,17 @@ class FriendService {
         "subject": "Invited on KlearSplit"
       };
 
-      const sender = `${friendData.first_name}${friendData.last_name ? ` ${friendData.last_name}` : ""}`;
+      const sender = `${friendData.firstName}${ friendData.lastName || ""}`;
 
       sendMail(options, "invitationTemplate", {
-        "name": friendRequestTo.first_name,
+        "name": friendRequestTo.firstName,
         sender
       });
     }
 
     const newFriendData = {
-      "friend1_id": friendData.user_id,
-      "friend2_id": friendRequestTo.user_id
+      "friend1_id": friendData.userId,
+      "friend2_id": friendRequestTo.userId
     };
 
     if (newFriendData.friend1_id === newFriendData.friend2_id) {

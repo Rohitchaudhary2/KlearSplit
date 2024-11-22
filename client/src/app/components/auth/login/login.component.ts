@@ -237,7 +237,7 @@ export class LoginComponent {
       "password",
       new FormControl("", [
         Validators.required,
-        Validators.pattern(new RegExp("^(?=.*[a-z])(?=.*[0-9]).{8,20}$")),
+        Validators.pattern(/^(?=.*[a-z])(?=.*\d).{8,20}$/),
       ]),
     );
     this.isLoading.set(false);

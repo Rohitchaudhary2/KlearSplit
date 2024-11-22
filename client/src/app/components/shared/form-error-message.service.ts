@@ -43,7 +43,10 @@ export class FormErrorMessageService {
 
     const errorMessage = Object.entries(errorMap).find(([ key ]) => control.hasError(key))?.[1];
 
-    return errorMessage ? typeof errorMessage === "function" ? errorMessage() : errorMessage : null;
+    if(!errorMessage) {
+      return null;
+    }
+    return typeof errorMessage === "function" ? errorMessage() : errorMessage;
   }
 
   /**
@@ -76,7 +79,7 @@ export class FormErrorMessageService {
     const value = control.value;
     const errors = [
       !/[a-z]/.test(value) && "at least one lowercase letter",
-      !/[0-9]/.test(value) && "at least one digit",
+      !/\d/.test(value) && "at least one digit",
       (value.length < 8 || value.length > 20) && "be between 8 and 20 characters long",
     ].filter(Boolean);
 

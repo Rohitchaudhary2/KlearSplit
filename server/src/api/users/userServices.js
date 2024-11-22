@@ -323,17 +323,17 @@ class UserService {
    * Retrieves users based on a regular expression search and filters out friends.
    * @param {Object} data - The input data for fetching users based on regex search.
    * @param {string} data.regex - The regular expression pattern to search for users (e.g., a username or email pattern).
-   * @param {string} data.user_id - The ID of the currently logged-in user (to filter out their existing friends).
+   * @param {string} data.userId - The ID of the currently logged-in user (to filter out their existing friends).
    * @returns {Promise<Array>} - A filtered list of users who match the regex but are not friends with the logged-in user.
    */
   static getUsersByRegex = async(data) => {
     const users = await UserDb.getUsersByRegex(data.regex);
     const filteredUsers = await Promise.all(
       users
-        .filter((user) => user.user_id !== data.user_id) // Filter out the current user
+        .filter((user) => user.user_id !== data.userId) // Filter out the current user
         .map(async(user) => {
           const newFriendData = {
-            "friend1_id": data.user_id, // Assuming logged-in user's ID
+            "friend1_id": data.userId, // Assuming logged-in user's ID
             "friend2_id": user.user_id
           };
 

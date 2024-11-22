@@ -20,8 +20,8 @@ class FriendDb {
    * @param {boolean} [flag=true] - Whether to include soft-deleted records.
    * @returns {Promise<Object|null>} - The found friend entry or null if none exists.
    */
-  static checkFriendExist = async(friendData, flag = true) =>
-    await Friend.scope("withDeletedAt").findOne({
+  static checkFriendExist = async(friendData, flag = true) => {
+    return await Friend.scope("withDeletedAt").findOne({
       "where": {
         [ Op.or ]: [
           {
@@ -36,6 +36,7 @@ class FriendDb {
       },
       "paranoid": flag
     });
+  };
 
   /**
    * Restores a soft-deleted friend entry.

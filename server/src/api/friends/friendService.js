@@ -44,7 +44,7 @@ class FriendService {
         "subject": "Invited on KlearSplit"
       };
 
-      const sender = `${friendData.first_name}${friendData.last_name ? ` ${friendData.last_name}` : ""}`;
+      const sender = `${friendData.first_name} ${friendData.last_name || ""}`.trim();
 
       sendMail(options, "invitationTemplate", {
         "name": friendRequestTo.first_name,

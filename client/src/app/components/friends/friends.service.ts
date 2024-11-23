@@ -36,9 +36,8 @@ export class FriendsService {
    * @param loadExpenses - Flag to determine if expenses are to be loaded.
    * @param pageMessage - Page number for message data.
    * @param pageExpense - Page number for expense data.
-   * @param pageSize - Page size for message and expense data.
    * @param pageCombined - Page number for combined data.
-   * @param pageSizeCombined - Page size for combined data.
+   * @param pageSize - Page size for message, expense, and combined data.
    * @returns An observable with the data for messages, expenses, and combined.
    */
   fetchMessagesAndExpenses(
@@ -47,13 +46,12 @@ export class FriendsService {
     loadExpenses: boolean,
     pageMessage: number,
     pageExpense: number,
-    pageSize: number,
     pageCombined: number,
-    pageSizeCombined: number,
+    pageSize: number,
   ) {
     const messagesUrl = `${API_URLS.getMessages}/${conversationId}?page=${pageMessage}&pageSize=${pageSize}`;
     const expensesUrl = `${API_URLS.getExpenses}/${conversationId}?page=${pageExpense}&pageSize=${pageSize}`;
-    const combinedUrl = `${API_URLS.getCombined}/${conversationId}?page=${pageCombined}&pageSize=${pageSizeCombined}`;
+    const combinedUrl = `${API_URLS.getCombined}/${conversationId}?page=${pageCombined}&pageSize=${pageSize}`;
     // If all messages, expenses, and combined need to be loaded
     if (loadMessages && loadExpenses) {
       return this.httpClient

@@ -87,7 +87,6 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   pageExpense = 1;
   pageSize = 10;
   pageCombined = 1;
-  pageSizeCombined = 20;
 
   // Flag to indicate if data is still being loaded
   loading = false;
@@ -242,16 +241,15 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         loadExpenses,
         this.pageMessage,
         this.pageExpense,
-        this.pageSize,
         this.pageCombined,
-        this.pageSizeCombined,
+        this.pageSize,
       )
       .subscribe({
         next: ({ messages, expenses, combined }) => {
           // Check if all data has already been loaded for the current view and set the flag accordingly
           this.checkAndSetLoaded("allMessagesLoaded", loadMessages, messages, this.pageSize);
           this.checkAndSetLoaded("allExpensesLoaded", loadExpenses, expenses, this.pageSize);
-          this.checkAndSetLoaded("allCombinedLoaded", loadCombined, combined, this.pageSizeCombined);
+          this.checkAndSetLoaded("allCombinedLoaded", loadCombined, combined, this.pageSize);
 
           this.messages.set([ ...messages, ...this.messages() ]);
           this.expenses.set([ ...expenses, ...this.expenses() ]);
@@ -648,6 +646,26 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     return defaultLabel;
   }
 
+  setBlockStatus() {
+    const currentStatus = this.selectedUser()?.block_status;
+    const isSender = this.selectedUser()?.status === "SENDER";
+    if (this.getBlockLabel() === "Block") {
+      if (currentStatus !== "NONE") {
+        this.selectedUser()!.block_status = "BOTH";
+      } else {
+        this.selectedUser()!.block_status = isSender
+          ? "FRIEND1"
+          : "FRIEND2";
+      }
+    } else if (currentStatus !== "BOTH") {
+        this.selectedUser()!.block_status = "NONE";
+    } else {
+        this.selectedUser()!.block_status = isSender
+          ? "FRIEND2"
+          : "FRIEND1";
+    }
+  }
+
   /**
    * Handles the archive or block request for a conversation based on the provided `type`.
    *
@@ -670,23 +688,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             `${this.getBlockLabel()}ed Successfully`,
             "Success",
           );
-          const currentStatus = this.selectedUser()?.block_status;
-          const isSender = this.selectedUser()?.status === "SENDER";
-          if (this.getBlockLabel() === "Block") {
-            if (currentStatus !== "NONE") {
-              this.selectedUser()!.block_status = "BOTH";
-            } else {
-              this.selectedUser()!.block_status = isSender
-                ? "FRIEND1"
-                : "FRIEND2";
-            }
-          } else if (currentStatus !== "BOTH") {
-              this.selectedUser()!.block_status = "NONE";
-          } else {
-              this.selectedUser()!.block_status = isSender
-                ? "FRIEND2"
-                : "FRIEND1";
-          }
+          this.setBlockStatus();
         }
       },
     });

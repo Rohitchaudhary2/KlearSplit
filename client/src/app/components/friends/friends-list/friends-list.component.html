@@ -34,13 +34,13 @@
     </h6>
     <hr class="m-0 mt-1" />
     <div class="requests">
-      <thead>
-        <tr style="display: none;">
-          <th></th> 
-          <th></th> 
-        </tr>
-      </thead>
       <table class="table table-hover">
+        <thead>
+          <tr style="display: none;">
+            <th scope="col"></th> 
+            <th scope="col"></th> 
+          </tr>
+        </thead>
         <tbody>
           @for (request of requests(); track $index) {
             <tr
@@ -63,7 +63,6 @@
                   ><img
                     class="profile-image"
                     [src]="request.friend.image_url || '/profile.png'"
-                    alt="Profile Image"
                 /></span>
               </td>
               <td
@@ -194,7 +193,6 @@
                   ><img
                     class="profile-image"
                     [src]="friend.friend.image_url || '/profile.png'"
-                    alt="Profile Image"
                 /></span>
               </td>
               <td class="col-md-9 col-lg-10 col-sm-9">

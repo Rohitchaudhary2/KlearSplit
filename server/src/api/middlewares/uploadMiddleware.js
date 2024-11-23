@@ -26,7 +26,7 @@ const uploadMiddleware = (folderName, fieldName) => {
     },
     "filename": (req, file, cb) => {
       // Generate a unique file name using timestamp and a random number
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
 
       cb(
         null,

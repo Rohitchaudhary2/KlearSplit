@@ -228,10 +228,91 @@ const validateSettlementAmount = (currentBalance, debtorAmount) => {
   }
 };
 
+/**
+ * Validates if the friend relationship exists.
+ */
+const validateFriendExist = (friendExist) => {
+  if (!friendExist) {
+    throw new ErrorHandler(404, "Friend not found");
+  }
+};
+
+/**
+ * Validates if the existing expense exists.
+ */
+const validateExistingExpense = (existingExpense) => {
+  if (!existingExpense) {
+    throw new ErrorHandler(404, "Expense not found");
+  }
+};
+
+/**
+ * Validates conversation permissions for expense updates.
+ */
+const validateConversationPermissions = (friendExist) => {
+  if (
+    friendExist.status === "REJECTED" || friendExist.archival_status !== "NONE" || friendExist.block_status !== "NONE"
+  ) {
+    throw new ErrorHandler(403, "This action is not allowed.");
+  }
+};
+
+/**
+ * Validates if the participants are allowed to update the expense.
+ */
+const validateUpdateParticipants = (updatedExpenseData, friendExist) => {
+  if (
+    !(
+      (updatedExpenseData.payer_id === (friendExist.friend1_id || friendExist.friend2_id)) && (updatedExpenseData.debtor_id === (friendExist.friend1_id || friendExist.friend2_id))
+    )
+  ) {
+    throw new ErrorHandler(403, "You are not allowed to update this expense");
+  }
+};
+
+/**
+ * Checks if balance-affecting fields are being updated.
+ */
+const isBalanceUpdateRequired = (fields, updatedExpenseData) => {
+  return fields.some((field) => field in updatedExpenseData);
+};
+
+/**
+ * Formats the payer's name.
+ */
+const formatPayerName = (payer) => {
+  return `${payer.first_name} ${payer.last_name || ""}`.trim();
+};
+
+/**
+ * Validates settlement conditions.
+ */
+const validateSettlement = (updatedExpenseData, currentBalance, debtorAmount) => {
+  if (updatedExpenseData.split_type === "SETTLEMENT") {
+    if (currentBalance === 0) {
+      throw new ErrorHandler(400, "You are all settled up.");
+    }
+    validateSettlementAmount(currentBalance, debtorAmount);
+  }
+
+  if (
+    updatedExpenseData.payer_id && updatedExpenseData.debtor_id && updatedExpenseData.payer_id === updatedExpenseData.debtor_id
+  ) {
+    throw new ErrorHandler(400, "You cannot add an expense with yourself");
+  }
+};
+
 export {
   formatFriendData,
   getNewStatus,
   calculateDebtorAmount,
   calculateNewBalance,
-  validateSettlementAmount
+  validateSettlementAmount,
+  formatPayerName,
+  validateFriendExist,
+  validateExistingExpense,
+  validateConversationPermissions,
+  validateUpdateParticipants,
+  isBalanceUpdateRequired,
+  validateSettlement
 };

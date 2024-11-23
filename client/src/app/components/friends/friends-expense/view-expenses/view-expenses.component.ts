@@ -31,11 +31,11 @@ import { FriendsExpenseComponent } from "../friends-expense.component";
  * to a selected user and provides options to update or delete those expenses.
  */
 export class ViewExpensesComponent implements OnInit {
-  private dialogRef = inject(MatDialogRef<ViewExpensesComponent>);
-  private data = inject(MAT_DIALOG_DATA);
-  private dialog = inject(MatDialog);
-  private toastr = inject(ToastrService);
-  private friendsService = inject(FriendsService);
+  private readonly dialogRef = inject(MatDialogRef<ViewExpensesComponent>);
+  private readonly data = inject(MAT_DIALOG_DATA);
+  private readonly dialog = inject(MatDialog);
+  private readonly toastr = inject(ToastrService);
+  private readonly friendsService = inject(FriendsService);
 
   user = this.data[0]; // Logged in user
   selectedUser = this.data[1]; // Friend associated in expenses
@@ -60,7 +60,7 @@ export class ViewExpensesComponent implements OnInit {
     updatedExpense: ExpenseData;
   }>();
 
-  constructor(private datePipe: DatePipe) {}
+  constructor(private readonly datePipe: DatePipe) {}
 
   /**
    * `ngOnInit` lifecycle hook. This method is called when the component is initialized.

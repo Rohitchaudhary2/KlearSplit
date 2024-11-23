@@ -51,13 +51,13 @@ import { SocketService } from "./socket.service";
 export class FriendsComponent implements OnDestroy, AfterViewInit {
   // Reference to the message container element, accessed via ViewChild
   messageContainer = viewChild<ElementRef>("messageContainer");
-  private cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
+  private readonly cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
   // Injecting services needed by the component
-  private toastr = inject(ToastrService);
-  private friendsService = inject(FriendsService);
-  private authService = inject(AuthService);
-  private socketService = inject(SocketService);
-  private dialog = inject(MatDialog);
+  private readonly toastr = inject(ToastrService);
+  private readonly friendsService = inject(FriendsService);
+  private readonly authService = inject(AuthService);
+  private readonly socketService = inject(SocketService);
+  private readonly dialog = inject(MatDialog);
 
   // Current user data from authService
   user = this.authService.currentUser();
@@ -84,11 +84,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
   // Pagination related variables for message and expense loading
   pageMessage = 1;
-  pageSizeMessage = 10;
   pageExpense = 1;
-  pageSizeExpense = 10;
+  pageSize = 10;
   pageCombined = 1;
-  pageSizeCombined = 20;
 
   // Flag to indicate if data is still being loaded
   loading = false;
@@ -242,23 +240,21 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         loadMessages,
         loadExpenses,
         this.pageMessage,
-        this.pageSizeMessage,
         this.pageExpense,
-        this.pageSizeExpense,
         this.pageCombined,
-        this.pageSizeCombined,
+        this.pageSize,
       )
       .subscribe({
         next: ({ messages, expenses, combined }) => {
           // Check if all data has already been loaded for the current view and set the flag accordingly
-          this.checkAndSetLoaded("allMessagesLoaded", loadMessages, messages, this.pageSizeMessage);
-          this.checkAndSetLoaded("allExpensesLoaded", loadExpenses, expenses, this.pageSizeExpense);
-          this.checkAndSetLoaded("allCombinedLoaded", loadCombined, combined, this.pageSizeCombined);
+          this.checkAndSetLoaded("allMessagesLoaded", loadMessages, messages, this.pageSize);
+          this.checkAndSetLoaded("allExpensesLoaded", loadExpenses, expenses, this.pageSize);
+          this.checkAndSetLoaded("allCombinedLoaded", loadCombined, combined, this.pageSize);
 
           this.messages.set([ ...messages, ...this.messages() ]);
           this.expenses.set([ ...expenses, ...this.expenses() ]);
           this.combinedView.set([ ...combined, ...this.combinedView() ]);
-
+          
           // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
           if (
             this.pageMessage === 1 ||
@@ -273,7 +269,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             const newScrollHeight = element!.scrollHeight;
 
             // Adjust the scroll position to keep the view consistent
-            const scrollDiff = newScrollHeight! - this.scrollPosition;
+            const scrollDiff = newScrollHeight - this.scrollPosition;
             element!.scrollTop = element!.scrollTop + scrollDiff - 100;
           }
 
@@ -588,7 +584,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    */
   getFullNameAndImage(user: CurrentUser | AddedFriend | undefined) {
     return {
-      fullName: `${user?.first_name}${user?.last_name ? ` ${user?.last_name}` : ""}`,
+      fullName: `${user?.first_name} ${ user?.last_name ?? ""}`,
       imageUrl: user?.image_url,
     };
   }
@@ -650,6 +646,26 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     return defaultLabel;
   }
 
+  setBlockStatus() {
+    const currentStatus = this.selectedUser()?.block_status;
+    const isSender = this.selectedUser()?.status === "SENDER";
+    if (this.getBlockLabel() === "Block") {
+      if (currentStatus !== "NONE") {
+        this.selectedUser()!.block_status = "BOTH";
+      } else {
+        this.selectedUser()!.block_status = isSender
+          ? "FRIEND1"
+          : "FRIEND2";
+      }
+    } else if (currentStatus !== "BOTH") {
+        this.selectedUser()!.block_status = "NONE";
+    } else {
+        this.selectedUser()!.block_status = isSender
+          ? "FRIEND2"
+          : "FRIEND1";
+    }
+  }
+
   /**
    * Handles the archive or block request for a conversation based on the provided `type`.
    *
@@ -672,25 +688,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             `${this.getBlockLabel()}ed Successfully`,
             "Success",
           );
-          const currentStatus = this.selectedUser()?.block_status;
-          const isSender = this.selectedUser()?.status === "SENDER";
-          if (this.getBlockLabel() === "Block") {
-            if (currentStatus !== "NONE") {
-              this.selectedUser()!.block_status = "BOTH";
-            } else {
-              this.selectedUser()!.block_status = isSender
-                ? "FRIEND1"
-                : "FRIEND2";
-            }
-          } else {
-            if (currentStatus !== "BOTH") {
-              this.selectedUser()!.block_status = "NONE";
-            } else {
-              this.selectedUser()!.block_status = isSender
-                ? "FRIEND2"
-                : "FRIEND1";
-            }
-          }
+          this.setBlockStatus();
         }
       },
     });

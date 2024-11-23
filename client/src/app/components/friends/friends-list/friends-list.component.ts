@@ -34,9 +34,9 @@ import { FriendsService } from "../friends.service";
 })
 export class FriendsListComponent implements OnInit {
   // Injecting necessary services and tools to handle dialog, toastr notifications, and fetching data from the friends service.
-  private dialog = inject(MatDialog);
-  private toastr = inject(ToastrService);
-  private friendsService = inject(FriendsService);
+  private readonly dialog = inject(MatDialog);
+  private readonly toastr = inject(ToastrService);
+  private readonly friendsService = inject(FriendsService);
 
   // Signal to store the search term, used for searching friends
   searchTerm = signal("");

@@ -16,8 +16,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
   styleUrl: "./split-type.component.css",
 })
 export class SplitTypeComponent implements OnInit {
-  private dialogRef = inject(MatDialogRef<SplitTypeComponent>);
-  private data = inject(MAT_DIALOG_DATA);
+  private readonly dialogRef = inject(MatDialogRef<SplitTypeComponent>);
+  private readonly data = inject(MAT_DIALOG_DATA);
   participants = this.data[0];
   expenseData = this.data[1];
   activeItem = "EQUAL";
@@ -98,17 +98,17 @@ export class SplitTypeComponent implements OnInit {
         this.activeItem === "UNEQUAL" &&
         (value! > this.expenseData.total_amount || value! < 0)
       ) {
-        this.adjustValue(value!, controlName, this.expenseData.total_amount);
+        this.adjustValue(value, controlName, this.expenseData.total_amount);
       } else if (
         this.activeItem === "PERCENTAGE" &&
-        (value! > 100 || value! < 0)
+        (value > 100 || value < 0)
       ) {
-        this.adjustValue(value!, controlName, 100);
+        this.adjustValue(value, controlName, 100);
       }
       if (controlName === "participant1_share") {
-        this.updateShare("participant2_share", value!);
+        this.updateShare("participant2_share", value);
       } else {
-        this.updateShare("participant1_share", value!);
+        this.updateShare("participant1_share", value);
       }
     });
   }

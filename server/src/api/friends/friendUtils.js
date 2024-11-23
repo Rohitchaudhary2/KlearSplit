@@ -111,19 +111,77 @@ const calculateDebtorAmount = (expenseData, existingExpense = null) => {
   }
 };
 
-// Helper function to calculate the new balance based on the payer
 /**
- * Helper function that calculates the new balance between friends based on the expense and payer information.
+ * Handles balance calculation for new expense entries.
  *
- * @param {number} currentBalance - The current balance between the friends.
+ * @param {number} currentBalance - The current balance between the two friends.
  * @param {number} debtorAmount - The amount owed by the debtor.
- * @param {UUID} newPayerId - The ID of the new payer.
- * @param {Object} friendExist - The friend relationship data.
- * @param {string} type - The split type of the expense.
- * @param {Object|null} existingExpense - The existing expense data (if any).
- * @param {boolean} isUpdate - Whether the balance update is for an existing expense.
+ * @param {string} newPayerId - UUID of the payer for the new expense.
+ * @param {Object} friendExist - The existing friend relationship object.
+ * @param {string} type - Type of the expense, e.g., "SETTLEMENT" or other types.
+ * @returns {number} - The updated balance after adding the new expense.
+ */
+const calculateForNewEntry = (currentBalance, debtorAmount, newPayerId, friendExist, type) => {
+  if (type !== "SETTLEMENT") {
+    return newPayerId === friendExist.friend1_id ? currentBalance + debtorAmount : currentBalance - debtorAmount;
+  }
+  return currentBalance > 0 ? currentBalance - debtorAmount : currentBalance + debtorAmount;
+};
+
+/**
+ * Reverses the impact of an existing expense on the balance.
  *
- * @returns {number} - The updated balance.
+ * @param {number} currentBalance - The current balance between the two friends.
+ * @param {Object} existingExpense - The existing expense object.
+ * @param {Object} friendExist - The existing friend relationship object.
+ * @returns {number} - The updated balance after reversing the expense impact.
+ */
+const reverseOldImpact = (currentBalance, existingExpense, friendExist) => {
+  return existingExpense.payer_id === friendExist.friend1_id ? currentBalance - parseFloat(existingExpense.debtor_amount) : currentBalance + parseFloat(existingExpense.debtor_amount);
+};
+
+/**
+ * Applies the impact of a swapped payer and debtor for an updated expense.
+ *
+ * @param {number} currentBalance - The current balance between the two friends.
+ * @param {Object} existingExpense - The existing expense object.
+ * @param {string} newPayerId - UUID of the new payer in the updated expense.
+ * @param {Object} friendExist - The existing friend relationship object.
+ * @returns {number} - The updated balance after applying the new impact.
+ */
+const applyNewImpact = (currentBalance, existingExpense, newPayerId, friendExist) => {
+  return newPayerId === friendExist.friend1_id ? currentBalance + parseFloat(existingExpense.debtor_amount) : currentBalance - parseFloat(existingExpense.debtor_amount);
+};
+
+/**
+ * Adjusts the balance for other field changes in the expense.
+ *
+ * @param {number} currentBalance - The current balance between the two friends.
+ * @param {number} debtorAmount - The amount owed by the debtor in the updated expense.
+ * @param {Object} existingExpense - The existing expense object.
+ * @param {string} newPayerId - UUID of the new payer in the updated expense.
+ * @param {Object} friendExist - The existing friend relationship object.
+ * @param {string} type - Type of the expense, e.g., "SETTLEMENT" or other types.
+ * @returns {number} - The updated balance after adjusting for field changes.
+ */
+const adjustForFieldChanges = (currentBalance, debtorAmount, existingExpense, newPayerId, friendExist, type) => {
+  if (type !== "SETTLEMENT") {
+    return newPayerId === friendExist.friend1_id ? currentBalance + debtorAmount - parseFloat(existingExpense.debtor_amount) : currentBalance - (debtorAmount - parseFloat(existingExpense.debtor_amount));
+  }
+  return currentBalance > 0 ? currentBalance - (debtorAmount - parseFloat(existingExpense.debtor_amount)) : currentBalance + debtorAmount - parseFloat(existingExpense.debtor_amount);
+};
+
+/**
+ * Main function to calculate the updated balance based on new or updated expenses.
+ *
+ * @param {number} currentBalance - The current balance between the two friends.
+ * @param {number} debtorAmount - The amount owed by the debtor.
+ * @param {string} newPayerId - UUID of the new payer.
+ * @param {Object} friendExist - The existing friend relationship object.
+ * @param {string} type - Type of the expense, e.g., "SETTLEMENT" or other types.
+ * @param {Object|null} existingExpense - The existing expense object (if updating an expense).
+ * @param {boolean} isUpdate - Whether this is an update to an existing expense.
+ * @returns {number} - The updated balance after applying the new or updated expense.
  */
 const calculateNewBalance = (
   currentBalance,
@@ -135,33 +193,17 @@ const calculateNewBalance = (
   isUpdate = false
 ) => {
   if (!isUpdate) {
-    // Handle the case for new entries
-    if (type !== "SETTLEMENT") {
-      // Adjust balance for non-settlement types
-      return newPayerId === friendExist.friend1_id ? currentBalance + debtorAmount : currentBalance - debtorAmount;
-    }
-    // Adjust balance for settlement types
-    return currentBalance > 0 ? currentBalance - debtorAmount : currentBalance + debtorAmount;
+    return calculateForNewEntry(currentBalance, debtorAmount, newPayerId, friendExist, type);
   }
-  // Handle updates to existing expenses
-  // First, handle the swap if payer_id and debtor_id are interchanged
-  let updatedCurrentBalance;
 
-  if (
-    newPayerId !== existingExpense.payer_id && existingExpense.debtor_id === newPayerId
-  ) {
-    // Reverse the old impact of the existing expense
-    updatedCurrentBalance = currentBalance + existingExpense.payer_id === friendExist.friend1_id ? -parseFloat(existingExpense.debtor_amount) : parseFloat(existingExpense.debtor_amount); // Add if friend2 was payer
-    // Apply the new impact of the swapped payer and debtor
-    updatedCurrentBalance = currentBalance + newPayerId === friendExist.friend1_id ? parseFloat(existingExpense.debtor_amount) : -parseFloat(existingExpense.debtor_amount); // Substract if friend2 is now payer
+  let updatedCurrentBalance = currentBalance;
+
+  if (newPayerId !== existingExpense.payer_id && existingExpense.debtor_id === newPayerId) {
+    updatedCurrentBalance += reverseOldImpact(updatedCurrentBalance, existingExpense, friendExist);
+    updatedCurrentBalance += applyNewImpact(updatedCurrentBalance, existingExpense, newPayerId, friendExist);
   }
-  // Handle changes in other balance-affecting fields after the swap
-  if (type !== "SETTLEMENT") {
-    updatedCurrentBalance = currentBalance + newPayerId === friendExist.friend1_id ? debtorAmount - parseFloat(existingExpense.debtor_amount) : -(debtorAmount - parseFloat(existingExpense.debtor_amount));
-  } else {
-    updatedCurrentBalance = currentBalance + currentBalance > 0 ? -(debtorAmount - parseFloat(existingExpense.debtor_amount)) : debtorAmount - parseFloat(existingExpense.debtor_amount);
-  }
-  return updatedCurrentBalance;
+
+  return adjustForFieldChanges(updatedCurrentBalance, debtorAmount, existingExpense, newPayerId, friendExist, type);
 };
 
 /**
@@ -186,10 +228,91 @@ const validateSettlementAmount = (currentBalance, debtorAmount) => {
   }
 };
 
+/**
+ * Validates if the friend relationship exists.
+ */
+const validateFriendExist = (friendExist) => {
+  if (!friendExist) {
+    throw new ErrorHandler(404, "Friend not found");
+  }
+};
+
+/**
+ * Validates if the existing expense exists.
+ */
+const validateExistingExpense = (existingExpense) => {
+  if (!existingExpense) {
+    throw new ErrorHandler(404, "Expense not found");
+  }
+};
+
+/**
+ * Validates conversation permissions for expense updates.
+ */
+const validateConversationPermissions = (friendExist) => {
+  if (
+    friendExist.status === "REJECTED" || friendExist.archival_status !== "NONE" || friendExist.block_status !== "NONE"
+  ) {
+    throw new ErrorHandler(403, "This action is not allowed.");
+  }
+};
+
+/**
+ * Validates if the participants are allowed to update the expense.
+ */
+const validateUpdateParticipants = (updatedExpenseData, friendExist) => {
+  if (
+    !(
+      (updatedExpenseData.payer_id === (friendExist.friend1_id || friendExist.friend2_id)) && (updatedExpenseData.debtor_id === (friendExist.friend1_id || friendExist.friend2_id))
+    )
+  ) {
+    throw new ErrorHandler(403, "You are not allowed to update this expense");
+  }
+};
+
+/**
+ * Checks if balance-affecting fields are being updated.
+ */
+const isBalanceUpdateRequired = (fields, updatedExpenseData) => {
+  return fields.some((field) => field in updatedExpenseData);
+};
+
+/**
+ * Formats the payer's name.
+ */
+const formatPayerName = (payer) => {
+  return `${payer.first_name} ${payer.last_name || ""}`.trim();
+};
+
+/**
+ * Validates settlement conditions.
+ */
+const validateSettlement = (updatedExpenseData, currentBalance, debtorAmount) => {
+  if (updatedExpenseData.split_type === "SETTLEMENT") {
+    if (currentBalance === 0) {
+      throw new ErrorHandler(400, "You are all settled up.");
+    }
+    validateSettlementAmount(currentBalance, debtorAmount);
+  }
+
+  if (
+    updatedExpenseData.payer_id && updatedExpenseData.debtor_id && updatedExpenseData.payer_id === updatedExpenseData.debtor_id
+  ) {
+    throw new ErrorHandler(400, "You cannot add an expense with yourself");
+  }
+};
+
 export {
   formatFriendData,
   getNewStatus,
   calculateDebtorAmount,
   calculateNewBalance,
-  validateSettlementAmount
+  validateSettlementAmount,
+  formatPayerName,
+  validateFriendExist,
+  validateExistingExpense,
+  validateConversationPermissions,
+  validateUpdateParticipants,
+  isBalanceUpdateRequired,
+  validateSettlement
 };

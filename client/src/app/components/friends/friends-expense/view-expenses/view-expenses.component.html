@@ -36,6 +36,7 @@
                 matPrefix
                 class="hover me-2"
                 (click)="onUpdateExpense(expense)"
+                (keyup.enter)="onUpdateExpense(expense)"
                 >edit</mat-icon
               >
               <mat-icon
@@ -48,6 +49,13 @@
                     expense.debtor_amount
                   )
                 "
+                (keyup.enter)="
+                onDeleteExpense(
+                  expense.friend_expense_id,
+                  expense.payer_id,
+                  expense.debtor_amount
+                )
+              "
                 >delete</mat-icon
               >
             </td>
@@ -62,13 +70,14 @@
   mat-dialog-actions
   class="d-flex align-items-center justify-content-end gap-2 py-2 px-3"
 >
-  <mat-icon class="hover" (click)="downloadExpenses()">download</mat-icon>
+  <mat-icon class="hover" (click)="downloadExpenses()" (keyup.enter)="downloadExpenses()">download</mat-icon>
   <button
     mat-button
     disableRipple
     class="custom-mat-button"
     color="warn"
     (click)="onCancel()"
+    (keyup.enter)="onCancel()"
   >
     Close
   </button>

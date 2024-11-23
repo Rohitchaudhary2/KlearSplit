@@ -9,8 +9,8 @@ import {
 @Component({
   selector: "app-confirmation-dialog",
   standalone: true,
-  imports: [MatDialogModule, MatButtonModule],
-  templateUrl: './confirmation-dialog.component.html',
+  imports: [ MatDialogModule, MatButtonModule ],
+  templateUrl: "./confirmation-dialog.component.html",
 })
 export class ConfirmationDialogComponent {
   dialogRef = inject(MatDialogRef<ConfirmationDialogComponent>);

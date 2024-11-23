@@ -4,6 +4,8 @@ import { concatMap, map } from "rxjs";
 
 import { API_URLS } from "../../constants/api-urls";
 import {
+  CombinedExpense,
+  CombinedMessage,
   CombinedView,
   Expense,
   ExpenseInput,
@@ -19,7 +21,11 @@ import {
 })
 export class FriendsService {
   // Injecting the HttpClient to make HTTP requests
-  private httpClient = inject(HttpClient);
+  private readonly httpClient = inject(HttpClient);
+
+  sortBycreatedAt(data: (CombinedMessage | CombinedExpense)[]) {
+    return data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+  }
 
   /**
    * Fetches messages, expenses, and combined data for a specific conversation.
@@ -29,11 +35,9 @@ export class FriendsService {
    * @param loadMessages - Flag to determine if messages are to be loaded.
    * @param loadExpenses - Flag to determine if expenses are to be loaded.
    * @param pageMessage - Page number for message data.
-   * @param pageSizeMessage - Page size for message data.
    * @param pageExpense - Page number for expense data.
-   * @param pageSizeExpense - Page size for expense data.
    * @param pageCombined - Page number for combined data.
-   * @param pageSizeCombined - Page size for combined data.
+   * @param pageSize - Page size for message, expense, and combined data.
    * @returns An observable with the data for messages, expenses, and combined.
    */
   fetchMessagesAndExpenses(
@@ -41,15 +45,13 @@ export class FriendsService {
     loadMessages: boolean,
     loadExpenses: boolean,
     pageMessage: number,
-    pageSizeMessage: number,
     pageExpense: number,
-    pageSizeExpense: number,
     pageCombined: number,
-    pageSizeCombined: number,
+    pageSize: number,
   ) {
-    const messagesUrl = `${API_URLS.getMessages}/${conversationId}?page=${pageMessage}&pageSize=${pageSizeMessage}`;
-    const expensesUrl = `${API_URLS.getExpenses}/${conversationId}?page=${pageExpense}&pageSize=${pageSizeExpense}`;
-    const combinedUrl = `${API_URLS.getCombined}/${conversationId}?page=${pageCombined}&pageSize=${pageSizeCombined}`;
+    const messagesUrl = `${API_URLS.getMessages}/${conversationId}?page=${pageMessage}&pageSize=${pageSize}`;
+    const expensesUrl = `${API_URLS.getExpenses}/${conversationId}?page=${pageExpense}&pageSize=${pageSize}`;
+    const combinedUrl = `${API_URLS.getCombined}/${conversationId}?page=${pageCombined}&pageSize=${pageSize}`;
     // If all messages, expenses, and combined need to be loaded
     if (loadMessages && loadExpenses) {
       return this.httpClient
@@ -74,9 +76,7 @@ export class FriendsService {
                     .pipe(
                       map((combined) => {
                         // Sort combined data by creation date
-                        combined.data.sort((a, b) =>
-                          a.createdAt < b.createdAt ? -1 : 1,
-                        );
+                        combined.data = this.sortBycreatedAt(combined.data);
                         return {
                           messages: messages.data,
                           expenses: expenses.data,

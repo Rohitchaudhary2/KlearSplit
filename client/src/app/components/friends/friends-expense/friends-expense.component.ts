@@ -34,13 +34,24 @@ import { SplitTypeComponent } from "./split-type/split-type.component";
   styleUrl: "./friends-expense.component.css",
 })
 export class FriendsExpenseComponent implements OnInit {
-  private formErrorMessages = inject(FormErrorMessageService);
-  private dialogRef = inject(MatDialogRef<FriendsExpenseComponent>);
-  private dialog = inject(MatDialog);
+  private readonly formErrorMessages = inject(FormErrorMessageService);
+  private readonly dialogRef = inject(MatDialogRef<FriendsExpenseComponent>);
+  private readonly dialog = inject(MatDialog);
   data = inject(MAT_DIALOG_DATA);
   participants;
   imageName = signal<string>("Upload Bill Receipt");
   splitType = "EQUAL";
+
+  setParticipantShares(payerId: string, userId: string, payerShare: number, debtorShare: number) {
+    if (payerId === userId) {
+      const participant1Share = JSON.stringify(payerShare);
+      const participant2Share = JSON.stringify(debtorShare);
+      return { participant1Share, participant2Share };
+    }
+    const participant1Share = JSON.stringify(debtorShare);
+    const participant2Share = JSON.stringify(payerShare);
+    return { participant1Share, participant2Share };
+  }
 
   /**
    * Constructor to update the expense form and set up participants based on the type of data passed.
@@ -72,24 +83,33 @@ export class FriendsExpenseComponent implements OnInit {
       const debtorAmount = parseFloat(expenseToBeUpdated.debtor_amount);
       const payerAmount = totalAmount - debtorAmount;
 
-      if (this.splitType === "UNEQUAL") {
-        if (expenseToBeUpdated.payer_id === this.participants[0].user_id) {
-          participant1Share = JSON.stringify(payerAmount);
-          participant2Share = JSON.stringify(debtorAmount);
-        } else {
-          participant1Share = JSON.stringify(debtorAmount);
-          participant2Share = JSON.stringify(payerAmount);
+      switch (this.splitType) {
+        case "UNEQUAL": {
+          const participantShares = this.setParticipantShares(
+            expenseToBeUpdated.payer_id,
+            this.participants[0].user_id,
+            payerAmount,
+            debtorAmount
+          );
+          participant1Share = participantShares.participant1Share;
+          participant2Share = participantShares.participant2Share;
+          break;
         }
-      } else if (this.splitType === "PERCENT") {
-        const debtorPercentage = (debtorAmount / totalAmount) * 100;
-        const payerPercentage = (payerAmount / totalAmount) * 100;
-        if (expenseToBeUpdated.payer_id === this.participants[0].user_id) {
-          participant1Share = JSON.stringify(payerPercentage);
-          participant2Share = JSON.stringify(debtorPercentage);
-        } else {
-          participant1Share = JSON.stringify(debtorPercentage);
-          participant2Share = JSON.stringify(payerPercentage);
+      
+        case "PERCENT": {
+          const debtorPercentage = (debtorAmount / totalAmount) * 100;
+          const payerPercentage = (payerAmount / totalAmount) * 100;
+          const participantShares = this.setParticipantShares(
+            expenseToBeUpdated.payer_id,
+            this.participants[0].user_id,
+            payerPercentage,
+            debtorPercentage
+          );
+          participant1Share = participantShares.participant1Share;
+          participant2Share = participantShares.participant2Share;
+          break;
         }
+          
       }
 
       // Update the form values with the expense data and the calculated shares
@@ -240,7 +260,7 @@ export class FriendsExpenseComponent implements OnInit {
 
     // If there is a debtor share, append it to the formData
     if (debtorShare) {
-      formData.append("debtor_share", debtorShare as string);
+      formData.append("debtor_share", debtorShare);
     }
     formData.append("debtor_id", debtorId as string);
 
@@ -264,7 +284,7 @@ export class FriendsExpenseComponent implements OnInit {
     if (id === this.participants[0].user_id) {
       return "you";
     } else {
-      return `${this.participants[1].first_name}${this.participants[1].last_name ? ` ${this.participants[1].last_name}` : ""}`;
+      return `${this.participants[1].first_name} ${ this.participants[1].last_name || ""}`;
     }
   }
 

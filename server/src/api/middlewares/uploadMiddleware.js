@@ -26,7 +26,7 @@ const uploadMiddleware = (folderName, fieldName) => {
     },
     "filename": (req, file, cb) => {
       // Generate a unique file name using timestamp and a random number
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
 
       cb(
         null,
@@ -50,11 +50,14 @@ const uploadMiddleware = (folderName, fieldName) => {
     cb(null, true); // If the file type is valid, pass it to multer
   };
 
+  // Explicitly limit file size to 2MB for safety
+  const maxFileSize = 2 * 1024 * 1024;
+
   // Configue multer with storage, file filter, and field name
   const upload = multer({
     storage,
     "limits": {
-      "fileSize": 2 * 1024 * 1024 // 2MB limit
+      "fileSize": maxFileSize
     },
     fileFilter
   }).single(fieldName); // Only allow a single file upload for the specified field

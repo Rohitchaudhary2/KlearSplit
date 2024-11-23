@@ -1,5 +1,5 @@
 import { NgClass } from "@angular/common";
-import { Component, inject, signal } from "@angular/core";
+import { Component, inject, OnInit, signal } from "@angular/core";
 import {
   FormControl,
   FormGroup,
@@ -33,13 +33,13 @@ import { LoginUser } from "../login-types.model";
   templateUrl: "./login.component.html",
   styleUrl: "./login.component.css",
 })
-export class LoginComponent {
-  private formErrorMessages = inject(FormErrorMessageService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
+export class LoginComponent implements OnInit {
+  private readonly formErrorMessages = inject(FormErrorMessageService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
-  private authService = inject(AuthService);
-  private toastr = inject(ToastrService);
+  private readonly authService = inject(AuthService);
+  private readonly toastr = inject(ToastrService);
 
   private readonly googleAuthUrl = API_URLS.googleAuth;
 
@@ -56,18 +56,6 @@ export class LoginComponent {
     this.form.valueChanges.subscribe(() => {
       this.loginFailed.set(false);
     });
-
-    // Check for query parameters and display an error message if any
-    if (Object.keys(this.route.snapshot.queryParams).length > 0) {
-      const { error } = this.route.snapshot.queryParams;
-      const errorMessage = decodeURIComponent(error);
-      this.toastr.error(errorMessage, "Error");
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: {},
-        replaceUrl: true,
-      });
-    }
   }
 
   form = new FormGroup<{
@@ -82,10 +70,24 @@ export class LoginComponent {
     password: new FormControl("", {
       validators: [
         Validators.required,
-        Validators.pattern(new RegExp("^(?=.*[a-z])(?=.*[0-9]).{8,20}$")),
+        Validators.pattern(/^(?=.*[a-z])(?=.*\d)[a-z\d]{8,20}$/),
       ],
     }),
   });
+
+  ngOnInit(): void {
+    // Check for query parameters and display an error message if any
+    if (Object.keys(this.route.snapshot.queryParams).length > 0) {
+      const { error } = this.route.snapshot.queryParams;
+      const errorMessage = decodeURIComponent(error);
+      this.toastr.error(errorMessage, "Error");
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+    }
+  }
 
   /**
    * Returns the validation error message for a specific form field.
@@ -189,7 +191,7 @@ export class LoginComponent {
           Validators.required,
           Validators.minLength(6),
           Validators.maxLength(6),
-          Validators.pattern(/^[0-9]{6}$/),
+          Validators.pattern(/^\d{6}$/),
         ]),
       );
     }
@@ -237,7 +239,7 @@ export class LoginComponent {
       "password",
       new FormControl("", [
         Validators.required,
-        Validators.pattern(new RegExp("^(?=.*[a-z])(?=.*[0-9]).{8,20}$")),
+        Validators.pattern(/^(?=.*[a-z])(?=.*\d).{8,20}$/),
       ]),
     );
     this.isLoading.set(false);
@@ -245,6 +247,9 @@ export class LoginComponent {
 
   // Initiates Google Sign-In by redirecting to the authentication URL.
   onGoogleSignIn() {
-    window.open(this.googleAuthUrl, "_self");
+    const newWindow = window.open(this.googleAuthUrl, "_self");
+    if (newWindow) {
+      newWindow.opener = null; // Ensures no link between the parent and the new window
+    }
   }
 }

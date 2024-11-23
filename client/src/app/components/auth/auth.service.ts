@@ -15,20 +15,20 @@ import { TokenService } from "./token.service";
 })
 export class AuthService {
   // Dependency injection for necessary services
-  private httpClient = inject(HttpClient);
-  private toastr = inject(ToastrService);
-  private router = inject(Router);
-  private tokenService = inject(TokenService);
+  private readonly httpClient = inject(HttpClient);
+  private readonly toastr = inject(ToastrService);
+  private readonly router = inject(Router);
+  private readonly tokenService = inject(TokenService);
 
   // URLs for API endpoints
-  private verifyUrl = API_URLS.verify; // URL for OTP verification
-  private registerUrl = API_URLS.register; // URL for user registeration
-  private loginUrl = API_URLS.login; // URL for login
-  private logoutUrl = API_URLS.logout; // URL for logout
-  private forgotPasswordVerifyUrl = API_URLS.verifyForgotPassword; // URL to verify user for forgot password
-  private forgotPasswordUrl = API_URLS.forgotPassword; // URL for forgot password
-  private restoreAccountVerifyUrl = API_URLS.restoreAccountVerify; // URL to verify user for restore account
-  private restoreAccountUrl = API_URLS.restoreAccount; // URL for restore account
+  private readonly verifyUrl = API_URLS.verify; // URL for OTP verification
+  private readonly registerUrl = API_URLS.register; // URL for user registeration
+  private readonly loginUrl = API_URLS.login; // URL for login
+  private readonly logoutUrl = API_URLS.logout; // URL for logout
+  private readonly forgotPasswordVerifyUrl = API_URLS.verifyForgotPassword; // URL to verify user for forgot password
+  private readonly forgotPasswordUrl = API_URLS.forgotPassword; // URL for forgot password
+  private readonly restoreAccountVerifyUrl = API_URLS.restoreAccountVerify; // URL to verify user for restore account
+  private readonly restoreAccountUrl = API_URLS.restoreAccount; // URL for restore account
 
   currentUser = signal<CurrentUser | undefined>(undefined); // Store user data
 

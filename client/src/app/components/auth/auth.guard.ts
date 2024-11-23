@@ -10,11 +10,11 @@ import { TokenService } from "./token.service";
   providedIn: "root",
 })
 export class AuthGuard implements CanActivate {
-  private router = inject(Router);
+  private readonly router = inject(Router);
 
-  private authService = inject(AuthService);
-  private tokenService = inject(TokenService);
-  private userService = inject(UserService);
+  private readonly authService = inject(AuthService);
+  private readonly tokenService = inject(TokenService);
+  private readonly userService = inject(UserService);
 
   /**
    * Determines whether the route can be activated based on the user's authentication status.

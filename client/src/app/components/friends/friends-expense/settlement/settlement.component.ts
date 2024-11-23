@@ -38,8 +38,8 @@ function amountRangeValidator(totalAmount: number): ValidatorFn {
   styleUrl: "./settlement.component.css",
 })
 export class SettlementComponent implements OnInit {
-  private dialogRef = inject(MatDialogRef<SettlementComponent>);
-  formErrorMessages = inject(FormErrorMessageService);
+  private readonly dialogRef = inject(MatDialogRef<SettlementComponent>);
+  private readonly formErrorMessages = inject(FormErrorMessageService);
 
   payer_name: string;
   debtor_name: string;

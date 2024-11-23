@@ -33,9 +33,14 @@
     } @else if (users().length) {
       <table class="table table-hover" style="cursor: pointer">
         <tbody>
+          <thead>
+            <tr>
+              <th style="display: none;"></th> 
+            </tr>
+          </thead>
           @for (user of users(); track $index) {
             <tr>
-              <td (click)="selectUser(user)">{{ user.email }}</td>
+              <td (click)="selectUser(user)" (keyup.enter)="selectUser(user)">{{ user.email }}</td>
             </tr>
           }
         </tbody>

@@ -9,7 +9,7 @@ import { AllExpenses } from "./dashboard.model";
   providedIn: "root",
 })
 export class DashboardService {
-  private httpClient = inject(HttpClient);
+  private readonly httpClient = inject(HttpClient);
   /**
    * Fetches all expense-related data from the server.
    *

@@ -9,8 +9,8 @@ interface Message {
 @Component({
   selector: "app-message",
   standalone: true,
-  imports: [NgClass],
-  templateUrl: './message.component.html',
+  imports: [ NgClass ],
+  templateUrl: "./message.component.html",
 })
 export class MessageComponent {
   // Input properties to pass data from parent components

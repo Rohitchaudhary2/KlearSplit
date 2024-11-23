@@ -8,7 +8,7 @@ import { MessageData } from "./friend.model";
   providedIn: "root",
 })
 export class SocketService {
-  private socket: Socket;
+  private readonly socket: Socket;
 
   constructor() {
     // Initialize the socket connection using the environment's socket URL

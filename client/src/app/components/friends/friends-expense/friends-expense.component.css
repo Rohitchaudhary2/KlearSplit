@@ -26,11 +26,6 @@
   max-width: 100% !important;
 }
 
-.file-upload {
-  display: flex;
-  align-items: center; /* Align label and input vertically */
-}
-
 .file-input {
   display: none; /* Hide the default file input */
 }

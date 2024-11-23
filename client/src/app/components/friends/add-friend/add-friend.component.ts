@@ -28,13 +28,13 @@ import { FriendsService } from "../friends.service";
     MatButtonModule,
     MatIconModule,
   ],
-  templateUrl: './add-friend.component.html',
+  templateUrl: "./add-friend.component.html",
 })
 export class AddFriendComponent implements OnInit {
-  private dialogRef = inject(MatDialogRef<AddFriendComponent>);
-  private formErrorMessages = inject(FormErrorMessageService);
-  private friendsService = inject(FriendsService);
-  private searchSubject = new Subject<string>();
+  private readonly dialogRef = inject(MatDialogRef<AddFriendComponent>);
+  private readonly formErrorMessages = inject(FormErrorMessageService);
+  private readonly friendsService = inject(FriendsService);
+  private readonly searchSubject = new Subject<string>();
   users = signal<SearchedUser[]>([]);
   loading = signal(false);
   selectedUser = signal<SearchedUser | undefined>(undefined);

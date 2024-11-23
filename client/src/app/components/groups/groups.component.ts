@@ -38,13 +38,13 @@ import { CurrentUser } from "../shared/types.model";
     MessageComponent,
     ExpenseComponent,
   ],
-  templateUrl: "./friends.component.html",
-  styleUrl: "./friends.component.css",
+  templateUrl: "../friends/friends.component.html",
+  styleUrl: "../friends/friends.component.css",
 })
 export class FriendsComponent implements OnDestroy, AfterViewInit {
   // Reference to the message container element, accessed via ViewChild
   messageContainer = viewChild<ElementRef>("messageContainer");
-  private cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
+  private readonly cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
   // Injecting services needed by the component
   private toastr = inject(ToastrService);
   private friendsService = inject(FriendsService);
@@ -581,7 +581,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    */
   getFullNameAndImage(user: CurrentUser | AddedFriend | undefined) {
     return {
-      fullName: `${user?.first_name}${user?.last_name ? ` ${user?.last_name}` : ""}`,
+      fullName: `${user?.first_name}${ user?.last_name ?? ""}`,
       imageUrl: user?.image_url,
     };
   }
@@ -675,14 +675,12 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
                 ? "FRIEND1"
                 : "FRIEND2";
             }
-          } else {
-            if (currentStatus !== "BOTH") {
+          } else if (currentStatus !== "BOTH") {
               this.selectedUser()!.block_status = "NONE";
-            } else {
+          } else {
               this.selectedUser()!.block_status = isSender
                 ? "FRIEND2"
                 : "FRIEND1";
-            }
           }
         }
       },

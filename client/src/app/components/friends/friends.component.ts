@@ -254,7 +254,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           this.messages.set([ ...messages, ...this.messages() ]);
           this.expenses.set([ ...expenses, ...this.expenses() ]);
           this.combinedView.set([ ...combined, ...this.combinedView() ]);
-
+          
           // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
           if (
             this.pageMessage === 1 ||

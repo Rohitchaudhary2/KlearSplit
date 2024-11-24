@@ -199,8 +199,8 @@ const calculateNewBalance = (
   let updatedCurrentBalance = currentBalance;
 
   if (newPayerId !== existingExpense.payer_id && existingExpense.debtor_id === newPayerId) {
-    updatedCurrentBalance += reverseOldImpact(updatedCurrentBalance, existingExpense, friendExist);
-    updatedCurrentBalance += applyNewImpact(updatedCurrentBalance, existingExpense, newPayerId, friendExist);
+    updatedCurrentBalance = reverseOldImpact(updatedCurrentBalance, existingExpense, friendExist);
+    updatedCurrentBalance = applyNewImpact(updatedCurrentBalance, existingExpense, newPayerId, friendExist);
   }
 
   return adjustForFieldChanges(updatedCurrentBalance, debtorAmount, existingExpense, newPayerId, friendExist, type);
@@ -261,9 +261,11 @@ const validateConversationPermissions = (friendExist) => {
  * Validates if the participants are allowed to update the expense.
  */
 const validateUpdateParticipants = (updatedExpenseData, friendExist) => {
+  const friendIds = [ friendExist.friend1_id, friendExist.friend2_id ];
+
   if (
     !(
-      (updatedExpenseData.payer_id === (friendExist.friend1_id || friendExist.friend2_id)) && (updatedExpenseData.debtor_id === (friendExist.friend1_id || friendExist.friend2_id))
+      friendIds.includes(updatedExpenseData.payer_id) && friendIds.includes(updatedExpenseData.debtor_id)
     )
   ) {
     throw new ErrorHandler(403, "You are not allowed to update this expense");

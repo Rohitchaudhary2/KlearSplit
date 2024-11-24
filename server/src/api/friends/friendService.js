@@ -5,7 +5,7 @@ import { hashedPassword } from "../utils/hashPassword.js";
 import { generatePassword } from "../utils/passwordGenerator.js";
 import sendMail from "../utils/sendMail.js";
 import FriendDb from "./friendDb.js";
-import { formatFriendData, getNewStatus, calculateDebtorAmount, calculateNewBalance, validateSettlementAmount, formatPayerName, validateSettlement, validateFriendExist, validateExistingExpense, validateConversationPermissions, validateUpdateParticipants, isBalanceUpdateRequired } from "./friendUtils.js";
+import { formatFriendData, getNewStatus, calculateDebtorAmount, calculateNewBalance, validateSettlementAmount, formatPersonName, validateSettlement, validateFriendExist, validateExistingExpense, validateConversationPermissions, validateUpdateParticipants, isBalanceUpdateRequired } from "./friendUtils.js";
 
 class FriendService {
   /**
@@ -44,7 +44,7 @@ class FriendService {
         "subject": "Invited on KlearSplit"
       };
 
-      const sender = `${friendData.first_name} ${friendData.last_name || ""}`.trim();
+      const sender = formatPersonName(friendData);
 
       sendMail(options, "invitationTemplate", {
         "name": friendRequestTo.firstName,
@@ -302,7 +302,7 @@ class FriendService {
 
     try {
       // Calculate debtor amount for the expense
-      const debtorAmount = this.calculateDebtorAmount(expenseData);
+      const debtorAmount = calculateDebtorAmount(expenseData);
 
       Object.assign(expenseData, { "debtor_amount": debtorAmount });
 
@@ -458,7 +458,7 @@ class FriendService {
       throw new ErrorHandler(400, "Failed to update expense");
     }
 
-    updatedExpense.dataValues.payer = formatPayerName(updatedExpense.payer);
+    updatedExpense.dataValues.payer = formatPersonName(updatedExpense.payer);
     return updatedExpense;
   };
 
@@ -505,7 +505,7 @@ class FriendService {
 
       await transaction.commit();
 
-      updatedExpense.dataValues.payer = formatPayerName(updatedExpense.payer);
+      updatedExpense.dataValues.payer = formatPersonName(updatedExpense.payer);
       return updatedExpense;
     } catch (error) {
       await transaction.rollback();

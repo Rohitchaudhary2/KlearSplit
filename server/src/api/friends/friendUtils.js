@@ -278,10 +278,10 @@ const isBalanceUpdateRequired = (fields, updatedExpenseData) => {
 };
 
 /**
- * Formats the payer's name.
+ * Formats the person's name.
  */
-const formatPayerName = (payer) => {
-  return `${payer.first_name} ${payer.last_name || ""}`.trim();
+const formatPersonName = (person) => {
+  return `${person.first_name} ${person.last_name || ""}`.trim();
 };
 
 /**
@@ -308,7 +308,7 @@ export {
   calculateDebtorAmount,
   calculateNewBalance,
   validateSettlementAmount,
-  formatPayerName,
+  formatPersonName,
   validateFriendExist,
   validateExistingExpense,
   validateConversationPermissions,

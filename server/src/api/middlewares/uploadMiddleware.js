@@ -1,6 +1,7 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import { ErrorHandler } from "./errorHandler.js";
 
 const __dirname = path.resolve();
@@ -64,6 +65,16 @@ const uploadMiddleware = (folderName, fieldName) => {
 
   // Middleware function to handle the upload process
   return (req, res, next) => {
+    // Validate Content-Length header
+    const contentLength = parseInt(req.headers[ "content-length" ]);
+
+    if (isNaN(contentLength)) {
+      return next(new ErrorHandler(411, "Content-Length header is required"));
+    }
+    if (contentLength > maxFileSize) {
+      return next(new ErrorHandler(413, "File size exceeds the maximum limit of 2MB"));
+    }
+    
     upload(req, res, (err) => {
       if (err instanceof multer.MulterError) {
         // Multer-specific error (e.g., file size exceeded)

@@ -187,7 +187,7 @@ class FriendService {
    * @returns {Promise<Object>} - The updated friend data after performing the action.
    */
   static archiveBlockFriend = async(friend) => {
-    const { "user_id": userId, type, "conversation_id": conversationId } = friend;
+    const { userId, type, conversationId } = friend;
     const friendExist = await FriendDb.getFriend(conversationId);
 
     // If the friend doesn't exist, throw an error

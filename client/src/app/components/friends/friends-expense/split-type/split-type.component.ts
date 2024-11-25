@@ -58,20 +58,15 @@ export class SplitTypeComponent implements OnInit {
    * Initialize the participant shares based on the split type
    */
   private initializeShares(): void {
-    if (this.activeItem === "UNEQUAL") {
-      this.unequalParticipant1Share = parseFloat(
-        this.expenseData.participant1_share,
-      );
-      this.unequalParticipant2Share = parseFloat(
-        this.expenseData.participant2_share,
-      );
-    } else if (this.activeItem === "PERCENTAGE") {
-      this.percentageParticipant1Share = parseFloat(
-        this.expenseData.participant1_share,
-      );
-      this.percentageParticipant2Share = parseFloat(
-        this.expenseData.participant2_share,
-      );
+    switch(this.activeItem) {
+      case "UNEQUAL":
+        this.unequalParticipant1Share = parseFloat(this.expenseData.participant1_share);
+        this.unequalParticipant2Share = parseFloat(this.expenseData.participant2_share);
+        break;
+      case "PERCENTAGE":
+        this.percentageParticipant1Share = parseFloat(this.expenseData.participant1_share);
+        this.percentageParticipant2Share = parseFloat(this.expenseData.participant2_share);
+        break;
     }
   }
 
@@ -86,11 +81,7 @@ export class SplitTypeComponent implements OnInit {
    * @param max - The maximum allowed value for the adjustment. Any value greater than this will be capped at this value.
    */
   private adjustValue(value: number, controlName: string, max: number): void {
-    if (value > max) {
-      value = max;
-    } else if (value < 0) {
-      value = 0;
-    }
+    value = Math.max(0, Math.min(value, max));
     this.form.get(controlName)?.setValue(value);
   }
 
@@ -115,10 +106,13 @@ export class SplitTypeComponent implements OnInit {
       ) {
         this.adjustValue(value, controlName, 100);
       }
-      if (controlName === "participant1_share") {
-        this.updateShare("participant2_share", value);
-      } else {
-        this.updateShare("participant1_share", value);
+      switch(controlName) {
+        case "participant1_share":
+          this.updateShare("participant2_share", value);
+          break;
+        case "participant2_share":
+          this.updateShare("participant1_share", value);
+          break;
       }
     });
   }
@@ -139,12 +133,13 @@ export class SplitTypeComponent implements OnInit {
 
     this.updating = true;
 
-    if (this.activeItem === "UNEQUAL") {
-      this.form
-        .get(participant)
-        ?.setValue(this.expenseData.total_amount - otherShare);
-    } else if (this.activeItem === "PERCENTAGE") {
-      this.form.get(participant)?.setValue(100 - otherShare);
+    switch(this.activeItem) {
+      case "UNEQUAL":
+        this.form.get(participant)?.setValue(this.expenseData.total_amount - otherShare);
+        break;
+      case "PERCENTAGE":
+        this.form.get(participant)?.setValue(100 - otherShare);
+        break;
     }
 
     this.updating = false;
@@ -160,16 +155,22 @@ export class SplitTypeComponent implements OnInit {
     // Default share value (split equally between two participants)
     const defaultShare = parseFloat(this.expenseData.total_amount) / 2;
 
-    if (this.activeItem === "EQUAL") {
-      this.setShareValues(defaultShare, defaultShare, false); // Disable both inputs for equal share
-    } else if (this.activeItem === "PERCENTAGE") {
-      const percentage1 = this.percentageParticipant1Share ?? 50;
-      const percentage2 = this.percentageParticipant2Share ?? 50;
-      this.setShareValues(percentage1, percentage2, true); // Enable both inputs for percentage share
-    } else {
-      const unequal1 = this.unequalParticipant1Share ?? defaultShare;
-      const unequal2 = this.unequalParticipant2Share ?? defaultShare;
-      this.setShareValues(unequal1, unequal2, true); // Enable both inputs for unequal share
+    switch(this.activeItem) {
+      case "EQUAL":
+        this.setShareValues(defaultShare, defaultShare, false); // Disable both inputs for equal share
+        break;
+      case "PERCENTAGE": {
+        const percentage1 = this.percentageParticipant1Share ?? 50;
+        const percentage2 = this.percentageParticipant2Share ?? 50;
+        this.setShareValues(percentage1, percentage2, true); // Enable both inputs for percentage share
+        break;
+      }
+      case "UNEQUAL": {
+        const unequal1 = this.unequalParticipant1Share ?? defaultShare;
+        const unequal2 = this.unequalParticipant2Share ?? defaultShare;
+        this.setShareValues(unequal1, unequal2, true); // Enable both inputs for unequal share
+        break;
+      }
     }
   }
 
@@ -215,16 +216,17 @@ export class SplitTypeComponent implements OnInit {
     const participant1Share = this.form.get("participant1_share")?.value;
     const participant2Share = this.form.get("participant2_share")?.value;
     // Before switching to another mode, store the current share values for UNEQUAL or PERCENTAGE
-    if (this.activeItem === "UNEQUAL") {
-      this.unequalParticipant1Share = participant1Share ?? null;
-      this.unequalParticipant2Share = participant2Share ?? null;
-    } else if (this.activeItem === "PERCENTAGE") {
-      this.percentageParticipant1Share = participant1Share ?? null;
-      this.percentageParticipant2Share = participant2Share ?? null;
+    switch(this.activeItem) {
+      case "UNEQUAL":
+        this.unequalParticipant1Share = participant1Share ?? null;
+        this.unequalParticipant2Share = participant2Share ?? null;
+        break;
+      case "PERCENTAGE":
+        this.percentageParticipant1Share = participant1Share ?? null;
+        this.percentageParticipant2Share = participant2Share ?? null;
+        break;
     }
-
     this.activeItem = item;
-
     this.inputFieldControls();
   }
 

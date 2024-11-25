@@ -487,9 +487,8 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           return item.friend_expense_id === updatedExpense.friend_expense_id
             ? { ...updatedExpense, type: "expense" }
             : item;
-        } else {
-          return item;
         }
+        return item;
       },
     );
     this.combinedView.set(updatedCombinedView);
@@ -659,23 +658,35 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     return defaultLabel;
   }
 
+  /**
+   * Sets the block status of the selected user based on the current block label and user status.
+   *
+   * - If the block label is "Block" and the current status is not "NONE", it sets the block status to "BOTH".
+   * - If the block label is "Block" and the current status is "NONE", it sets the block status to either "FRIEND1" or "FRIEND2" depending on whether the user is the sender.
+   * - If the block label is "Unblock" and the current status is not "BOTH", it sets the block status to "NONE".
+   * - If the block label is "Unblock" and the current status is "BOTH", it sets the block status to either "FRIEND2" or "FRIEND1" depending on whether the user is the sender.
+   *
+   * @param currentStatus - The current block status of the selected user. Determines what action to take in the block/unblock process.
+   * @param isSender - A boolean value indicating whether the user is the sender. Used to decide the specific block status ("FRIEND1" or "FRIEND2").
+   */
   setBlockStatus() {
     const currentStatus = this.selectedUser()?.block_status;
     const isSender = this.selectedUser()?.status === "SENDER";
-    if (this.getBlockLabel() === "Block") {
-      if (currentStatus !== "NONE") {
-        this.selectedUser()!.block_status = "BOTH";
-      } else {
-        this.selectedUser()!.block_status = isSender
-          ? "FRIEND1"
-          : "FRIEND2";
-      }
-    } else if (currentStatus !== "BOTH") {
-        this.selectedUser()!.block_status = "NONE";
-    } else {
-        this.selectedUser()!.block_status = isSender
-          ? "FRIEND2"
-          : "FRIEND1";
+    switch(this.getBlockLabel()) {
+      case "Block":
+        if (currentStatus !== "NONE") {
+          this.selectedUser()!.block_status = "BOTH";
+        } else {
+          this.selectedUser()!.block_status = isSender ? "FRIEND1" : "FRIEND2";
+        }
+        break;
+      case "Unblock":
+        if(currentStatus !== "BOTH") {
+          this.selectedUser()!.block_status = "NONE";
+        } else {
+          this.selectedUser()!.block_status = isSender ? "FRIEND2" : "FRIEND1";
+        }
+        break;
     }
   }
 
@@ -691,17 +702,20 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   archiveBlock(conversationId: string, type: string) {
     this.friendsService.archiveBlockRequest(conversationId, type).subscribe({
       next: () => {
-        if (type === "archived") {
-          this.toastr.success(
-            `${this.getArchiveLabel()}d Successfully`,
-            "Success",
-          );
-        } else {
-          this.toastr.success(
-            `${this.getBlockLabel()}ed Successfully`,
-            "Success",
-          );
-          this.setBlockStatus();
+        switch(type) {
+          case "archived":
+            this.toastr.success(
+              `${this.getArchiveLabel()}d Successfully`,
+              "Success",
+            );
+            break;
+          case "blocked":
+            this.toastr.success(
+              `${this.getBlockLabel()}ed Successfully`,
+              "Success",
+            );
+            this.setBlockStatus();
+            break;
         }
       },
     });

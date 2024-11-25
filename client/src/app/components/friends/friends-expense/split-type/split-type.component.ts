@@ -75,6 +75,16 @@ export class SplitTypeComponent implements OnInit {
     }
   }
 
+  /**
+   * Adjusts the provided value to be within the range of 0 and the given maximum.
+   * If the value is greater than the maximum, it is set to the maximum.
+   * If the value is less than 0, it is set to 0.
+   * The adjusted value is then set to the form control specified by `controlName`.
+   *
+   * @param value - The value to be adjusted. It is the number that will be checked and potentially modified.
+   * @param controlName - The name of the form control whose value will be updated with the adjusted value.
+   * @param max - The maximum allowed value for the adjustment. Any value greater than this will be capped at this value.
+   */
   private adjustValue(value: number, controlName: string, max: number): void {
     if (value > max) {
       value = max;

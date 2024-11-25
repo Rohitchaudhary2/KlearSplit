@@ -147,6 +147,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.isImageLoaded = true;
   }
 
+  // Method to set the selected user or friend whose chat will be opened.
   onSelectUser(friend: FriendData | undefined) {
     // Check if there is a previously selected user
     if (this.selectedUser()) {
@@ -208,6 +209,18 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     }
   }
 
+  /**
+   * Checks whether all messages, expenses, or combined data have been completely loaded,
+   * and sets the appropriate loader state accordingly.
+   *
+   * @param loadedKey - The key indicating which data type's load status to check. It can be one of:
+   *   - `"allMessagesLoaded"` for messages,
+   *   - `"allExpensesLoaded"` for expenses,
+   *   - `"allCombinedLoaded"` for combined messages and expenses.
+   * @param loadCondition - A boolean indicating whether the data should be considered loaded based on the condition.
+   * @param items - The array of items (messages, expenses, or combined data) to check the length against.
+   * @param pageSize - The number of items that should be loaded per page. If the number of items is less than this, it indicates all data is loaded.
+   */
   checkAndSetLoaded(loadedKey: "allMessagesLoaded" | "allExpensesLoaded" |"allCombinedLoaded", loadCondition: boolean,
     items: (ExpenseData | MessageData | CombinedExpense | CombinedMessage)[], pageSize: number) {
     if (!this[loadedKey] && loadCondition && items.length < pageSize) {

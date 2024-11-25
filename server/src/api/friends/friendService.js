@@ -54,7 +54,7 @@ class FriendService {
 
     const newFriendData = {
       "friend1_id": friendData.userId,
-      "friend2_id": friendRequestTo.userId
+      "friend2_id": friendRequestTo.user_id
     };
 
     if (newFriendData.friend1_id === newFriendData.friend2_id) {

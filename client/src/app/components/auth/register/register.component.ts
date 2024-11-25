@@ -13,6 +13,7 @@ import { MatInputModule } from "@angular/material/input";
 import { Router, RouterLink } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 
+import { API_URLS } from "../../../constants/api-urls";
 import { FormErrorMessageService } from "../../shared/form-error-message.service";
 import { AuthService } from "../auth.service";
 import { RegisterUser } from "../register-types.model";
@@ -34,10 +35,12 @@ import { RegisterUser } from "../register-types.model";
   styleUrls: [ "./register.component.css" ], // Fix: styleUrl -> styleUrls
 })
 export class RegisterComponent {
-  private router = inject(Router);
-  private toastr = inject(ToastrService);
-  private authService = inject(AuthService);
-  private formErrorMessages = inject(FormErrorMessageService);
+  private readonly router = inject(Router);
+  private readonly toastr = inject(ToastrService);
+  private readonly authService = inject(AuthService);
+  private readonly formErrorMessages = inject(FormErrorMessageService);
+
+  private readonly googleAuthUrl = API_URLS.googleAuth;
 
   registerFailed = signal(false); // Indicates whether registration failed
   isRestoreMode = signal(false); // Indicates if the form is in "restore account" mode
@@ -78,7 +81,7 @@ export class RegisterComponent {
       validators: [
         Validators.minLength(10),
         Validators.maxLength(10),
-        Validators.pattern(/^[0-9]{10}$/),
+        Validators.pattern(/^\d{10}$/),
       ],
     }),
   });
@@ -200,7 +203,7 @@ export class RegisterComponent {
         Validators.required,
         Validators.minLength(6),
         Validators.maxLength(6),
-        Validators.pattern(/^[0-9]{6}$/),
+        Validators.pattern(/^\d{6}$/),
       ]),
     );
   }
@@ -237,7 +240,7 @@ export class RegisterComponent {
             Validators.required,
             Validators.minLength(6),
             Validators.maxLength(6),
-            Validators.pattern(/^[0-9]{6}$/),
+            Validators.pattern(/^\d{6}$/),
           ]),
         );
         this.startCountdown();
@@ -330,13 +333,16 @@ export class RegisterComponent {
       new FormControl("", [
         Validators.minLength(10),
         Validators.maxLength(10),
-        Validators.pattern(/^[0-9]{10}$/),
+        Validators.pattern(/^\d{10}$/),
       ]),
     );
   }
 
   // Initiates Google Sign-In by redirecting to the authentication URL.
   onGoogleSignUp() {
-    window.open("http://localhost:3000/api/auth/google", "_self");
+    const newWindow = window.open(this.googleAuthUrl, "_self");
+    if (newWindow) {
+      newWindow.opener = null; // Ensures no link between the parent and the new window
+    }
   }
 }

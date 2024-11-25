@@ -7,8 +7,8 @@ import { AuthService } from "../auth/auth.service";
   providedIn: "root",
 })
 export class GuestGuard implements CanActivate {
-  private router = inject(Router);
-  private authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
   canActivate(): boolean {
     if (this.authService.isAuthenticated()) {

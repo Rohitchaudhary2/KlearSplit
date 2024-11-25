@@ -42,6 +42,18 @@ export class FriendsExpenseComponent implements OnInit {
   imageName = signal<string>("Upload Bill Receipt");
   splitType = "EQUAL";
 
+  /**
+   * Sets the shares for the payer and debtor participants.
+   * If the payerId is the same as userId, the payer's share is assigned to participant1 and the debtor's share to participant2.
+   * If payerId is different from userId, the shares are reversed.
+   * The shares are returned as strings.
+   *
+   * @param payerId - The ID of the payer. Used to determine which participant is the payer.
+   * @param userId - The ID of the current user. Used to check if they are the payer or debtor.
+   * @param payerShare - The share amount assigned to the payer.
+   * @param debtorShare - The share amount assigned to the debtor.
+   * @returns An object containing `participant1Share` and `participant2Share` as strings.
+   */
   setParticipantShares(payerId: string, userId: string, payerShare: number, debtorShare: number) {
     if (payerId === userId) {
       const participant1Share = JSON.stringify(payerShare);

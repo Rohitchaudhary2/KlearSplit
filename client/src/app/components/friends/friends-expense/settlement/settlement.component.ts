@@ -50,11 +50,11 @@ export class SettlementComponent implements OnInit {
   constructor() {
     const data = inject(MAT_DIALOG_DATA);
     ({
-      payer_name: this.payer_name,
-      debtor_name: this.debtor_name,
-      total_amount: this.total_amount,
-      debtor_image: this.debtor_image,
-      payer_image: this.payer_image,
+      payerName: this.payer_name,
+      debtorName: this.debtor_name,
+      totalAmount: this.total_amount,
+      debtorImage: this.debtor_image,
+      payerImage: this.payer_image,
     } = data);
   }
 

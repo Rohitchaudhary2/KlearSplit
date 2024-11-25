@@ -1,7 +1,7 @@
-.container {
+/* .container {
   min-height: 80vh;
   border-radius: 20px;
-}
+} */
 
 .subcontainer {
   flex-wrap: wrap;
@@ -191,9 +191,9 @@ td {
     270deg,
     #00fffb,
     #0081bc,
-    #00ff00,
-    #ffff00,
-    #ff0000
+    #00fff2,
+    #007bff,
+    #000dff
   );
   background-size: 400%; /* Adjust for smoother animation */
   -webkit-background-clip: text;
@@ -224,4 +224,24 @@ td {
 
 .loading {
   box-shadow: 0 -5px 0px rgba(89, 108, 228, 0.5);
+}
+
+.back-button {
+  background-color: #4CAF50; /* Green background */
+  border: none; /* Remove the border */
+  color: white; /* Text color */
+  padding: 10px 20px; /* Padding around the text */
+  text-align: center; /* Align text to center */
+  text-decoration: none; /* Remove underline */
+  display: inline-block; /* Makes the button an inline block element */
+  font-size: 16px; /* Font size */
+  cursor: pointer; /* Show a pointer cursor on hover */
+  border-radius: 5px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a shadow */
+  transition: all 0.3s ease; /* Smooth transition */
+}
+
+.back-button:hover {
+  background-color: #45a049; /* Darker green on hover */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Slightly darker shadow on hover */
 }

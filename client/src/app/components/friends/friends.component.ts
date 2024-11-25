@@ -12,6 +12,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { DialogPosition, MatDialog } from "@angular/material/dialog";
+import { MatIconModule } from "@angular/material/icon";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../auth/auth.service";
@@ -44,6 +45,7 @@ import { SocketService } from "./socket.service";
     NgClass,
     MessageComponent,
     ExpenseComponent,
+    MatIconModule,
   ],
   templateUrl: "./friends.component.html",
   styleUrl: "./friends.component.css",
@@ -147,27 +149,31 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.isImageLoaded = true;
   }
 
+  clearSelectedUserData(){
+    this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
+    // Remove the existing 'onNewMessage' listener for the previous user
+    this.socketService.removeNewMessageListener();
+    // Clear previous data (messages, expenses, and combined view)
+    this.messages.set([]);
+    this.expenses.set([]);
+    this.combinedView.set([]);
+    // Reset pagination values
+    this.pageMessage = 1;
+    this.pageExpense = 1;
+    this.pageCombined = 1;
+    this.messageInput = "";
+    // Reset flags to indicate whether all messages, expenses, and combined data are loaded
+    this.allMessagesLoaded = false;
+    this.allExpensesLoaded = false;
+    this.allCombinedLoaded = false;
+    this.selectedUser.set(undefined);
+  }
+
   // Method to set the selected user or friend whose chat will be opened.
   onSelectUser(friend: FriendData | undefined) {
     // Check if there is a previously selected user
     if (this.selectedUser()) {
-      // Leave the previous room to ensure no duplicate connections
-      this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
-      // Remove the existing 'onNewMessage' listener for the previous user
-      this.socketService.removeNewMessageListener();
-      // Clear previous data (messages, expenses, and combined view)
-      this.messages.set([]);
-      this.expenses.set([]);
-      this.combinedView.set([]);
-      // Reset pagination values
-      this.pageMessage = 1;
-      this.pageExpense = 1;
-      this.pageCombined = 1;
-      this.messageInput = "";
-      // Reset flags to indicate whether all messages, expenses, and combined data are loaded
-      this.allMessagesLoaded = false;
-      this.allExpensesLoaded = false;
-      this.allCombinedLoaded = false;
+      this.clearSelectedUserData();
     }
 
     // Set the selected user (friend) as the new selected user (friend)
@@ -374,6 +380,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     };
     this.socketService.sendMessage(messageData);
     this.messageInput = "";
+    this.charCountExceeded = false;
   }
 
   /**

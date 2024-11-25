@@ -25,6 +25,7 @@
       border: 2px solid rgba(255, 255, 255, 0.05);
       background-clip: padding-box;
       box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
+      font-size: calc(0.5vw + 0.5em);
     "
   >
     @if (startsWithPrefix(expense()!.expense_id, "adding")) {
@@ -90,14 +91,14 @@
     } @else {
       <div
         class="px-3 text-black"
-        style="max-width: 13vw; word-wrap: break-word; vertical-align: middle"
+        style="max-width: 10vw; word-wrap: break-word; vertical-align: middle"
       >
         <p class="m-0">{{ expense()?.expense_name }}</p>
       </div>
 
       <div class="card" style="background-color: transparent; border: none">
         <div
-          class="card-header d-flex justify-content-start px-4"
+          class="card-header d-flex justify-content-center"
           style="
             border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             background: transparent;
@@ -107,14 +108,14 @@
             {{ isCurrentUserPayer() ? "You paid" : friendName() + " paid" }}
           </p>
         </div>
-        <div class="card-body px-4" style="max-width: 28vw">
+        <div class="card-body" style="max-width: 9vw">
           <p class="mb-0">{{ expense()?.total_amount }}</p>
         </div>
       </div>
 
-      <div class="card" style="background-color: transparent; border: none">
+      <div class="card justify-content-center" style="background-color: transparent; border: none">
         <div
-          class="card-header d-flex justify-content-start px-4"
+          class="card-header d-flex "
           style="
             border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             background: transparent;
@@ -124,7 +125,7 @@
             {{ isCurrentUserPayer() ? "You lent" : friendName() + " lent you" }}
           </p>
         </div>
-        <div class="card-body px-4" style="max-width: 28vw">
+        <div class="card-body" style="max-width: 9vw">
           <p class="mb-0">{{ expense()?.debtor_amount }}</p>
         </div>
       </div>

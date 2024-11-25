@@ -1,3 +1,12 @@
+@if (isLoading()) {
+  <div class="fullscreen-overlay">
+    <div class="text-center">
+      <div class="spinner-border text-primary" aria-live="polite" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+}
 <section class="gradient-form shadow-lg">
   <div
     class="container d-flex justify-content-center align-items-center min-vh-100"

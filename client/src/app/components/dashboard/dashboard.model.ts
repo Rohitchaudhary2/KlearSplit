@@ -1,3 +1,4 @@
+export type TopFriend = Record<string, { amount: number; friend_id: string }>;
 export interface AllExpenses {
   success: boolean;
   message: string;
@@ -8,5 +9,3 @@ export interface AllExpenses {
     monthlyExpense: number[];
   };
 }
-
-export type TopFriend = Record<string, { amount: number; friend_id: string }>;

@@ -1,3 +1,4 @@
+// Interface for the current logged in user
 export interface CurrentUser {
   user_id: string;
   first_name: string;
@@ -7,6 +8,7 @@ export interface CurrentUser {
   image_url: string;
 }
 
+// Interface for the response for fetching a user
 export interface FetchResponse {
   data: CurrentUser;
   status: number;

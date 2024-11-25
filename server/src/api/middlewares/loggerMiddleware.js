@@ -7,17 +7,18 @@ const morganFormat = ":method :url :status :response-time ms";
 // Logger middleware using morgan
 export const loggerMiddleware = morgan(morganFormat, {
   // Stream to which morgan will write log messages
-  stream: {
+  "stream": {
     // Custom write function to process each log message
-    write: (message) => {
+    "write": (message) => {
       const messageParts = message.split(" ");
       const logObject = {
-        method: messageParts[0],
-        url: messageParts[1],
-        status: messageParts[2],
-        responseTime: messageParts[3],
+        "method": messageParts[ 0 ],
+        "url": messageParts[ 1 ],
+        "status": messageParts[ 2 ],
+        "responseTime": messageParts[ 3 ]
       };
+
       logger.info(JSON.stringify(logObject));
-    },
-  },
+    }
+  }
 });

@@ -11,14 +11,14 @@ import initializeFriendExpense from "../api/friends/models/friendExpenseModel.js
 // Creating a new Sequelize instance for connecting to the PostgreSQL database
 const sequelize = new Sequelize(database, username, password, {
   host,
-  dialect: "postgres",
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
+  "dialect": "postgres",
+  "dialectOptions": {
+    "ssl": {
+      "require": true,
+      "rejectUnauthorized": false
+    }
   },
-  logging: false,
+  "logging": false
 });
 
 // Associations for the models
@@ -29,30 +29,30 @@ const FriendExpense = initializeFriendExpense(sequelize);
 // const Group = initializeGroup(sequelize);
 
 // User model association with Friends model
-User.hasMany(Friend, { foreignKey: "friend1_id" });
-User.hasMany(Friend, { foreignKey: "friend2_id" });
-Friend.belongsTo(User, { foreignKey: "friend1_id", as: "friend1" });
+User.hasMany(Friend, { "foreignKey": "friend1_id" });
+User.hasMany(Friend, { "foreignKey": "friend2_id" });
+Friend.belongsTo(User, { "foreignKey": "friend1_id", "as": "friend1" });
 
-Friend.belongsTo(User, { foreignKey: "friend2_id", as: "friend2" });
+Friend.belongsTo(User, { "foreignKey": "friend2_id", "as": "friend2" });
 
 // Friend Messages model associations with User and Friend models
-User.hasMany(FriendMessage, { foreignKey: "sender_id" });
-Friend.hasMany(FriendMessage, { foreignKey: "conversation_id" });
-FriendMessage.belongsTo(User, { foreignKey: "sender_id", as: "sender" });
+User.hasMany(FriendMessage, { "foreignKey": "sender_id" });
+Friend.hasMany(FriendMessage, { "foreignKey": "conversation_id" });
+FriendMessage.belongsTo(User, { "foreignKey": "sender_id", "as": "sender" });
 FriendMessage.belongsTo(Friend, {
-  foreignKey: "conversation_id",
-  as: "conversation",
+  "foreignKey": "conversation_id",
+  "as": "conversation"
 });
 
 // Friend Expenses model association with User and Friend models
-User.hasMany(FriendExpense, { foreignKey: "payer_id" });
-User.hasMany(FriendExpense, { foreignKey: "debtor_id" });
-Friend.hasMany(FriendExpense, { foreignKey: "conversation_id" });
-FriendExpense.belongsTo(User, { foreignKey: "payer_id", as: "payer" });
-FriendExpense.belongsTo(User, { foreignKey: "debtor_id", as: "debtor" });
+User.hasMany(FriendExpense, { "foreignKey": "payer_id" });
+User.hasMany(FriendExpense, { "foreignKey": "debtor_id" });
+Friend.hasMany(FriendExpense, { "foreignKey": "conversation_id" });
+FriendExpense.belongsTo(User, { "foreignKey": "payer_id", "as": "payer" });
+FriendExpense.belongsTo(User, { "foreignKey": "debtor_id", "as": "debtor" });
 FriendExpense.belongsTo(Friend, {
-  foreignKey: "conversation_id",
-  as: "conversation",
+  "foreignKey": "conversation_id",
+  "as": "conversation"
 });
 
 // Group.hasMany(User, { foreignKey: "" })
@@ -60,19 +60,19 @@ FriendExpense.belongsTo(Friend, {
 try {
   await sequelize.authenticate(); // Attempting to authenticate the connection to the database
   logger.log({
-    level: "info",
-    message: JSON.stringify({
-      statusCode: 200,
-      message: "Connection has been established successfully.",
-    }),
+    "level": "info",
+    "message": JSON.stringify({
+      "statusCode": 200,
+      "message": "Connection has been established successfully."
+    })
   });
 } catch {
   logger.log({
-    level: "error",
-    message: JSON.stringify({
-      statusCode: 503,
-      message: "Service unavailable. Unable to connect to the database.",
-    }),
+    "level": "error",
+    "message": JSON.stringify({
+      "statusCode": 503,
+      "message": "Service unavailable. Unable to connect to the database."
+    })
   });
 }
 

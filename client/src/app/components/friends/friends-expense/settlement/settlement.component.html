@@ -3,13 +3,13 @@
 </h2>
 <div class="d-flex flex-column pb-3">
   <div class="d-flex align-items-center justify-content-around p-3">
-    <img class="profile-image" [src]="payer_image" alt="Image" />
+    <img class="profile-image" [src]="payer_image  || '/profile.png'" alt="Payer"/>
     <span class="arrow"></span>
     <img
       class="profile-image"
       style="width: 60px"
-      [src]="debtor_image"
-      alt="Image"
+      [src]="debtor_image  || '/profile.png'"
+      alt="Debtor"
     />
   </div>
   <div class="d-flex align-items-center justify-content-center px-3">

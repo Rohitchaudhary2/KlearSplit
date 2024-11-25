@@ -12,7 +12,7 @@
       matInput
       formControlName="searchInputControl"
       placeholder="Search"
-      (ngModelChange)="onSearchInputChange()"
+      (ngModelChange)="onSearchInputChange($event)"
       style="
         background-color: transparent;
         outline: none !important;
@@ -33,14 +33,19 @@
     } @else if (users().length) {
       <table class="table table-hover" style="cursor: pointer">
         <tbody>
+          <thead>
+            <tr>
+              <th style="display: none;"></th> 
+            </tr>
+          </thead>
           @for (user of users(); track $index) {
             <tr>
-              <td (click)="selectUser(user)">{{ user.email }}</td>
+              <td (click)="selectUser(user)" (keyup.enter)="selectUser(user)">{{ user.email }}</td>
             </tr>
           }
         </tbody>
       </table>
-    } @else if (searchInput() && !selectedUser()) {
+    } @else if (this.form.value.searchInputControl) {
       <div class="px-2">No user found!</div>
     }
   </div>

@@ -2,19 +2,19 @@
   <!-- search container -->
   <div class="d-flex justify-content-evenly align-items-center gap-3 mx-3">
     <div
-      class="d-flex justify-content-between search-container shadow col-md-10 ps-3"
+      class="d-flex justify-content-between search-container shadow col-9 col-md-10 ps-3"
     >
       <input
         type="text"
         [(ngModel)]="searchTerm"
         (input)="onSearchChange()"
-        placeholder="Search"
+        placeholder="Search using email"
       />
       <button type="submit" class="search-button">
         <i class="fa fa-search"></i>
       </button>
     </div>
-    <div class="col-md-1">
+    <div class="col-3 col-md-1 text-center">
       <button
         class="material-icons shadow user-add"
         data-bs-toggle="tooltip"
@@ -35,17 +35,23 @@
     <hr class="m-0 mt-1" />
     <div class="requests">
       <table class="table table-hover">
+        <thead>
+          <tr style="display: none;">
+            <th scope="col"></th> 
+            <th scope="col"></th> 
+          </tr>
+        </thead>
         <tbody>
           @for (request of requests(); track $index) {
             <tr
               (click)="onSelectUser(request)"
+              (keyup.enter)="onSelectUser(request)"
               class="row equal-height-row d-flex justify-content-between m-0"
-              [ngClass]="selectedFriend() === request ? 'active' : ''"
               style="cursor: pointer"
             >
               <td
-                [ngClass]="selectedFriend() === request ? 'active' : ''"
-                class="col-md-3 col-lg-2 col-sm-3"
+
+                class="col-3 col-md-3 col-lg-3"
                 style="
                   flex: 0 0 auto;
                   text-align: center;
@@ -55,16 +61,16 @@
                 <span
                   ><img
                     class="profile-image"
-                    [src]="request.friend.image_url"
-                    alt="Image"
+                    [src]="request.friend.image_url || '/profile.png'"
+                    alt="Profile"
                 /></span>
               </td>
               <td
-                class="col-md-4 col-lg-4 col-sm-3"
-                [ngClass]="selectedFriend() === request ? 'active' : ''"
+                class="col-9 col-md-9 col-lg-9"
+
                 style="flex: 1 1 0"
               >
-                <div class="d-flex justify-content-between align-items-center">
+                <span class="d-flex justify-content-between align-items-center">
                   <span
                     >{{ request.friend.first_name }}
                     {{ request.friend.last_name }}</span
@@ -95,6 +101,10 @@
                             onAcceptReject(request.conversation_id, 'ACCEPTED');
                             $event.stopPropagation()
                           "
+                          (keyup.enter)="
+                            onAcceptReject(request.conversation_id, 'ACCEPTED');
+                            $event.stopPropagation()
+                          "
                           >check</mat-icon
                         >
                       </span>
@@ -107,6 +117,10 @@
                           (click)="
                             onAcceptReject(request.conversation_id, 'REJECTED');
                             $event.stopPropagation()
+                          "
+                          (keyup.enter)="
+                          onAcceptReject(request.conversation_id, 'REJECTED');
+                          $event.stopPropagation()
                           "
                           >close</mat-icon
                         >
@@ -121,13 +135,17 @@
                             onWithdrawRequest(request.conversation_id);
                             $event.stopPropagation()
                           "
+                          (keyup.enter)="
+                          onWithdrawRequest(request.conversation_id);
+                          $event.stopPropagation()
+                          "
                           >close</mat-icon
                         >
                       </span>
                     }
                   </span>
-                </div>
-                <div>{{ request.friend.email }}</div>
+                </span>
+                <span>{{ request.friend.email }}</span>
               </td>
             </tr>
           } @empty {
@@ -148,6 +166,12 @@
     </div>
     <div class="friends">
       <table class="table table-hover">
+        <thead>
+          <tr style="display: none;">
+            <th></th> 
+            <th></th> 
+          </tr>
+        </thead>
         <tbody>
           @for (friend of friendList(); track $index) {
             <tr
@@ -155,6 +179,7 @@
               [ngClass]="selectedFriend() === friend ? 'active' : ''"
               style="cursor: pointer"
               (click)="onSelectUser(friend)"
+              (keyup.enter)="onSelectUser(friend)"
             >
               <td
                 class="col-md-3 col-lg-2 col-sm-3"
@@ -167,8 +192,8 @@
                 <span
                   ><img
                     class="profile-image"
-                    [src]="friend.friend.image_url"
-                    alt="Image"
+                    [src]="friend.friend.image_url || '/profile.png'"
+                    alt="Friend"
                 /></span>
               </td>
               <td class="col-md-9 col-lg-10 col-sm-9">

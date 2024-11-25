@@ -1,6 +1,7 @@
 {
   "name": "client",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -36,11 +37,17 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.2.1",
+    "@angular-eslint/eslint-plugin": "^18.4.1",
+    "@angular-eslint/template-parser": "^18.4.1",
     "@angular/cli": "^18.2.1",
     "@angular/compiler-cli": "^18.2.0",
+    "@eslint/js": "^9.15.0",
     "@types/crypto-js": "^4.2.2",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
     "angular-eslint": "18.3.1",
     "eslint": "^9.9.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "prettier": "^3.3.3",
     "typescript": "~5.5.2",
     "typescript-eslint": "8.2.0"

@@ -1,59 +1,80 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
-import { CurrentUser } from '../shared/types.model';
-import { Observable, map } from 'rxjs';
-import { ToastrService } from 'ngx-toastr';
-import { RegisterResponse, RegisterUser } from './register-types.model';
-import { Router } from '@angular/router';
-import { LoginResponse, LoginUser } from './login-types.model';
-import { API_URLS } from '../../constants/api-urls';
-import { TokenService } from './token.service';
+import { HttpClient } from "@angular/common/http";
+import { inject, Injectable, signal } from "@angular/core";
+import { Router } from "@angular/router";
+import { ToastrService } from "ngx-toastr";
+import { map, Observable } from "rxjs";
+
+import { API_URLS } from "../../constants/api-urls";
+import { CurrentUser } from "../shared/types.model";
+import { LoginResponse, LoginUser } from "./login-types.model";
+import { RegisterResponse, RegisterUser } from "./register-types.model";
+import { TokenService } from "./token.service";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class AuthService {
-  private httpClient = inject(HttpClient);
-  private toastr = inject(ToastrService);
-  private router = inject(Router);
-  private tokenService = inject(TokenService);
+  // Dependency injection for necessary services
+  private readonly httpClient = inject(HttpClient);
+  private readonly toastr = inject(ToastrService);
+  private readonly router = inject(Router);
+  private readonly tokenService = inject(TokenService);
 
-  private verifyUrl = API_URLS.verify; // URL for OTP verification
-  private registerUrl = API_URLS.register; // URL for user registeration
-  private loginUrl = API_URLS.login; // URL for login
-  private logoutUrl = API_URLS.logout; // URL for logout
-  private forgotPasswordVerifyUrl = API_URLS.verifyForgotPassword; // URL to verify user for forgot password
-  private forgotPasswordUrl = API_URLS.forgotPassword; // URL for forgot password
-  private restoreAccountVerifyUrl = API_URLS.restoreAccountVerify; // URL to verify user for restore account
-  private restoreAccountUrl = API_URLS.restoreAccount; // URL for restore account
+  // URLs for API endpoints
+  private readonly verifyUrl = API_URLS.verify; // URL for OTP verification
+  private readonly registerUrl = API_URLS.register; // URL for user registeration
+  private readonly loginUrl = API_URLS.login; // URL for login
+  private readonly logoutUrl = API_URLS.logout; // URL for logout
+  private readonly forgotPasswordVerifyUrl = API_URLS.verifyForgotPassword; // URL to verify user for forgot password
+  private readonly forgotPasswordUrl = API_URLS.forgotPassword; // URL for forgot password
+  private readonly restoreAccountVerifyUrl = API_URLS.restoreAccountVerify; // URL to verify user for restore account
+  private readonly restoreAccountUrl = API_URLS.restoreAccount; // URL for restore account
 
-  currentUser = signal<CurrentUser | undefined | null>(undefined); // Store user data
+  currentUser = signal<CurrentUser | undefined>(undefined); // Store user data
 
-  // Getter for authentication status
+  /**
+   * Check if a user is authenticated based on their user ID.
+   * Returns `true` if a user ID is found, otherwise `false`.
+   */
   isAuthenticated(): boolean {
     const userId = this.tokenService.getUserId();
     return !!userId;
   }
 
-  // Method to set user as authenticated after login/register
+  /**
+   * Set the authenticated user data after login or registration.
+   * Updates the `currentUser` signal with the provided user data.
+   *
+   * @param user - The user data to set.
+   */
   setAuthenticatedUser(user: CurrentUser | undefined): void {
     this.currentUser.set(user);
   }
 
-  // Verify User Function (Send OTP for Verification)
+  /**
+   * Send an OTP to verify a new user.
+   *
+   * @param user - Partial details of the user (e.g., email or phone number).
+   * @returns Observable of the API response.
+   */
   verifyUser(user: Partial<RegisterUser>): Observable<object> {
     return this.httpClient
       .post(`${this.verifyUrl}`, user, { withCredentials: true })
       .pipe(
         map((response) => {
-          // Handle OTP verification success response here (if needed)
-          this.toastr.success('OTP sent successfully', 'Success');
+          this.toastr.success("OTP sent successfully", "Success");
           return response;
         }),
       );
   }
 
-  // Register User with OTP Verification
+  /**
+   * Register a new user with OTP verification.
+   *
+   * @param user - Partial details of the user.
+   * @param otp - The OTP provided for verification.
+   * @returns Observable of the registration response containing user data and tokens.
+   */
   registerUserWithOtp(
     user: Partial<RegisterUser>,
     otp: { otp: string | null | undefined },
@@ -67,6 +88,7 @@ export class AuthService {
       .pipe(
         map((response: RegisterResponse) => {
           if (response) {
+            // Set the authenticated user data
             this.setAuthenticatedUser(response.data);
             this.tokenService.setUserId(response.data?.user_id);
           }
@@ -76,13 +98,19 @@ export class AuthService {
       );
   }
 
-  // Login User
+  /**
+   * Authenticate a user by logging in.
+   *
+   * @param user - Login details of the user (e.g., email and password).
+   * @returns Observable of the login response containing user data and tokens.
+   */
   login(user: LoginUser): Observable<LoginResponse> {
     return this.httpClient
       .post<LoginResponse>(this.loginUrl, user, { withCredentials: true })
       .pipe(
         map((response: LoginResponse) => {
           if (response) {
+            // Set the authenticated user data
             this.setAuthenticatedUser(response.data);
             this.tokenService.setUserId(response.data?.user_id);
           }
@@ -92,20 +120,29 @@ export class AuthService {
       );
   }
 
-  // logout user
+  /**
+   * Logout the currently authenticated user.
+   * Clears the user session and navigates to the login page.
+   */
   logout(): void {
     this.httpClient.get(this.logoutUrl, { withCredentials: true }).subscribe({
       next: () => {
         // Remove the access of user from protected routes
-        this.currentUser.set(null);
+        this.currentUser.set(undefined);
         this.tokenService.removeUserId();
-        this.toastr.success('You have logged out successfully.', 'Success');
-        this.router.navigate(['/login']);
+        this.toastr.success("You have logged out successfully.", "Success");
+        this.router.navigate([ "/login" ]);
       },
     });
   }
 
-  // Verify a user who already exists to resend them a password
+  /**
+   * Verify a user for the "Forgot Password" process.
+   * Sends an OTP to the user's email.
+   *
+   * @param email - The email of the user.
+   * @returns Observable of the API response.
+   */
   verifyForgotPasswordUser(
     email: string | null | undefined,
   ): Observable<object> {
@@ -117,13 +154,18 @@ export class AuthService {
       )
       .pipe(
         map((response) => {
-          this.toastr.success('OTP sent successfully', 'Success');
+          this.toastr.success("OTP sent successfully", "Success");
           return response;
         }),
       );
   }
 
-  // Get a new password if you forgot your current one
+  /**
+   * Reset the password for a user who has forgotten it.
+   *
+   * @param email - The email of the user.
+   * @param otp - The OTP sent for verification.
+   */
   forgotPassword(
     email: string | null | undefined,
     otp: string | null | undefined,
@@ -136,15 +178,21 @@ export class AuthService {
       )
       .pipe(
         map((response) => {
-          this.toastr.success('New Password sent successfully', 'Success');
+          this.toastr.success("New Password sent successfully", "Success");
           // Reroute to login
-          this.router.navigate(['/login']);
+          this.router.navigate([ "/login" ]);
           return response;
         }),
       );
   }
 
-  // Verify a user who already exists to restore their account
+  /**
+   * Verify an existing user for account restoration.
+   * Sends an OTP to the user's email for verification.
+   *
+   * @param email - The email of the user.
+   * @returns Observable of the API response.
+   */
   verifyExistingUser(email: string | null | undefined): Observable<object> {
     return this.httpClient
       .post(
@@ -154,13 +202,19 @@ export class AuthService {
       )
       .pipe(
         map((response) => {
-          this.toastr.success('OTP sent successfully', 'Success');
+          this.toastr.success("OTP sent successfully", "Success");
           return response;
         }),
       );
   }
 
-  // Restore a deleted account
+  /**
+   * Restore a previously deleted account.
+   *
+   * @param email - The email of the user.
+   * @param otp - The OTP sent for verification.
+   * @returns Observable of the restoration response containing user data and tokens.
+   */
   restoreAccount(
     email: string | null | undefined,
     otp: string | null | undefined,
@@ -174,6 +228,7 @@ export class AuthService {
       .pipe(
         map((response) => {
           if (response) {
+            // Set the authenticated user data
             this.setAuthenticatedUser(response.data);
             this.tokenService.setUserId(response.data?.user_id);
           }
@@ -183,6 +238,10 @@ export class AuthService {
       );
   }
 
+  /**
+   * Refresh the access token for the current user session.
+   * Sends a request to the API to generate a new access token.
+   */
   refreshAccessToken() {
     return this.httpClient.get(`${API_URLS.refreshAccessToken}`, {
       withCredentials: true,

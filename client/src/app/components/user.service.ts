@@ -11,12 +11,12 @@ import { FetchResponse } from "./shared/types.model";
   providedIn: "root",
 })
 export class UserService {
-  private httpClient = inject(HttpClient);
+  private readonly httpClient = inject(HttpClient);
 
-  private tokenService = inject(TokenService);
-  private authService = inject(AuthService);
+  private readonly tokenService = inject(TokenService);
+  private readonly authService = inject(AuthService);
 
-  private getUserUrl = API_URLS.fetchUser; // URL for getting user without the id part
+  private readonly getUserUrl = API_URLS.fetchUser; // URL for getting user without the id part
 
   fetchUserDetails(userId: string | undefined) {
     const getUserUrlWithId = `${this.getUserUrl}/${userId}`;

@@ -5,7 +5,7 @@ import { hashedPassword } from "../utils/hashPassword.js";
 import { generatePassword } from "../utils/passwordGenerator.js";
 import sendMail from "../utils/sendMail.js";
 import FriendDb from "./friendDb.js";
-import { formatFriendData, getNewStatus, calculateDebtorAmount, calculateNewBalance, validateSettlementAmount } from "./friendUtils.js";
+import { formatFriendData, getNewStatus, calculateDebtorAmount, calculateNewBalance, validateSettlementAmount, formatPersonName, validateSettlement, validateFriendExist, validateExistingExpense, validateConversationPermissions, validateUpdateParticipants, isBalanceUpdateRequired } from "./friendUtils.js";
 
 class FriendService {
   /**
@@ -43,8 +43,7 @@ class FriendService {
         "email": friendRequestTo.email,
         "subject": "Invited on KlearSplit"
       };
-
-      const sender = `${friendData.firstName} ${ friendData.lastName || ""}`;
+      const sender = formatPersonName(friendData);
 
       sendMail(options, "invitationTemplate", {
         "name": friendRequestTo.firstName,
@@ -191,9 +190,7 @@ class FriendService {
     const friendExist = await FriendDb.getFriend(conversationId);
 
     // If the friend doesn't exist, throw an error
-    if (!friendExist) {
-      throw new ErrorHandler(404, "Friend doesn't exist");
-    }
+    validateFriendExist(friendExist);
     const statusField = type === "archived" ? "archival_status" : "block_status";
 
     // Determine new status for friend1 or friend2 based on the current status
@@ -228,9 +225,7 @@ class FriendService {
     // Check if the conversation exists
     const friendExist = await FriendDb.getFriend(conversationId);
 
-    if (!friendExist) {
-      throw new ErrorHandler(404, "Friend doesn't exist");
-    }
+    validateFriendExist(friendExist);
 
     // Ensure that the conversation status allows messaging
     if (friendExist.dataValues.status === "REJECTED") {
@@ -257,9 +252,7 @@ class FriendService {
     // Check if the conversation exists
     const friendExist = await FriendDb.getFriend(conversationId);
 
-    if (!friendExist) {
-      throw new ErrorHandler(404, "Friend doesn't exist");
-    }
+    validateFriendExist(friendExist);
 
     // Ensure that the conversation status allows messaging
     if (friendExist.dataValues.status === "REJECTED") {
@@ -298,23 +291,17 @@ class FriendService {
   static addExpense = async(expenseData, conversationId) => {
     const friendExist = await FriendDb.getFriend(conversationId);
 
-    if (!friendExist) {
-      throw new ErrorHandler(404, "Friend not found");
-    }
+    validateFriendExist(friendExist);
     Object.assign(expenseData, { "conversation_id": conversationId });
 
     // Validate that the conversation allows expenses
-    if (
-      friendExist.status === "REJECTED" || friendExist.archival_status !== "NONE" || friendExist.block_status !== "NONE"
-    ) {
-      throw new ErrorHandler(403, "This action is not allowed.");
-    }
+    validateConversationPermissions(friendExist);
 
     const transaction = await sequelize.transaction();
 
     try {
       // Calculate debtor amount for the expense
-      const debtorAmount = this.calculateDebtorAmount(expenseData);
+      const debtorAmount = calculateDebtorAmount(expenseData);
 
       Object.assign(expenseData, { "debtor_amount": debtorAmount });
 
@@ -390,9 +377,7 @@ class FriendService {
   static getExpenses = async(conversationId, page, pageSize, fetchAll) => {
     const friendExist = await FriendDb.getFriend(conversationId);
 
-    if (!friendExist) {
-      throw new ErrorHandler(404, "Friend not found");
-    }
+    validateFriendExist(friendExist);
 
     // Ensure that you are allowed to view the expense
     if (friendExist.status === "REJECTED") {
@@ -431,33 +416,15 @@ class FriendService {
   static updateExpense = async(updatedExpenseData, conversationId) => {
     const friendExist = await FriendDb.getFriend(conversationId);
 
-    if (!friendExist) {
-      throw new ErrorHandler(404, "Friend not found");
-    }
-    const existingExpense = await FriendDb.getExpense(
-      updatedExpenseData.friend_expense_id
-    );
+    validateFriendExist(friendExist);
+  
+    const existingExpense = await FriendDb.getExpense(updatedExpenseData.friend_expense_id);
 
-    if (!existingExpense) {
-      throw new ErrorHandler(404, "Expense not found");
-    }
-
-    // Validate that the conversation allows expenses
-    if (
-      friendExist.status === "REJECTED" || friendExist.archival_status !== "NONE" || friendExist.block_status !== "NONE"
-    ) {
-      throw new ErrorHandler(403, "This action is not allowed.");
-    }
-
-    // Don't allow to update the expense if not part of the conversation
-    if (
-      !(
-        (updatedExpenseData.payer_id === (friendExist.friend1_id || friendExist.friend2_id)) && (updatedExpenseData.debtor_id === (friendExist.friend1_id || friendExist.friend2_id))
-      )
-    ) {
-      throw new ErrorHandler(403, "You are not allowed to update this expense");
-    }
-
+    validateExistingExpense(existingExpense);
+  
+    validateConversationPermissions(friendExist);
+    validateUpdateParticipants(updatedExpenseData, friendExist);
+  
     const balanceAffectingFields = [
       "total_amount",
       "payer_id",
@@ -467,55 +434,47 @@ class FriendService {
       "participant2_share",
       "debtor_share"
     ];
+  
+    const requiresBalanceUpdate = isBalanceUpdateRequired(balanceAffectingFields, updatedExpenseData);
+  
+    if (!requiresBalanceUpdate) {
+      return this.handleNonBalanceUpdate(updatedExpenseData);
+    }
+  
+    return this.handleBalanceUpdate(updatedExpenseData, friendExist, existingExpense);
+  };
 
-    // Check if balance-related fields are being updated
-    const requiresBalanceUpdate = balanceAffectingFields.some(
-      (field) => field in updatedExpenseData
+  /**
+   * Handles non-balance updates.
+   */
+  static handleNonBalanceUpdate = async(updatedExpenseData) => {
+    const { affectedRows, updatedExpense } = await FriendDb.updateExpense(
+      updatedExpenseData,
+      updatedExpenseData.friend_expense_id
     );
 
-    // Only non-balance fields are being updated, skip transaction
-    if (!requiresBalanceUpdate) {
-      const { affectedRows, updatedExpense } = await FriendDb.updateExpense(
-        updatedExpenseData,
-        updatedExpenseData.friend_expense_id
-      );
-
-      if (affectedRows === 0) {
-        throw new ErrorHandler(400, "Failed to update expense");
-      }
-
-      // Format the payer's name in the response
-      updatedExpense.dataValues.payer = `${updatedExpense.payer.first_name} ${updatedExpense.payer.last_name || ""}`.trim();
-      return updatedExpense;
+    if (affectedRows === 0) {
+      throw new ErrorHandler(400, "Failed to update expense");
     }
 
-    // Balance-related fields need an update, use a transaction
+    updatedExpense.dataValues.payer = formatPersonName(updatedExpense.payer);
+    return updatedExpense;
+  };
+
+  /**
+   * Handles balance updates with a transaction.
+   */
+  static handleBalanceUpdate = async(updatedExpenseData, friendExist, existingExpense) => {
     const transaction = await sequelize.transaction();
 
     try {
-      const debtorAmount = calculateDebtorAmount(
-        updatedExpenseData,
-        existingExpense
-      );
+      const debtorAmount = calculateDebtorAmount(updatedExpenseData, existingExpense);
 
       Object.assign(updatedExpenseData, { "debtor_amount": debtorAmount });
 
       const currentBalance = parseFloat(friendExist.balance_amount);
 
-      // Handle settlement split type
-      if (updatedExpenseData.split_type === "SETTLEMENT") {
-        if (currentBalance === 0) {
-          throw new ErrorHandler(400, "You are all settled up.");
-        }
-        validateSettlementAmount(currentBalance, debtorAmount);
-      }
-
-      // Prevent self-expense
-      if (
-        updatedExpenseData.payer_id && updatedExpenseData.debtor_id && updatedExpenseData.payer_id === updatedExpenseData.debtor_id
-      ) {
-        throw new ErrorHandler(400, "You cannot add an expense with yourself");
-      }
+      validateSettlement(updatedExpenseData, currentBalance, debtorAmount);
 
       const newBalance = calculateNewBalance(
         currentBalance,
@@ -527,7 +486,6 @@ class FriendService {
         true
       );
 
-      // Update the expense with a transaction
       const { affectedRows, updatedExpense } = await FriendDb.updateExpense(
         updatedExpenseData,
         updatedExpenseData.friend_expense_id,
@@ -538,21 +496,17 @@ class FriendService {
         throw new ErrorHandler(400, "Failed to update expense");
       }
 
-      // Update the balance in the friends table
       await FriendDb.updateFriends(
         { "balance_amount": newBalance },
         friendExist.conversation_id,
         transaction
       );
 
-      // Commit the transaction
       await transaction.commit();
 
-      // Format the payer's name in the response
-      updatedExpense.dataValues.payer = `${updatedExpense.payer.first_name} ${updatedExpense.payer.last_name || ""}`.trim();
+      updatedExpense.dataValues.payer = formatPersonName(updatedExpense.payer);
       return updatedExpense;
     } catch (error) {
-      // Rollback the transaction in case of any error
       await transaction.rollback();
       throw error;
     }
@@ -571,15 +525,11 @@ class FriendService {
   static deleteExpense = async(conversationId, friendExpenseId) => {
     const friendExist = await FriendDb.getFriend(conversationId);
 
-    if (!friendExist) {
-      throw new ErrorHandler(404, "Friend not found");
-    }
+    validateFriendExist(friendExist);
 
     const existingExpense = await FriendDb.getExpense(friendExpenseId);
 
-    if (!existingExpense) {
-      throw new ErrorHandler(404, "Expense not found");
-    }
+    validateExistingExpense(existingExpense);
 
     // Verify that the expense belongs to the current conversation
     if (friendExist.conversationId !== existingExpense.conversation_id) {

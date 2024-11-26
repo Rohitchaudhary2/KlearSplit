@@ -251,8 +251,6 @@ export class SplitTypeComponent implements OnInit {
     ) {
       return;
     }
-
-    // If validation is successful, close the dialog and pass the selected split data
     this.dialogRef.close({
       split_type: this.activeItem,
       participant1Share,

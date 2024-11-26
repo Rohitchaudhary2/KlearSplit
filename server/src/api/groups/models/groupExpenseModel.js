@@ -1,40 +1,54 @@
 import { DataTypes } from "sequelize";
 
 export default (sequelize) => {
-  const GroupMessage = sequelize.define(
-    "group_message",
+  const GroupExpense = sequelize.define(
+    "group_expense",
     {
-      group_message_id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
-        primaryKey: true,
+      "group_expense_id": {
+        "type": DataTypes.UUID,
+        "defaultValue": DataTypes.UUIDV4,
+        "allowNull": false,
+        "primaryKey": true
       },
-      sender_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "groups_members",
-          key: "group_membership_id",
-        },
+      "expense_name": {
+        "type": DataTypes.STRING(50),
+        "allowNull": false,
+        "validate": {
+          "notEmpty": {
+            "msg": "Expense name can't be empty."
+          }
+        }
       },
-      group_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "groups",
-          key: "group_id",
-        },
+      "group_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
       },
-      message: {
-        type: DataTypes.STRING,
-        allowNull: false,
+      "payer_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
       },
+      "total_amount": {
+        "type": DataTypes.DECIMAL(12, 2),
+        "allowNull": false,
+        "defaultValue": 0
+      },
+      "description": {
+        "type": DataTypes.STRING(50),
+        "allowNull": true
+      },
+      "receipt_url": {
+        "type": DataTypes.STRING(255),
+        "allowNull": true
+      },
+      "split_type": {
+        "type": DataTypes.ENUM("EQUAL", "UNEQUAL", "PERCENTAGE"),
+        "allowNull": false
+      }
     },
     {
-      timestamps: true,
-      paranoid: true,
-    },
+      "timestamps": true,
+      "paranoid": true
+    }
   );
 
   //   GroupMember.beforeDestroy(async (user, options) => {
@@ -95,5 +109,5 @@ export default (sequelize) => {
   //     );
   //   });
 
-  return GroupMessage;
+  return GroupExpense;
 };

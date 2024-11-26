@@ -1,10 +1,10 @@
 import { DataTypes } from "sequelize";
 
 export default (sequelize) => {
-  const GroupMember = sequelize.define(
-    "group_member",
+  const GroupSettlement = sequelize.define(
+    "group_settlement",
     {
-      "group_membership_id": {
+      "group_settlement_id": {
         "type": DataTypes.UUID,
         "defaultValue": DataTypes.UUIDV4,
         "allowNull": false,
@@ -14,28 +14,21 @@ export default (sequelize) => {
         "type": DataTypes.UUID,
         "allowNull": false
       },
-      "inviter_id": {
-        "type": DataTypes.UUID,
-        "allowNull": true
-      },
-      "member_id": {
+      "payer_id": {
         "type": DataTypes.UUID,
         "allowNull": false
       },
-      "status": {
-        "type": DataTypes.ENUM("PENDING", "ACCEPTED", "REJECTED"),
-        "allowNull": false,
-        "defaultValue": "PENDING"
+      "debtor_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
       },
-      "role": {
-        "type": DataTypes.ENUM("CREATOR", "ADMIN", "COADMIN", "USER"),
-        "allowNull": false,
-        "defaultValue": "USER"
+      "settlement_amount": {
+        "type": DataTypes.DECIMAL(12, 2),
+        "allowNull": false
       },
-      "has_archived": {
-        "type": DataTypes.BOOLEAN,
-        "allowNull": false,
-        "defaultValue": false
+      "description": {
+        "type": DataTypes.STRING(150),
+        "allowNull": false
       }
     },
     {
@@ -102,5 +95,5 @@ export default (sequelize) => {
   //     );
   //   });
 
-  return GroupMember;
+  return GroupSettlement;
 };

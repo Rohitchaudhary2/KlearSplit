@@ -1,41 +1,32 @@
 import { DataTypes } from "sequelize";
 
 export default (sequelize) => {
-  const GroupExpenseParticipant = sequelize.define(
-    "group_expense_participant",
+  const GroupMessage = sequelize.define(
+    "group_message",
     {
-      expense_participant_id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
-        primaryKey: true,
+      "group_message_id": {
+        "type": DataTypes.UUID,
+        "defaultValue": DataTypes.UUIDV4,
+        "allowNull": false,
+        "primaryKey": true
       },
-      group_expense_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "group_expenses",
-          key: "group_expense_id",
-        },
+      "sender_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
       },
-      debtor_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "groups_members",
-          key: "group_membership_id",
-        },
+      "group_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
       },
-      debtor_amount: {
-        type: DataTypes.DECIMAL(12, 2),
-        allowNull: false,
-        defaultValue: 0,
-      },
+      "message": {
+        "type": DataTypes.STRING(512),
+        "allowNull": false
+      }
     },
     {
-      timestamps: true,
-      paranoid: true,
-    },
+      "timestamps": true,
+      "paranoid": true
+    }
   );
 
   //   GroupMember.beforeDestroy(async (user, options) => {
@@ -96,5 +87,5 @@ export default (sequelize) => {
   //     );
   //   });
 
-  return GroupExpenseParticipant;
+  return GroupMessage;
 };

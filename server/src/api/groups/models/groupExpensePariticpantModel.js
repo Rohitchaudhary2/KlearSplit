@@ -1,62 +1,33 @@
 import { DataTypes } from "sequelize";
 
 export default (sequelize) => {
-  const GroupExpense = sequelize.define(
-    "group_expense",
+  const GroupExpenseParticipant = sequelize.define(
+    "group_expense_participant",
     {
-      group_expense_id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
-        primaryKey: true,
+      "expense_participant_id": {
+        "type": DataTypes.UUID,
+        "defaultValue": DataTypes.UUIDV4,
+        "allowNull": false,
+        "primaryKey": true
       },
-      expense_name: {
-        type: DataTypes.STRING(50),
-        allowNull: false,
-        validate: {
-          notEmpty: {
-            msg: "Expense name can't be empty.",
-          },
-        },
+      "group_expense_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
       },
-      group_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "groups",
-          key: "group_id",
-        },
+      "debtor_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
       },
-      payer_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "groups_members",
-          key: "group_membership_id",
-        },
-      },
-      total_amount: {
-        type: DataTypes.DECIMAL(12, 2),
-        allowNull: false,
-        defaultValue: 0,
-      },
-      description: {
-        type: DataTypes.STRING(50),
-        allowNull: true,
-      },
-      receipt_url: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-      },
-      split_type: {
-        type: DataTypes.ENUM("EQUAL", "UNEQUAL", "PERCENTAGE"),
-        allowNull: false,
-      },
+      "debtor_amount": {
+        "type": DataTypes.DECIMAL(12, 2),
+        "allowNull": false,
+        "defaultValue": 0
+      }
     },
     {
-      timestamps: true,
-      paranoid: true,
-    },
+      "timestamps": true,
+      "paranoid": true
+    }
   );
 
   //   GroupMember.beforeDestroy(async (user, options) => {
@@ -117,5 +88,5 @@ export default (sequelize) => {
   //     );
   //   });
 
-  return GroupExpense;
+  return GroupExpenseParticipant;
 };

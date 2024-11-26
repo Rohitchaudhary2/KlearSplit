@@ -14,6 +14,7 @@ import {
   updateUserSchema
 } from "../users/userValidations.js";
 import { ErrorHandler } from "./errorHandler.js";
+import { groupCreationSchema } from "./../groups/groupValidations.js";
 
 // Middleware to validate user creation or update data
 export const validateData = (req, res, next) => {
@@ -150,6 +151,20 @@ export const validateExpense = (req, res, next) => {
       throw new ErrorHandler(400, error);
     }
     req.validatedExpense = value;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const validateGroupCreationData = (req, res, next) => {
+  try {
+    const { error, value } = groupCreationSchema.validate(req.body);
+
+    if (error) {
+      throw new ErrorHandler(400, error);
+    }
+    req.validatedGroupData = value;
     next();
   } catch (error) {
     next(error);

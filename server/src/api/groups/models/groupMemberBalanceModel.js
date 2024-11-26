@@ -4,47 +4,35 @@ export default (sequelize) => {
   const GroupMemberBalance = sequelize.define(
     "group_member_balance",
     {
-      balance_id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
-        primaryKey: true,
+      "balance_id": {
+        "type": DataTypes.UUID,
+        "defaultValue": DataTypes.UUIDV4,
+        "allowNull": false,
+        "primaryKey": true
       },
-      group_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "groups",
-          key: "group_id",
-        },
+      "group_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
       },
-      participant1_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "groups_members",
-          key: "group_membership_id",
-        },
+      "participant1_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
       },
-      participant2_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "groups_members",
-          key: "group_membership_id",
-        },
+      "participant2_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
       },
-      balance_amount: {
-        type: DataTypes.DECIMAL(12, 2),
-        allowNull: false,
-        defaultValue: 0,
-      },
+      "balance_amount": {
+        "type": DataTypes.DECIMAL(12, 2),
+        "allowNull": false,
+        "defaultValue": 0
+      }
     },
     {
-      tableName: "group_member_balance",
-      timestamps: true,
-      paranoid: true,
-    },
+      "tableName": "group_member_balance",
+      "timestamps": true,
+      "paranoid": true
+    }
   );
 
   //   GroupMember.beforeDestroy(async (user, options) => {

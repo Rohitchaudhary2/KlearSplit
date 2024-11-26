@@ -23,6 +23,10 @@ export default (sequelize) => {
         "type": DataTypes.STRING(255),
         "allowNull": true
       },
+      "creator_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
+      },
       "image_url": {
         "type": DataTypes.STRING(255),
         "defaultValue":

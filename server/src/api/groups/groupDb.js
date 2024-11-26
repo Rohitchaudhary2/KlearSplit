@@ -1,3 +1,0 @@
-// class GroupDb {
-//     static createGroup =
-// }

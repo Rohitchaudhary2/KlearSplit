@@ -7,7 +7,7 @@
     class="ms-3 underline"
     [class.active]="activeItem === 'EQUAL'"
     (click)="setActive('EQUAL')"
-    (keydown)="setActive('EQUAL')"
+    (keyup.enter)="setActive('EQUAL')"
   >
     Equal
   </span>
@@ -15,7 +15,7 @@
     class="ms-3 underline"
     [class.active]="activeItem === 'UNEQUAL'"
     (click)="setActive('UNEQUAL')"
-    (keydown)="setActive('UNEQUAL')"
+    (keyup.enter)="setActive('UNEQUAL')"
   >
     Unequal
   </span>
@@ -23,7 +23,7 @@
     class="ms-3 underline"
     [class.active]="activeItem === 'PERCENTAGE'"
     (click)="setActive('PERCENTAGE')"
-    (keydown)="setActive('PERCENTAGE')"
+    (keyup.enter)="setActive('PERCENTAGE')"
   >
     Percentage
   </span>

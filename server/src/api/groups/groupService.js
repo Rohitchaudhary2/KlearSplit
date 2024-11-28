@@ -3,6 +3,12 @@ import GroupDb from "./groupDb.js";
 import GroupUtils from "./groupUtils.js";
 
 class GroupService {
+  static assignRolesAndAddMembers = async(membersData, inviterId, groupId) => {
+    const members = GroupUtils.assignRoles(membersData.members, membersData.admins, membersData.coadmins, inviterId, groupId);
+
+    return await GroupDb.addMembers(members);
+  };
+
   static createGroup = async(groupData, userId) => {
     Object.assign(groupData.group, { "creator_id": userId });
     
@@ -18,9 +24,9 @@ class GroupService {
       "role": "CREATOR"
     } ];
 
-    await GroupDb.addMembers(groupCreatorData);
+    const groupCreator = await GroupDb.addMembers(groupCreatorData);
     
-    await this.addMembers(groupData.membersData, userId, group.group_id);
+    await this.assignRolesAndAddMembers(groupData.membersData, groupCreator.group_membership_id, group.group_id);
     return group;
   };
 
@@ -37,11 +43,15 @@ class GroupService {
       throw new ErrorHandler(400, "You are not allowed to invite members to this group");
     }
 
-    const members = GroupUtils.assignRoles(membersData.members, membersData.admins, membersData.coadmins, groupId, inviter.group_membership_id);
-
-    const addedMembers = await GroupDb.addMembers(members);
+    const addedMembers = await this.assignRolesAndAddMembers(membersData, inviterId, groupId);
 
     return addedMembers;
+  };
+
+  static getUserGroups = async(userId) => {
+    const groups = await GroupDb.getUserGroups(userId);
+
+    return groups;
   };
 }
 

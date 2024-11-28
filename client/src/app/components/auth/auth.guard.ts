@@ -38,8 +38,7 @@ export class AuthGuard implements CanActivate {
       });
       return false;
     }
-    const userId = this.tokenService.getUserId();
-    await lastValueFrom(this.userService.fetchUserDetails(userId));
+    await lastValueFrom(this.userService.fetchUserDetails());
     if (this.authService.isAuthenticated()) {
       return true; // Allow access if the user is authenticated
     } else {

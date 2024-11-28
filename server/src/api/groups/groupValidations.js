@@ -1,5 +1,13 @@
 import Joi from "joi";
 
+const memberData = {
+  "membersData": {
+    "members": Joi.array().items(Joi.string().uuid().required()).required(),
+    "admins": Joi.array().items(Joi.string().uuid().required()),
+    "coadmins": Joi.array().items(Joi.string().uuid().required())
+  }
+};
+
 export const groupCreationSchema = Joi.object({
   "group": {
     "group_name": Joi.string().trim().min(2).max(50).required().messages({
@@ -9,9 +17,10 @@ export const groupCreationSchema = Joi.object({
     "group_description": Joi.string().trim(),
     "image_url": Joi.string()
   },
-  "membersData": {
-    "members": Joi.array().items(Joi.string().uuid().required()).required(),
-    "admins": Joi.array().items(Joi.string().uuid().required()),
-    "coadmins": Joi.array().items(Joi.string().uuid().required())
-  }
+  ...memberData
+});
+
+export const membersDataSchema = Joi.object({
+  ...memberData,
+  "group_id": Joi.string().uuid().required()
 });

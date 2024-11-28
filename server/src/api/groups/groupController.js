@@ -11,6 +11,26 @@ class GroupController {
       next(error);
     }
   };
+
+  static addMembers = async(req, res, next) => {
+    try {
+      const addedMembers = await GroupService.addMembers(req.validatedMembersData.membersData, req.user.user_id, req.validatedMembersData.group_id);
+
+      responseHandler(res, 201, "Members added successfully", addedMembers);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static getUserGroups = async(req, res, next) => {
+    try {
+      const groups = await GroupService.getUserGroups(req.user.user_id);
+
+      responseHandler(res, 200, "Groups fetched successfully", groups);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default GroupController;

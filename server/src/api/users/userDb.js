@@ -45,7 +45,7 @@ class UserDb {
     });
 
   // Retrieves users based on provided regex
-  static getUsersByRegex = async(regex) => {
+  static getUsersByRegex = async(regex, userId) => {
     const nameParts = regex.split(" ").filter(Boolean); // Split by space and remove empty values
 
     let whereCondition;
@@ -79,7 +79,11 @@ class UserDb {
     }
 
     return await User.findAll({
-      "where": whereCondition,
+      "where": {
+        ...whereCondition,
+        "user_id": {
+          [ Op.ne ]: userId
+        } },
       "attributes": [ "user_id", "email", "first_name", "last_name" ]
     });
   };

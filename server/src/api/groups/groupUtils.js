@@ -1,5 +1,5 @@
 class GroupUtils {
-  static assignRoles(members, admins, coadmins, groupId, inviterId) {
+  static assignRoles(members, admins, coadmins, inviterId, groupId) {
     if (!(admins || coadmins)) {
       return members.map((userId) => ({ "inviter_id": inviterId, "group_id": groupId, "member_id": userId }));
     }

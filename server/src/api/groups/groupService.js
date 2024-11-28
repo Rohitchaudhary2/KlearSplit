@@ -53,6 +53,12 @@ class GroupService {
 
     return groups;
   };
+
+  static getGroup = async(groupId) => {
+    const group = await GroupDb.getGroup(groupId);
+
+    return group;
+  };
 }
 
 export default GroupService;

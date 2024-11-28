@@ -32,6 +32,12 @@ class GroupDb {
 
     return groups;
   };
+
+  static getGroup = async(groupId) => {
+    // TODO
+
+    return groupId;
+  };
 }
 
 export default GroupDb;

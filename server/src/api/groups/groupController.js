@@ -31,6 +31,16 @@ class GroupController {
       next(error);
     }
   };
+
+  static getGroup = async(req, res, next) => {
+    try {
+      const group = await GroupService.getGroup(req.validatedParams);
+
+      responseHandler(res, 200, "Group fetched successfully", group);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default GroupController;

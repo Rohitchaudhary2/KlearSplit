@@ -74,7 +74,7 @@ Group.belongsTo(User, { "foreignKey": "creator_id" });
 User.hasMany(GroupMember, { "foreignKey": "member_id" });
 Group.hasMany(GroupMember, { "foreignKey": "group_id" });
 GroupMember.hasMany(GroupMember, { "foreignKey": "inviter_id" });
-GroupMember.belongsTo(User, { "foreignKey": "user_id" });
+GroupMember.belongsTo(User, { "foreignKey": "member_id" });
 GroupMember.belongsTo(Group, { "foreignKey": "group_id" });
 GroupMember.belongsTo(GroupMember, { "foreignKey": "inviter_id" });
 
@@ -85,7 +85,7 @@ GroupMessage.belongsTo(Group, { "foreignKey": "group_id" });
 GroupMessage.belongsTo(GroupMember, { "foreignKey": "sender_id" });
 
 // Group Member Balance
-Group.hasMany(GroupMemberBalance, { "ForeignKey": "group_id" });
+Group.hasMany(GroupMemberBalance, { "foreignKey": "group_id" });
 GroupMember.hasMany(GroupMemberBalance, { "foreignKey": "participant1_id" });
 GroupMember.hasMany(GroupMemberBalance, { "foreignKey": "participant2_id" });
 GroupMemberBalance.belongsTo(Group, { "ForeignKey": "group_id" });

@@ -1,0 +1,19 @@
+<div class="transparent subcontainer d-flex flex-column">
+    <!-- search container -->
+    <app-search-bar
+        placeholder="Search using group name"
+        actionButtonIcon="group_add"
+        actionButtonTitle="Create Group"
+        (searchChange)="onSearchChange($event)"
+        (actionButtonClick)="onCreateGroupClick()"
+    />
+
+    <!-- pending group invites -->
+    <div class="pending-request shadow-lg mt-3 mx-3">
+        <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem;">
+            Group Invites
+        </h6>
+        <hr class="m-0 mt-1" />
+        
+    </div>
+</div>

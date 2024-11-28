@@ -15,8 +15,8 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
 
-import { ConfirmationDialogComponent } from "../../confirmation-dialog/confirmation-dialog.component";
-import { FormErrorMessageService } from "../../shared/form-error-message.service";
+import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
+import { FormErrorMessageService } from "../../../shared/form-error-message.service";
 import { PayerComponent } from "./payer/payer.component";
 import { SplitTypeComponent } from "./split-type/split-type.component";
 

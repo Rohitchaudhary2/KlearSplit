@@ -11,7 +11,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ToastrService } from "ngx-toastr";
 
-import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
+import { ConfirmationDialogComponent } from "../../../../confirmation-dialog/confirmation-dialog.component";
 import { ExpenseData, ExpenseResponse } from "../../friend.model";
 import { FriendsService } from "../../friends.service";
 import { FriendsExpenseComponent } from "../friends-expense.component";

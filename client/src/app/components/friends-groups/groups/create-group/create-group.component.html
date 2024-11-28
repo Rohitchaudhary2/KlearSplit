@@ -1,0 +1,77 @@
+<h1 mat-dialog-title class="text-center bg-primary text-white py-2">
+  Create Group
+</h1>
+<div mat-dialog-content class="d-flex flex-column align-items-center px-1 pt-4">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline" class="w-100 custom-form-field  mb-2">
+      <mat-label>Group Name</mat-label>
+      <input
+        matInput
+        formControlName="groupName"
+        (blur)="trimInput('groupName')"
+        style="background-color: transparent"
+      />
+      @if (getFormErrors("groupName")) {
+        <mat-error>{{ getFormErrors("groupName") }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Group Description</mat-label>
+      <textarea
+        matInput
+        formControlName="groupDescription"
+        (blur)="trimInput('description')"
+        style="background-color: transparent"
+      ></textarea>
+      @if (getFormErrors("groupDescription")) {
+        <mat-error>{{ getFormErrors("groupDescription") }}</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="parent-container">
+      <div class="file-upload" style="text-align: center">
+        <label
+          for="profile-image"
+          class="upload-label px-3"
+          style="color: green"
+          >{{ imageName() }}</label
+        >
+        <input
+          type="file"
+          id="profile-image"
+          accept="image/*"
+          (change)="selectImage($event)"
+          class="file-input"
+        />
+      </div>
+    </div>
+    <button
+      mat-raised-button
+      color="primary"
+      type="button"
+      (click)="openMembersDialog()"
+      class="mt-2 w-100"
+    >
+      Add Members
+    </button>
+    @if (selectedMembers.length > 0) {
+      <p>Selected Members:</p>
+      <ul>
+        @for (member of selectedMembers; track $index) {
+          <li>
+            {{ member.first_name }}
+            <mat-checkbox [(ngModel)]="member.isAdmin">Admin</mat-checkbox>
+            <mat-checkbox [(ngModel)]="member.isCoAdmin">Co-Admin</mat-checkbox>
+          </li>
+        }
+      </ul>
+    }
+  </form>
+</div>
+<div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3">
+  <button mat-button color="warn" (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onSubmit()" [disabled]="form.invalid">
+    Submit
+  </button>
+</div>

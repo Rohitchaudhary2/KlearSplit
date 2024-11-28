@@ -7,13 +7,13 @@ import {
   Validators,
 } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
-import { MatDialogRef } from "@angular/material/dialog";
+import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { debounceTime, of, Subject, switchMap } from "rxjs";
 
-import { FormErrorMessageService } from "../../shared/form-error-message.service";
+import { FormErrorMessageService } from "../../../shared/form-error-message.service";
 import { SearchedUser } from "../friend.model";
 import { FriendsService } from "../friends.service";
 
@@ -35,6 +35,7 @@ export class AddFriendComponent implements OnInit {
   private readonly formErrorMessages = inject(FormErrorMessageService);
   private readonly friendsService = inject(FriendsService);
   private readonly searchSubject = new Subject<string>();
+  data = inject(MAT_DIALOG_DATA);
   users = signal<SearchedUser[]>([]);
   loading = signal(false);
   selectedUser = signal<SearchedUser | undefined>(undefined);

@@ -14,8 +14,8 @@ import { FormsModule } from "@angular/forms";
 import { DialogPosition, MatDialog } from "@angular/material/dialog";
 import { ToastrService } from "ngx-toastr";
 
-import { AuthService } from "../auth/auth.service";
-import { CurrentUser } from "../shared/types.model";
+import { AuthService } from "../../auth/auth.service";
+import { CurrentUser } from "../../shared/types.model";
 import { ExpenseComponent } from "./expense/expense.component";
 import {
   AddedFriend,
@@ -152,7 +152,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     if (this.selectedUser()) {
       // Leave the previous room to ensure no duplicate connections
       this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
-      // Remove the existing 'onNewMessage' listener for the previous user
+      // Remove the existing 'onNewConversationMessage' listener for the previous user
       this.socketService.removeNewMessageListener();
       // Clear previous data (messages, expenses, and combined view)
       this.messages.set([]);
@@ -182,7 +182,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.socketService.joinRoom(this.selectedUser()!.conversation_id);
 
     // Listen for new messages from the server for the new room
-    this.socketService.onNewMessage((message: MessageData) => {
+    this.socketService.onNewConversationMessage((message: MessageData) => {
       this.messages.set([ ...this.messages(), message ]);
       this.combinedView.set([
         ...this.combinedView(),
@@ -359,7 +359,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       sender_id: this.user!.user_id,
       message: this.messageInput,
     };
-    this.socketService.sendMessage(messageData);
+    this.socketService.sendConversationMessage(messageData);
     this.messageInput = "";
   }
 

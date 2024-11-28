@@ -1,7 +1,8 @@
 import { Injectable } from "@angular/core";
 import { io, Socket } from "socket.io-client";
 
-import { environment } from "../../../environments/environment"; // Make sure this path is correct
+import { environment } from "../../../../environments/environment"; // Make sure this path is correct
+import { GroupMessageData } from "../groups/groups.model";
 import { MessageData } from "./friend.model";
 
 @Injectable({
@@ -31,7 +32,17 @@ export class SocketService {
    *
    * @param messageData - The message data object containing conversation ID, sender ID, and message content
    */
-  sendMessage(messageData: Partial<MessageData>): void {
+  sendConversationMessage(messageData: Partial<MessageData>): void {
+    this.socket.emit("sendMessage", messageData);
+  }
+
+  /**
+   * Sends a message to the server for a specific group.
+   * The message is emitted through the 'sendMessage' event.
+   *
+   * @param messageData - The message data object containing group ID, sender ID, and message content
+   */
+  sendGroupMessage(messageData: Partial<GroupMessageData>): void {
     this.socket.emit("sendMessage", messageData);
   }
 
@@ -41,7 +52,11 @@ export class SocketService {
    *
    * @param callback - The function to call with the new message data when a new message arrives
    */
-  onNewMessage(callback: (message: MessageData) => void): void {
+  onNewConversationMessage(callback: (message: MessageData) => void): void {
+    this.socket.on("newMessage", callback); // Listen for 'newMessage' events
+  }
+
+  onNewGroupMessage(callback: (message: GroupMessageData) => void): void {
     this.socket.on("newMessage", callback); // Listen for 'newMessage' events
   }
 

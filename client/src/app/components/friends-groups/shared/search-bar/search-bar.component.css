@@ -1,0 +1,26 @@
+.action-button {
+  background-color: white;
+  border-radius: 20px;
+}
+
+.action-button:hover {
+    transform: translateY(-1px); /* Subtle lift effect on hover */
+}
+
+.search-container {
+  background: white;
+  padding: 0.5rem;
+  border-radius: 20px;
+}
+
+.search-button {
+  border: none;
+  background-color: transparent;
+}
+
+input,
+input:focus {
+  width: 80%;
+  outline: none;
+  border: none;
+}

@@ -1,0 +1,63 @@
+<h1 mat-dialog-title class="text-center bg-primary text-white py-2">
+  Select Members
+</h1>
+<mat-form-field appearance="outline" class="w-100 px-4 mb-2">
+  <mat-label>Search Users</mat-label>
+  <input
+    matInput
+    formControlName="searchInputControl"
+    placeholder="Search"
+    (ngModelChange)="onSearchInputChange($event)"
+    style="
+      background-color: transparent;
+      outline: none !important;
+      border-color: transparent !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    "
+  />
+  @if (getFormErrors("groupName")) {
+    <mat-error>{{ getFormErrors("groupName") }}</mat-error>
+  }
+</mat-form-field>
+
+@if (users().length > 0) {
+  <ul>
+    @for (user of users(); track $index) {
+      <li>
+        {{ user.first_name }} {{ user.last_name || "" }} ({{ user.email }})
+        <button mat-icon-button color="primary" (click)="selectUser(user)">
+          <mat-icon>add</mat-icon>
+        </button>
+      </li>
+    }
+  </ul>
+}
+
+<h3 class="text-center py-2">Selected Members</h3>
+<ul>
+  @for (user of selectedMembers(); track $index) {
+    <li>
+      {{ user.first_name }} {{ user.last_name || "" }} ({{ user.email }})
+      <mat-form-field>
+        <mat-label>Role</mat-label>
+        <mat-select
+          [(ngModel)]="user.role"
+          (ngModelChange)="updateRole(user, $event)"
+        >
+          <mat-option value="member">Member</mat-option>
+          <mat-option value="admin">Admin</mat-option>
+          <mat-option value="coadmin">Co-admin</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-icon-button color="warn" (click)="removeUser(user)">
+        <mat-icon>remove</mat-icon>
+      </button>
+    </li>
+  }
+</ul>
+
+<div mat-dialog-actions class="d-flex justify-content-end gap-2 pb-2 px-3">
+  <button mat-button color="warn" (click)="onCancel()">Cancel</button>
+  <button mat-button [disabled]="form.invalid" (click)="onSave()">Add</button>
+</div>

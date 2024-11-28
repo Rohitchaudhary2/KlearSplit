@@ -13,21 +13,11 @@ export default (sequelize) => {
       },
       "conversation_id": {
         "type": DataTypes.UUID,
-        "allowNull": false,
-        "references": {
-          "model": "friends",
-          "key": "conversation_id"
-        },
-        "onDelete": "CASCADE"
+        "allowNull": false
       },
       "sender_id": {
         "type": DataTypes.UUID,
-        "allowNull": false,
-        "references": {
-          "model": "users",
-          "key": "user_id"
-        },
-        "onDelete": "CASCADE"
+        "allowNull": false
       },
       "message": {
         "type": DataTypes.STRING(512),

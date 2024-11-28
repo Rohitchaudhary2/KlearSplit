@@ -12,7 +12,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 
-import { FormErrorMessageService } from "../../../shared/form-error-message.service";
+import { FormErrorMessageService } from "../../../../shared/form-error-message.service";
 
 function amountRangeValidator(totalAmount: number): ValidatorFn {
   return (control: AbstractControl): { outOfRange: { max: number } } | null => {
@@ -50,11 +50,11 @@ export class SettlementComponent implements OnInit {
   constructor() {
     const data = inject(MAT_DIALOG_DATA);
     ({
-      payer_name: this.payer_name,
-      debtor_name: this.debtor_name,
-      total_amount: this.total_amount,
-      debtor_image: this.debtor_image,
-      payer_image: this.payer_image,
+      payerName: this.payer_name,
+      debtorName: this.debtor_name,
+      totalAmount: this.total_amount,
+      debtorImage: this.debtor_image,
+      payerImage: this.payer_image,
     } = data);
   }
 

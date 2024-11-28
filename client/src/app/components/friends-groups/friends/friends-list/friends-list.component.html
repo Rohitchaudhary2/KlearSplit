@@ -1,31 +1,12 @@
 <div class="transparent subcontainer d-flex flex-column">
   <!-- search container -->
-  <div class="d-flex justify-content-evenly align-items-center gap-3 mx-3">
-    <div
-      class="d-flex justify-content-between search-container shadow col-md-10 ps-3"
-    >
-      <input
-        type="text"
-        [(ngModel)]="searchTerm"
-        (input)="onSearchChange()"
-        placeholder="Search using email"
-      />
-      <button type="submit" class="search-button">
-        <i class="fa fa-search"></i>
-      </button>
-    </div>
-    <div class="col-md-1">
-      <button
-        class="material-icons shadow user-add"
-        data-bs-toggle="tooltip"
-        data-bs-placement="top"
-        title="Add Friend"
-        (click)="onAddFriendClick()"
-      >
-        person_add
-      </button>
-    </div>
-  </div>
+  <app-search-bar
+    placeholder="Search using email"
+    actionButtonIcon="person_add"
+    actionButtonTitle="Add Friend"
+    (searchChange)="onSearchChange($event)"
+    (actionButtonClick)="onAddFriendClick()"
+  />
 
   <!-- pending friend requests -->
   <div class="pending-request shadow-lg mt-3 mx-3">

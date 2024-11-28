@@ -14,7 +14,8 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { ToastrService } from "ngx-toastr";
 
-import { ConfirmationDialogComponent } from "../../confirmation-dialog/confirmation-dialog.component";
+import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
+import { SearchBarComponent } from "../../shared/search-bar/search-bar.component";
 import { AddFriendComponent } from "../add-friend/add-friend.component";
 import { FriendData } from "../friend.model";
 import { FriendsService } from "../friends.service";
@@ -28,6 +29,7 @@ import { FriendsService } from "../friends.service";
     MatIconModule,
     MatTooltipModule,
     NgClass,
+    SearchBarComponent,
   ],
   templateUrl: "./friends-list.component.html",
   styleUrl: "../friends.component.css",
@@ -97,7 +99,8 @@ export class FriendsListComponent implements OnInit {
    *
    * @returns {void} This method doesn't return any value but updates the `requests` and `friendList` signals with the filtered results.
    */
-  onSearchChange(): void {
+  onSearchChange(term: string): void {
+    this.searchTerm.set(term);
     const regex = new RegExp(this.searchTerm(), "i"); // Case-insensitive search
     this.requests.set(
       this.friendRequests().filter((user) => regex.test(user.friend.email)),
@@ -117,6 +120,7 @@ export class FriendsListComponent implements OnInit {
   onAddFriendClick(): void {
     const dialogRef = this.dialog.open(AddFriendComponent, {
       width: "500px",
+      data: [ "Add Friend for Easier Bill Splitting" ],
       enterAnimationDuration: "500ms",
       exitAnimationDuration: "500ms",
     });
@@ -167,7 +171,7 @@ export class FriendsListComponent implements OnInit {
           ),
         );
         // Changing the requests and friendList for UI display
-        this.onSearchChange();
+        this.onSearchChange(this.searchTerm());
       },
     });
   }
@@ -206,7 +210,7 @@ export class FriendsListComponent implements OnInit {
               (request) => request.conversation_id !== conversationId,
             ),
           );
-          this.onSearchChange();
+          this.onSearchChange(this.searchTerm());
         },
       });
     });

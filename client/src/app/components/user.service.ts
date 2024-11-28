@@ -18,8 +18,8 @@ export class UserService {
 
   private readonly getUserUrl = API_URLS.fetchUser; // URL for getting user without the id part
 
-  fetchUserDetails(userId: string | undefined) {
-    const getUserUrlWithId = `${this.getUserUrl}/${userId}`;
+  fetchUserDetails() {
+    const getUserUrlWithId = `${this.getUserUrl}`;
     return this.httpClient
       .get<FetchResponse>(getUserUrlWithId, {
         withCredentials: true,

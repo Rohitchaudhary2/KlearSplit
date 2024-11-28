@@ -43,7 +43,7 @@ userRouter.post(
 );
 
 // Route for getting loggedin user data.
-userRouter.get("/:id", authenticateToken, UserController.getUser);
+userRouter.get("/user", authenticateToken, UserController.getUser);
 
 // Route for getting users whose name or email matches a specific regex.
 userRouter.get(

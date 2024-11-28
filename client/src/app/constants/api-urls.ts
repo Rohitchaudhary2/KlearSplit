@@ -10,7 +10,7 @@ export const API_URLS = {
   forgotPassword: `${environment.apiBaseUrl}/users/forgotpassword`,
   restoreAccountVerify: `${environment.apiBaseUrl}/users/verifyrestore`,
   restoreAccount: `${environment.apiBaseUrl}/users/restore`,
-  fetchUser: `${environment.apiBaseUrl}/users`,
+  fetchUser: `${environment.apiBaseUrl}/users/user`,
   getUsers: `${environment.apiBaseUrl}/users/getUsers`,
   addFriend: `${environment.apiBaseUrl}/friends/addfriend`,
   getFriends: `${environment.apiBaseUrl}/friends/getallfriends`,

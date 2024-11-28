@@ -74,7 +74,7 @@ class UserController {
   // Controller for getting user information
   static getUser = async(req, res, next) => {
     try {
-      const userData = await UserService.getUser(req.params.id);
+      const userData = await UserService.getUser(req.user.user_id);
 
       responseHandler(res, 200, "Successfully fetched user", userData);
     } catch (error) {
@@ -85,10 +85,10 @@ class UserController {
   // Controller for getting users by a regular expression
   static getUsersByRegex = async(req, res, next) => {
     try {
-      const regex = req.params.regex;
+      const data = req.params;
       const userId = req.user.user_id;
 
-      const users = await UserService.getUsersByRegex({ regex, userId });
+      const users = await UserService.getUsersByRegex({ data, userId });
 
       responseHandler(res, 200, "Successfully fetched users", users);
     } catch (error) {

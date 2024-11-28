@@ -1,36 +1,33 @@
 import { DataTypes } from "sequelize";
 
 export default (sequelize) => {
-  const Group = sequelize.define(
-    "group",
+  const GroupSettlement = sequelize.define(
+    "group_settlement",
     {
-      "group_id": {
+      "group_settlement_id": {
         "type": DataTypes.UUID,
         "defaultValue": DataTypes.UUIDV4,
         "allowNull": false,
         "primaryKey": true
       },
-      "group_name": {
-        "type": DataTypes.STRING(100),
-        "allowNull": false,
-        "validate": {
-          "notEmpty": {
-            "msg": "Group name can't be empty."
-          }
-        }
-      },
-      "group_description": {
-        "type": DataTypes.STRING(255),
-        "allowNull": true
-      },
-      "creator_id": {
+      "group_id": {
         "type": DataTypes.UUID,
         "allowNull": false
       },
-      "image_url": {
-        "type": DataTypes.STRING(255),
-        "defaultValue":
-          "https://www.google.com/url?sa=i&url=https%3A%2F%2Fen.silhouette-ac.com%2Fsilhouette%2F143023%2Fgroup-of-three-people&psig=AOvVaw31ToMuast5syZwRrvivnmA&ust=1731416089810000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCMCS492p1IkDFQAAAAAdAAAAABAE",
+      "payer_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
+      },
+      "debtor_id": {
+        "type": DataTypes.UUID,
+        "allowNull": false
+      },
+      "settlement_amount": {
+        "type": DataTypes.DECIMAL(12, 2),
+        "allowNull": false
+      },
+      "description": {
+        "type": DataTypes.STRING(150),
         "allowNull": false
       }
     },
@@ -40,7 +37,7 @@ export default (sequelize) => {
     }
   );
 
-  //   Group.beforeDestroy(async (user, options) => {
+  //   GroupMember.beforeDestroy(async (user, options) => {
   //     const transaction = options.transaction;
   //     const userId = user.user_id;
 
@@ -68,7 +65,7 @@ export default (sequelize) => {
   //     );
   //   });
 
-  //   Group.afterRestore(async (user, options) => {
+  //   GroupMember.afterRestore(async (user, options) => {
   //     const transaction = options.transaction;
   //     const userId = user.user_id;
 
@@ -98,5 +95,5 @@ export default (sequelize) => {
   //     );
   //   });
 
-  return Group;
+  return GroupSettlement;
 };

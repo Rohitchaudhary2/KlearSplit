@@ -56,7 +56,7 @@ class GroupController {
     try {
       const updatedMember = await GroupService.updateGroupMember(req.validatedParams.group_id, req.validatedGroupMemberData, req.user.user_id);
 
-      return updatedMember;
+      responseHandler(res, 200, "Group member updated successfully", updatedMember);
     } catch (error) {
       next(error);
     }

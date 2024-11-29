@@ -216,7 +216,7 @@ export const validateGroupParams = (req, res, next) => {
 
 export const validateUpdateGroupMember = (req, res, next) => {
   try {
-    const { error, value } = updateGroupMemberSchema.validate(req.params);
+    const { error, value } = updateGroupMemberSchema.validate(req.body);
 
     if (error) {
       throw new ErrorHandler(400, error);

@@ -16,5 +16,5 @@ groupRouter.get("/:group_id", authenticateToken, validateGroupParams, GroupContr
 
 groupRouter.patch("/:group_id", authenticateToken, validateGroupParams, validateGroupUpdationData, GroupController.updateGroup);
 
-groupRouter.patch("/:group_id", authenticateToken, validateGroupParams, validateUpdateGroupMember, GroupController.updateGroupMember);
+groupRouter.patch("/updatemember/:group_id", authenticateToken, validateGroupParams, validateUpdateGroupMember, GroupController.updateGroupMember);
 export default groupRouter;

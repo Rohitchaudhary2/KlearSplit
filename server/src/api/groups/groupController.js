@@ -34,7 +34,7 @@ class GroupController {
 
   static getGroup = async(req, res, next) => {
     try {
-      const group = await GroupService.getGroup(req.validatedParams);
+      const group = await GroupService.getGroup(req.validatedParams.group_id, req.user.user_id);
 
       responseHandler(res, 200, "Group fetched successfully", group);
     } catch (error) {

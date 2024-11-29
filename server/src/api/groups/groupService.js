@@ -26,24 +26,24 @@ class GroupService {
 
     const groupCreator = await GroupDb.addMembers(groupCreatorData);
     
-    await this.assignRolesAndAddMembers(groupData.membersData, groupCreator.group_membership_id, group.group_id);
+    await this.assignRolesAndAddMembers(groupData.membersData, groupCreator[ 0 ].dataValues.group_membership_id, group.group_id);
     return group;
   };
 
-  static addMembers = async(membersData, inviterId, groupId) => {
+  static addMembers = async(membersData, userId, groupId) => {
     const isGroupExists = await GroupDb.getGroupData(groupId);
 
     if (!isGroupExists) {
       throw new ErrorHandler(400, "Group does not Exist");
     }
 
-    const inviter = await GroupDb.getGroupMember(groupId, inviterId);
+    const inviter = await GroupDb.getGroupMember(groupId, userId);
 
     if (!inviter || inviter.role === "USER") {
       throw new ErrorHandler(400, "You are not allowed to invite members to this group");
     }
 
-    const addedMembers = await this.assignRolesAndAddMembers(membersData, inviterId, groupId);
+    const addedMembers = await this.assignRolesAndAddMembers(membersData, inviter.group_membership_id, groupId);
 
     return addedMembers;
   };
@@ -54,8 +54,21 @@ class GroupService {
     return groups;
   };
 
-  static getGroup = async(groupId) => {
-    const group = await GroupDb.getGroup(groupId);
+  static isUserMemberOfGroup = async(groupId, userId) => {
+    const userMembershipInfo = await GroupDb.getGroupMember(groupId, userId);
+
+    if (!userMembershipInfo) {
+      throw new ErrorHandler(403, "You are not Part of this group");
+    }
+    return userMembershipInfo.dataValues;
+  };
+
+  static getGroup = async(groupId, userId) => {
+    const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+
+    const group = await GroupDb.getGroup(groupId, userMembershipInfo.group_membership_id);
+
+    group.push({ ...userMembershipInfo, "balance_with_user": 0, "total_balance": 0 });
 
     return group;
   };

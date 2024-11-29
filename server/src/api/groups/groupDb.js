@@ -17,16 +17,16 @@ class GroupDb {
 
   static getUserGroups = async(userId) => {
     const groups = await sequelize.query(
-      `select r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, 
+      `select r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, r.status, 
       sum(case when gmb.participant1_id = r.group_membership_id	then gmb.balance_amount when gmb.participant2_id = r.group_membership_id then -gmb.balance_amount else 0 end) as balance_amount 
       from 
-      (select g.*, gm.group_membership_id 
+      (select g.*, gm.group_membership_id, gm.status 
       from groups g 
       join 
       group_members gm on g.group_id = gm.group_id where gm.member_id = '${userId}') r 
       left join 
       group_member_balance gmb on gmb.group_id = r.group_id 
-      group by r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id;`, {
+      group by r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, r.status;`, {
         "type": QueryTypes.SELECT
       });
 

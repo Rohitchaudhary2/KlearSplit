@@ -1,5 +1,5 @@
 import { CurrencyPipe, NgClass } from "@angular/common";
-import { Component, inject, output, signal } from "@angular/core";
+import { Component, inject, OnInit, output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { MatIconModule } from "@angular/material/icon";
@@ -25,7 +25,7 @@ import { GroupsService } from "../groups.service";
   templateUrl: "./groups-list.component.html",
   styleUrl: "./groups-list.component.css"
 })
-export class GroupsListComponent {
+export class GroupsListComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly groupService = inject(GroupsService);
   private readonly toastr = inject(ToastrService);
@@ -35,9 +35,53 @@ export class GroupsListComponent {
   
   searchTerm = signal("");
 
+  // Signals to store and manage the current list of group invites
+  // Two signals are made for implementing search functionality.
+  private groupInvites = signal<GroupData[]>([]);
+  invites = signal(this.groupInvites());
+
+  // Signals to store and manage the current list of group invites
+  // Two signals are made for implementing search functionality.
+  private groups = signal<GroupData[]>([]);
+  groupList = signal(this.groups());
+
+  // Fetch the list of groups of the currentUser
+  fetchGroups() {
+    this.groupService.fetchGroups().subscribe({
+      next: (groups) => {
+        this.groupInvites.set(groups.data.invitedGroups);
+        this.invites.set(this.groupInvites());
+        this.groups.set(groups.data.acceptedGroups);
+        this.groupList.set(this.groups());
+      }
+    });
+  }
+
+  ngOnInit(): void {
+    // Call to fetchGroups method to get all the groups of the user on component initialization.
+    this.fetchGroups();
+  }
+
   // Searches from the existing group list
   onSearchChange(term: string): void {
     this.searchTerm.set(term);
+    const regex = new RegExp(this.searchTerm(), "i");
+    this.invites.set(
+      this.groupInvites().filter((group) => regex.test(group.group_name))
+    );
+    this.groupList.set(
+      this.groups().filter((group) => regex.test(group.group_name))
+    );
+  }
+
+  /**
+   * Converts a string representation of a balance amount to a number.
+   *
+   * @param {string} balanceAmount - The balance amount in string format.
+   * @returns {number} The parsed number representing the balance amount.
+   */
+  getBalanceAsNumber(balanceAmount: string): number {
+    return parseFloat(balanceAmount);
   }
 
   // Opens the dialog box to create a new group.

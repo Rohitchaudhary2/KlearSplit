@@ -57,7 +57,18 @@ export interface GroupData {
     group_name: string;
     group_description: string;
     image_url: string;
-    members: GroupMember[];
+    creator_id: string;
+    balance_amount: string;
+    status: string;
+}
+
+export interface Group {
+    success: string;
+    message: string;
+    data: {
+        invitedGroups: GroupData[];
+        acceptedGroups: GroupData[];
+    };
 }
 
 export interface GroupMessageData {

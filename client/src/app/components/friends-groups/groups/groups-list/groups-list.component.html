@@ -1,19 +1,86 @@
 <div class="transparent subcontainer d-flex flex-column">
-    <!-- search container -->
-    <app-search-bar
-        placeholder="Search using group name"
-        actionButtonIcon="group_add"
-        actionButtonTitle="Create Group"
-        (searchChange)="onSearchChange($event)"
-        (actionButtonClick)="onCreateGroupClick()"
-    />
+  <!-- search container -->
+  <app-search-bar
+    placeholder="Search using group name"
+    actionButtonIcon="group_add"
+    actionButtonTitle="Create Group"
+    (searchChange)="onSearchChange($event)"
+    (actionButtonClick)="onCreateGroupClick()"
+  />
 
-    <!-- pending group invites -->
-    <div class="pending-request shadow-lg mt-3 mx-3">
-        <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem;">
-            Group Invites
-        </h6>
-        <hr class="m-0 mt-1" />
-        
+  <!-- pending group invites -->
+  <div class="pending-invites shadow-lg mt-3 mx-3">
+    <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">
+      Group Invites
+    </h6>
+    <hr class="m-0 mt-1" />
+    <div class="invites">
+      <table class="table table-hover">
+        <thead>
+          <tr style="display: none">
+            <th scope="col"></th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (invite of invites(); track $index) {
+            <tr
+              (click)="onSelectGroup(invite)"
+              (keyup.enter)="onSelectGroup(invite)"
+              class="row equal-height-row d-flex justify-content-between m-0"
+              style="cursor: pointer"
+              tabindex="0"
+            >
+              <td
+                class="col-3 col-md-3 col-lg-3"
+                style="
+                  flex: 0 0 auto;
+                  text-align: center;
+                  align-content: center;
+                "
+              >
+                <span>
+                  <img
+                    class="profile-image"
+                    [src]="invite.image_url"
+                    alt="Profile"
+                  />
+                </span>
+              </td>
+              <td class="col-9 col-md-9 col-lg-9" style="flex: 1 1 0">
+                <span class="text-end pe-3 d-flex align-items-center">
+                  <span class="text-end pe-3">
+                    @if (getBalanceAsNumber(invite.balance_amount) < 0) {
+                      <span class="text-danger"
+                        >-{{
+                          getBalanceAsNumber(invite.balance_amount)
+                            | currency: "INR"
+                        }}</span
+                      >
+                    }
+                    <span
+                        class="d-flex align-items-center border bg-success text-white"
+                        matTooltip="Accept Invite"
+                        matTooltipPosition="above"
+                    >
+                        <mat-icon>check</mat-icon>
+                    </span>
+                    <span
+                        class="ms-2 d-flex align-items-center border bg-danger text-white"
+                        matTooltip="Reject Invite"
+                        matTooltipPosition="above"
+                    >
+                        <mat-icon>close</mat-icon>
+                    </span>
+                  </span>
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <div class="pt-3 text-center">No Group Invites</div>
+          }
+        </tbody>
+      </table>
     </div>
+  </div>
 </div>

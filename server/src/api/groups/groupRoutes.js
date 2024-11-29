@@ -1,7 +1,7 @@
 import { Router } from "express";
 import GroupController from "./groupController.js";
 // import uploadMiddleware from "../middlewares/uploadMiddleware.js";
-import { validateGroupCreationData, validateMembersData, validateParams } from "../middlewares/validationMiddleware.js";
+import { validateGroupCreationData, validateGroupParams, validateMembersData } from "../middlewares/validationMiddleware.js";
 import { authenticateToken } from "../middlewares/auth.js";
 
 const groupRouter = Router();
@@ -12,5 +12,5 @@ groupRouter.post("/addmembers", authenticateToken, validateMembersData, GroupCon
 
 groupRouter.get("/usergroups", authenticateToken, GroupController.getUserGroups);
 
-groupRouter.get("/:id", authenticateToken, validateParams, GroupController.getGroup);
+groupRouter.get("/:group_id", authenticateToken, validateGroupParams, GroupController.getGroup);
 export default groupRouter;

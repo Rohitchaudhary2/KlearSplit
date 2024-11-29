@@ -24,3 +24,10 @@ export const membersDataSchema = Joi.object({
   ...memberData,
   "group_id": Joi.string().uuid().required()
 });
+
+export const groupIdParamValidation = Joi.object({
+  "group_id": Joi.string()
+    .uuid()
+    .required()
+    .trim()
+});

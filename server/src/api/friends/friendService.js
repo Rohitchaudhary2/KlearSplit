@@ -5,7 +5,7 @@ import { hashedPassword } from "../utils/hashPassword.js";
 import { generatePassword } from "../utils/passwordGenerator.js";
 import sendMail from "../utils/sendMail.js";
 import FriendDb from "./friendDb.js";
-import { formatFriendData, getNewStatus, calculateDebtorAmount, calculateNewBalance, validateSettlementAmount, formatPersonName, validateSettlement, validateFriendExist, validateExistingExpense, validateConversationPermissions, validateUpdateParticipants, isBalanceUpdateRequired } from "./friendUtils.js";
+import { formatFriendData, getNewStatus, calculateDebtorAmount, calculateNewBalance, validateSettlementAmount, formatPersonName, validateSettlement, isFriendExist, validateExistingExpense, validateConversationPermissions, validateUpdateParticipants, isBalanceUpdateRequired } from "./friendUtils.js";
 
 class FriendService {
   /**
@@ -61,21 +61,21 @@ class FriendService {
     }
 
     // Check if the friend already exists and is not deleted
-    const friendExist = await this.checkFriendExist(newFriendData, false);
+    const friend = await this.checkFriendExist(newFriendData, false);
 
-    if (friendExist && !friendExist.dataValues.deletedAt) {
+    if (friend && !friend.dataValues.deletedAt) {
       throw new ErrorHandler(409, "Friend already exist");
     }
 
     // Restore deleted friend request if found
-    if (friendExist && friendExist.dataValues.deletedAt) {
-      return await FriendDb.restoreFriend(friendExist);
+    if (friend && friend.dataValues.deletedAt) {
+      return await FriendDb.restoreFriend(friend);
     }
 
     // Add the friend if no issues
-    const friend = await FriendDb.addFriend(newFriendData);
+    const newFriend = await FriendDb.addFriend(newFriendData);
 
-    return friend;
+    return newFriend;
   };
 
   /**
@@ -185,19 +185,19 @@ class FriendService {
    *
    * @returns {Promise<Object>} - The updated friend data after performing the action.
    */
-  static archiveBlockFriend = async(friend) => {
-    const { userId, type, conversationId } = friend;
-    const friendExist = await FriendDb.getFriend(conversationId);
+  static archiveBlockFriend = async(friendData) => {
+    const { "user_id": userId, type, "conversation_id": conversationId } = friendData;
+    const friend = await FriendDb.getFriend(conversationId);
 
     // If the friend doesn't exist, throw an error
-    validateFriendExist(friendExist);
+    isFriendExist(friend);
     const statusField = type === "archived" ? "archival_status" : "block_status";
 
     // Determine new status for friend1 or friend2 based on the current status
-    const newStatus = userId === friendExist.dataValues.friend1_id ? getNewStatus("FRIEND1", "FRIEND2", friendExist[ statusField ]) : getNewStatus("FRIEND2", "FRIEND1", friendExist[ statusField ]);
+    const newStatus = userId === friend.dataValues.friend1_id ? getNewStatus("FRIEND1", "FRIEND2", friend[ statusField ]) : getNewStatus("FRIEND2", "FRIEND1", friend[ statusField ]);
 
     // Do not allow the user to archive or block before the balance_amount is 0
-    if (parseFloat(friendExist.dataValues.balance_amount) !== 0) {
+    if (parseFloat(friend.dataValues.balance_amount) !== 0) {
       throw new ErrorHandler(400, "Settle up before this action!");
     }
 
@@ -223,12 +223,12 @@ class FriendService {
     const { "conversation_id": conversationId } = messageData;
 
     // Check if the conversation exists
-    const friendExist = await FriendDb.getFriend(conversationId);
+    const friend = await FriendDb.getFriend(conversationId);
 
-    validateFriendExist(friendExist);
+    isFriendExist(friend);
 
     // Ensure that the conversation status allows messaging
-    if (friendExist.dataValues.status === "REJECTED") {
+    if (friend.dataValues.status === "REJECTED") {
       throw new ErrorHandler(400, "Not allowed to send message");
     }
 
@@ -250,12 +250,12 @@ class FriendService {
    */
   static getMessages = async(conversationId, page, pageSize) => {
     // Check if the conversation exists
-    const friendExist = await FriendDb.getFriend(conversationId);
+    const friend = await FriendDb.getFriend(conversationId);
 
-    validateFriendExist(friendExist);
+    isFriendExist(friend);
 
     // Ensure that the conversation status allows messaging
-    if (friendExist.dataValues.status === "REJECTED") {
+    if (friend.dataValues.status === "REJECTED") {
       throw new ErrorHandler(
         403,
         "You are not allowed to message in this chat."
@@ -289,13 +289,13 @@ class FriendService {
    * @returns {Promise<Object>} - Returns the saved expense object.
    */
   static addExpense = async(expenseData, conversationId) => {
-    const friendExist = await FriendDb.getFriend(conversationId);
+    const friend = await FriendDb.getFriend(conversationId);
 
-    validateFriendExist(friendExist);
+    isFriendExist(friend);
     Object.assign(expenseData, { "conversation_id": conversationId });
 
     // Validate that the conversation allows expenses
-    validateConversationPermissions(friendExist);
+    validateConversationPermissions(friend);
 
     const transaction = await sequelize.transaction();
 
@@ -306,7 +306,7 @@ class FriendService {
       Object.assign(expenseData, { "debtor_amount": debtorAmount });
 
       // Current balance for the friend relationship
-      const currentBalance = parseFloat(friendExist.balance_amount);
+      const currentBalance = parseFloat(friend.balance_amount);
 
       // Process settlement expenses
       if (expenseData.split_type === "SETTLEMENT") {
@@ -318,8 +318,8 @@ class FriendService {
         Object.assign(expenseData, { "expense_name": "Settlement" });
 
         // Determine payer and debtor based on balance direction
-        Object.assign(expenseData, { "payer_id": currentBalance > 0 ? friendExist.friend2_id : friendExist.friend1_id });
-        Object.assign(expenseData, { "debtor_id": currentBalance > 0 ? friendExist.friend1_id : friendExist.friend2_id });
+        Object.assign(expenseData, { "payer_id": currentBalance > 0 ? friend.friend2_id : friend.friend1_id });
+        Object.assign(expenseData, { "debtor_id": currentBalance > 0 ? friend.friend1_id : friend.friend2_id });
       }
 
       // Prevent self-expenses
@@ -329,7 +329,7 @@ class FriendService {
 
       // Verify that the payer is part of the conversation
       if (
-        expenseData.payer_id !== friendExist.friend1_id && expenseData.payer_id !== friendExist.friend2_id
+        expenseData.payer_id !== friend.friend1_id && expenseData.payer_id !== friend.friend2_id
       ) {
         throw new ErrorHandler(
           403,
@@ -344,7 +344,7 @@ class FriendService {
         currentBalance,
         debtorAmount,
         expenseData.payer_id,
-        friendExist,
+        friend,
         expenseData.split_type
       );
 
@@ -375,12 +375,12 @@ class FriendService {
    * @returns {Promise<Array<Object>>} - Returns an array of expense objects.
    */
   static getExpenses = async(conversationId, page, pageSize, fetchAll) => {
-    const friendExist = await FriendDb.getFriend(conversationId);
+    const friend = await FriendDb.getFriend(conversationId);
 
-    validateFriendExist(friendExist);
+    isFriendExist(friend);
 
     // Ensure that you are allowed to view the expense
-    if (friendExist.status === "REJECTED") {
+    if (friend.status === "REJECTED") {
       throw new ErrorHandler(
         403,
         "You are not allowed to view this conversation."
@@ -414,16 +414,16 @@ class FriendService {
    * @returns {Promise<Object>} - Returns the updated expense object.
    */
   static updateExpense = async(updatedExpenseData, conversationId) => {
-    const friendExist = await FriendDb.getFriend(conversationId);
+    const friend = await FriendDb.getFriend(conversationId);
 
-    validateFriendExist(friendExist);
+    isFriendExist(friend);
   
     const existingExpense = await FriendDb.getExpense(updatedExpenseData.friend_expense_id);
 
     validateExistingExpense(existingExpense);
   
-    validateConversationPermissions(friendExist);
-    validateUpdateParticipants(updatedExpenseData, friendExist);
+    validateConversationPermissions(friend);
+    validateUpdateParticipants(updatedExpenseData, friend);
   
     const balanceAffectingFields = [
       "total_amount",
@@ -441,7 +441,7 @@ class FriendService {
       return this.handleNonBalanceUpdate(updatedExpenseData);
     }
   
-    return this.handleBalanceUpdate(updatedExpenseData, friendExist, existingExpense);
+    return this.handleBalanceUpdate(updatedExpenseData, friend, existingExpense);
   };
 
   /**
@@ -464,7 +464,7 @@ class FriendService {
   /**
    * Handles balance updates with a transaction.
    */
-  static handleBalanceUpdate = async(updatedExpenseData, friendExist, existingExpense) => {
+  static handleBalanceUpdate = async(updatedExpenseData, friend, existingExpense) => {
     const transaction = await sequelize.transaction();
 
     try {
@@ -472,7 +472,7 @@ class FriendService {
 
       Object.assign(updatedExpenseData, { "debtor_amount": debtorAmount });
 
-      const currentBalance = parseFloat(friendExist.balance_amount);
+      const currentBalance = parseFloat(friend.balance_amount);
 
       validateSettlement(updatedExpenseData, currentBalance, debtorAmount);
 
@@ -480,7 +480,7 @@ class FriendService {
         currentBalance,
         debtorAmount,
         updatedExpenseData.payer_id || existingExpense.payer_id,
-        friendExist,
+        friend,
         updatedExpenseData.split_type || existingExpense.split_type,
         existingExpense,
         true
@@ -498,7 +498,7 @@ class FriendService {
 
       await FriendDb.updateFriends(
         { "balance_amount": newBalance },
-        friendExist.conversation_id,
+        friend.conversation_id,
         transaction
       );
 
@@ -523,16 +523,16 @@ class FriendService {
    * @returns {Promise<Object>} - Returns a success message upon deletion.
    */
   static deleteExpense = async(conversationId, friendExpenseId) => {
-    const friendExist = await FriendDb.getFriend(conversationId);
+    const friend = await FriendDb.getFriend(conversationId);
 
-    validateFriendExist(friendExist);
+    isFriendExist(friend);
 
     const existingExpense = await FriendDb.getExpense(friendExpenseId);
 
     validateExistingExpense(existingExpense);
 
     // Verify that the expense belongs to the current conversation
-    if (friendExist.conversationId !== existingExpense.conversation_id) {
+    if (friend.conversationId !== existingExpense.conversation_id) {
       throw new ErrorHandler(403, "You are not allowed to delete this expense");
     }
 
@@ -560,7 +560,7 @@ class FriendService {
       await FriendDb.updateFriends(
         {
           "balance_amount":
-            existingExpense.payer_id === friendExist.friend1_id ? parseFloat(friendExist.balance_amount) - parseFloat(existingExpense.debtor_amount) : parseFloat(friendExist.balance_amount) + parseFloat(existingExpense.debtor_amount)
+            existingExpense.payer_id === friend.friend1_id ? parseFloat(friend.balance_amount) - parseFloat(existingExpense.debtor_amount) : parseFloat(friend.balance_amount) + parseFloat(existingExpense.debtor_amount)
         },
         conversationId,
         transaction

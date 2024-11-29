@@ -33,7 +33,7 @@ const formatFriendData = (userId) => (friend) => {
  *
  * @param {string} friendTag1 - The first possible friendship tag (e.g., "FRIEND1").
  * @param {string} friendTag2 - The second possible friendship tag (e.g., "FRIEND2").
- * @param {object} friendExist - An object representing the current friendship, containing the `statusField`.
+ * @param {string} status - A string representing the current archive or block status.
  *
  * @returns {string} The updated archive/block status.
  *
@@ -117,13 +117,13 @@ const calculateDebtorAmount = (expenseData, existingExpense = null) => {
  * @param {number} currentBalance - The current balance between the two friends.
  * @param {number} debtorAmount - The amount owed by the debtor.
  * @param {string} newPayerId - UUID of the payer for the new expense.
- * @param {Object} friendExist - The existing friend relationship object.
+ * @param {Object} friend - The existing friend relationship object.
  * @param {string} type - Type of the expense, e.g., "SETTLEMENT" or other types.
  * @returns {number} - The updated balance after adding the new expense.
  */
-const calculateForNewEntry = (currentBalance, debtorAmount, newPayerId, friendExist, type) => {
+const calculateForNewEntry = (currentBalance, debtorAmount, newPayerId, friend, type) => {
   if (type !== "SETTLEMENT") {
-    return newPayerId === friendExist.friend1_id ? currentBalance + debtorAmount : currentBalance - debtorAmount;
+    return newPayerId === friend.friend1_id ? currentBalance + debtorAmount : currentBalance - debtorAmount;
   }
   return currentBalance > 0 ? currentBalance - debtorAmount : currentBalance + debtorAmount;
 };
@@ -133,11 +133,14 @@ const calculateForNewEntry = (currentBalance, debtorAmount, newPayerId, friendEx
  *
  * @param {number} currentBalance - The current balance between the two friends.
  * @param {Object} existingExpense - The existing expense object.
- * @param {Object} friendExist - The existing friend relationship object.
+ * @param {Object} friend - The existing friend relationship object.
  * @returns {number} - The updated balance after reversing the expense impact.
  */
-const reverseOldImpact = (currentBalance, existingExpense, friendExist) => {
-  return existingExpense.payer_id === friendExist.friend1_id ? currentBalance - parseFloat(existingExpense.debtor_amount) : currentBalance + parseFloat(existingExpense.debtor_amount);
+const reverseOldImpact = (currentBalance, existingExpense, friend) => {
+  // The following checks if the payer id in the existing expense is the same as that of friend 1 and if so,
+  // it substract the existing debtor amount to reverse the previous change,
+  // otherwise, it adds the existing debtor amount to reverse the previous change.
+  return existingExpense.payer_id === friend.friend1_id ? currentBalance - parseFloat(existingExpense.debtor_amount) : currentBalance + parseFloat(existingExpense.debtor_amount);
 };
 
 /**
@@ -146,28 +149,40 @@ const reverseOldImpact = (currentBalance, existingExpense, friendExist) => {
  * @param {number} currentBalance - The current balance between the two friends.
  * @param {Object} existingExpense - The existing expense object.
  * @param {string} newPayerId - UUID of the new payer in the updated expense.
- * @param {Object} friendExist - The existing friend relationship object.
+ * @param {Object} friend - The existing friend relationship object.
  * @returns {number} - The updated balance after applying the new impact.
  */
-const applyNewImpact = (currentBalance, existingExpense, newPayerId, friendExist) => {
-  return newPayerId === friendExist.friend1_id ? currentBalance + parseFloat(existingExpense.debtor_amount) : currentBalance - parseFloat(existingExpense.debtor_amount);
+const applyNewImpact = (currentBalance, existingExpense, newPayerId, friend) => {
+  // The following checks if the new payer id is the same as that of friend 1 and if so,
+  // it adds the existing debtor amount to apply the new change,
+  // otherwise, it subtracts the existing debtor amount to apply the new change.
+  return newPayerId === friend.friend1_id ? currentBalance + parseFloat(existingExpense.debtor_amount) : currentBalance - parseFloat(existingExpense.debtor_amount);
 };
 
 /**
- * Adjusts the balance for other field changes in the expense.
+ * Adjusts the balance for field changes other than payer and debtor swap in the expense.
  *
  * @param {number} currentBalance - The current balance between the two friends.
  * @param {number} debtorAmount - The amount owed by the debtor in the updated expense.
  * @param {Object} existingExpense - The existing expense object.
  * @param {string} newPayerId - UUID of the new payer in the updated expense.
- * @param {Object} friendExist - The existing friend relationship object.
+ * @param {Object} friend - The existing friend relationship object.
  * @param {string} type - Type of the expense, e.g., "SETTLEMENT" or other types.
  * @returns {number} - The updated balance after adjusting for field changes.
  */
-const adjustForFieldChanges = (currentBalance, debtorAmount, existingExpense, newPayerId, friendExist, type) => {
+const adjustForFieldChanges = (currentBalance, debtorAmount, existingExpense, newPayerId, friend, type) => {
+  // If the type is not settlement
   if (type !== "SETTLEMENT") {
-    return newPayerId === friendExist.friend1_id ? currentBalance + debtorAmount - parseFloat(existingExpense.debtor_amount) : currentBalance - (debtorAmount - parseFloat(existingExpense.debtor_amount));
+    // The following code checks if the new payer is the same as the friend1 id and if so,
+    // adds the debtor amount to the current balance and substract the existing debtor amount to remove the previous impact,
+    // otherwise it substract the debtor amount from the current balance and add the existing debtor amount to remove the previous impact.
+    return newPayerId === friend.friend1_id ? currentBalance + debtorAmount - parseFloat(existingExpense.debtor_amount) : currentBalance - (debtorAmount - parseFloat(existingExpense.debtor_amount));
   }
+  // If the type is settlement
+  // The following code checks if the current balance is greater than 0 and if so,
+  // substract the debtor amount from the current balance and add the existing debtor amount to remove the previous impact,
+  // otherwise it adds the debtor amount to the current balance and substract the existing debtor amount to remove the previous impact.
+  // This ensure that the expense when of settlement type always tries to approach a balance of 0.
   return currentBalance > 0 ? currentBalance - (debtorAmount - parseFloat(existingExpense.debtor_amount)) : currentBalance + debtorAmount - parseFloat(existingExpense.debtor_amount);
 };
 
@@ -177,7 +192,7 @@ const adjustForFieldChanges = (currentBalance, debtorAmount, existingExpense, ne
  * @param {number} currentBalance - The current balance between the two friends.
  * @param {number} debtorAmount - The amount owed by the debtor.
  * @param {string} newPayerId - UUID of the new payer.
- * @param {Object} friendExist - The existing friend relationship object.
+ * @param {Object} friend - The existing friend relationship object.
  * @param {string} type - Type of the expense, e.g., "SETTLEMENT" or other types.
  * @param {Object|null} existingExpense - The existing expense object (if updating an expense).
  * @param {boolean} isUpdate - Whether this is an update to an existing expense.
@@ -187,23 +202,27 @@ const calculateNewBalance = (
   currentBalance,
   debtorAmount,
   newPayerId,
-  friendExist,
+  friend,
   type,
   existingExpense = null,
   isUpdate = false
 ) => {
   if (!isUpdate) {
-    return calculateForNewEntry(currentBalance, debtorAmount, newPayerId, friendExist, type);
+    // New expense
+    return calculateForNewEntry(currentBalance, debtorAmount, newPayerId, friend, type);
   }
 
   let updatedCurrentBalance = currentBalance;
 
+  // The following condition checks if the new payer is changed to the old debtor
   if (newPayerId !== existingExpense.payer_id && existingExpense.debtor_id === newPayerId) {
-    updatedCurrentBalance = reverseOldImpact(updatedCurrentBalance, existingExpense, friendExist);
-    updatedCurrentBalance = applyNewImpact(updatedCurrentBalance, existingExpense, newPayerId, friendExist);
+    // The following reverses the effect of previous changes
+    updatedCurrentBalance = reverseOldImpact(updatedCurrentBalance, existingExpense, friend);
+    // The following updates the balance based on the new payer
+    updatedCurrentBalance = applyNewImpact(updatedCurrentBalance, existingExpense, newPayerId, friend);
   }
 
-  return adjustForFieldChanges(updatedCurrentBalance, debtorAmount, existingExpense, newPayerId, friendExist, type);
+  return adjustForFieldChanges(updatedCurrentBalance, debtorAmount, existingExpense, newPayerId, friend, type);
 };
 
 /**
@@ -231,8 +250,8 @@ const validateSettlementAmount = (currentBalance, debtorAmount) => {
 /**
  * Validates if the friend relationship exists.
  */
-const validateFriendExist = (friendExist) => {
-  if (!friendExist) {
+const isFriendExist = (friend) => {
+  if (!friend) {
     throw new ErrorHandler(404, "Friend not found");
   }
 };
@@ -249,9 +268,9 @@ const validateExistingExpense = (existingExpense) => {
 /**
  * Validates conversation permissions for expense updates.
  */
-const validateConversationPermissions = (friendExist) => {
+const validateConversationPermissions = (friend) => {
   if (
-    friendExist.status === "REJECTED" || friendExist.archival_status !== "NONE" || friendExist.block_status !== "NONE"
+    friend.status === "REJECTED" || friend.archival_status !== "NONE" || friend.block_status !== "NONE"
   ) {
     throw new ErrorHandler(403, "This action is not allowed.");
   }
@@ -260,8 +279,8 @@ const validateConversationPermissions = (friendExist) => {
 /**
  * Validates if the participants are allowed to update the expense.
  */
-const validateUpdateParticipants = (updatedExpenseData, friendExist) => {
-  const friendIds = [ friendExist.friend1_id, friendExist.friend2_id ];
+const validateUpdateParticipants = (updatedExpenseData, friend) => {
+  const friendIds = [ friend.friend1_id, friend.friend2_id ];
 
   if (
     !(
@@ -311,7 +330,7 @@ export {
   calculateNewBalance,
   validateSettlementAmount,
   formatPersonName,
-  validateFriendExist,
+  isFriendExist,
   validateExistingExpense,
   validateConversationPermissions,
   validateUpdateParticipants,

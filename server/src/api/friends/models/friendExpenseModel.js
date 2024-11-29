@@ -39,27 +39,15 @@ export default (sequelize) => {
       },
       "conversation_id": {
         "type": DataTypes.UUID,
-        "allowNull": false,
-        "references": {
-          "model": "friends",
-          "key": "conversation_id"
-        }
+        "allowNull": false
       },
       "payer_id": {
         "type": DataTypes.UUID,
-        "allowNull": false,
-        "references": {
-          "model": "users",
-          "key": "user_id"
-        }
+        "allowNull": false
       },
       "debtor_id": {
         "type": DataTypes.UUID,
-        "allowNull": false,
-        "references": {
-          "model": "users",
-          "key": "user_id"
-        }
+        "allowNull": false
       },
       "split_type": {
         "type": DataTypes.ENUM("EQUAL", "UNEQUAL", "PERCENTAGE", "SETTLEMENT"),

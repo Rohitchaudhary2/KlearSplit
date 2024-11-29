@@ -1,0 +1,25 @@
+<div class="d-flex justify-content-evenly align-items-center gap-3 mx-3">
+    <div class="d-flex justify-content-between search-container shadow col-md-10 ps-3">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+        placeholder="{{ placeholder() }}"
+      />
+      <button type="submit" class="search-button">
+        <i class="fa fa-search"></i>
+      </button>
+    </div>
+    <div class="col-md-1">
+      <button
+        class="material-icons shadow action-button"
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        [title]="actionButtonTitle()"
+        (click)="onActionButtonClick()"
+      >
+        {{ actionButtonIcon() }}
+      </button>
+    </div>
+</div>
+  

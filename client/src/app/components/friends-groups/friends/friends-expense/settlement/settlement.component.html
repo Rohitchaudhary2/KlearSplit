@@ -1,0 +1,49 @@
+<h2 mat-dialog-title class="text-center bg-success text-white py-2">
+  settle up
+</h2>
+<div class="d-flex flex-column pb-3">
+  <div class="d-flex align-items-center justify-content-around p-3">
+    <img class="profile-image" [src]="payer_image || '/profile.png'" alt="Payer"/>
+    <span class="arrow"></span>
+    <img
+      class="profile-image"
+      style="width: 60px"
+      [src]="debtor_image || '/profile.png'"
+      alt="Debtor"
+    />
+  </div>
+  <div class="d-flex align-items-center justify-content-center px-3">
+    <span class="fs-5 fw-bold text-success name" style="max-width: 12rem">{{
+      payer_name
+    }}</span>
+    <span class="mx-3 fs-6">paid</span>
+    <span class="fs-5 fw-bold text-success name" style="max-width: 12rem">{{
+      debtor_name
+    }}</span>
+  </div>
+</div>
+
+<div [formGroup]="form" class="d-flex justify-content-center">
+  <mat-form-field appearance="outline">
+    <mat-label>Settlement Amount</mat-label>
+    <mat-icon matPrefix>currency_rupee</mat-icon>
+    <input matInput formControlName="settlement_amount" />
+    @if (getFormErrors("settlement_amount")) {
+      <mat-error>{{ getFormErrors("settlement_amount") }}</mat-error>
+    }
+  </mat-form-field>
+</div>
+
+<div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3 pb-3">
+  <button mat-button class="custom-mat-button" (click)="onCancel()">
+    Cancel
+  </button>
+  <button
+    mat-button
+    class="custom-mat-button"
+    color="warn"
+    (click)="sendSplitType()"
+  >
+    Submit
+  </button>
+</div>

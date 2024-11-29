@@ -1,0 +1,144 @@
+<ul style="padding: 0; margin: 0; list-style: none;">
+  <li
+    class="d-flex mb-1 px-2"
+    [ngClass]="{
+      'justify-content-start': !isCurrentUserPayer(),
+      'justify-content-end': isCurrentUserPayer(),
+    }"
+  >
+    @if (!isCurrentUserPayer()) {
+      <img
+        [src]="friendImageUrl() || '/profile.png'"
+        alt="avatar"
+        class="rounded-circle d-inline-flex align-self-end me-3 shadow-1-strong"
+        width="40"
+      />
+    }
+
+    <div
+      class="d-flex justify-content-between align-items-center"
+      style="
+        max-width: 28vw;
+        max-height: 15vh;
+        background: rgba(24, 24, 16, 0.2);
+        border-radius: 2em;
+        backdrop-filter: blur(15px);
+        border: 2px solid rgba(255, 255, 255, 0.05);
+        background-clip: padding-box;
+        box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
+      "
+    >
+      @if (startsWithPrefix(expense()!.expense_id, "adding")) {
+        <div
+          class="d-flex align-items-center justify-content-center"
+          style="width: 15vw; height: 10vh; color: black; border-radius: 2em"
+        >
+          <p>Adding Expense...</p>
+        </div>
+      } @else if (startsWithPrefix(expense()!.expense_id, "error")) {
+        <div
+          class="d-flex align-items-center justify-content-around p-3 text-black"
+          style="
+            width: 15vw;
+            height: 10vh;
+            color: black;
+            background-color: rgb(239, 115, 115);
+            border-radius: 2em;
+          "
+        >
+          <button
+            class="btn btn-sm"
+            (click)="onRetryExpenseAddition(expense()!.expense_id)"
+          >
+            Retry
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              class="bi bi-repeat"
+              viewBox="0 0 16 16"
+            >
+              <path
+                d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192m3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"
+              />
+            </svg>
+          </button>
+          <div class="card" style="background-color: transparent; border: none">
+            <div
+              class="card-header d-flex justify-content-center px-4"
+              style="
+                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+                background: transparent;
+              "
+            >
+              <p class="fw-bold mb-0">
+                {{ expense()?.expense_name }}
+              </p>
+            </div>
+            <div class="card-body px-4" style="max-width: 28vw">
+              <p class="mb-0">{{ expense()?.total_amount }}</p>
+            </div>
+          </div>
+        </div>
+      } @else if (startsWithPrefix(expense()!.expense_id, "retry")) {
+        <div
+          class="d-flex align-items-center justify-content-center"
+          style="width: 15vw; height: 10vh; color: black"
+        >
+          <div>Retrying...</div>
+        </div>
+      } @else {
+        <div
+          class="px-3 text-black"
+          style="max-width: 13vw; word-wrap: break-word; vertical-align: middle"
+        >
+          <p class="m-0">{{ expense()?.expense_name }}</p>
+        </div>
+
+        <div class="card" style="background-color: transparent; border: none">
+          <div
+            class="card-header d-flex justify-content-start px-4"
+            style="
+              border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+              background: transparent;
+            "
+          >
+            <p class="fw-bold mb-0">
+              {{ isCurrentUserPayer() ? "You paid" : friendName() + " paid" }}
+            </p>
+          </div>
+          <div class="card-body px-4" style="max-width: 28vw">
+            <p class="mb-0">{{ expense()?.total_amount }}</p>
+          </div>
+        </div>
+
+        <div class="card" style="background-color: transparent; border: none">
+          <div
+            class="card-header d-flex justify-content-start px-4"
+            style="
+              border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+              background: transparent;
+            "
+          >
+            <p class="fw-bold mb-0">
+              {{ isCurrentUserPayer() ? "You lent" : friendName() + " lent you" }}
+            </p>
+          </div>
+          <div class="card-body px-4" style="max-width: 28vw">
+            <p class="mb-0">{{ expense()?.debtor_amount }}</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (isCurrentUserPayer()) {
+      <img
+        [src]="currentUserImageUrl() || '/profile.png'"
+        alt="avatar"
+        class="rounded-circle d-inline-flex align-self-end ms-3 shadow-1-strong"
+        width="40"
+      />
+    }
+  </li>
+</ul>

@@ -34,13 +34,13 @@ class GroupService {
     const isGroupExists = await GroupDb.getGroupData(groupId);
 
     if (!isGroupExists) {
-      throw new ErrorHandler(400, "Group does not Exist");
+      throw new ErrorHandler(404, "Group does not Exist");
     }
 
     const inviter = await GroupDb.getGroupMember(groupId, userId);
 
     if (!inviter || inviter.role === "USER") {
-      throw new ErrorHandler(400, "You are not allowed to invite members to this group");
+      throw new ErrorHandler(403, "You are not allowed to invite members to this group");
     }
 
     const addedMembers = await this.assignRolesAndAddMembers(membersData, inviter.group_membership_id, groupId);
@@ -71,6 +71,38 @@ class GroupService {
     group.push({ ...userMembershipInfo, "balance_with_user": 0, "total_balance": 0 });
 
     return group;
+  };
+
+  static updateGroup = async(groupId, groupData, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+    
+    await this.isUserMemberOfGroup(groupId, userId);
+
+    const updatedGroup = await GroupDb.updateGroup(groupId, groupData);
+
+    return updatedGroup;
+  };
+
+  static updateGroupMember = async(groupId, groupMemberData, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+    
+    const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+
+    if (groupMemberData.status && userMembershipInfo.status !== "PENDING") {
+      throw new ErrorHandler(400, "Status can't be changed once accepted or rejected the group invitation.");
+    }
+
+    const updatedMember = GroupDb.updateGroupMember(userMembershipInfo.group_membership_id, groupMemberData);
+
+    return updatedMember;
   };
 }
 

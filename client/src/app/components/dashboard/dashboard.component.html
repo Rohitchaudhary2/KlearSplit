@@ -8,28 +8,49 @@
 <div class="chart-container">
   <div class="row">
     <div class="col">
-      <canvas
+      @if(hasNoneZeroData(pieChartData1)) {
+        <canvas
         baseChart
         [data]="pieChartData1"
         [type]="'pie'"
         [options]="pieChartOptions1"
-      ></canvas>
+        ></canvas>
+      } @else {
+        <div class="d-flex flex-column align-items-center canvas">
+          <h5>Number of Expenses by Amount Range</h5>
+          <p>No Data Found</p>
+        </div>
+      }
     </div>
     <div class="col">
-      <canvas
+      @if(hasNoneZeroData(pieChartData2)) {
+        <canvas
         baseChart
         [data]="pieChartData2"
         [type]="'pie'"
         [options]="pieChartOptions2"
-      ></canvas>
+        ></canvas>
+      } @else {
+        <div class="d-flex flex-column align-items-center canvas">
+          <h5>Balance Amount</h5>
+          <p>No Data Found</p>
+        </div>
+      }
     </div>
     <div class="col">
-      <canvas
+      @if(pieChartData3.datasets[0].data.length) {
+        <canvas
         baseChart
         [data]="pieChartData3"
         [type]="'pie'"
         [options]="pieChartOptions3"
-      ></canvas>
+        ></canvas>
+      } @else {
+        <div class="d-flex flex-column align-items-center canvas">
+          <h5>Top Cash Flow Partners</h5>
+          <p>No Data Found</p>
+        </div>
+      }
     </div>
   </div>
   <div class="row">

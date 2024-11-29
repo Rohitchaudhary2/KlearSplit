@@ -41,6 +41,26 @@ class GroupController {
       next(error);
     }
   };
+
+  static updateGroup = async(req, res, next) => {
+    try {
+      const group = await GroupService.updateGroup(req.validatedParams.group_id, req.validatedGroupData, req.user.user_id);
+
+      responseHandler(res, 200, "Group updated successfully", group);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static updateGroupMember = async(req, res, next) => {
+    try {
+      const updatedMember = await GroupService.updateGroupMember(req.validatedParams.group_id, req.validatedGroupMemberData, req.user.user_id);
+
+      return updatedMember;
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default GroupController;

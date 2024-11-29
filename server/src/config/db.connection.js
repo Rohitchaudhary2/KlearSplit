@@ -18,12 +18,12 @@ import initializeGroupExpenseParticipant from "../api/groups/models/groupExpense
 const sequelize = new Sequelize(database, username, password, {
   host,
   "dialect": "postgres",
-  // "dialectOptions": {
-  //   "ssl": {
-  //     "require": true,
-  //     "rejectUnauthorized": false
-  //   }
-  // },
+  "dialectOptions": {
+    "ssl": {
+      "require": true,
+      "rejectUnauthorized": false
+    }
+  },
   "logging": false
 });
 

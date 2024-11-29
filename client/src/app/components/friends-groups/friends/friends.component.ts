@@ -12,6 +12,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { DialogPosition, MatDialog } from "@angular/material/dialog";
+import { MatIconModule } from "@angular/material/icon";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
@@ -44,6 +45,7 @@ import { SocketService } from "./socket.service";
     NgClass,
     MessageComponent,
     ExpenseComponent,
+    MatIconModule,
   ],
   templateUrl: "./friends.component.html",
   styleUrl: "./friends.component.css",
@@ -147,26 +149,31 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.isImageLoaded = true;
   }
 
+  clearSelectedUserData(){
+    this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
+    // Remove the existing 'onNewMessage' listener for the previous user
+    this.socketService.removeNewMessageListener();
+    // Clear previous data (messages, expenses, and combined view)
+    this.messages.set([]);
+    this.expenses.set([]);
+    this.combinedView.set([]);
+    // Reset pagination values
+    this.pageMessage = 1;
+    this.pageExpense = 1;
+    this.pageCombined = 1;
+    this.messageInput = "";
+    // Reset flags to indicate whether all messages, expenses, and combined data are loaded
+    this.allMessagesLoaded = false;
+    this.allExpensesLoaded = false;
+    this.allCombinedLoaded = false;
+    this.selectedUser.set(undefined);
+  }
+
+  // Method to set the selected user or friend whose chat will be opened.
   onSelectUser(friend: FriendData | undefined) {
     // Check if there is a previously selected user
     if (this.selectedUser()) {
-      // Leave the previous room to ensure no duplicate connections
-      this.socketService.leaveRoom(this.selectedUser()!.conversation_id);
-      // Remove the existing 'onNewConversationMessage' listener for the previous user
-      this.socketService.removeNewMessageListener();
-      // Clear previous data (messages, expenses, and combined view)
-      this.messages.set([]);
-      this.expenses.set([]);
-      this.combinedView.set([]);
-      // Reset pagination values
-      this.pageMessage = 1;
-      this.pageExpense = 1;
-      this.pageCombined = 1;
-      this.messageInput = "";
-      // Reset flags to indicate whether all messages, expenses, and combined data are loaded
-      this.allMessagesLoaded = false;
-      this.allExpensesLoaded = false;
-      this.allCombinedLoaded = false;
+      this.clearSelectedUserData();
     }
 
     // Set the selected user (friend) as the new selected user (friend)
@@ -208,6 +215,18 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     }
   }
 
+  /**
+   * Checks whether all messages, expenses, or combined data have been completely loaded,
+   * and sets the appropriate loader state accordingly.
+   *
+   * @param loadedKey - The key indicating which data type's load status to check. It can be one of:
+   *   - `"allMessagesLoaded"` for messages,
+   *   - `"allExpensesLoaded"` for expenses,
+   *   - `"allCombinedLoaded"` for combined messages and expenses.
+   * @param loadCondition - A boolean indicating whether the data should be considered loaded based on the condition.
+   * @param items - The array of items (messages, expenses, or combined data) to check the length against.
+   * @param pageSize - The number of items that should be loaded per page. If the number of items is less than this, it indicates all data is loaded.
+   */
   checkAndSetLoaded(loadedKey: "allMessagesLoaded" | "allExpensesLoaded" |"allCombinedLoaded", loadCondition: boolean,
     items: (ExpenseData | MessageData | CombinedExpense | CombinedMessage)[], pageSize: number) {
     if (!this[loadedKey] && loadCondition && items.length < pageSize) {
@@ -361,6 +380,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     };
     this.socketService.sendConversationMessage(messageData);
     this.messageInput = "";
+    this.charCountExceeded = false;
   }
 
   /**
@@ -474,9 +494,8 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           return item.friend_expense_id === updatedExpense.friend_expense_id
             ? { ...updatedExpense, type: "expense" }
             : item;
-        } else {
-          return item;
         }
+        return item;
       },
     );
     this.combinedView.set(updatedCombinedView);
@@ -646,23 +665,35 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     return defaultLabel;
   }
 
+  /**
+   * Sets the block status of the selected user based on the current block label and user status.
+   *
+   * - If the block label is "Block" and the current status is not "NONE", it sets the block status to "BOTH".
+   * - If the block label is "Block" and the current status is "NONE", it sets the block status to either "FRIEND1" or "FRIEND2" depending on whether the user is the sender.
+   * - If the block label is "Unblock" and the current status is not "BOTH", it sets the block status to "NONE".
+   * - If the block label is "Unblock" and the current status is "BOTH", it sets the block status to either "FRIEND2" or "FRIEND1" depending on whether the user is the sender.
+   *
+   * @param currentStatus - The current block status of the selected user. Determines what action to take in the block/unblock process.
+   * @param isSender - A boolean value indicating whether the user is the sender. Used to decide the specific block status ("FRIEND1" or "FRIEND2").
+   */
   setBlockStatus() {
     const currentStatus = this.selectedUser()?.block_status;
     const isSender = this.selectedUser()?.status === "SENDER";
-    if (this.getBlockLabel() === "Block") {
-      if (currentStatus !== "NONE") {
-        this.selectedUser()!.block_status = "BOTH";
-      } else {
-        this.selectedUser()!.block_status = isSender
-          ? "FRIEND1"
-          : "FRIEND2";
-      }
-    } else if (currentStatus !== "BOTH") {
-        this.selectedUser()!.block_status = "NONE";
-    } else {
-        this.selectedUser()!.block_status = isSender
-          ? "FRIEND2"
-          : "FRIEND1";
+    switch(this.getBlockLabel()) {
+      case "Block":
+        if (currentStatus !== "NONE") {
+          this.selectedUser()!.block_status = "BOTH";
+        } else {
+          this.selectedUser()!.block_status = isSender ? "FRIEND1" : "FRIEND2";
+        }
+        break;
+      case "Unblock":
+        if(currentStatus !== "BOTH") {
+          this.selectedUser()!.block_status = "NONE";
+        } else {
+          this.selectedUser()!.block_status = isSender ? "FRIEND2" : "FRIEND1";
+        }
+        break;
     }
   }
 
@@ -678,17 +709,20 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   archiveBlock(conversationId: string, type: string) {
     this.friendsService.archiveBlockRequest(conversationId, type).subscribe({
       next: () => {
-        if (type === "archived") {
-          this.toastr.success(
-            `${this.getArchiveLabel()}d Successfully`,
-            "Success",
-          );
-        } else {
-          this.toastr.success(
-            `${this.getBlockLabel()}ed Successfully`,
-            "Success",
-          );
-          this.setBlockStatus();
+        switch(type) {
+          case "archived":
+            this.toastr.success(
+              `${this.getArchiveLabel()}d Successfully`,
+              "Success",
+            );
+            break;
+          case "blocked":
+            this.toastr.success(
+              `${this.getBlockLabel()}ed Successfully`,
+              "Success",
+            );
+            this.setBlockStatus();
+            break;
         }
       },
     });

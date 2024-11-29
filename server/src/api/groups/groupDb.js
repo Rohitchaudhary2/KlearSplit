@@ -50,6 +50,19 @@ class GroupDb {
 
     return group;
   };
+
+  static updateGroup = async(groupId, groupData) => await Group.update(groupData, {
+    "where": {
+      "group_id": groupId
+    },
+    "returning": true
+  });
+
+  static updateGroupMember = async(groupMembershipId, groupMemberData) => await GroupMember.update(groupMemberData, {
+    "where": {
+      "group_membership_id": groupMembershipId
+    }
+  });
 }
 
 export default GroupDb;

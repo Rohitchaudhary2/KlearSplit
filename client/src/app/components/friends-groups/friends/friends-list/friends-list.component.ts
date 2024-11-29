@@ -29,7 +29,7 @@ import { FriendsService } from "../friends.service";
     MatIconModule,
     MatTooltipModule,
     NgClass,
-    SearchBarComponent,
+    SearchBarComponent
   ],
   templateUrl: "./friends-list.component.html",
   styleUrl: "../friends.component.css",
@@ -120,7 +120,6 @@ export class FriendsListComponent implements OnInit {
   onAddFriendClick(): void {
     const dialogRef = this.dialog.open(AddFriendComponent, {
       width: "500px",
-      data: [ "Add Friend for Easier Bill Splitting" ],
       enterAnimationDuration: "500ms",
       exitAnimationDuration: "500ms",
     });

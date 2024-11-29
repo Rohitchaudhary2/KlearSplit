@@ -14,7 +14,7 @@ import {
   updateUserSchema
 } from "../users/userValidations.js";
 import { ErrorHandler } from "./errorHandler.js";
-import { groupCreationSchema, groupIdParamValidation, membersDataSchema } from "./../groups/groupValidations.js";
+import { groupCreationSchema, groupIdParamValidation, groupUpdationSchema, membersDataSchema, updateGroupMemberSchema } from "./../groups/groupValidations.js";
 
 // Middleware to validate user creation or update data
 export const validateData = (req, res, next) => {
@@ -171,6 +171,20 @@ export const validateGroupCreationData = (req, res, next) => {
   }
 };
 
+export const validateGroupUpdationData = (req, res, next) => {
+  try {
+    const { error, value } = groupUpdationSchema.validate(req.body);
+
+    if (error) {
+      throw new ErrorHandler(400, error);
+    }
+    req.validatedGroupData = value;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const validateMembersData = (req, res, next) => {
   try {
     const { error, value } = membersDataSchema.validate(req.body);
@@ -194,6 +208,20 @@ export const validateGroupParams = (req, res, next) => {
       throw new ErrorHandler(400, error);
     }
     req.validatedParams = value;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const validateUpdateGroupMember = (req, res, next) => {
+  try {
+    const { error, value } = updateGroupMemberSchema.validate(req.params);
+
+    if (error) {
+      throw new ErrorHandler(400, error);
+    }
+    req.validatedGroupMemberData = value;
     next();
   } catch (error) {
     next(error);

@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { concatMap, map, Observable } from "rxjs";
+import { concatMap, map } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
 import {
@@ -268,7 +268,7 @@ export class FriendsService {
    * @param query - The search query.
    * @returns An observable with the search results (list of users possibly empty).
    */
-  searchUsers(query: string): Observable<SearchedUserResponse> {
+  searchUsers(query: string) {
     return this.httpClient.get<SearchedUserResponse>(
       `${API_URLS.getUsers}/${query}`,
       {

@@ -28,12 +28,12 @@
               (click)="onSelectUser(request)"
               (keyup.enter)="onSelectUser(request)"
               class="row equal-height-row d-flex justify-content-between m-0"
-              [ngClass]="selectedFriend() === request ? 'active' : ''"
               style="cursor: pointer"
+              tabindex="0"
             >
               <td
-                [ngClass]="selectedFriend() === request ? 'active' : ''"
-                class="col-md-3 col-lg-2 col-sm-3"
+
+                class="col-3 col-md-3 col-lg-3"
                 style="
                   flex: 0 0 auto;
                   text-align: center;
@@ -48,11 +48,11 @@
                 /></span>
               </td>
               <td
-                class="col-md-4 col-lg-4 col-sm-3"
-                [ngClass]="selectedFriend() === request ? 'active' : ''"
+                class="col-9 col-md-9 col-lg-9"
+
                 style="flex: 1 1 0"
               >
-                <div class="d-flex justify-content-between align-items-center">
+                <span class="d-flex justify-content-between align-items-center">
                   <span
                     >{{ request.friend.first_name }}
                     {{ request.friend.last_name }}</span
@@ -126,8 +126,8 @@
                       </span>
                     }
                   </span>
-                </div>
-                <div>{{ request.friend.email }}</div>
+                </span>
+                <span>{{ request.friend.email }}</span>
               </td>
             </tr>
           } @empty {

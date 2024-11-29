@@ -27,6 +27,13 @@ export class DashboardComponent implements OnInit {
   // Refrences to chart components in the template for programmatic updates
   @ViewChildren(BaseChartDirective) charts?: QueryList<BaseChartDirective>;
 
+  hasNoneZeroData(pieChartData: {
+    labels: string[];
+    datasets: ChartDataset<"pie">[];
+  }) {
+    return pieChartData.datasets[0].data.some((value) => value !== 0);
+  }
+
   // Data and configuration for the first pie chart (expenses by amount range)
   pieChartData1: {
     labels: string[];

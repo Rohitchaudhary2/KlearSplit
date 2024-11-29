@@ -20,10 +20,10 @@ class GroupDb {
       `select r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, r.status, 
       sum(case when gmb.participant1_id = r.group_membership_id	then gmb.balance_amount when gmb.participant2_id = r.group_membership_id then -gmb.balance_amount else 0 end) as balance_amount 
       from 
-      (select g.*, gm.group_membership_id, gm.status 
+      (select g.*, gm.group_membership_id, gm.status
       from groups g 
       join 
-      group_members gm on g.group_id = gm.group_id where gm.member_id = '${userId}') r 
+      group_members gm on g.group_id = gm.group_id where gm.member_id = '${userId}' and gm.status!='REJECTED') r 
       left join 
       group_member_balance gmb on gmb.group_id = r.group_id 
       group by r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, r.status;`, {
@@ -58,11 +58,19 @@ class GroupDb {
     "returning": true
   });
 
-  static updateGroupMember = async(groupMembershipId, groupMemberData) => await GroupMember.update(groupMemberData, {
-    "where": {
-      "group_membership_id": groupMembershipId
+  static updateGroupMember = async(groupMembershipId, groupMemberData) => {
+    const [ rows, [ updatedMember ] ] = await GroupMember.update(groupMemberData, {
+      "where": {
+        "group_membership_id": groupMembershipId
+      },
+      "returning": true
+    });
+
+    if (rows === 0) {
+      return 0;
     }
-  });
+    return updatedMember;
+  };
 }
 
 export default GroupDb;

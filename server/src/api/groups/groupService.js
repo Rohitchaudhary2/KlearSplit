@@ -21,7 +21,8 @@ class GroupService {
     const groupCreatorData = [ {
       "group_id": group.group_id,
       "member_id": group.creator_id,
-      "role": "CREATOR"
+      "role": "CREATOR",
+      "status": "ACCEPTED"
     } ];
 
     const groupCreator = await GroupDb.addMembers(groupCreatorData);
@@ -51,7 +52,21 @@ class GroupService {
   static getUserGroups = async(userId) => {
     const groups = await GroupDb.getUserGroups(userId);
 
-    return groups;
+    const { acceptedGroups, invitedGroups } = groups.reduce((acc, val) => {
+      switch (val.status) {
+        case "ACCEPTED":
+          acc.acceptedGroups.push(val);
+          break;
+        case "PENDING":
+          acc.invitedGroups.push(val);
+          break;
+        default:
+          throw new ErrorHandler(500, "User specific groups have wrong status");
+      }
+      return acc;
+    }, { "acceptedGroups": [], "invitedGroups": [] });
+
+    return { acceptedGroups, invitedGroups };
   };
 
   static isUserMemberOfGroup = async(groupId, userId) => {

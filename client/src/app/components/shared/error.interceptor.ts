@@ -21,8 +21,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           // If the refresh token is invalid, redirect to login page
           tokenService.removeUserId();
           router.navigate([ "/login" ]);
-          return throwError(() => refreshError);
         }
+        toastr.error(refreshError.error.message, "Error");
         return throwError(() => refreshError);
       }));
   }

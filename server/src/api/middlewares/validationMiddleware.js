@@ -159,8 +159,10 @@ export const validateExpense = (req, res, next) => {
 
 export const validateGroupCreationData = (req, res, next) => {
   try {
-    const { error, value } = groupCreationSchema.validate(req.body);
-
+    const group = JSON.parse(req.body.group);
+    const membersData = JSON.parse(req.body.membersData);
+    const { error, value } = groupCreationSchema.validate({ group, membersData });
+    
     if (error) {
       throw new ErrorHandler(400, error);
     }

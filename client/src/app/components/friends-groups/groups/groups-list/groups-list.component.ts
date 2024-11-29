@@ -52,9 +52,10 @@ export class GroupsListComponent {
       if (!result) {
         return;
       }
-      
+
+      const groupData = result.formData;
       // Call the createGroup method in the GroupService to send a group invite to the selected users
-      this.groupService.createGroup(result).subscribe({
+      this.groupService.createGroup(groupData).subscribe({
         next: () => {
           this.toastr.success("Group created successfully", "Success");
         }

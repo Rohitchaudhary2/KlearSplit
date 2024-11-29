@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from "@angular/core";
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from "@angular/material/dialog";
 import { MatFormFieldModule } from "@angular/material/form-field";
@@ -20,7 +20,6 @@ interface Group {
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    FormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -71,7 +70,7 @@ export class CreateGroupComponent implements OnInit {
   
   /**
    * Trims the leading and trailing whitespace from the value of a specific form control.
-   * This is used to ensure no accidental spaces are included in form fields like 'expense_name' or 'description'.
+   * This is used to ensure no accidental spaces are included in form fields like 'group_name' or 'group_description'.
    *
    * @param controlName - The name of the form control whose value will be trimmed.
    */
@@ -85,14 +84,14 @@ export class CreateGroupComponent implements OnInit {
 
   /**
    * Handles the file selection event when the user selects an image or file.
-   * This method updates the form control for 'receipt' with the selected file and sets the image name.
+   * This method updates the form control for 'image' with the selected file and sets the image name.
    *
    * @param event - The event triggered by the file input. It's expected to be of type 'Event' where the target
    * is an HTMLInputElement with the selected files.
    */
   selectImage(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input?.files?.length) {
+    if (input.files && input.files.length > 0) {
       this.form.controls.image.setValue(input.files[0]);
       this.imageName.set(input.files[0].name);
     }
@@ -107,11 +106,11 @@ export class CreateGroupComponent implements OnInit {
   openMembersDialog() {
     const dialogRef = this.dialog.open(SelectMembersDialogComponent, {
       panelClass: "second-dialog",
-      width: "20%",
+      width: "30%",
       data: [ "Add Members" ],
       backdropClass: "dialog-bg-trans",
       position: {
-        right: "2%",
+        right: "9%",
       },
     });
 
@@ -128,24 +127,39 @@ export class CreateGroupComponent implements OnInit {
       return;
     }
 
+    const formData = new FormData();
+
     // Remove empty fields from the group object
     const group = Object.keys(this.form.value).reduce((acc, key) => {
       const typedKey = key as keyof Group;
       const value = this.form.get(typedKey)?.value;
       // Handle File type specifically for 'image' field
       if (typedKey === "image" && value instanceof File) {
-        acc[typedKey] = "image"; // Assign File type for image
+        formData.append("image", value); // Add image as a file
       } else if (value && typeof value === "string") {
         acc[typedKey] = value; // Assign string type for other fields
       }
       return acc;
     }, {} as Partial<Group>);
-
-    const formData = new FormData();
+    
     formData.append("group", JSON.stringify(group));
+
+    // Process and clean up membersData
+    const cleanedMembersData = Object.keys(this.membersData).reduce((acc, key) => {
+      const typedKey = key as keyof typeof this.membersData; // Explicitly cast key
+      const value = this.membersData[typedKey];
+      // Only include non-empty arrays
+      if (Array.isArray(value) && value.length > 0) {
+        acc[typedKey] = value;
+      }
+      return acc;
+    }, {} as typeof this.membersData);
+
+    // Append the cleaned membersData as JSON
+    formData.append("membersData", JSON.stringify(cleanedMembersData));
+    // Send data
     this.dialogRef.close({
-      group,
-      membersData: { ...this.membersData },
+      formData,
     });
   }
 

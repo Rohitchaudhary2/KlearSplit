@@ -7,12 +7,12 @@
       <mat-label>Group Name</mat-label>
       <input
         matInput
-        formControlName="groupName"
-        (blur)="trimInput('groupName')"
+        formControlName="group_name"
+        (blur)="trimInput('group_name')"
         style="background-color: transparent"
       />
-      @if (getFormErrors("groupName")) {
-        <mat-error>{{ getFormErrors("groupName") }}</mat-error>
+      @if (getFormErrors("group_name")) {
+        <mat-error>{{ getFormErrors("group_name") }}</mat-error>
       }
     </mat-form-field>
 
@@ -20,12 +20,12 @@
       <mat-label>Group Description</mat-label>
       <textarea
         matInput
-        formControlName="groupDescription"
-        (blur)="trimInput('description')"
+        formControlName="group_description"
+        (blur)="trimInput('group_description')"
         style="background-color: transparent"
       ></textarea>
-      @if (getFormErrors("groupDescription")) {
-        <mat-error>{{ getFormErrors("groupDescription") }}</mat-error>
+      @if (getFormErrors("group_description")) {
+        <mat-error>{{ getFormErrors("group_description") }}</mat-error>
       }
     </mat-form-field>
 
@@ -55,18 +55,6 @@
     >
       Add Members
     </button>
-    @if (selectedMembers.length > 0) {
-      <p>Selected Members:</p>
-      <ul>
-        @for (member of selectedMembers; track $index) {
-          <li>
-            {{ member.first_name }}
-            <mat-checkbox [(ngModel)]="member.isAdmin">Admin</mat-checkbox>
-            <mat-checkbox [(ngModel)]="member.isCoAdmin">Co-Admin</mat-checkbox>
-          </li>
-        }
-      </ul>
-    }
   </form>
 </div>
 <div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3">

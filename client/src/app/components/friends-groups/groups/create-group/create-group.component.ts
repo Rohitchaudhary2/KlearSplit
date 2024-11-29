@@ -8,9 +8,13 @@ import { MatInputModule } from "@angular/material/input";
 
 import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
-import { CurrentUser } from "../../../shared/types.model";
-// import { AddFriendComponent } from "../../friends/add-friend/add-friend.component";
 import { SelectMembersDialogComponent } from "./select-members-dialog/select-members-dialog.component";
+
+interface Group {
+  group_name: string;
+  group_description: string;
+  image: string;
+}
 @Component({
   selector: "app-create-group",
   standalone: true,
@@ -35,27 +39,20 @@ export class CreateGroupComponent implements OnInit {
   imageName = signal<string>("Upload group profile");
 
   form = new FormGroup({
-    groupName: new FormControl("", {
+    group_name: new FormControl("", {
       validators: [ Validators.required, Validators.maxLength(100) ]
     }),
-    groupDescription: new FormControl("", {
+    group_description: new FormControl("", {
       validators: [ Validators.maxLength(255) ]
     }),
     image: new FormControl<File | null>(null),
-    members: new FormControl<string[]>([], {
-      validators: [ Validators.required ]
-    }),
-    admins: new FormControl<string[]>([]),
-    coadmins: new FormControl<string[]>([]),
   });
 
-  selectedMembers: {
-    user_id: string;
-    first_name: string;
-    last_name: string;
-    isAdmin: boolean;
-    isCoAdmin: boolean
-  }[] = [];
+  membersData: {
+    members: string[];
+    admins: string[];
+    coadmins: string[];
+  } = { members: [], admins: [], coadmins: [] };
 
   ngOnInit(): void {
     this.dialogRef.updateSize("30%");
@@ -114,35 +111,42 @@ export class CreateGroupComponent implements OnInit {
       data: [ "Add Members" ],
       backdropClass: "dialog-bg-trans",
       position: {
-        right: "5%",
+        right: "2%",
       },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.selectedMembers = result.map((user: CurrentUser) => ({
-          ...user,
-          isAdmin: false,
-          isCoAdmin: false,
-        }));
-        this.form.controls.members.setValue(
-          this.selectedMembers.map((member) => member.user_id)
-        );
+      if (!result) {
+        return;
       }
+      this.membersData = result;
     });
   }
 
   onSubmit() {
-    if (this.form.valid) {
-      this.dialogRef.close({
-        ...this.form.value,
-        members: this.selectedMembers.map((member) => ({
-          id: member.user_id,
-          isAdmin: member.isAdmin,
-          isCoAdmin: member.isCoAdmin,
-        })),
-      });
+    if (!this.form.valid) {
+      return;
     }
+
+    // Remove empty fields from the group object
+    const group = Object.keys(this.form.value).reduce((acc, key) => {
+      const typedKey = key as keyof Group;
+      const value = this.form.get(typedKey)?.value;
+      // Handle File type specifically for 'image' field
+      if (typedKey === "image" && value instanceof File) {
+        acc[typedKey] = "image"; // Assign File type for image
+      } else if (value && typeof value === "string") {
+        acc[typedKey] = value; // Assign string type for other fields
+      }
+      return acc;
+    }, {} as Partial<Group>);
+
+    const formData = new FormData();
+    formData.append("group", JSON.stringify(group));
+    this.dialogRef.close({
+      group,
+      membersData: { ...this.membersData },
+    });
   }
 
   onCancel(): void {

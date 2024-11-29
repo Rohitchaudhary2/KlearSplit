@@ -17,8 +17,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   function handleTokenExpiration() {
     return authService.refreshAccessToken().pipe(switchMap(() => next(req)),
       catchError((refreshError) => {
-        tokenService.removeUserId();
-        router.navigate([ "/login" ]);
+        if (refreshError.status === 401) {
+          // If the refresh token is invalid, redirect to login page
+          tokenService.removeUserId();
+          router.navigate([ "/login" ]);
+          return throwError(() => refreshError);
+        }
         return throwError(() => refreshError);
       }));
   }

@@ -1,6 +1,7 @@
 <h1 mat-dialog-title class="text-center bg-primary text-white py-2">
   Select Members
 </h1>
+<form [formGroup]="form">
 <mat-form-field appearance="outline" class="w-100 px-4 mb-2">
   <mat-label>Search Users</mat-label>
   <input
@@ -33,7 +34,7 @@
     }
   </ul>
 }
-
+</form>
 <h3 class="text-center py-2">Selected Members</h3>
 <ul>
   @for (user of selectedMembers(); track $index) {
@@ -42,6 +43,7 @@
       <mat-form-field>
         <mat-label>Role</mat-label>
         <mat-select
+          appearance="outline"
           [(ngModel)]="user.role"
           (ngModelChange)="updateRole(user, $event)"
         >
@@ -59,5 +61,5 @@
 
 <div mat-dialog-actions class="d-flex justify-content-end gap-2 pb-2 px-3">
   <button mat-button color="warn" (click)="onCancel()">Cancel</button>
-  <button mat-button [disabled]="form.invalid" (click)="onSave()">Add</button>
+  <button mat-button (click)="onSave()">Add</button>
 </div>

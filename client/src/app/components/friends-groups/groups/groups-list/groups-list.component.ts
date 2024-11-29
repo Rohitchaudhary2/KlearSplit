@@ -4,10 +4,12 @@ import { FormsModule } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from "@angular/material/tooltip";
+import { ToastrService } from "ngx-toastr";
 
 import { SearchBarComponent } from "../../shared/search-bar/search-bar.component";
 import { CreateGroupComponent } from "../create-group/create-group.component";
 import { GroupData } from "../groups.model";
+import { GroupsService } from "../groups.service";
 
 @Component({
   selector: "app-groups-list",
@@ -25,6 +27,8 @@ import { GroupData } from "../groups.model";
 })
 export class GroupsListComponent {
   private readonly dialog = inject(MatDialog);
+  private readonly groupService = inject(GroupsService);
+  private readonly toastr = inject(ToastrService);
 
   selectedGroup = output<GroupData | undefined>();
   currentGroup = signal<GroupData | undefined>(undefined);
@@ -48,7 +52,13 @@ export class GroupsListComponent {
       if (!result) {
         return;
       }
-      // console.log(result);
+      
+      // Call the createGroup method in the GroupService to send a group invite to the selected users
+      this.groupService.createGroup(result).subscribe({
+        next: () => {
+          this.toastr.success("Group created successfully", "Success");
+        }
+      });
     });
   }
 

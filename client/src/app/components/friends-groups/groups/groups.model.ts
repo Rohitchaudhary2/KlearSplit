@@ -1,4 +1,4 @@
-export interface CreateGroup {
+export interface CreateGroupData {
     group: {
         group_name: string;
         group_description: string;

@@ -42,35 +42,43 @@
                 <span>
                   <img
                     class="profile-image"
-                    [src]="invite.image_url"
+                    [src]="invite.image_url || 'profile.png'"
                     alt="Profile"
                   />
                 </span>
               </td>
               <td class="col-9 col-md-9 col-lg-9" style="flex: 1 1 0">
-                <span class="text-end pe-3 d-flex align-items-center">
-                  <span class="text-end pe-3">
-                    @if (getBalanceAsNumber(invite.balance_amount) < 0) {
-                      <span class="text-danger"
-                        >-{{
+                <span class="d-flex justify-content-between align-items-center">
+                  <span>{{ invite.group_name }}</span>
+                  <span class="text-end pe-3 d-flex align-items-center">
+                    <span class="text-end pe-3">
+                      @if (getBalanceAsNumber(invite.balance_amount) < 0) {
+                        <span class="text-danger"
+                          >-{{
+                            getBalanceAsNumber(invite.balance_amount)
+                              | currency: "INR"
+                          }}</span
+                        >
+                      } @else {
+                        <span class="text-success">{{
                           getBalanceAsNumber(invite.balance_amount)
                             | currency: "INR"
-                        }}</span
-                      >
-                    }
-                    <span
-                        class="d-flex align-items-center border bg-success text-white"
-                        matTooltip="Accept Invite"
-                        matTooltipPosition="above"
-                    >
-                        <mat-icon>check</mat-icon>
+                        }}</span>
+                      }
                     </span>
                     <span
-                        class="ms-2 d-flex align-items-center border bg-danger text-white"
-                        matTooltip="Reject Invite"
-                        matTooltipPosition="above"
+                      class="d-flex align-items-center border bg-success text-white"
+                      matTooltip="Accept Invite"
+                      matTooltipPosition="above"
                     >
-                        <mat-icon>close</mat-icon>
+                      <mat-icon>check</mat-icon>
+                    </span>
+                    <span
+                      class="ms-2 d-flex align-items-center border bg-danger text-white"
+                      matTooltip="Reject Invite"
+                      matTooltipPosition="above"
+                    >
+                      <mat-icon>close</mat-icon>
                     </span>
                   </span>
                 </span>

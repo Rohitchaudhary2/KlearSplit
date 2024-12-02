@@ -45,6 +45,17 @@
           class="file-input"
         />
       </div>
+      @if (form.controls.image.value) {
+        <button
+          mat-button
+          type="button"
+          color="warn"
+          (click)="removeImage()"
+          class="mt-2"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
     </div>
     <button
       mat-raised-button

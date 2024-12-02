@@ -102,6 +102,7 @@ export class GroupsListComponent implements OnInit {
       this.groupService.createGroup(groupData).subscribe({
         next: () => {
           this.toastr.success("Group created successfully", "Success");
+          this.fetchGroups();
         }
       });
     });

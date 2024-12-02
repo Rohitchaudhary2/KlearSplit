@@ -1,8 +1,9 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
+import { Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
-import { CreateGroupData, Group, SearchedUserResponse } from "./groups.model";
+import { CreateGroupData, CreateGroupResponse, Groups, SearchedUserResponse } from "./groups.model";
 
 @Injectable({
   providedIn: "root"
@@ -34,8 +35,8 @@ export class GroupsService {
    * @param groupData The data to create a new group.
    * @returns An observable indicating the success of the request.
    */
-  createGroup(groupData: CreateGroupData | FormData) {
-    return this.httpClient.post(`${API_URLS.createGroup}`,
+  createGroup(groupData: CreateGroupData | FormData): Observable<CreateGroupResponse> {
+    return this.httpClient.post<CreateGroupResponse>(`${API_URLS.createGroup}`,
       groupData,
       { withCredentials: true }
     );
@@ -47,7 +48,7 @@ export class GroupsService {
    * @returns An observable with the list of groups.
    */
   fetchGroups() {
-    return this.httpClient.get<Group>(API_URLS.fetchGroups, {
+    return this.httpClient.get<Groups>(API_URLS.fetchGroups, {
       withCredentials: true
     });
   }

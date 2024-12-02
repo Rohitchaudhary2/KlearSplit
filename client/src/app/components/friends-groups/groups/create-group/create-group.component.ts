@@ -97,6 +97,11 @@ export class CreateGroupComponent implements OnInit {
     }
   }
 
+  removeImage() {
+    this.form.controls.image.setValue(null); // Clear the image from the form control
+    this.imageName.set("Upload group profile"); // Reset the label to the default value
+  }
+
   /**
    * Opens a dialog to allow the user to select a group members.
    *

@@ -5,6 +5,7 @@ import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from "@angular/material/dial
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
+import { MatTooltipModule } from "@angular/material/tooltip";
 
 import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
@@ -24,6 +25,7 @@ interface Group {
     MatInputModule,
     MatButtonModule,
     MatIconModule,
+    MatTooltipModule
   ],
   templateUrl: "./create-group.component.html",
   styleUrl: "./create-group.component.css"

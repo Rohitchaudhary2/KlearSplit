@@ -16,8 +16,8 @@ export class MessageComponent {
   // Input properties to pass data from parent components
   message = input<Message>();
   currentUserId = input();
-  friendImageUrl = input();
-  friendName = input();
+  imageUrl = input(); // Image URL of the sender
+  name = input(); // Name of the sender
   currentUserImageUrl = input();
 
   /**

@@ -1,5 +1,5 @@
 import { CurrencyPipe, NgClass } from "@angular/common";
-import { Component, inject, OnInit, output, signal } from "@angular/core";
+import { Component, inject, input, OnInit, output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { MatIconModule } from "@angular/material/icon";
@@ -44,6 +44,8 @@ export class GroupsListComponent implements OnInit {
   // Two signals are made for implementing search functionality.
   private groups = signal<GroupData[]>([]);
   groupList = signal(this.groups());
+
+  balanceAmount = input<string>();
 
   // Fetch the list of groups of the currentUser
   fetchGroups() {

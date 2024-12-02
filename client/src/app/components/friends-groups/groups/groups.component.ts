@@ -1,11 +1,14 @@
 import { NgClass } from "@angular/common";
-import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, inject, OnDestroy, signal, viewChild } from "@angular/core";
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, signal, viewChild } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { MatDialog } from "@angular/material/dialog";
 
 import { AuthService } from "../../auth/auth.service";
 import { CurrentUser } from "../../shared/types.model";
 import { FriendsListComponent } from "../friends/friends-list/friends-list.component";
+import { MessageComponent } from "../friends/message/message.component";
 import { SocketService } from "../friends/socket.service";
+import { GroupDetailsComponent } from "./group-details/group-details.component";
 import { CombinedGroupExpense, CombinedGroupMessage, GroupData, GroupExpenseData, GroupMessageData } from "./groups.model";
 import { GroupsListComponent } from "./groups-list/groups-list.component";
 
@@ -16,10 +19,11 @@ import { GroupsListComponent } from "./groups-list/groups-list.component";
     FormsModule,
     NgClass,
     FriendsListComponent,
-    GroupsListComponent
+    GroupsListComponent,
+    MessageComponent
   ],
   templateUrl: "./groups.component.html",
-  styleUrl: "./groups.component.css"
+  styleUrls: [ "./groups.component.css", "../friends/friends.component.css" ]
 })
 export class GroupsComponent implements AfterViewInit, OnDestroy {
   // Reference to the message container element, accessed via ViewChild
@@ -27,6 +31,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
   private readonly authService = inject(AuthService);
   private readonly socketService = inject(SocketService);
+  private dialog = inject(MatDialog);
 
   // Current user data from authService
   user = this.authService.currentUser();
@@ -91,6 +96,22 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
+   * HostListener that listens for scroll events on the component.
+   * When the user scrolls to the top, it triggers loading of more items.
+   *
+   * @param event - The scroll event
+   */
+  @HostListener("scroll", [ "$event" ])
+  onScroll(event: Event) {
+    const element = event.target as HTMLElement;
+    // Check if the user has scrolled to the top and if loading is not in progress
+    if (element.scrollTop === 0 && !this.loading) {
+      this.scrollPosition = element.scrollHeight;
+      // this.loadItems(element);
+    }
+  }
+
+  /**
    * Scrolls the message container to the bottom.
    */
   scrollToBottom() {
@@ -109,26 +130,30 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     this.isImageLoaded = true;
   }
 
+  clearSelectedGroupData() {
+    // If there is, send a message to the server to leave the group
+    this.socketService.leaveRoom(this.selectedGroup()!.group_id);
+    // Remove the existing 'onNewGroupMessage' listener for the previous group
+    this.socketService.removeNewMessageListener();
+    // Clear previous data (messages, expenses, and combined view)
+    this.messages.set([]);
+    this.expenses.set([]);
+    this.combinedView.set([]);
+    // Reset pagination values
+    this.pageMessage = 1;
+    this.pageExpense = 1;
+    this.pageCombined = 1;
+    this.messageInput = "";
+    // Reset flags to indicate whether all messages, expenses, and combined data are loaded
+    this.allMessagesLoaded = false;
+    this.allExpensesLoaded = false;
+    this.allCombinedLoaded = false;
+  }
+
   onSelectGroup(group: GroupData | undefined) {
     // Check if there is a previously selected group
     if (this.selectedGroup()) {
-      // If there is, send a message to the server to leave the group
-      this.socketService.leaveRoom(this.selectedGroup()!.group_id);
-      // Remove the existing 'onNewGroupMessage' listener for the previous group
-      this.socketService.removeNewMessageListener();
-      // Clear previous data (messages, expenses, and combined view)
-      this.messages.set([]);
-      this.expenses.set([]);
-      this.combinedView.set([]);
-      // Reset pagination values
-      this.pageMessage = 1;
-      this.pageExpense = 1;
-      this.pageCombined = 1;
-      this.messageInput = "";
-      // Reset flags to indicate whether all messages, expenses, and combined data are loaded
-      this.allMessagesLoaded = false;
-      this.allExpensesLoaded = false;
-      this.allCombinedLoaded = false;
+      this.clearSelectedGroupData();
     }
 
     // Set the selected group as the new selected group
@@ -183,6 +208,25 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     };
     this.socketService.sendGroupMessage(messageData);
     this.messageInput = "";
+  }
+
+  /**
+   * Handles the input change event for the message textarea.
+   * Updates the character count and sets a flag if the character limit is exceeded.
+   *
+   * @param event - The input event triggered when the textarea value changes.
+   */
+  onInputChange(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    this.charCount = textarea.value.length;
+    this.charCountExceeded = this.charCount === 512;
+  }
+
+  openGroupDetails() {
+    this.dialog.open(GroupDetailsComponent, {
+      width: "500px",
+      data: this.selectedGroup(),
+    });
   }
 
   /**

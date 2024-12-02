@@ -3,7 +3,7 @@ import { inject, Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
-import { CreateGroupData, CreateGroupResponse, Groups, SearchedUserResponse } from "./groups.model";
+import { CreateGroupData, CreateGroupResponse, GroupResponse, Groups, SearchedUserResponse } from "./groups.model";
 
 @Injectable({
   providedIn: "root"
@@ -48,7 +48,7 @@ export class GroupsService {
    * @returns An observable with the list of groups.
    */
   fetchGroups() {
-    return this.httpClient.get<Groups>(API_URLS.fetchGroups, {
+    return this.httpClient.get<Groups>(API_URLS.getGroups, {
       withCredentials: true
     });
   }
@@ -63,6 +63,13 @@ export class GroupsService {
     return this.httpClient.patch(
       `${API_URLS.updateGroupMember}/${groupId}`,
       { status },
+      { withCredentials: true }
+    );
+  }
+
+  fetchGroupMembers(groupId: string) {
+    return this.httpClient.get<GroupResponse>(
+      `${API_URLS.getGroup}/${groupId}`,
       { withCredentials: true }
     );
   }

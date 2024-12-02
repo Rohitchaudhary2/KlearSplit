@@ -1,7 +1,181 @@
 <div class="d-flex row justify-content-center align-items-center m-5">
-    <div class="col-md-4" style="flex: 0 0 auto">
-      <app-groups-list
-        (selectedGroup)="onSelectGroup($event)"
-      />
+  <div class="col-md-4" style="flex: 0 0 auto">
+    <app-groups-list
+      (selectedGroup)="onSelectGroup($event)"
+      [balanceAmount]="selectedGroup()?.balance_amount"
+    />
+  </div>
+
+  <!-- chatbox -->
+  <div
+    class="col-md-8 ps-md-5 d-md-block"
+    [ngClass]="{ 'd-none': !selectedGroup() }"
+    style="flex: 1 1 0"
+  >
+    <div
+      class="chat-box d-flex flex-column justify-content-between subcontainer shadow-lg mx-3"
+    >
+      @if (selectedGroup()) {
+        <div class="d-flex justify-content-between align-items-center p-2">
+          <div>
+            <span
+              class="material-icons pe-2"
+              style="vertical-align: middle"
+              (click)="clearSelectedGroupData()"
+            >
+              arrow_back
+            </span>
+            <span
+              ><img
+                class="profile-image"
+                [src]="selectedGroup()?.image_url || '/group-profile.png'"
+                alt="Group"
+            /></span>
+            <span class="ms-3 fs-4" style="vertical-align: middle"
+              >{{ selectedGroup()?.group_name }}</span
+            >
+          </div>
+          <div class="d-flex align-items-center">
+            <div class="dropdown pe-3">
+              <button
+                class="btn btn-secondary dropdown-toggle"
+                type="button"
+                id="dropdownMenuButton2"
+                data-bs-toggle="dropdown"
+              >
+                {{ currentView() }}
+              </button>
+              <ul class="dropdown-menu">
+                <li>
+                  <button class="dropdown-item" (click)="toggleView('All')">
+                    All
+                  </button>
+                </li>
+                <li>
+                  <button
+                    class="dropdown-item"
+                    (click)="toggleView('Messages')"
+                  >
+                    Messages
+                  </button>
+                </li>
+                <li>
+                  <button
+                    class="dropdown-item"
+                    (click)="toggleView('Expenses')"
+                  >
+                    Expenses
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <button
+              class="vertical-dots d-flex flex-column me-2 btn"
+              id="dropdownMenuButton1"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </button>
+
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+              <li>
+                <button class="dropdown-item" (click)="openGroupDetails()">
+                  Group Details
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <hr class="m-0" />
+
+        <div
+          #messageContainer
+          (scroll)="onScroll($event)"
+          class="message-body flex-grow-1 row p-0 m-0"
+          [ngClass]="loading ? 'loading' : ''"
+          style="max-height: 57vh; overflow-y: auto"
+        >
+          <!-- <div
+            class="message-body col-md-12 col-lg-12 col-xl-12"
+            style="height: 100%"
+          >
+            <ul class="message-body list-unstyled text-white m-0">
+              @if (currentView() === "Messages") {
+                @for (message of messages(); track message.group_message_id) {
+                  <app-message
+                    [message]="{
+                      sender_id: message.sender_id,
+                      message: message.message,
+                    }"
+                    [currentUserId]="user?.user_id"
+                    [imageUrl]="selectedGroup()?.friend?.image_url"
+                    [name]="selectedGroup()?.friend?.first_name"
+                    [currentUserImageUrl]="user?.image_url"
+                  >
+                  </app-message>
+                }
+              }
+            </ul>
+          </div> -->
+        </div>
+
+        <hr class="m-0" />
+        <div
+          class="d-flex input-container justify-content-around align-items-center mx-3"
+        >
+          <div class="custom-width">
+            <button
+              [disabled]="addExpenseLoader"
+              class="btn btn-success w-100"
+            >
+              Add Expense
+            </button>
+          </div>
+          <div class="input-field ms-3">
+            <input
+              class="message-input"
+              [(ngModel)]="messageInput"
+              (keyup.enter)="sendMessage()"
+              style="width: 100%"
+              type="text"
+              maxlength="512"
+              (input)="onInputChange($event)"
+              class="form-control"
+              placeholder="Type something..."
+            />
+          </div>
+          @if (charCountExceeded) {
+            <div class="char-count error">
+              Max Characters Limit Reached {{ charCount }} / 512
+            </div>
+          }
+          <button (click)="sendMessage()" class="send-message m-3">
+            <i class="fa fa-paper-plane"></i>
+          </button>
+        </div>
+      } @else {
+        <div
+          class="text-center p-2 d-flex flex-column justify-content-between"
+          style="position: relative; flex: 1 1 0"
+        >
+          <h1 class="pt-2 animated-text">
+            Welcome, <span>{{ user_name }}!</span>
+          </h1>
+          <img
+            class="chat-box-image"
+            (load)="onImageLoad()"
+            [class.visible]="isImageLoaded"
+            src="robot.gif"
+            alt="robot"
+          />
+          <h3 class="pb-2 animated-text">
+            Please select a chat to start messaging
+          </h3>
+        </div>
+      }
     </div>
+  </div>
 </div>

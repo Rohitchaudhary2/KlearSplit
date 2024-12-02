@@ -23,7 +23,7 @@ import { GroupsService } from "../groups.service";
     SearchBarComponent,
   ],
   templateUrl: "./groups-list.component.html",
-  styleUrl: "./groups-list.component.css"
+  styleUrls: [ "./groups-list.component.css", "../../friends/friends.component.css" ]
 })
 export class GroupsListComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
@@ -107,7 +107,43 @@ export class GroupsListComponent implements OnInit {
     });
   }
 
-  // This function is triggered when a group is selected and emits out an output signal to the parent component to set which group is selected
+  /**
+   * Accepts or rejects a group invite based on the given status.
+   *
+   * @param groupId The ID of the group associated with the invite.
+   * @param status The status of the invite, either "ACCEPTED" or "REJECTED".
+   */
+  onAcceptReject(groupId: string, status: string): void {
+    this.groupService.acceptRejectInvite(groupId, status).subscribe({
+      next: () => {
+        this.toastr.success(`Invite ${status} Successfully`, "Success");
+        if (status === "ACCEPTED") {
+          // Add the accepted invite to the group list
+          this.groups().unshift({
+            ...this.groupInvites().find(
+              (invite) => invite.group_id === groupId
+            )!
+          });
+        }
+        // Remove the processed invite from the group invite list
+        this.groupInvites.set(
+          this.groupInvites().filter(
+            (invite) => invite.group_id !== groupId
+          )
+        );
+        // Changing the invites and groupList for UI display
+        this.onSearchChange(this.searchTerm());
+      }
+    });
+  }
+
+  /**
+   * Sets the selected group and emits the selected group.
+   * This method updates the current group signal and notifies listeners
+   * about the selected group by emitting an event.
+   *
+   * @param group - The group object to select or `undefined` to clear the selection.
+   */
   onSelectGroup(group: GroupData | undefined): void {
     this.currentGroup.set(group);
     this.selectedGroup.emit(group);

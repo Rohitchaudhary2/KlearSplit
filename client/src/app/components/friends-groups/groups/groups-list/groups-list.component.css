@@ -1,25 +1,4 @@
-.pending-invites {
-  max-height: 22vh;
-  background-color: white;
-  border-radius: 10px 10px 10px 10px;
+table.table tr:hover {
+  background-color: blue;
 }
 
-.invites {
-  max-height: 16vh;
-  overflow-y: auto;
-  border-radius: 0px 0px 10px 10px;
-}
-
-hr {
-  border-top: 4px solid black;
-}
-
-td {
-  vertical-align: middle;
-}
-
-.profile-image {
-  width: 40px !important;
-  height: 40px !important;
-  border-radius: 50%;
-}

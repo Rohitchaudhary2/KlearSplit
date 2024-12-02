@@ -51,4 +51,18 @@ export class GroupsService {
       withCredentials: true
     });
   }
+  /**
+   * Update group member details.
+   *
+   * @param groupId The Id of the group to update.
+   * @param status The field which needs to be updated.
+   * @returns An observable indicating the success of the update.
+   */
+  acceptRejectInvite(groupId: string, status: string) {
+    return this.httpClient.patch(
+      `${API_URLS.updateGroupMember}/${groupId}`,
+      { status },
+      { withCredentials: true }
+    );
+  }
 }

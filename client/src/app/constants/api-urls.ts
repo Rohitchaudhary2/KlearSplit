@@ -26,5 +26,6 @@ export const API_URLS = {
   getAllExpensesData: `${environment.apiBaseUrl}/dashboard/getallexpensesdata`,
   updateExpense: `${environment.apiBaseUrl}/friends/updateexpense`,
   createGroup: `${environment.apiBaseUrl}/groups/create`,
-  fetchGroups: `${environment.apiBaseUrl}/groups/usergroups`
+  fetchGroups: `${environment.apiBaseUrl}/groups/usergroups`,
+  updateGroupMember: `${environment.apiBaseUrl}/groups/updatemember`
 };

@@ -3,7 +3,7 @@ import { inject, Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
-import { CreateGroupData, CreateGroupResponse, GroupResponse, Groups, SearchedUserResponse } from "./groups.model";
+import { CreateGroupData, CreateGroupResponse, GroupMessageData, GroupResponse, Groups, SearchedUserResponse } from "./groups.model";
 
 @Injectable({
   providedIn: "root"
@@ -52,6 +52,7 @@ export class GroupsService {
       withCredentials: true
     });
   }
+  
   /**
    * Update group member details.
    *
@@ -67,9 +68,45 @@ export class GroupsService {
     );
   }
 
+  /**
+   * This method fetches the complete details of a particular group.
+   * It fetches the group details and group members.
+   *
+   * @param groupId The ID of the group to fetch details.
+   * @returns An observable with the list of objects for the details of each group member.
+   */
   fetchGroupMembers(groupId: string) {
     return this.httpClient.get<GroupResponse>(
       `${API_URLS.getGroup}/${groupId}`,
+      { withCredentials: true }
+    );
+  }
+
+  /**
+   * This method is used to save the message sent to the group.
+   *
+   *
+   * @param message The message that needs to be sent.
+   * @param groupId The ID of the group to which the message needs to be sent.
+   * @returns The observable indicating the success of the message sending.
+   */
+  saveGroupMessages(message: string, groupId: string) {
+    return this.httpClient.post(
+      `${API_URLS.saveGroupMessages}/${groupId}`,
+      { message },
+      { withCredentials: true }
+    );
+  }
+
+  /**
+   * This method is used to fetch all the messages of a group.
+   *
+   * @param groupId The ID of the group from where the message needs to be fetched.
+   * @returns An observable with the list of messages.
+   */
+  fetchGroupMessages(groupId: string) {
+    return this.httpClient.get<GroupMessageData[]>(
+      `${API_URLS.getGroupMessages}/${groupId}`,
       { withCredentials: true }
     );
   }

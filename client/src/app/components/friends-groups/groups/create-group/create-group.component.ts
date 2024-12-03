@@ -99,9 +99,17 @@ export class CreateGroupComponent implements OnInit {
     }
   }
 
+  /**
+   * Removes the selected image.
+   */
   removeImage() {
     this.form.controls.image.setValue(null); // Clear the image from the form control
     this.imageName.set("Upload group profile"); // Reset the label to the default value
+
+    const fileInput = document.getElementById("profile-image") as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = ""; // Reset the file input to allow selecting the same file again
+    }
   }
 
   /**

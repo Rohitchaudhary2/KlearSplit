@@ -10,6 +10,7 @@ import { MessageComponent } from "../friends/message/message.component";
 import { SocketService } from "../friends/socket.service";
 import { GroupDetailsComponent } from "./group-details/group-details.component";
 import { CombinedGroupExpense, CombinedGroupMessage, GroupData, GroupExpenseData, GroupMessageData } from "./groups.model";
+import { GroupsService } from "./groups.service";
 import { GroupsListComponent } from "./groups-list/groups-list.component";
 
 @Component({
@@ -31,7 +32,8 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
   private readonly authService = inject(AuthService);
   private readonly socketService = inject(SocketService);
-  private dialog = inject(MatDialog);
+  private readonly groupsService = inject(GroupsService);
+  private readonly dialog = inject(MatDialog);
 
   // Current user data from authService
   user = this.authService.currentUser();
@@ -207,6 +209,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       message: this.messageInput,
     };
     this.socketService.sendGroupMessage(messageData);
+    this.groupsService.saveGroupMessages(this.messageInput, this.selectedGroup()!.group_id);
     this.messageInput = "";
   }
 
@@ -222,10 +225,24 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     this.charCountExceeded = this.charCount === 512;
   }
 
+  /**
+   * Opens the dialog for viewing a group's details such as balance of the current user with each member.
+   */
   openGroupDetails() {
     this.dialog.open(GroupDetailsComponent, {
       width: "500px",
       data: this.selectedGroup(),
+    });
+  }
+
+  /**
+   * Fetches the messages of a particular group.
+   */
+  fetchGroupMessages() {
+    this.groupsService.fetchGroupMessages(this.selectedGroup()!.group_id).subscribe({
+      next: (response) => {
+        this.messages.set(response); // Set the messages in the messages signal
+      }
     });
   }
 

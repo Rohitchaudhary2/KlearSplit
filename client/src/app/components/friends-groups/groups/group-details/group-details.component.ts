@@ -18,17 +18,24 @@ export class GroupDetailsComponent implements OnInit {
   private readonly groupsService = inject(GroupsService);
   private readonly dialogRef = inject(MatDialogRef<GroupDetailsComponent>);
   data = inject<GroupData>(MAT_DIALOG_DATA);
+  loading = false;
 
   groupMembers = signal<GroupMemberData[]>([]);
   currentUserId = this.authService.currentUser()?.user_id;
 
   ngOnInit(): void {
+    this.loading = true;
     this.fetchGroupMembers();
   }
 
+  /**
+   * This function calls the service to fetch the group details containing all the members.
+   * The response contains the balance of the current user with each member and the total balance of that member.
+   */
   fetchGroupMembers() {
     this.groupsService.fetchGroupMembers(this.data.group_id).subscribe((response) => {
       this.groupMembers.set(response.data);
+      this.loading = false;
     });
   }
 

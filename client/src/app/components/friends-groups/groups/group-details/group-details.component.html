@@ -19,7 +19,16 @@
 
   <!-- Members List -->
   <div class="members-list">
-    <h3>Group Members</h3>
+    <div class="d-flex">
+      <h3>Group Members</h3>
+      @if (loading) {
+        <span class="text-center mx-2">
+          <span class="spinner-border text-primary" aria-live="polite" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </span>
+        </span>
+      }
+    </div>
     @for (member of groupMembers(); track $index) {
         <div
           class="member"
@@ -34,6 +43,9 @@
             <h4 class="member-name">Hello</h4>
             <p class="member-balance">
               Balance with you: {{ member.balance_with_user | currency: "INR" }}
+            </p>
+            <p class="member-balance">
+              Total balance in group: {{ member.total_balance | currency: "INR" }}
             </p>
           </div>
         </div>

@@ -1,17 +1,23 @@
-import { QueryTypes } from "sequelize";
-import { Group, GroupMember, sequelize } from "../../config/db.connection.js";
+import { Op, QueryTypes } from "sequelize";
+import { Group, GroupExpense, GroupExpenseParticipant, GroupMember, GroupMessage, sequelize } from "../../config/db.connection.js";
 
 class GroupDb {
   static createGroup = async(group) => await Group.create(group);
 
-  static addMembers = async(members) => await GroupMember.bulkCreate(members, { "returning": true });
+  static addMembers = async(members) => await GroupMember.bulkCreate(members, {
+    "updateOnDuplicate": [ "status", "inviter_id", "role" ],
+    "returning": true
+  });
 
   static getGroupData = async(groupId) => await Group.findByPk(groupId);
 
   static getGroupMember = async(groupId, userId) => await GroupMember.findOne({
     "where": {
       "group_id": groupId,
-      "member_id": userId
+      "member_id": userId,
+      "status": {
+        [ Op.ne ]: "REJECTED" // Exclude members with status 'REJECTED'
+      }
     }
   });
 
@@ -35,7 +41,7 @@ class GroupDb {
 
   static getGroup = async(groupId, groupMembershipId) => {
     const group = await sequelize.query(
-      `select gm.*, sum(case when gmb.participant1_id = gm.group_membership_id and gmb.participant2_id = '${groupMembershipId}' then gmb.balance_amount when gmb.participant1_id = '${groupMembershipId}' and gmb.participant2_id = gm.group_membership_id then -gmb.balance_amount else 0 end) as balance_with_user, 
+      `select r.*, u.first_name, u.last_name, u.image_url from (select gm.*, sum(case when gmb.participant1_id = gm.group_membership_id and gmb.participant2_id = '${groupMembershipId}' then gmb.balance_amount when gmb.participant1_id = '${groupMembershipId}' and gmb.participant2_id = gm.group_membership_id then -gmb.balance_amount else 0 end) as balance_with_user, 
       sum(case when gmb.participant1_id = gm.group_membership_id	then gmb.balance_amount when gmb.participant2_id = gm.group_membership_id then -gmb.balance_amount else 0 end) as total_balance 
       from 
       group_members gm 
@@ -43,7 +49,9 @@ class GroupDb {
       group_member_balance gmb on gm.group_id = gmb.group_id 
       where 
       gm.group_id = '${groupId}' and gm.group_membership_id != '${groupMembershipId}' 
-      group by gm.group_membership_id;`, {
+      group by gm.group_membership_id;) r 
+      join 
+      users u on r.member_id = u.user_id`, {
         "type": QueryTypes.SELECT
       }
     );
@@ -71,6 +79,30 @@ class GroupDb {
     }
     return updatedMember;
   };
+
+  static saveMessage = async(messageData, groupId, groupMembershipId) => await GroupMessage.create({ ...messageData, "group_id": groupId, "sender_id": groupMembershipId });
+
+  static getMessages = async(groupId) => await GroupMessage.findAll({
+    "where": {
+      "group_id": groupId
+    }
+  });
+
+  static leaveGroup = async(groupMembershipId) => await GroupMember.destroy({
+    "where": {
+      "group_membership_id": groupMembershipId
+    }
+  });
+
+  static addExpense = async(expenseData) => await GroupExpense.create(expenseData);
+
+  static addExpenseParticipants = async(debtors) => await GroupExpenseParticipant.bulkCreate(debtors);
+
+  static getExpenses = async(groupId) => await GroupExpense.findAll({
+    "where": {
+      "group_id": groupId
+    }
+  });
 }
 
 export default GroupDb;

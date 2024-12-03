@@ -1,9 +1,7 @@
+import { ErrorHandler } from "../middlewares/errorHandler";
+
 class GroupUtils {
   static assignRoles(members, admins, coadmins, inviterId, groupId) {
-    // if (!(admins || coadmins)) {
-    //   return members.map((userId) => ({ "inviter_id": inviterId, "group_id": groupId, "member_id": userId }));
-    // }
-    
     return members.map((userId) => {
       const member = { "inviter_id": inviterId, "group_id": groupId, "member_id": userId };
 
@@ -16,6 +14,42 @@ class GroupUtils {
       return member;
     });
   }
+
+  static isPayerInDebtors = (debtors, payerId) => {
+    const isPayerInDebtors = debtors.some((debtor) => debtor.debtor_id === payerId);
+
+    if (isPayerInDebtors) {
+      throw new ErrorHandler(400, "Payer can't be in debtor list.");
+    }
+  };
+
+  static updatedDebtors = (debtors, splitType, totalAmount, payerShare) => {
+    const debtorShareTotal = debtors.reduce((acc, val) => {
+      return acc + val;
+    }, 0);
+    const calculatedTotalExpenseAmount = payerShare + debtorShareTotal;
+
+    switch (splitType) {
+      case "EQUAL":
+      case "UNEQUAL": {
+        if (calculatedTotalExpenseAmount !== totalAmount) {
+          throw new ErrorHandler(400, "Expense shares of partcipants does not add up to total amount.");
+        }
+        return debtors;
+      }
+      case "PERCENTAGE": {
+        if (calculatedTotalExpenseAmount !== 100) {
+          throw new ErrorHandler(400, "Expense shares of partcipants does not add up to 100%.");
+        }
+        debtors.forEach((debtor) => Object.assign(debtor, { "debtor_share": (debtor.debtor_share * totalAmount) / 100 }));
+
+        return debtors;
+      }
+      default: {
+        throw new ErrorHandler(400, "Wrong split type.");
+      }
+    }
+  };
 }
 
 export default GroupUtils;

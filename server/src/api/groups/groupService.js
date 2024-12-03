@@ -3,12 +3,14 @@ import GroupDb from "./groupDb.js";
 import GroupUtils from "./groupUtils.js";
 
 class GroupService {
+  // Function to assign roles and add members in group
   static assignRolesAndAddMembers = async(membersData, inviterId, groupId) => {
     const members = GroupUtils.assignRoles(membersData.members, membersData.admins, membersData.coadmins, inviterId, groupId);
 
     return await GroupDb.addMembers(members);
   };
 
+  // Service to create group
   static createGroup = async(groupData, userId) => {
     Object.assign(groupData.group, { "creator_id": userId });
     
@@ -31,6 +33,7 @@ class GroupService {
     return group;
   };
 
+  // Service to add members to the group
   static addMembers = async(membersData, userId, groupId) => {
     const isGroupExists = await GroupDb.getGroupData(groupId);
 
@@ -49,6 +52,7 @@ class GroupService {
     return addedMembers;
   };
 
+  // Service to get logged in user's groups
   static getUserGroups = async(userId) => {
     const groups = await GroupDb.getUserGroups(userId);
 
@@ -61,7 +65,7 @@ class GroupService {
           acc.invitedGroups.push(val);
           break;
         default:
-          throw new ErrorHandler(500, "User specific groups have wrong status");
+          throw new ErrorHandler(500, "Wrong status");
       }
       return acc;
     }, { "acceptedGroups": [], "invitedGroups": [] });
@@ -69,6 +73,7 @@ class GroupService {
     return { acceptedGroups, invitedGroups };
   };
 
+  // Function to check whether user is member of group or not
   static isUserMemberOfGroup = async(groupId, userId) => {
     const userMembershipInfo = await GroupDb.getGroupMember(groupId, userId);
 
@@ -78,6 +83,7 @@ class GroupService {
     return userMembershipInfo.dataValues;
   };
 
+  // Service to particular group's members and their balance data
   static getGroup = async(groupId, userId) => {
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
 
@@ -88,6 +94,7 @@ class GroupService {
     return group;
   };
 
+  // Service to update group information
   static updateGroup = async(groupId, groupData, userId) => {
     const group = await GroupDb.getGroupData(groupId);
 
@@ -102,6 +109,7 @@ class GroupService {
     return updatedGroup;
   };
 
+  // Service to update group member's data like status, role, has_archived fields.
   static updateGroupMember = async(groupId, groupMemberData, userId) => {
     const group = await GroupDb.getGroupData(groupId);
 
@@ -118,6 +126,90 @@ class GroupService {
     const updatedMember = GroupDb.updateGroupMember(userMembershipInfo.group_membership_id, groupMemberData);
 
     return updatedMember;
+  };
+
+  // Service to save message
+  static saveMessage = async(messageData, groupId, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+    
+    const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+
+    const message = GroupDb.saveMessage(messageData, groupId, userMembershipInfo.group_membership_id);
+
+    return message;
+  };
+
+  // Service to get messages for a particular group
+  static getMessages = async(groupId, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+    
+    await this.isUserMemberOfGroup(groupId, userId);
+
+    const messages = GroupDb.getMessages(groupId);
+
+    return messages;
+  };
+
+  // Service to leave group
+  static leaveGroup = async(groupId, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+
+    const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+
+    await GroupDb.leaveGroup(userMembershipInfo.group_membership_id);
+  };
+
+  // Service to add expense
+  static addExpense = async(expenseData, groupId, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+
+    await this.isUserMemberOfGroup(groupId, userId);
+
+    GroupUtils.isPayerInDebtors(expenseData.debtors, expenseData.payer_id);
+
+    const debtors = GroupUtils.updatedDebtors(expenseData.debtors, expenseData.split_type, expenseData.total_amount, expenseData.payer_share);
+
+    delete expenseData.debtors;
+    delete expenseData.payer_share;
+    Object.assign(expenseData, { "group_id": groupId });
+
+    const expense = await GroupDb.addExpense(expenseData);
+
+    debtors.forEach((debtor) => Object.assign(debtor, { "group_expense_id": expense.group_expense_id }));
+
+    const expenseParticipants = await GroupDb.addExpenseParticipants(debtors);
+    
+    return { expense, expenseParticipants };
+  };
+
+  // Service to get expenses
+  static getExpenses = async(groupId, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+
+    await this.isUserMemberOfGroup(groupId, userId);
+    const expenses = await GroupDb.getExpenses(groupId);
+
+    return expenses;
   };
 }
 

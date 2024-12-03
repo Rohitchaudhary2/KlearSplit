@@ -117,7 +117,7 @@ class FriendService {
    * @returns {Promise<Object>} - The updated friend request object.
    */
   static acceptRejectFriendRequest = async(friendRequest) => {
-    const { "conversation_id": conversationId, status } = friendRequest;
+    const { conversationId, status } = friendRequest;
     const friendRequestExist = await FriendDb.getFriend(conversationId);
 
     // If the friend request doesn't exist, throw an error
@@ -126,7 +126,7 @@ class FriendService {
     }
 
     // Check if the user is the one receiving the request and the request is still pending
-    if (friendRequest.user_id !== friendRequestExist.dataValues.friend2_id || friendRequest.status === "PENDING") {
+    if ((friendRequest.userId !== friendRequestExist.dataValues.friend2_id) || (friendRequest.status === "PENDING")) {
       throw new ErrorHandler(400, "Invalid request");
     }
 

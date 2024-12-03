@@ -19,9 +19,8 @@ export class UserService {
   private readonly getUserUrl = API_URLS.fetchUser; // URL for getting user without the id part
 
   fetchUserDetails() {
-    const getUserUrlWithId = `${this.getUserUrl}`;
     return this.httpClient
-      .get<FetchResponse>(getUserUrlWithId, {
+      .get<FetchResponse>(this.getUserUrl, {
         withCredentials: true,
       })
       .pipe(

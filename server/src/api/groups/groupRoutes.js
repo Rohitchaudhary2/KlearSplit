@@ -3,11 +3,11 @@ import GroupController from "./groupController.js";
 // import uploadMiddleware from "../middlewares/uploadMiddleware.js";
 import { validateExpenseData, validateGroupCreationData, validateGroupParams, validateGroupUpdationData, validateMembersData, validateMessageData, validateUpdateGroupMember } from "../middlewares/validationMiddleware.js";
 import { authenticateToken } from "../middlewares/auth.js";
+import uploadMiddleware from "../middlewares/uploadMiddleware.js";
 
 const groupRouter = Router();
 
-// Route for creating group
-groupRouter.post("/create", authenticateToken, validateGroupCreationData, GroupController.createGroup);
+groupRouter.post("/create", authenticateToken, uploadMiddleware("groupProfile", "image"), validateGroupCreationData, GroupController.createGroup);
 
 // Route for adding members in group
 groupRouter.post("/addmembers", authenticateToken, validateMembersData, GroupController.addMembers);

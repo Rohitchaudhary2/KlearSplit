@@ -85,10 +85,11 @@ class UserController {
   // Controller for getting users by a regular expression
   static getUsersByRegex = async(req, res, next) => {
     try {
-      const data = req.params;
+      const { regex } = req.params;
+      const { fetchAll } = req.query;
       const userId = req.user.user_id;
 
-      const users = await UserService.getUsersByRegex({ data, userId });
+      const users = await UserService.getUsersByRegex({ "data": { regex, fetchAll }, userId });
 
       responseHandler(res, 200, "Successfully fetched users", users);
     } catch (error) {

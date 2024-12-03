@@ -1,19 +1,179 @@
 <div class="transparent subcontainer d-flex flex-column">
-    <!-- search container -->
-    <app-search-bar
-        placeholder="Search using group name"
-        actionButtonIcon="group_add"
-        actionButtonTitle="Create Group"
-        (searchChange)="onSearchChange($event)"
-        (actionButtonClick)="onCreateGroupClick()"
-    />
+  <!-- search container -->
+  <app-search-bar
+    placeholder="Search using group name"
+    actionButtonIcon="group_add"
+    actionButtonTitle="Create Group"
+    (searchChange)="onSearchChange($event)"
+    (actionButtonClick)="onCreateGroupClick()"
+  />
 
-    <!-- pending group invites -->
-    <div class="pending-request shadow-lg mt-3 mx-3">
-        <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem;">
-            Group Invites
-        </h6>
-        <hr class="m-0 mt-1" />
-        
+  <!-- pending group invites -->
+  <div class="pending-request shadow-lg mt-3 mx-3">
+    <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">
+      Group Invites
+    </h6>
+    <hr class="m-0 mt-1" />
+    <div class="requests">
+      <table class="table table-hover">
+        <thead>
+          <tr style="display: none">
+            <th scope="col"></th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (invite of invites(); track $index) {
+            <tr
+              (click)="onSelectGroup(invite)"
+              (keyup.enter)="onSelectGroup(invite)"
+              class="row equal-height-row d-flex justify-content-between m-0"
+              style="cursor: pointer"
+              tabindex="0"
+            >
+              <td
+                class="col-3 col-md-3 col-lg-3"
+                style="
+                  flex: 0 0 auto;
+                  text-align: center;
+                  align-content: center;
+                "
+              >
+                <span>
+                  <img
+                    class="profile-image"
+                    [src]="invite.image_url || 'profile.png'"
+                    alt="Profile"
+                  />
+                </span>
+              </td>
+              <td class="col-9 col-md-9 col-lg-9" style="flex: 1 1 0">
+                <span class="d-flex justify-content-between align-items-center">
+                  <span>{{ invite.group_name }}</span>
+                  <span class="text-end pe-3 d-flex align-items-center">
+                    <span class="text-end pe-3">
+                      @if (getBalanceAsNumber(invite.balance_amount) < 0) {
+                        <span class="text-danger"
+                          >-{{
+                            getBalanceAsNumber(invite.balance_amount)
+                              | currency: "INR"
+                          }}</span
+                        >
+                      } @else {
+                        <span class="text-success">{{
+                          getBalanceAsNumber(invite.balance_amount)
+                            | currency: "INR"
+                        }}</span>
+                      }
+                    </span>
+                    <span
+                      class="d-flex align-items-center border bg-success text-white"
+                      matTooltip="Accept Invite"
+                      matTooltipPosition="above"
+                    >
+                      <mat-icon
+                        (click)="
+                          onAcceptReject(invite.group_id, 'ACCEPTED');
+                          $event.stopPropagation()
+                        "
+                        (keyup.enter)="
+                          onAcceptReject(invite.group_id, 'ACCEPTED');
+                          $event.stopPropagation()
+                        "
+                      >check</mat-icon>
+                    </span>
+                    <span
+                      class="ms-2 d-flex align-items-center border bg-danger text-white"
+                      matTooltip="Reject Invite"
+                      matTooltipPosition="above"
+                    >
+                      <mat-icon
+                      (click)="
+                        onAcceptReject(invite.group_id, 'REJECTED');
+                        $event.stopPropagation()
+                      "
+                      (keyup.enter)="
+                        onAcceptReject(invite.group_id, 'REJECTED');
+                        $event.stopPropagation()
+                      "
+                      >close</mat-icon>
+                    </span>
+                  </span>
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <div class="pt-3 text-center">No Group Invites</div>
+          }
+        </tbody>
+      </table>
     </div>
+  </div>
+
+  <!-- Groups List -->
+  <div class="friend-list d-flex flex-column shadow-lg mt-3 mx-3 flex-grow-1">
+    <div class="friend-request=heading">
+      <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem;">
+        Group List
+      </h6>
+      <hr class="m-0 mt-1" />
+    </div>
+    <div class="friends">
+      <table class="table table-hover">
+        <thead>
+          <tr style="display: none;">
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (group of groupList(); track $index) {
+            <tr
+              class="row equal-height-row d-flex justify-content-between m-0"
+              [ngClass]="{'selected': currentGroup() === group}"
+              style="cursor: pointer"
+              (click)="onSelectGroup(group)"
+              (keyup.enter)="onSelectGroup(group)"
+            >
+              <td
+                class="col-md-3 col-lg-2 col-sm-3"
+                style="
+                  flex: 0 0 auto;
+                  text-align: center;
+                  align-content: center;
+                "
+              >
+                <span
+                  ><img
+                    class="profile-image"
+                    [src]="group.image_url || '/profile.png'"
+                    alt="group"
+                /></span>
+              </td>
+              <td class="col-md-9 col-lg-10 col-sm-9">
+                <div class="d-flex justify-content-between">
+                  <span
+                    >{{ group.group_name }}</span
+                  >
+                  <span class="text-end pe-3">
+                    @if (getBalanceAsNumber(group.balance_amount) < 0) {
+                      <span class="text-danger">{{
+                        -getBalanceAsNumber(group.balance_amount)
+                          | currency: "INR"
+                      }}</span>
+                    } @else {
+                      <span class="text-success">{{
+                        getBalanceAsNumber(group.balance_amount)
+                          | currency: "INR"
+                      }}</span>
+                    }
+                  </span>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>

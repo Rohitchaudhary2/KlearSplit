@@ -1,0 +1,42 @@
+<div class="group-details-container">
+  <!-- Group Info Section -->
+  <div class="group-header">
+    <img
+      src="/group-profile.png"
+      alt="{{ data.group_name }}"
+      class="group-profile-pic"
+    />
+    <div class="group-info">
+      <h2 class="group-name">{{ data.group_name }}</h2>
+      <p class="group-description">{{ data.group_description }}</p>
+    </div>
+  </div>
+
+  <!-- User Balance -->
+  <div class="user-balance">
+    <h3>Total Balance: {{ data.balance_amount | currency: "INR" }}</h3>
+  </div>
+
+  <!-- Members List -->
+  <div class="members-list">
+    <h3>Group Members</h3>
+    @for (member of groupMembers(); track $index) {
+        <div
+          class="member"
+          [ngClass]="{ 'current-user': member.member_id === currentUserId }"
+        >
+          <img
+            src="/profile.png"
+            alt="hello"
+            class="member-profile-pic"
+          />
+          <div class="member-details">
+            <h4 class="member-name">Hello</h4>
+            <p class="member-balance">
+              Balance with you: {{ member.balance_with_user | currency: "INR" }}
+            </p>
+          </div>
+        </div>
+    }
+  </div>
+</div>

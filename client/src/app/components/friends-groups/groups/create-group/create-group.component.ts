@@ -1,26 +1,31 @@
 import { Component, inject, OnInit, signal } from "@angular/core";
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from "@angular/material/dialog";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
+import { MatTooltipModule } from "@angular/material/tooltip";
 
 import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
-import { CurrentUser } from "../../../shared/types.model";
-// import { AddFriendComponent } from "../../friends/add-friend/add-friend.component";
 import { SelectMembersDialogComponent } from "./select-members-dialog/select-members-dialog.component";
+
+interface Group {
+  group_name: string;
+  group_description: string;
+  image: string;
+}
 @Component({
   selector: "app-create-group",
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    FormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
+    MatTooltipModule
   ],
   templateUrl: "./create-group.component.html",
   styleUrl: "./create-group.component.css"
@@ -35,27 +40,20 @@ export class CreateGroupComponent implements OnInit {
   imageName = signal<string>("Upload group profile");
 
   form = new FormGroup({
-    groupName: new FormControl("", {
+    group_name: new FormControl("", {
       validators: [ Validators.required, Validators.maxLength(100) ]
     }),
-    groupDescription: new FormControl("", {
+    group_description: new FormControl("", {
       validators: [ Validators.maxLength(255) ]
     }),
     image: new FormControl<File | null>(null),
-    members: new FormControl<string[]>([], {
-      validators: [ Validators.required ]
-    }),
-    admins: new FormControl<string[]>([]),
-    coadmins: new FormControl<string[]>([]),
   });
 
-  selectedMembers: {
-    user_id: string;
-    first_name: string;
-    last_name: string;
-    isAdmin: boolean;
-    isCoAdmin: boolean
-  }[] = [];
+  membersData: {
+    members: string[];
+    admins: string[];
+    coadmins: string[];
+  } = { members: [], admins: [], coadmins: [] };
 
   ngOnInit(): void {
     this.dialogRef.updateSize("30%");
@@ -74,7 +72,7 @@ export class CreateGroupComponent implements OnInit {
   
   /**
    * Trims the leading and trailing whitespace from the value of a specific form control.
-   * This is used to ensure no accidental spaces are included in form fields like 'expense_name' or 'description'.
+   * This is used to ensure no accidental spaces are included in form fields like 'group_name' or 'group_description'.
    *
    * @param controlName - The name of the form control whose value will be trimmed.
    */
@@ -88,17 +86,22 @@ export class CreateGroupComponent implements OnInit {
 
   /**
    * Handles the file selection event when the user selects an image or file.
-   * This method updates the form control for 'receipt' with the selected file and sets the image name.
+   * This method updates the form control for 'image' with the selected file and sets the image name.
    *
    * @param event - The event triggered by the file input. It's expected to be of type 'Event' where the target
    * is an HTMLInputElement with the selected files.
    */
   selectImage(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input?.files?.length) {
+    if (input.files && input.files.length > 0) {
       this.form.controls.image.setValue(input.files[0]);
       this.imageName.set(input.files[0].name);
     }
+  }
+
+  removeImage() {
+    this.form.controls.image.setValue(null); // Clear the image from the form control
+    this.imageName.set("Upload group profile"); // Reset the label to the default value
   }
 
   /**
@@ -110,39 +113,61 @@ export class CreateGroupComponent implements OnInit {
   openMembersDialog() {
     const dialogRef = this.dialog.open(SelectMembersDialogComponent, {
       panelClass: "second-dialog",
-      width: "20%",
+      width: "30%",
       data: [ "Add Members" ],
       backdropClass: "dialog-bg-trans",
       position: {
-        right: "5%",
+        right: "9%",
       },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.selectedMembers = result.map((user: CurrentUser) => ({
-          ...user,
-          isAdmin: false,
-          isCoAdmin: false,
-        }));
-        this.form.controls.members.setValue(
-          this.selectedMembers.map((member) => member.user_id)
-        );
+      if (!result) {
+        return;
       }
+      this.membersData = result;
     });
   }
 
   onSubmit() {
-    if (this.form.valid) {
-      this.dialogRef.close({
-        ...this.form.value,
-        members: this.selectedMembers.map((member) => ({
-          id: member.user_id,
-          isAdmin: member.isAdmin,
-          isCoAdmin: member.isCoAdmin,
-        })),
-      });
+    if (!this.form.valid) {
+      return;
     }
+
+    const formData = new FormData();
+
+    // Remove empty fields from the group object
+    const group = Object.keys(this.form.value).reduce((acc, key) => {
+      const typedKey = key as keyof Group;
+      const value = this.form.get(typedKey)?.value;
+      // Handle File type specifically for 'image' field
+      if (typedKey === "image" && value instanceof File) {
+        formData.append("image", value); // Add image as a file
+      } else if (value && typeof value === "string") {
+        acc[typedKey] = value; // Assign string type for other fields
+      }
+      return acc;
+    }, {} as Partial<Group>);
+    
+    formData.append("group", JSON.stringify(group));
+
+    // Process and clean up membersData
+    const cleanedMembersData = Object.keys(this.membersData).reduce((acc, key) => {
+      const typedKey = key as keyof typeof this.membersData; // Explicitly cast key
+      const value = this.membersData[typedKey];
+      // Only include non-empty arrays
+      if (Array.isArray(value) && value.length > 0) {
+        acc[typedKey] = value;
+      }
+      return acc;
+    }, {} as typeof this.membersData);
+
+    // Append the cleaned membersData as JSON
+    formData.append("membersData", JSON.stringify(cleanedMembersData));
+    // Send data
+    this.dialogRef.close({
+      formData,
+    });
   }
 
   onCancel(): void {

@@ -129,8 +129,8 @@
                       message: message.message,
                     }"
                     [currentUserId]="user?.user_id"
-                    [friendImageUrl]="selectedUser()?.friend?.image_url"
-                    [friendName]="selectedUser()?.friend?.first_name"
+                    [imageUrl]="selectedUser()?.friend?.image_url"
+                    [name]="selectedUser()?.friend?.first_name"
                     [currentUserImageUrl]="user?.image_url"
                   >
                   </app-message>
@@ -161,8 +161,8 @@
                         message: item.message,
                       }"
                       [currentUserId]="user?.user_id"
-                      [friendImageUrl]="selectedUser()?.friend?.image_url"
-                      [friendName]="selectedUser()?.friend?.first_name"
+                      [imageUrl]="selectedUser()?.friend?.image_url"
+                      [name]="selectedUser()?.friend?.first_name"
                       [currentUserImageUrl]="user?.image_url"
                     >
                     </app-message>

@@ -104,8 +104,8 @@ export class SelectMembersDialogComponent {
    * @param {string} searchQuery - The new search query entered by the user (this is derived from the form control).
    */
   onSearchInputChange(searchQuery: string) {
+    this.searchSubject.next(searchQuery.trim());
     this.loading.set(true);
-    this.searchSubject.next(searchQuery);
   }
 
   /**
@@ -122,6 +122,7 @@ export class SelectMembersDialogComponent {
     }
     this.users.set([]); // Clear the search results
     this.form.get("searchInputControl")!.reset(); // Clear the input field
+    this.onSearchInputChange("");
   }
 
   /**

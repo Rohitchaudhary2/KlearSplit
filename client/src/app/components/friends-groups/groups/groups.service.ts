@@ -1,8 +1,9 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
+import { Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
-import { SearchedUserResponse } from "./groups.model";
+import { CreateGroupData, CreateGroupResponse, GroupResponse, Groups, SearchedUserResponse } from "./groups.model";
 
 @Injectable({
   providedIn: "root"
@@ -25,6 +26,51 @@ export class GroupsService {
         params,
         withCredentials: true,
       },
+    );
+  }
+
+  /**
+   * Create new group
+   *
+   * @param groupData The data to create a new group.
+   * @returns An observable indicating the success of the request.
+   */
+  createGroup(groupData: CreateGroupData | FormData): Observable<CreateGroupResponse> {
+    return this.httpClient.post<CreateGroupResponse>(`${API_URLS.createGroup}`,
+      groupData,
+      { withCredentials: true }
+    );
+  }
+
+  /**
+   * Fetch the list of groups.
+   *
+   * @returns An observable with the list of groups.
+   */
+  fetchGroups() {
+    return this.httpClient.get<Groups>(API_URLS.getGroups, {
+      withCredentials: true
+    });
+  }
+  /**
+   * Update group member details.
+   *
+   * @param groupId The Id of the group to update.
+   * @param status The field which needs to be updated.
+   * @returns An observable indicating the success of the update.
+   */
+  acceptRejectInvite(groupId: string, status: string) {
+    return this.httpClient.patch(
+      `${API_URLS.updateGroupMember}/${groupId}`,
+      { status },
+      { withCredentials: true }
+    );
+  }
+
+  fetchGroupMembers(groupId: string) {
+    return this.httpClient.get<GroupResponse>(
+      `${API_URLS.getGroup}/${groupId}`,
+      { withCredentials: true }
     );
   }
 }

@@ -25,4 +25,8 @@ export const API_URLS = {
   refreshAccessToken: `${environment.apiBaseUrl}/auth/refreshtoken`,
   getAllExpensesData: `${environment.apiBaseUrl}/dashboard/getallexpensesdata`,
   updateExpense: `${environment.apiBaseUrl}/friends/updateexpense`,
+  createGroup: `${environment.apiBaseUrl}/groups/create`,
+  getGroups: `${environment.apiBaseUrl}/groups/usergroups`,
+  updateGroupMember: `${environment.apiBaseUrl}/groups/updatemember`,
+  getGroup: `${environment.apiBaseUrl}/groups`
 };

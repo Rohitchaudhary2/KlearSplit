@@ -1,4 +1,4 @@
-export interface CreateGroup {
+export interface CreateGroupData {
     group: {
         group_name: string;
         group_description: string;
@@ -12,14 +12,18 @@ export interface CreateGroup {
 }
 
 export interface CreateGroupResponse {
-    group_id: string;
-    group_name: string;
-    group_description: string;
-    image_url: string;
-    creator_id: string;
-    createdAt: string;
-    updatedAt: string;
-    deletedAt: string | null;
+    success: string;
+    message: string;
+    data: {
+        group_id: string;
+        group_name: string;
+        group_description: string;
+        image_url: string;
+        creator_id: string;
+        createdAt: string;
+        updatedAt: string;
+        deletedAt: string | null;
+    }
 }
 
 export interface SearchedUser {
@@ -43,21 +47,44 @@ export interface MemberData {
     image_url: string;
 }
 
-export interface GroupMember {
-    member_id: string;
-    group_id: string;
-    status: string;
-    role: string;
-    has_archived: string;
-    member: MemberData;
-}
-
 export interface GroupData {
     group_id: string;
     group_name: string;
     group_description: string;
     image_url: string;
-    members: GroupMember[];
+    creator_id: string;
+    balance_amount: string;
+    status: string;
+}
+
+export interface Groups {
+    success: string;
+    message: string;
+    data: {
+        invitedGroups: GroupData[];
+        acceptedGroups: GroupData[];
+    };
+}
+
+export interface GroupMemberData {
+    group_membership_id: string;
+    group_id: string;
+    inviter_id: string;
+    member_id: string;
+    status: string;
+    role: string;
+    has_archived: boolean;
+    balance_with_user: string;
+    total_balance: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+}
+
+export interface GroupResponse {
+    success: string;
+    message: string;
+    data: GroupMemberData[];
 }
 
 export interface GroupMessageData {
@@ -66,6 +93,8 @@ export interface GroupMessageData {
     sender_id: string;
     message: string;
     createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
 }
 
 export interface GroupExpenseData {

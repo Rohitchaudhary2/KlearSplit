@@ -66,3 +66,10 @@ export const expenseCreationSchema = Joi.object({
   "payer_share": Joi.number().positive().max(9999999999.98).required(),
   "debtors": Joi.array().items(debtorSchema).min(1)
 });
+
+export const settlementCreationSchema = Joi.object({
+  "payer_id": Joi.string().trim().uuid().required(),
+  "debtor_id": Joi.string().trim().uuid().required(),
+  "settlement_amount": Joi.number().positive().max(9999999999.99).required(),
+  "description": Joi.string().trim().min(1)
+});

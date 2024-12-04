@@ -31,7 +31,19 @@ export default (sequelize) => {
     {
       "tableName": "group_member_balance",
       "timestamps": true,
-      "paranoid": true
+      "paranoid": true,
+      "indexes": [
+        // Define the composite unique index for group_id, participant1_id, and participant2_id
+        {
+          "unique": true,
+          "fields": [
+            "group_id",
+            // Use a combination of LEAST and GREATEST to ensure order consistency
+            sequelize.literal("LEAST(participant1_id, participant2_id)"),
+            sequelize.literal("GREATEST(participant1_id, participant2_id)")
+          ]
+        }
+      ]
     }
   );
 

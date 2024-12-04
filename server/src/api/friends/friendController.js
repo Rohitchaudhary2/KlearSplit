@@ -11,7 +11,7 @@ class FriendController {
         userId,
         firstName,
         lastName,
-        ...req.validatedUser
+        ...req.body
       });
 
       responseHandler(res, 201, "Successfully added friend", friendData);
@@ -23,7 +23,7 @@ class FriendController {
   // Controller to fetch all friends of a user
   static getAllFriends = async(req, res, next) => {
     try {
-      const friendData = await FriendService.getAllFriends(req.user.user_id, req.validatedFriends);
+      const friendData = await FriendService.getAllFriends(req.user.user_id, req.query);
 
       responseHandler(
         res,
@@ -39,9 +39,9 @@ class FriendController {
   // Controller to accept and reject a friend request
   static acceptRejectFriendRequest = async(req, res, next) => {
     try {
-      const { "conversation_id": conversationId } = req.validatedParams;
+      const { "conversation_id": conversationId } = req.params;
       const { "user_id": userId } = req.user;
-      const { status } = req.validatedFriend;
+      const { status } = req.body;
       const updatedFriendStatus = await FriendService.acceptRejectFriendRequest(
         { userId, conversationId, status }
       );
@@ -60,7 +60,7 @@ class FriendController {
   // Controller to withdraw a sent friend request
   static withdrawFriendRequest = async(req, res, next) => {
     try {
-      const { "conversation_id": conversationId } = req.validatedParams;
+      const { "conversation_id": conversationId } = req.params;
       const { "user_id": userId } = req.user;
       const deleteFriendRequest = await FriendService.withdrawFriendRequest({
         userId,
@@ -81,9 +81,9 @@ class FriendController {
   // Controller to archive or block a friend
   static archiveBlockFriend = async(req, res, next) => {
     try {
-      const { "conversation_id": conversationId } = req.validatedParams;
+      const { "conversation_id": conversationId } = req.params;
       const { "user_id": userId } = req.user;
-      const { type } = req.validatedFriend;
+      const { type } = req.body;
       const updatedFriendStatus = await FriendService.archiveBlockFriend({
         userId,
         conversationId,
@@ -104,8 +104,8 @@ class FriendController {
   // Controller to fetch messages of a conversation
   static getMessages = async(req, res, next) => {
     try {
-      const { "conversation_id": conversationId } = req.validatedParams;
-      const { page, pageSize } = req.validatedPagination;
+      const { "conversation_id": conversationId } = req.params;
+      const { page, pageSize } = req.query;
       const messages = await FriendService.getMessages(
         conversationId,
         page,
@@ -121,8 +121,8 @@ class FriendController {
   // Controller to add an expense
   static addExpense = async(req, res, next) => {
     try {
-      const { "conversation_id": conversationId } = req.validatedParams;
-      let expenseData = req.validatedExpense; // Access the form data here
+      const { "conversation_id": conversationId } = req.params;
+      let expenseData = req.body; // Access the form data here
 
       // Access file data if a file is uploaded
       if (req.file) {
@@ -146,8 +146,8 @@ class FriendController {
   // Controller to fetch expenses
   static getExpenses = async(req, res, next) => {
     try {
-      const { "conversation_id": conversationId } = req.validatedParams;
-      const { page, pageSize, fetchAll } = req.validatedPagination;
+      const { "conversation_id": conversationId } = req.params;
+      const { page, pageSize, fetchAll } = req.query;
       const expenses = await FriendService.getExpenses(
         conversationId,
         page,
@@ -164,8 +164,8 @@ class FriendController {
   // Controller to update an expense
   static updateExpense = async(req, res, next) => {
     try {
-      const { "conversation_id": conversationId } = req.validatedParams;
-      let updatedExpenseData = req.validatedExpense;
+      const { "conversation_id": conversationId } = req.params;
+      let updatedExpenseData = req.body;
       // Access file data if a file is uploaded
 
       if (req.file) {
@@ -185,7 +185,7 @@ class FriendController {
   // Controller to delete an expense
   static deleteExpense = async(req, res, next) => {
     try {
-      const { "conversation_id": conversationId } = req.validatedParams;
+      const { "conversation_id": conversationId } = req.params;
       const { "friend_expense_id": friendExpenseId } = req.body;
       const deletedExpense = await FriendService.deleteExpense(
         conversationId,
@@ -201,8 +201,8 @@ class FriendController {
   // controller to fetch both messages and expenses
   static getBoth = async(req, res, next) => {
     try {
-      const { "conversation_id": conversationId } = req.validatedParams;
-      const { page, pageSize } = req.validatedPagination;
+      const { "conversation_id": conversationId } = req.params;
+      const { page, pageSize } = req.query;
       const messagesAndExpenses = await FriendService.getBoth(
         conversationId,
         page,

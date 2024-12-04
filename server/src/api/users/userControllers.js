@@ -8,7 +8,7 @@ class UserController {
   // Controller for verifying a user before user creation
   static verifyUser = async(req, res, next) => {
     try {
-      await UserService.verifyUser(req.validatedUser);
+      await UserService.verifyUser(req.body);
       responseHandler(
         res,
         200,
@@ -22,7 +22,7 @@ class UserController {
   // Controller for creating or registering a user
   static createUser = async(req, res, next) => {
     try {
-      const userData = await UserService.createUser(req.validatedUser);
+      const userData = await UserService.createUser(req.body);
 
       authResponseHandler(res, 201, "Successfully created user", userData);
     } catch (error) {
@@ -33,7 +33,7 @@ class UserController {
   // Controller for verifying a user before restore.
   static verifyRestoreUser = async(req, res, next) => {
     try {
-      await UserService.verifyRestoreUser(req.validatedUser);
+      await UserService.verifyRestoreUser(req.body);
       responseHandler(res, 200, "Successfully Sent Otp");
     } catch (error) {
       next(error);
@@ -43,7 +43,7 @@ class UserController {
   // Controller for restoring user.
   static restoreUser = async(req, res, next) => {
     try {
-      const userData = await UserService.restoreUser(req.validatedUser);
+      const userData = await UserService.restoreUser(req.body);
 
       authResponseHandler(res, 201, "Successfully restored user", userData);
     } catch (error) {
@@ -54,7 +54,7 @@ class UserController {
   // Controller for verifying email for forgot password.
   static verifyForgotPassword = async(req, res, next) => {
     try {
-      await UserService.verifyForgotPassword(req.validatedUser);
+      await UserService.verifyForgotPassword(req.body);
       responseHandler(res, 200, "Successfully Sent Otp");
     } catch (error) {
       next(error);
@@ -64,7 +64,7 @@ class UserController {
   // Controller for changing password for forgot password.
   static forgotPassword = async(req, res, next) => {
     try {
-      await UserService.forgotPassword(req.validatedUser);
+      await UserService.forgotPassword(req.body);
       responseHandler(res, 200, "Successfully sent new Password.");
     } catch (error) {
       next(error);

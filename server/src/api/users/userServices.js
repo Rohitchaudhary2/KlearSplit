@@ -360,7 +360,7 @@ class UserService {
    * @returns {Promise<Object>} - The result of the update operation (updated user data).
    */
   static updateUser = async(req) => {
-    const user = req.validatedUser;
+    const user = req.body;
     const id = req.user.user_id;
 
     await this.getUser(id);

@@ -231,7 +231,10 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    */
   openGroupDetails() {
     this.dialog.open(GroupDetailsComponent, {
-      width: "500px",
+      maxWidth: "80vw",
+      maxHeight: "70vh",
+      height: "85%",
+      width: "100%",
       data: this.selectedGroup(),
     });
   }

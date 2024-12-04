@@ -70,6 +70,13 @@ export class ListDisplayComponent {
     };
   }
 
+  getRequestStatus(item: FriendData | GroupData) {
+    if(this.isFriendData(item)) {
+      return item.status === "RECEIVER";
+    }
+    return item.role !== "CREATOR";
+  }
+
   /**
    * Converts a string representation of a balance amount to a number.
    *

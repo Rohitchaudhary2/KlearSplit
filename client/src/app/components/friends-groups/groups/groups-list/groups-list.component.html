@@ -118,7 +118,12 @@
   ></app-list-display>
 
   <!-- Groups List -->
-  <div class="friend-list d-flex flex-column shadow-lg mt-3 mx-3 flex-grow-1">
+  <app-list-display
+    [heading]="'Group List'"
+    [items]="groupList()"
+    (selectedGroup)="onSelectGroup($event)"
+  ></app-list-display>
+  <!-- <div class="friend-list d-flex flex-column shadow-lg mt-3 mx-3 flex-grow-1">
     <div class="friend-request=heading">
       <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem;">
         Group List
@@ -182,5 +187,5 @@
         </tbody>
       </table>
     </div>
-  </div>
+  </div> -->
 </div>

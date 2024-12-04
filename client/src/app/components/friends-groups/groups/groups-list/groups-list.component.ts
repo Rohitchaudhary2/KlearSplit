@@ -128,7 +128,7 @@ export class GroupsListComponent implements OnInit {
           this.groups().unshift({
             ...this.groupInvites().find(
               (invite) => invite.group_id === groupId
-            )!
+            )!, status: "ACCEPTED"
           });
         }
         // Remove the processed invite from the group invite list

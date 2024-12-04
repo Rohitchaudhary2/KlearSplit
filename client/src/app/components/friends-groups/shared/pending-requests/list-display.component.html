@@ -186,58 +186,61 @@
                       }}</span>
                     }
                   </span>
-                  @if (item.status === "RECEIVER") {
-                    <span
-                      class="d-flex align-items-center border bg-success text-white"
-                      matTooltip="Accept Request"
-                      matTooltipPosition="above"
-                    >
-                      <mat-icon
-                        (click)="
-                          onAcceptReject(item, 'ACCEPTED');
-                          $event.stopPropagation()
-                        "
-                        (keyup.enter)="
-                          onAcceptReject(item, 'ACCEPTED');
-                          $event.stopPropagation()
-                        "
-                        >check</mat-icon
+                  @if (item.status !== "ACCEPTED") {
+
+                    @if (getRequestStatus(item)) {
+                      <span
+                        class="d-flex align-items-center border bg-success text-white"
+                        matTooltip="Accept Request"
+                        matTooltipPosition="above"
                       >
-                    </span>
-                    <span
-                      class="ms-2 d-flex align-items-center border bg-danger text-white"
-                      matTooltip="Reject Request"
-                      matTooltipPosition="above"
-                    >
-                      <mat-icon
-                        (click)="
+                        <mat-icon
+                          (click)="
+                            onAcceptReject(item, 'ACCEPTED');
+                            $event.stopPropagation()
+                          "
+                          (keyup.enter)="
+                            onAcceptReject(item, 'ACCEPTED');
+                            $event.stopPropagation()
+                          "
+                          >check</mat-icon
+                        >
+                      </span>
+                      <span
+                        class="ms-2 d-flex align-items-center border bg-danger text-white"
+                        matTooltip="Reject Request"
+                        matTooltipPosition="above"
+                      >
+                        <mat-icon
+                          (click)="
+                            onAcceptReject(item, 'REJECTED');
+                            $event.stopPropagation()
+                          "
+                          (keyup.enter)="
                           onAcceptReject(item, 'REJECTED');
                           $event.stopPropagation()
-                        "
-                        (keyup.enter)="
-                        onAcceptReject(item, 'REJECTED');
-                        $event.stopPropagation()
-                        "
-                        >close</mat-icon
-                      >
-                    </span>
-                  } @else {
-                    <span
-                      class="d-flex align-items-center border bg-danger text-white"
-                      matTooltip="Withdraw Request"
-                      matTooltipPosition="above"
-                      ><mat-icon
-                        (click)="
+                          "
+                          >close</mat-icon
+                        >
+                      </span>
+                    } @else {
+                      <span
+                        class="d-flex align-items-center border bg-danger text-white"
+                        matTooltip="Withdraw Request"
+                        matTooltipPosition="above"
+                        ><mat-icon
+                          (click)="
+                            onAcceptReject(item, 'WITHDRAW');
+                            $event.stopPropagation()
+                          "
+                          (keyup.enter)="
                           onAcceptReject(item, 'WITHDRAW');
                           $event.stopPropagation()
-                        "
-                        (keyup.enter)="
-                        onAcceptReject(item, 'WITHDRAW');
-                        $event.stopPropagation()
-                        "
-                        >close</mat-icon
-                      >
-                    </span>
+                          "
+                          >close</mat-icon
+                        >
+                      </span>
+                    }
                   }
                 </span>
               </span>

@@ -163,7 +163,7 @@ export class FriendsListComponent implements OnInit {
           this.friends().unshift({
             ...this.friendRequests().find(
               (request) => request.conversation_id === conversationId
-            )!
+            )!, status: "ACCEPTED"
           });
         }
         // Remove the processed request from the pending requests list

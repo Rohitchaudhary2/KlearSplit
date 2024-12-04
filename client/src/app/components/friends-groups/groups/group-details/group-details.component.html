@@ -20,7 +20,7 @@
 
   <!-- Members List -->
   <div class="members-list">
-    <div class="d-flex">
+    <div class="d-flex align-items-center">
       <h3>Group Members</h3>
       @if (loading) {
         <span class="text-center mx-2">
@@ -30,29 +30,35 @@
         </span>
       }
     </div>
-    @for (member of groupMembers(); track $index) {
-      <div
-        class="member"
-        [ngClass]="{ 'current-user': member.member_id === currentUserId }"
-      >
-        <img
-          [src]="member.image_url || '/profile.png'"
-          alt="hello"
-          class="member-profile-pic"
-        />
-        <div class="member-details">
-          <div class="d-flex justify-content-between">
-            <h4 class="member-name">{{ member.first_name }} {{ member.last_name || "" }}</h4>
-            <h4 class="member-name">{{ member.role }}</h4>
-          </div>
-          <p class="member-balance">
-            Balance with you: {{ member.balance_with_user | currency: "INR" }}
-          </p>
-          <p class="member-balance">
-            Total balance in group: {{ member.total_balance | currency: "INR" }}
-          </p>
-        </div>
+    <div class="members-table">
+      <!-- Table Header -->
+      <div class="table-row table-header">
+        <div class="table-cell">Profile</div>
+        <div class="table-cell">Name</div>
+        <div class="table-cell">Role</div>
+        <div class="table-cell">Balance with You</div>
+        <div class="table-cell">Total Balance in Group</div>
       </div>
-    }
+
+      <!-- Table Body -->
+      @for (member of groupMembers(); track $index) {
+        <div
+          class="table-row"
+          [ngClass]="{ 'current-user': member.member_id === currentUserId }"
+        >
+          <div class="table-cell">
+            <img
+              [src]="member.image_url || '/profile.png'"
+              alt="Profile Picture"
+              class="member-profile-pic"
+            />
+          </div>
+          <div class="table-cell">{{ member.first_name }} {{ member.last_name || "" }}</div>
+          <div class="table-cell">{{ member.role }}</div>
+          <div class="table-cell">{{ member.balance_with_user | currency: "INR" }}</div>
+          <div class="table-cell">{{ member.total_balance | currency: "INR" }}</div>
+        </div>
+      }
+    </div>
   </div>
 </div>

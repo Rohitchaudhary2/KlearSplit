@@ -109,7 +109,6 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     // Check if the user has scrolled to the top and if loading is not in progress
     if (element.scrollTop === 0 && !this.loading) {
       this.scrollPosition = element.scrollHeight;
-      // this.loadItems(element);
     }
   }
 
@@ -166,6 +165,8 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
+    //Fetch messages
+    this.fetchGroupMessages();
     // Join the new conversation room for the selected group
     this.socketService.joinRoom(this.selectedGroup()!.group_id);
 
@@ -209,7 +210,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       message: this.messageInput,
     };
     this.socketService.sendGroupMessage(messageData);
-    this.groupsService.saveGroupMessages(this.messageInput, this.selectedGroup()!.group_id);
+    this.groupsService.saveGroupMessages(this.messageInput, this.selectedGroup()!.group_id).subscribe();
     this.messageInput = "";
   }
 
@@ -240,8 +241,8 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    */
   fetchGroupMessages() {
     this.groupsService.fetchGroupMessages(this.selectedGroup()!.group_id).subscribe({
-      next: (response) => {
-        this.messages.set(response); // Set the messages in the messages signal
+      next: (messages) => {
+        this.messages.set([ ...messages, ...this.messages() ]); // Set the messages in the messages signal
       }
     });
   }

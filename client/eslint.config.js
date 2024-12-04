@@ -20,6 +20,7 @@ const tsConfig = {
       window: "readonly",
       document: "readonly",
       setInterval: "readonly",
+      setTimeout: "readonly",
       clearInterval: "readonly",
       console: "readonly",
       localStorage: "true"

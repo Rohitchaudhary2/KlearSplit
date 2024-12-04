@@ -11,7 +11,7 @@ import { GroupsService } from "../groups.service";
   standalone: true,
   imports: [ CommonModule, CurrencyPipe ],
   templateUrl: "./group-details.component.html",
-  styleUrl: "./group-details.component.css"
+  styleUrl: "./group-details.component.css",
 })
 export class GroupDetailsComponent implements OnInit {
   private readonly authService = inject(AuthService);
@@ -25,6 +25,7 @@ export class GroupDetailsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loading = true;
+    this.data.role = `${this.data.role[0]}${this.data.role.slice(1).toLowerCase()}`;
     this.fetchGroupMembers();
   }
 
@@ -33,10 +34,28 @@ export class GroupDetailsComponent implements OnInit {
    * The response contains the balance of the current user with each member and the total balance of that member.
    */
   fetchGroupMembers() {
-    this.groupsService.fetchGroupMembers(this.data.group_id).subscribe((response) => {
-      this.groupMembers.set(response.data);
-      this.loading = false;
-    });
+    this.groupsService
+      .fetchGroupMembers(this.data.group_id)
+      .subscribe((response) => {
+        const filteredMembers = response.data.filter(
+          (member) => member.member_id !== this.currentUserId,
+        ).map((member) => {
+          switch (member.role) {
+            case "ADMIN":
+              return { ...member, role: "Admin" };
+            case "COADMIN":
+              return { ...member, role: "Co-Admin" };
+            case "CREATOR":
+              return { ...member, role: "Creator" };
+            case "USER":
+              return { ...member, role: "" };
+            default:
+              return member;
+          }
+        });
+        this.groupMembers.set(filteredMembers);
+        this.loading = false;
+      });
   }
 
   closeDialog() {

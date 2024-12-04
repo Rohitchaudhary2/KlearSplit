@@ -1,4 +1,4 @@
-import { ErrorHandler } from "../middlewares/errorHandler";
+import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 class GroupUtils {
   static assignRoles(members, admins, coadmins, inviterId, groupId) {

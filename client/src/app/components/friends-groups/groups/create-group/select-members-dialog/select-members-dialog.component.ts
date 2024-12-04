@@ -1,4 +1,4 @@
-import { Component, inject, signal } from "@angular/core";
+import { Component, ElementRef, inject, signal, ViewChild } from "@angular/core";
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
 import { MatOptionModule } from "@angular/material/core";
@@ -7,6 +7,7 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
+import { MatTooltipModule } from "@angular/material/tooltip";
 import { debounceTime, of, Subject, switchMap } from "rxjs";
 
 import { FormErrorMessageService } from "../../../../shared/form-error-message.service";
@@ -30,12 +31,15 @@ type SelectableUser = SearchedUser & {
     FormsModule,
     MatIconModule,
     MatOptionModule,
-    MatSelectModule
+    MatSelectModule,
+    MatTooltipModule
   ],
   templateUrl: "./select-members-dialog.component.html",
   styleUrl: "./select-members-dialog.component.css"
 })
 export class SelectMembersDialogComponent {
+  @ViewChild("input", { static: false }) input!: ElementRef<HTMLInputElement>;
+
   private readonly dialogRef = inject(MatDialogRef<SelectMembersDialogComponent>);
   private readonly formErrorMessages = inject(FormErrorMessageService);
   private readonly groupsService = inject(GroupsService);
@@ -118,11 +122,13 @@ export class SelectMembersDialogComponent {
    */
   selectUser(user: SearchedUser) {
     if (!this.selectedMembers().find((member) => member.email === user.email)) {
-      this.selectedMembers.update((members) => [ ...members, user ]);
+      const selectableUser: SelectableUser = { ...user, role: "member", isAdmin: false, isCoAdmin: false };
+      this.selectedMembers.update((members) => [ ...members, selectableUser ]);
     }
     this.users.set([]); // Clear the search results
     this.form.get("searchInputControl")!.reset(); // Clear the input field
     this.onSearchInputChange("");
+    setTimeout(() => this.input.nativeElement.focus(), 0);
   }
 
   /**
@@ -160,6 +166,12 @@ export class SelectMembersDialogComponent {
       coadmins: this.selectedMembers()
         .filter((user) => user.isCoAdmin)
         .map((user) => user.user_id),
+      membersToDisplay: this.selectedMembers().map((user) =>
+        ({
+          name: `${user.first_name} ${user.last_name || ""}`.trim(),
+          email: user.email,
+          role: user.role
+        })),
     });
   }
 

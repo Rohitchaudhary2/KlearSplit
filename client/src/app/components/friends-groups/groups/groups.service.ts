@@ -1,9 +1,9 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Observable } from "rxjs";
+import { map, Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
-import { CreateGroupData, CreateGroupResponse, GroupMessageData, GroupResponse, Groups, SearchedUserResponse } from "./groups.model";
+import { CreateGroupData, CreateGroupResponse, GroupMessageResponse, GroupResponse, Groups, SearchedUserResponse } from "./groups.model";
 
 @Injectable({
   providedIn: "root"
@@ -52,7 +52,7 @@ export class GroupsService {
       withCredentials: true
     });
   }
-  
+
   /**
    * Update group member details.
    *
@@ -105,9 +105,11 @@ export class GroupsService {
    * @returns An observable with the list of messages.
    */
   fetchGroupMessages(groupId: string) {
-    return this.httpClient.get<GroupMessageData[]>(
+    return this.httpClient.get<GroupMessageResponse>(
       `${API_URLS.getGroupMessages}/${groupId}`,
       { withCredentials: true }
+    ).pipe(
+      map((messages) => messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)))
     );
   }
 }

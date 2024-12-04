@@ -55,6 +55,7 @@ export interface GroupData {
     creator_id: string;
     balance_amount: string;
     status: string;
+    role: string;
 }
 
 export interface Groups {
@@ -76,6 +77,9 @@ export interface GroupMemberData {
     has_archived: boolean;
     balance_with_user: string;
     total_balance: string;
+    first_name: string;
+    last_name: string;
+    image_url: string;
     createdAt: string;
     updatedAt: string;
     deletedAt: string | null;
@@ -95,6 +99,12 @@ export interface GroupMessageData {
     createdAt: string;
     updatedAt: string;
     deletedAt: string | null;
+}
+
+export interface GroupMessageResponse {
+    success: string;
+    message: string;
+    data: GroupMessageData[];
 }
 
 export interface GroupExpenseData {

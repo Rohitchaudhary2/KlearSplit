@@ -103,7 +103,7 @@
             style="height: 100%"
           >
             <ul class="message-body list-unstyled text-white m-0">
-              @if (currentView() === "Messages") {
+              @if (currentView() === "Messages" || currentView() === "All") {
                 @for (message of messages(); track message.group_message_id) {
                   <app-message
                     [message]="{

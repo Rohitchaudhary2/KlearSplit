@@ -1,131 +1,3 @@
-<!-- <div class="pending-request shadow-lg mt-3 mx-3">
-    <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">
-      {{ heading() }}
-    </h6>
-    <hr class="m-0 mt-1" />
-    <div class="requests">
-      <table class="table table-hover">
-        <thead>
-          <tr style="display: none;">
-            <th scope="col"></th> 
-            <th scope="col"></th> 
-          </tr>
-        </thead>
-        <tbody>
-          @for (request of requests(); track $index) {
-            <tr
-              (click)="onSelectUser(request)"
-              (keyup.enter)="onSelectUser(request)"
-              class="row equal-height-row d-flex justify-content-between m-0"
-              [ngClass]="selectedFriend() === request ? 'active' : ''"
-              style="cursor: pointer"
-            >
-              <td
-                [ngClass]="selectedFriend() === request ? 'active' : ''"
-                class="col-md-3 col-lg-2 col-sm-3"
-                style="
-                  flex: 0 0 auto;
-                  text-align: center;
-                  align-content: center;
-                "
-              >
-                <span
-                  ><img
-                    class="profile-image"
-                    [src]="request.friend.image_url || '/profile.png'"
-                    alt="Profile"
-                /></span>
-              </td>
-              <td
-                class="col-md-4 col-lg-4 col-sm-3"
-                [ngClass]="selectedFriend() === request ? 'active' : ''"
-                style="flex: 1 1 0"
-              >
-                <div class="d-flex justify-content-between align-items-center">
-                  <span
-                    >{{ request.friend.first_name }}
-                    {{ request.friend.last_name }}</span
-                  >
-
-                  <span class="text-end pe-3 d-flex align-items-center">
-                    <span class="text-end pe-3">
-                      @if (getBalanceAsNumber(request.balance_amount) < 0) {
-                        <span class="text-danger">{{
-                          -getBalanceAsNumber(request.balance_amount)
-                            | currency: "INR"
-                        }}</span>
-                      } @else {
-                        <span class="text-success">{{
-                          getBalanceAsNumber(request.balance_amount)
-                            | currency: "INR"
-                        }}</span>
-                      }
-                    </span>
-                    @if (request.status === "RECEIVER") {
-                      <span
-                        class="d-flex align-items-center border bg-success text-white"
-                        matTooltip="Accept Request"
-                        matTooltipPosition="above"
-                      >
-                        <mat-icon
-                          (click)="
-                            onAcceptReject(request.conversation_id, 'ACCEPTED');
-                            $event.stopPropagation()
-                          "
-                          (keyup.enter)="
-                            onAcceptReject(request.conversation_id, 'ACCEPTED');
-                            $event.stopPropagation()
-                          "
-                          >check</mat-icon
-                        >
-                      </span>
-                      <span
-                        class="ms-2 d-flex align-items-center border bg-danger text-white"
-                        matTooltip="Reject Request"
-                        matTooltipPosition="above"
-                      >
-                        <mat-icon
-                          (click)="
-                            onAcceptReject(request.conversation_id, 'REJECTED');
-                            $event.stopPropagation()
-                          "
-                          (keyup.enter)="
-                          onAcceptReject(request.conversation_id, 'REJECTED');
-                          $event.stopPropagation()
-                          "
-                          >close</mat-icon
-                        >
-                      </span>
-                    } @else {
-                      <span
-                        class="d-flex align-items-center border bg-danger text-white"
-                        matTooltip="Withdraw Request"
-                        matTooltipPosition="above"
-                        ><mat-icon
-                          (click)="
-                            onWithdrawRequest(request.conversation_id);
-                            $event.stopPropagation()
-                          "
-                          (keyup.enter)="
-                          onWithdrawRequest(request.conversation_id);
-                          $event.stopPropagation()
-                          "
-                          >close</mat-icon
-                        >
-                      </span>
-                    }
-                  </span>
-                </div>
-                <div>{{ request.friend.email }}</div>
-              </td>
-            </tr>
-          } @empty {
-            <div class="pt-3 text-center">No Friend Requests</div>
-          }
-        </tbody>
-      </table>
-    </div>
-</div> -->
 <div class="pending-request shadow-lg mt-3 mx-3">
   <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">{{ heading() }}</h6>
   <hr class="m-0 mt-1" />
@@ -186,61 +58,59 @@
                       }}</span>
                     }
                   </span>
-                  @if (item.status !== "ACCEPTED") {
 
-                    @if (getRequestStatus(item)) {
-                      <span
-                        class="d-flex align-items-center border bg-success text-white"
-                        matTooltip="Accept Request"
-                        matTooltipPosition="above"
+                  @if (getRequestStatus(item)) {
+                    <span
+                      class="d-flex align-items-center border bg-success text-white"
+                      matTooltip="Accept Request"
+                      matTooltipPosition="above"
+                    >
+                      <mat-icon
+                        (click)="
+                          onAcceptReject(item, 'ACCEPTED');
+                          $event.stopPropagation()
+                        "
+                        (keyup.enter)="
+                          onAcceptReject(item, 'ACCEPTED');
+                          $event.stopPropagation()
+                        "
+                        >check</mat-icon
                       >
-                        <mat-icon
-                          (click)="
-                            onAcceptReject(item, 'ACCEPTED');
-                            $event.stopPropagation()
-                          "
-                          (keyup.enter)="
-                            onAcceptReject(item, 'ACCEPTED');
-                            $event.stopPropagation()
-                          "
-                          >check</mat-icon
-                        >
-                      </span>
-                      <span
-                        class="ms-2 d-flex align-items-center border bg-danger text-white"
-                        matTooltip="Reject Request"
-                        matTooltipPosition="above"
-                      >
-                        <mat-icon
-                          (click)="
-                            onAcceptReject(item, 'REJECTED');
-                            $event.stopPropagation()
-                          "
-                          (keyup.enter)="
+                    </span>
+                    <span
+                      class="ms-2 d-flex align-items-center border bg-danger text-white"
+                      matTooltip="Reject Request"
+                      matTooltipPosition="above"
+                    >
+                      <mat-icon
+                        (click)="
                           onAcceptReject(item, 'REJECTED');
                           $event.stopPropagation()
-                          "
-                          >close</mat-icon
-                        >
-                      </span>
-                    } @else {
-                      <span
-                        class="d-flex align-items-center border bg-danger text-white"
-                        matTooltip="Withdraw Request"
-                        matTooltipPosition="above"
-                        ><mat-icon
-                          (click)="
-                            onAcceptReject(item, 'WITHDRAW');
-                            $event.stopPropagation()
-                          "
-                          (keyup.enter)="
+                        "
+                        (keyup.enter)="
+                        onAcceptReject(item, 'REJECTED');
+                        $event.stopPropagation()
+                        "
+                        >close</mat-icon
+                      >
+                    </span>
+                  } @else {
+                    <span
+                      class="d-flex align-items-center border bg-danger text-white"
+                      matTooltip="Withdraw Request"
+                      matTooltipPosition="above"
+                      ><mat-icon
+                        (click)="
                           onAcceptReject(item, 'WITHDRAW');
                           $event.stopPropagation()
-                          "
-                          >close</mat-icon
-                        >
-                      </span>
-                    }
+                        "
+                        (keyup.enter)="
+                        onAcceptReject(item, 'WITHDRAW');
+                        $event.stopPropagation()
+                        "
+                        >close</mat-icon
+                      >
+                    </span>
                   }
                 </span>
               </span>

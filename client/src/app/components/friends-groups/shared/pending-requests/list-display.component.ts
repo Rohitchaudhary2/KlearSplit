@@ -26,13 +26,13 @@ interface AcceptedRejected {
   styleUrls: [ "./list-display.component.css", "../../friends/friends.component.css" ],
 })
 export class ListDisplayComponent {
-  heading = input("");
+  heading = input.required();
   items = input.required<(FriendData | GroupData)[]>();
   acceptReject = output<AcceptedRejected>();
   selectedFriend = output<FriendData>();
   selectedGroup = output<GroupData>();
 
-  selectedItem?: FriendData | GroupData; // Of type T or undefined.
+  selectedItem?: FriendData | GroupData;
 
   onSelect(item: FriendData | GroupData): void {
     this.selectedItem = item;
@@ -60,13 +60,13 @@ export class ListDisplayComponent {
   getItemDetails(item: FriendData | GroupData) {
     if(this.isFriendData(item)) {
       return {
-        name: `${item.friend.first_name} ${item.friend.last_name || ""}`.trim(),
-        profile: `${item.friend.image_url || "/profile.png"}`,
+        name: `${item.friend.first_name} ${item.friend.last_name ?? ""}`.trim(),
+        profile: `${item.friend.image_url ?? "/profile.png"}`,
       };
     }
     return {
       name: item.group_name,
-      profile: `${item.image_url || "/group-profile.png"}`,
+      profile: `${item.image_url ?? "/group-profile.png"}`,
     };
   }
 

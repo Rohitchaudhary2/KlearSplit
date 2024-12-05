@@ -82,6 +82,6 @@ export const updateUserSchema = Joi.object({
 });
 
 export const restoreUserSchema = Joi.object({
-  "email": commonFields.email.required(),
+  "email": commonFields.email,
   "otp": Joi.string().trim().optional()
 });

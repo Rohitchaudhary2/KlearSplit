@@ -1,122 +1,77 @@
 import UserService from "./userServices.js";
-import {
-  authResponseHandler,
-  responseHandler
-} from "../utils/responseHandler.js";
+import { authResponseHandler, responseHandler } from "../utils/responseHandler.js";
+import asyncHandler from "./../utils/asyncHandler.js";
 
 class UserController {
   // Controller for verifying a user before user creation
-  static verifyUser = async(req, res, next) => {
-    try {
-      await UserService.verifyUser(req.validatedUser);
-      responseHandler(
-        res,
-        200,
-        "If email is valid then OTP sent successfully."
-      );
-    } catch (error) {
-      next(error);
-    }
-  };
+  static verifyUser = asyncHandler(async(req, res) => {
+    await UserService.verifyUser(req.body);
+    responseHandler(res, 200, "If email is valid then OTP sent successfully.");
+  });
 
   // Controller for creating or registering a user
-  static createUser = async(req, res, next) => {
-    try {
-      const userData = await UserService.createUser(req.validatedUser);
-
-      authResponseHandler(res, 201, "Successfully created user", userData);
-    } catch (error) {
-      next(error);
-    }
-  };
+  static createUser = asyncHandler(async(req, res) => {
+    const userData = await UserService.createUser(req.body);
+  
+    authResponseHandler(res, 201, "Successfully created user", userData);
+  });
 
   // Controller for verifying a user before restore.
-  static verifyRestoreUser = async(req, res, next) => {
-    try {
-      await UserService.verifyRestoreUser(req.validatedUser);
-      responseHandler(res, 200, "Successfully Sent Otp");
-    } catch (error) {
-      next(error);
-    }
-  };
+  static verifyRestoreUser = asyncHandler(async(req, res) => {
+    await UserService.verifyRestoreUser(req.body);
+    responseHandler(res, 200, "Successfully Sent Otp");
+  });
 
   // Controller for restoring user.
-  static restoreUser = async(req, res, next) => {
-    try {
-      const userData = await UserService.restoreUser(req.validatedUser);
+  static restoreUser = asyncHandler(async(req, res) => {
+    const userData = await UserService.restoreUser(req.body);
 
-      authResponseHandler(res, 201, "Successfully restored user", userData);
-    } catch (error) {
-      next(error);
-    }
-  };
+    authResponseHandler(res, 201, "Successfully restored user", userData);
+  });
 
   // Controller for verifying email for forgot password.
-  static verifyForgotPassword = async(req, res, next) => {
-    try {
-      await UserService.verifyForgotPassword(req.validatedUser);
-      responseHandler(res, 200, "Successfully Sent Otp");
-    } catch (error) {
-      next(error);
-    }
-  };
+  static verifyForgotPassword = asyncHandler(async(req, res) => {
+    await UserService.verifyForgotPassword(req.body);
+    responseHandler(res, 200, "Successfully Sent Otp");
+  });
 
   // Controller for changing password for forgot password.
-  static forgotPassword = async(req, res, next) => {
-    try {
-      await UserService.forgotPassword(req.validatedUser);
-      responseHandler(res, 200, "Successfully sent new Password.");
-    } catch (error) {
-      next(error);
-    }
-  };
+  static forgotPassword = asyncHandler(async(req, res) => {
+    await UserService.forgotPassword(req.body);
+    responseHandler(res, 200, "Successfully sent new Password.");
+  });
 
   // Controller for getting user information
-  static getUser = async(req, res, next) => {
-    try {
-      const userData = await UserService.getUser(req.user.user_id);
+  static getUser = asyncHandler(async(req, res) => {
+    const userData = await UserService.getUser(req.user.user_id);
 
-      responseHandler(res, 200, "Successfully fetched user", userData);
-    } catch (error) {
-      next(error);
-    }
-  };
+    responseHandler(res, 200, "Successfully fetched user", userData);
+  });
 
   // Controller for getting users by a regular expression
-  static getUsersByRegex = async(req, res, next) => {
-    try {
-      const { regex } = req.params;
-      const { fetchAll } = req.query;
-      const userId = req.user.user_id;
+  static getUsersByRegex = asyncHandler(async(req, res) => {
+    const { regex } = req.params;
+    const { fetchAll } = req.query;
+    const userId = req.user.user_id;
+  
+    const users = await UserService.getUsersByRegex({ "data": { regex, fetchAll }, userId });
 
-      const users = await UserService.getUsersByRegex({ "data": { regex, fetchAll }, userId });
-
-      responseHandler(res, 200, "Successfully fetched users", users);
-    } catch (error) {
-      next(error);
-    }
-  };
+    responseHandler(res, 200, "Successfully fetched users", users);
+  });
 
   // Controller for updating the user
-  static updateUser = async(req, res, next) => {
-    try {
-      const user = await UserService.updateUser(req);
+  static updateUser = asyncHandler(async(req, res) => {
+    const user = await UserService.updateUser(req);
 
-      responseHandler(res, 200, "Successfully updated user", user);
-    } catch (error) {
-      next(error);
-    }
-  };
+    responseHandler(res, 200, "Successfully updated user", user);
+  });
+  
 
   // Controller for deleting the user
-  static deleteUser = async(req, res, next) => {
-    try {
-      await UserService.deleteUser(req);
-      responseHandler(res, 200, "Successfully deleted user");
-    } catch (error) {
-      next(error);
-    }
-  };
+  static deleteUser = asyncHandler(async(req, res) => {
+    await UserService.deleteUser(req);
+    responseHandler(res, 200, "Successfully deleted user");
+  });
 }
 
 export default UserController;

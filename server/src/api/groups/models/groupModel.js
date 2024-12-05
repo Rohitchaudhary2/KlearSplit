@@ -29,9 +29,7 @@ export default (sequelize) => {
       },
       "image_url": {
         "type": DataTypes.STRING(255),
-        "defaultValue":
-          "https://www.google.com/url?sa=i&url=https%3A%2F%2Fen.silhouette-ac.com%2Fsilhouette%2F143023%2Fgroup-of-three-people&psig=AOvVaw31ToMuast5syZwRrvivnmA&ust=1731416089810000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCMCS492p1IkDFQAAAAAdAAAAABAE",
-        "allowNull": false
+        "allowNull": true
       }
     },
     {

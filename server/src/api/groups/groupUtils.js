@@ -41,7 +41,7 @@ class GroupUtils {
         if (calculatedTotalExpenseAmount !== 100) {
           throw new ErrorHandler(400, "Expense shares of partcipants does not add up to 100%.");
         }
-        debtors.forEach((debtor) => Object.assign(debtor, { "debtor_share": (debtor.debtor_share * totalAmount) / 100 }));
+        debtors.forEach((debtor) => Object.assign(debtor, { "debtor_amount": (debtor.debtor_share * totalAmount) / 100 }));
 
         return debtors;
       }

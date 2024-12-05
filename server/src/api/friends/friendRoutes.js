@@ -3,14 +3,13 @@ import FriendController from "./friendController.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import {
   validateExpense,
-  validateArchiveBlockFriend,
-  validateEmail,
-  validateFriendRequest,
-  validateGetFriends,
-  validatePagination,
-  validateParams
+  validateParams,
+  validateBody,
+  validateQuery
 } from "../middlewares/validationMiddleware.js";
+import * as friendsSchema from "./friendValidations.js";
 import uploadMiddleware from "../middlewares/uploadMiddleware.js";
+import { emailSchema } from "../users/userValidations.js";
 
 const friendRouter = Router();
 
@@ -24,7 +23,7 @@ const friendRouter = Router();
 friendRouter.post(
   "/addfriend",
   authenticateToken,
-  validateEmail,
+  validateBody(emailSchema),
   FriendController.addFriend
 );
 
@@ -34,7 +33,7 @@ friendRouter.post(
 friendRouter.get(
   "/getallfriends",
   authenticateToken,
-  validateGetFriends,
+  validateQuery(friendsSchema.getFriendsValidation),
   FriendController.getAllFriends
 );
 
@@ -44,8 +43,8 @@ friendRouter.get(
 friendRouter.patch(
   "/acceptrejectfriend/:conversation_id",
   authenticateToken,
-  validateParams,
-  validateFriendRequest,
+  validateParams(friendsSchema.uuidParamValidation),
+  validateBody(friendsSchema.acceptRejectFriendRequestValidation),
   FriendController.acceptRejectFriendRequest
 );
 
@@ -53,7 +52,7 @@ friendRouter.patch(
 friendRouter.delete(
   "/withdrawfriendrequest/:conversation_id",
   authenticateToken,
-  validateParams,
+  validateParams(friendsSchema.uuidParamValidation),
   FriendController.withdrawFriendRequest
 );
 
@@ -63,8 +62,8 @@ friendRouter.delete(
 friendRouter.patch(
   "/archiveblockfriend/:conversation_id",
   authenticateToken,
-  validateParams,
-  validateArchiveBlockFriend,
+  validateParams(friendsSchema.uuidParamValidation),
+  validateBody(friendsSchema.archiveBlockFriendValidation),
   FriendController.archiveBlockFriend
 );
 
@@ -74,8 +73,8 @@ friendRouter.patch(
 friendRouter.get(
   "/getmessages/:conversation_id",
   authenticateToken,
-  validateParams,
-  validatePagination,
+  validateParams(friendsSchema.uuidParamValidation),
+  validateQuery(friendsSchema.paginationValidation),
   FriendController.getMessages
 );
 
@@ -87,7 +86,7 @@ friendRouter.post(
   "/addexpense/:conversation_id",
   authenticateToken,
   uploadMiddleware("receipts", "receipt"),
-  validateParams,
+  validateParams(friendsSchema.uuidParamValidation),
   validateExpense,
   FriendController.addExpense
 );
@@ -96,8 +95,8 @@ friendRouter.post(
 friendRouter.get(
   "/getexpenses/:conversation_id",
   authenticateToken,
-  validateParams,
-  validatePagination,
+  validateParams(friendsSchema.uuidParamValidation),
+  validateQuery(friendsSchema.paginationValidation),
   FriendController.getExpenses
 );
 
@@ -106,7 +105,7 @@ friendRouter.patch(
   "/updateexpense/:conversation_id",
   authenticateToken,
   uploadMiddleware("receipts", "receipt"),
-  validateParams,
+  validateParams(friendsSchema.uuidParamValidation),
   validateExpense,
   FriendController.updateExpense
 );
@@ -115,7 +114,7 @@ friendRouter.patch(
 friendRouter.delete(
   "/deleteexpense/:conversation_id",
   authenticateToken,
-  validateParams,
+  validateParams(friendsSchema.uuidParamValidation),
   FriendController.deleteExpense
 );
 
@@ -123,8 +122,8 @@ friendRouter.delete(
 friendRouter.get(
   "/getboth/:conversation_id",
   authenticateToken,
-  validateParams,
-  validatePagination,
+  validateParams(friendsSchema.uuidParamValidation),
+  validateQuery(friendsSchema.paginationValidation),
   FriendController.getBoth
 );
 

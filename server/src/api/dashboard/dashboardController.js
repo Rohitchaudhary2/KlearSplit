@@ -1,3 +1,4 @@
+import asyncHandler from "../utils/asyncHandler.js";
 import { responseHandler } from "../utils/responseHandler.js";
 import DashboardService from "./dashboardService.js";
 
@@ -9,15 +10,11 @@ class DashboardController {
    * @param {Function} next - The next middleware function, used to pass errors to the error handler.
    * @returns {Promise<void>} - This function sends a response to the client or passes an error to the error handler.
    */
-  static getAllExpensesData = async(req, res, next) => {
-    try {
-      const expenses = await DashboardService.getAllExpensesData(req.user.user_id);
+  static getAllExpensesData = asyncHandler(async(req, res) => {
+    const expenses = await DashboardService.getAllExpensesData(req.user.user_id);
 
-      responseHandler(res, 200, "Successfully fetched Expenses", expenses);
-    } catch (error) {
-      next(error);
-    }
-  };
+    responseHandler(res, 200, "Successfully fetched Expenses", expenses);
+  });
 }
 
 export default DashboardController;

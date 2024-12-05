@@ -135,10 +135,10 @@ export class ViewExpensesComponent implements OnInit {
       exitAnimationDuration: "200ms",
     });
     dialogRef.afterClosed().subscribe((data) => {
-      const result = data.formData;
-      if (!result) {
+      if (!data) {
         return;
       }
+      const result = data.formData;
 
       // Appending the original expense ID to the form data
       result.append("friend_expense_id", expense.friend_expense_id);

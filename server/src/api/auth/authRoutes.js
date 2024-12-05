@@ -4,11 +4,13 @@ import passport from "../middlewares/googleStrategy.js";
 import { login, logout, refreshToken } from "./authController.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import logger from "../utils/logger.js";
+import { validateBody } from "./../middlewares/validationMiddleware.js";
+import { loginSchema } from "./authValidations.js";
 
 const authRouter = Router();
 
 // Route for authenticating the user with email and password
-authRouter.post("/login", login);
+authRouter.post("/login", validateBody(loginSchema), login);
 
 // Route for authenticating user with Google
 authRouter.get(

@@ -131,4 +131,4 @@ try {
   });
 }
 
-export { sequelize, User, Friend, FriendMessage, FriendExpense, Group, GroupMember, GroupMemberBalance, GroupMessage, GroupExpense, GroupExpenseParticipant };
+export { sequelize, User, Friend, FriendMessage, FriendExpense, Group, GroupMember, GroupMemberBalance, GroupMessage, GroupExpense, GroupExpenseParticipant, GroupSettlement };

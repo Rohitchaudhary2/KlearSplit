@@ -33,8 +33,7 @@
     <div class="members-table">
       <!-- Table Header -->
       <div class="table-row table-header">
-        <div class="table-cell">Profile</div>
-        <div class="table-cell">Name</div>
+        <div class="table-cell member-cell">Member</div>
         <div class="table-cell">Role</div>
         <div class="table-cell">Balance with You</div>
         <div class="table-cell">Total Balance in Group</div>
@@ -44,16 +43,19 @@
       @for (member of groupMembers(); track $index) {
         <div
           class="table-row"
-          [ngClass]="{ 'current-user': member.member_id === currentUserId }"
         >
-          <div class="table-cell">
-            <img
-              [src]="member.image_url || '/profile.png'"
-              alt="Profile Picture"
-              class="member-profile-pic"
-            />
+          <div class="table-cell member-cell">
+            <div class="member-details">
+              <img
+                [src]="member.image_url || '/profile.png'"
+                alt="Profile Picture"
+                class="member-profile-pic"
+              />
+              <span class="member-name">
+                {{ member.first_name }} {{ member.last_name || "" }}
+              </span>
+            </div>
           </div>
-          <div class="table-cell">{{ member.first_name }} {{ member.last_name || "" }}</div>
           <div class="table-cell">{{ member.role }}</div>
           <div class="table-cell">{{ member.balance_with_user | currency: "INR" }}</div>
           <div class="table-cell">{{ member.total_balance | currency: "INR" }}</div>

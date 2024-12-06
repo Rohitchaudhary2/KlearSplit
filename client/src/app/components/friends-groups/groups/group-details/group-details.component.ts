@@ -48,7 +48,7 @@ export class GroupDetailsComponent implements OnInit {
             case "CREATOR":
               return { ...member, role: "Creator" };
             case "USER":
-              return { ...member, role: "" };
+              return { ...member, role: "Member" };
             default:
               return member;
           }

@@ -1,12 +1,14 @@
 <div class="pending-request shadow-lg mt-3 mx-3">
-  <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">{{ heading() }}</h6>
+  <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">
+    {{ heading() }}
+  </h6>
   <hr class="m-0 mt-1" />
   <div class="requests">
     <table class="table table-hover">
       <thead>
-        <tr style="display: none;">
-          <th scope="col"></th> 
-          <th scope="col"></th> 
+        <tr style="display: none">
+          <th scope="col"></th>
+          <th scope="col"></th>
         </tr>
       </thead>
       <tbody>
@@ -19,13 +21,8 @@
             tabindex="0"
           >
             <td
-
               class="col-3 col-md-3 col-lg-2"
-              style="
-                flex: 0 0 auto;
-                text-align: center;
-                align-content: center;
-              "
+              style="flex: 0 0 auto; text-align: center; align-content: center"
             >
               <span
                 ><img
@@ -34,15 +31,9 @@
                   alt="Profile"
               /></span>
             </td>
-            <td
-              class="col-9 col-md-9 col-lg-10"
-
-              style="flex: 1 1 0"
-            >
+            <td class="col-9 col-md-9 col-lg-10" style="flex: 1 1 0">
               <span class="d-flex justify-content-between align-items-center">
-                <span
-                  >{{ getItemDetails(item).name }}</span
-                >
+                <span>{{ getItemDetails(item).name }}</span>
 
                 <span class="text-end pe-3 d-flex align-items-center">
                   <span class="text-end pe-3">
@@ -88,8 +79,8 @@
                           $event.stopPropagation()
                         "
                         (keyup.enter)="
-                        onAcceptReject(item, 'REJECTED');
-                        $event.stopPropagation()
+                          onAcceptReject(item, 'REJECTED');
+                          $event.stopPropagation()
                         "
                         >close</mat-icon
                       >
@@ -105,8 +96,8 @@
                           $event.stopPropagation()
                         "
                         (keyup.enter)="
-                        onAcceptReject(item, 'WITHDRAW');
-                        $event.stopPropagation()
+                          onAcceptReject(item, 'WITHDRAW');
+                          $event.stopPropagation()
                         "
                         >close</mat-icon
                       >

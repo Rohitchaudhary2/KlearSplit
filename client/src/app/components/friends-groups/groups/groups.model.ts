@@ -1,14 +1,16 @@
+export interface MembersData {
+    members: [];
+    admins: [];
+    coadmins: [];
+}
+
 export interface CreateGroupData {
     group: {
         group_name: string;
         group_description: string;
         image_url: string;
     };
-    memberData: {
-        members: [];
-        admins: [];
-        coadmins: [];
-    }
+    memberData: MembersData
 }
 
 export interface CreateGroupResponse {

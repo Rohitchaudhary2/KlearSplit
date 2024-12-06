@@ -3,7 +3,8 @@ import { inject, Injectable } from "@angular/core";
 import { map, Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
-import { CreateGroupData, CreateGroupResponse, GroupMessageResponse, GroupResponse, Groups, SearchedUserResponse } from "./groups.model";
+import { CreateGroupData, CreateGroupResponse, GroupMessageResponse, GroupResponse, Groups, MembersData, SearchedUserResponse }
+  from "./groups.model";
 
 @Injectable({
   providedIn: "root"
@@ -38,6 +39,19 @@ export class GroupsService {
   createGroup(groupData: CreateGroupData | FormData): Observable<CreateGroupResponse> {
     return this.httpClient.post<CreateGroupResponse>(`${API_URLS.createGroup}`,
       groupData,
+      { withCredentials: true }
+    );
+  }
+
+  /**
+   * Add members to the group.
+   * @param membersData The member data object which contains the list of members, admins and coadmins depending on roles selected.
+   * @param groupId The ID of the group to add members to.
+   * @returns An observable containing the object with the data of the added members.
+   */
+  addGroupMembers(membersData: MembersData, groupId: string) {
+    return this.httpClient.post(API_URLS.addGroupMembers,
+      { membersData, group_id: groupId },
       { withCredentials: true }
     );
   }
@@ -110,6 +124,13 @@ export class GroupsService {
       { withCredentials: true }
     ).pipe(
       map((messages) => messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)))
+    );
+  }
+
+  leaveGroup(groupId: string) {
+    return this.httpClient.delete(
+      `${API_URLS.leaveGroup}/${groupId}`,
+      { withCredentials: true }
     );
   }
 }

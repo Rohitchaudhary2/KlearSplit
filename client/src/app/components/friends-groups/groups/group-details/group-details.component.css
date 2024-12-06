@@ -57,6 +57,12 @@
   object-fit: cover;
 }
 
+.member-cell {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .member-details {
   flex: 1;
 }

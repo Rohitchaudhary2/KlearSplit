@@ -2,12 +2,14 @@ import { NgClass } from "@angular/common";
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, signal, viewChild } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
+import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
 import { CurrentUser } from "../../shared/types.model";
 import { FriendsListComponent } from "../friends/friends-list/friends-list.component";
 import { MessageComponent } from "../friends/message/message.component";
 import { SocketService } from "../friends/socket.service";
+import { SelectMembersDialogComponent } from "./create-group/select-members-dialog/select-members-dialog.component";
 import { GroupDetailsComponent } from "./group-details/group-details.component";
 import { CombinedGroupExpense, CombinedGroupMessage, GroupData, GroupExpenseData, GroupMessageData } from "./groups.model";
 import { GroupsService } from "./groups.service";
@@ -30,6 +32,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   // Reference to the message container element, accessed via ViewChild
   messageContainer = viewChild<ElementRef>("messageContainer");
   private readonly cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
+  private readonly toastr = inject(ToastrService);
   private readonly authService = inject(AuthService);
   private readonly socketService = inject(SocketService);
   private readonly groupsService = inject(GroupsService);
@@ -240,6 +243,42 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
+   * Add members to the group.
+   */
+  onAddMembers() {
+    const dialogRef = this.dialog.open(SelectMembersDialogComponent, {
+      maxWidth: "50vw",
+      maxHeight: "50vh",
+      height: "70%",
+      width: "100%",
+      data: [ "Add Members" ],
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result) {
+        return;
+      }
+      delete result.membersToDisplay;
+      const membersData = result;
+      // Process and clean up membersData
+      const cleanedMembersData = Object.keys(membersData).reduce((acc, key) => {
+        const typedKey = key as keyof typeof membersData; // Explicitly cast key
+        const value = membersData[typedKey];
+        // Only include non-empty arrays
+        if (Array.isArray(value) && value.length > 0) {
+          acc[typedKey] = value;
+        }
+        return acc;
+      }, {} as typeof membersData);
+      this.groupsService.addGroupMembers(cleanedMembersData, this.selectedGroup()!.group_id).subscribe({
+        next: () => {
+          this.toastr.success("Member Added Successfully", "Success");
+        }
+      });
+    });
+  }
+
+  /**
    * Fetches the messages of a particular group.
    */
   fetchGroupMessages() {
@@ -264,5 +303,15 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       fullName: `${user?.first_name} ${ user?.last_name ?? ""}`.trim(),
       imageUrl: user?.image_url,
     };
+  }
+
+  onLeaveGroup() {
+    this.groupsService.leaveGroup(this.selectedGroup()!.group_id).subscribe({
+      next: () => {
+        this.toastr.success("Group Left Successfully", "Success");
+        this.selectedGroup.set(undefined);
+        
+      }
+    });
   }
 }

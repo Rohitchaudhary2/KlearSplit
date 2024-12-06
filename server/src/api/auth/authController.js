@@ -5,8 +5,8 @@ import asyncHandler from "../utils/asyncHandler.js";
 // Controller for login funnctionality
 export const login = asyncHandler(async(req, res) => {
   const userData = await AuthService.login(req);
-
-  authResponseHandler(res, 200, "User login successful", userData);
+  
+  return authResponseHandler(res, 200, "User login successful", userData);
 });
 
 // Controller for logout functionality

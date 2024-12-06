@@ -24,9 +24,10 @@ class GroupUtils {
   };
 
   static updatedDebtors = (debtors, splitType, totalAmount, payerShare) => {
-    const debtorShareTotal = debtors.reduce((acc, val) => {
-      return acc + val;
+    const debtorShareTotal = debtors.reduce((acc, debtor) => {
+      return acc + debtor.debtor_share;
     }, 0);
+    
     const calculatedTotalExpenseAmount = payerShare + debtorShareTotal;
 
     switch (splitType) {
@@ -35,15 +36,17 @@ class GroupUtils {
         if (calculatedTotalExpenseAmount !== totalAmount) {
           throw new ErrorHandler(400, "Expense shares of partcipants does not add up to total amount.");
         }
-        return debtors;
+        const updatedDebtors = debtors.map((debtor) => ({ "debtor_id": debtor.debtor_id, "debtor_amount": debtor.debtor_share }));
+        
+        return updatedDebtors;
       }
       case "PERCENTAGE": {
         if (calculatedTotalExpenseAmount !== 100) {
           throw new ErrorHandler(400, "Expense shares of partcipants does not add up to 100%.");
         }
-        debtors.forEach((debtor) => Object.assign(debtor, { "debtor_amount": (debtor.debtor_share * totalAmount) / 100 }));
+        const updatedDebtors = debtors.map((debtor) => ({ "debtor_id": debtor.debtor_id, "debtor_amount": (debtor.debtor_share * totalAmount) / 100 }));
 
-        return debtors;
+        return updatedDebtors;
       }
       default: {
         throw new ErrorHandler(400, "Wrong split type.");

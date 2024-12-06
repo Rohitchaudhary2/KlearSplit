@@ -88,22 +88,22 @@ GroupMessage.belongsTo(GroupMember, { "foreignKey": "sender_id" });
 Group.hasMany(GroupMemberBalance, { "foreignKey": "group_id" });
 GroupMember.hasMany(GroupMemberBalance, { "foreignKey": "participant1_id" });
 GroupMember.hasMany(GroupMemberBalance, { "foreignKey": "participant2_id" });
-GroupMemberBalance.belongsTo(Group, { "ForeignKey": "group_id" });
+GroupMemberBalance.belongsTo(Group, { "foreignKey": "group_id" });
 GroupMemberBalance.belongsTo(GroupMember, { "foreignKey": "participant1_id" });
 GroupMemberBalance.belongsTo(GroupMember, { "foreignKey": "participant2_id" });
 
 // Group Settlements
-Group.hasMany(GroupSettlement, { "ForeignKey": "group_id" });
+Group.hasMany(GroupSettlement, { "foreignKey": "group_id" });
 GroupMember.hasMany(GroupSettlement, { "foreignKey": "payer_id" });
 GroupMember.hasMany(GroupSettlement, { "foreignKey": "debtor_id" });
-GroupSettlement.belongsTo(Group, { "ForeignKey": "group_id" });
+GroupSettlement.belongsTo(Group, { "foreignKey": "group_id" });
 GroupSettlement.belongsTo(GroupMember, { "foreignKey": "payer_id" });
 GroupSettlement.belongsTo(GroupMember, { "foreignKey": "debtor_id" });
 
 // Group Expense
-Group.hasMany(GroupExpense, { "ForeignKey": "group_id" });
+Group.hasMany(GroupExpense, { "foreignKey": "group_id" });
 GroupMember.hasMany(GroupExpense, { "foreignKey": "payer_id" });
-GroupExpense.belongsTo(Group, { "ForeignKey": "group_id" });
+GroupExpense.belongsTo(Group, { "foreignKey": "group_id" });
 GroupExpense.belongsTo(GroupMember, { "foreignKey": "payer_id" });
 
 // Group Expense Participants

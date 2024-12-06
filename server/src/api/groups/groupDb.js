@@ -1,5 +1,5 @@
 import { Op, QueryTypes } from "sequelize";
-import { Group, GroupExpense, GroupExpenseParticipant, GroupMember, GroupMessage, GroupSettlement, sequelize } from "../../config/db.connection.js";
+import { Group, GroupExpense, GroupExpenseParticipant, GroupMember, GroupMemberBalance, GroupMessage, GroupSettlement, sequelize } from "../../config/db.connection.js";
 
 class GroupDb {
   static createGroup = async(group) => await Group.create(group);
@@ -27,12 +27,14 @@ class GroupDb {
       `select r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, r.status, r.role, r.has_archived, 
       sum(case when gmb.participant1_id = r.group_membership_id	then gmb.balance_amount when gmb.participant2_id = r.group_membership_id then -gmb.balance_amount else 0 end) as balance_amount 
       from 
-      (select g.*, gm.group_membership_id, gm.status, gm.role, gm.has_archived
+      (select g.*, gm.group_membership_id, gm.status, gm.role, gm.has_archived, gm."deletedAt"
       from groups g 
       join 
-      group_members gm on g.group_id = gm.group_id where gm.member_id = :userId and gm.status!='REJECTED') r 
+      group_members gm on g.group_id = gm.group_id where gm.member_id = :userId and gm.status!='REJECTED' and g."deletedAt" is null and gm."deletedAt" is null) r 
       left join 
       group_member_balance gmb on gmb.group_id = r.group_id 
+      where
+      gmb."deletedAt" is null
       group by r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, r.status, r.role, r.has_archived;`, {
         "replacements": { userId },
         "type": QueryTypes.SELECT
@@ -50,7 +52,7 @@ class GroupDb {
       left join 
       group_member_balance gmb on gm.group_id = gmb.group_id 
       where 
-      gm.group_id = :groupId and gm.group_membership_id != :groupMembershipId 
+      gm.group_id = :groupId and gm.group_membership_id != :groupMembershipId and gm."deletedAt" is null and gmb."deletedAt" is null
       group by gm.group_membership_id) r 
       join 
       users u on r.member_id = u.user_id;`, {
@@ -119,15 +121,17 @@ class GroupDb {
     }
   });
 
-  static addExpense = async(expenseData, transaction) => await GroupExpense.create(expenseData, { transaction });
+  static addExpense = async(expenseData, transaction) => {
+    return await GroupExpense.create(expenseData, { transaction });
+  };
 
   static addExpenseParticipants = async(debtors, transaction) => await GroupExpenseParticipant.bulkCreate(debtors, { transaction });
 
   static addSettlement = async(settlementData, transaction) => await GroupSettlement.create(settlementData, { transaction });
 
   static updateMembersBalance = async(membersBalance, transaction) => {
-    await sequelize.query(`
-      INSERT INTO group_member_balance (group_id, participant1_id, participant2_id, balance_amount)
+    return await sequelize.query(`
+      INSERT INTO group_member_balance
       VALUES 
         ${membersBalance}
       ON CONFLICT (group_id, LEAST(participant1_id, participant2_id), GREATEST(participant1_id, participant2_id))
@@ -141,16 +145,46 @@ class GroupDb {
     });
   };
 
-  static getExpenses = async(groupId, page = 1, pageSize = 20) => {
+  static getMemberBalance = async(groupId, payerId, debtorId) => GroupMemberBalance.findOne({
+    "where": {
+      "group_id": groupId,
+      [ Op.or ]: [
+        {
+          "participant1_id": payerId,
+          "participant2_id": debtorId
+        },
+        {
+          "participant1_id": debtorId,
+          "participant2_id": payerId
+        }
+      ]
+    }
+  });
+
+  static getExpenses = async(groupId, groupMembershipId, page = 1, pageSize = 20) => {
     const offset = (page - 1) * pageSize;
 
-    return await GroupExpense.findAll({
-      "where": {
-        "group_id": groupId
-      },
-      "order": [ [ "createdAt", "DESC" ] ],
-      "limit": pageSize,
-      offset
+    return await sequelize.query(`SELECT
+      ge.*,
+      SUM(ep.debtor_amount) AS total_debt_amount,
+      MAX(CASE WHEN ep.debtor_id = :groupMembershipId THEN ep.debtor_amount ELSE NULL END) AS user_debt
+      FROM
+        group_expenses ge
+      LEFT JOIN
+        expense_participants ep
+        ON ge.group_expense_id = ep.group_expense_id
+      WHERE
+        ge.group_id = :groupId and ge."deletedAt" is null and ep."deletedAt" is null
+      GROUP BY
+        ge.group_expense_id
+      ORDER BY
+        ge.createdAt DESC
+      LIMIT
+        :pageSize
+      OFFSET
+        :offset;`, {
+      "replacements": { groupMembershipId, groupId, pageSize, offset },
+      "type": QueryTypes.SELECT
     });
   };
 

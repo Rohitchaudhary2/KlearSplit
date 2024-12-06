@@ -1,4 +1,5 @@
 import { sequelize } from "../../config/db.connection.js";
+import crypto from "crypto";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import GroupDb from "./groupDb.js";
 import GroupUtils from "./groupUtils.js";
@@ -348,8 +349,10 @@ class GroupService {
     Object.assign(expenseData, { "group_id": groupId });
 
     // Verifying that payer and all debtors are valid group members.
-    const count = GroupDb.countGroupMembers(groupId, [ expenseData.payer_id, ...debtors ]);
-
+    const debtorIds = debtors.map((debtor) => debtor.debtor_id);
+    
+    const count = await GroupDb.countGroupMembers(groupId, [ expenseData.payer_id, ...debtorIds ]);
+    
     if (count !== debtors.length + 1) {
       throw new ErrorHandler(400, "Payer and all debtors must be in group.");
     }
@@ -362,7 +365,9 @@ class GroupService {
       const expense = await GroupDb.addExpense(expenseData, transaction);
 
       // Processing data to update balance or insert in members' balance table
-      const membersBalance = debtors.map((debtor) => `(${groupId}, ${ expenseData.payer_id }, ${debtor.debtor_id}, ${debtor.debtor_amount})`).join(",");
+      const membersBalance = debtors.map((debtor) => `('${crypto.randomUUID()}', '${groupId}', '${ expenseData.payer_id }', '${debtor.debtor_id}', ${debtor.debtor_amount}, '${new Date().toISOString()}', '${new Date().toISOString()}')`).join(",");
+
+      // const membersBalance = debtors.map((debtor) => [ crypto.randomUUID(), groupId, expenseData.payer_id, debtor.debtor_id, debtor.debtor_amount, new Date(), new Date() ]);
 
       debtors.forEach((debtor) => Object.assign(debtor, { "group_expense_id": expense.group_expense_id }));
 
@@ -418,12 +423,20 @@ class GroupService {
 
     try {
       // Adding settlement in the database
+      const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
+
+      if (!membersBalanceInfo || membersBalanceInfo.balance_amount === 0) {
+        throw new ErrorHandler(400, "All settled.");
+      }
+
+      if ((membersBalanceInfo.balance_amount < 0 && membersBalanceInfo.participant1_id !== settlementData.payer_id) || (membersBalanceInfo.balance_amount > 0 && membersBalanceInfo.participant2_id !== settlementData.payer_id)
+      ) {
+        throw new ErrorHandler(422, "Transaction mismatch: payer is not the correct participant for this balance");
+      }
+
       const settlement = GroupDb.addSettlement(settlementData, transaction);
 
-      const membersBalance = `(${groupId}, ${ settlementData.payer_id }, ${settlementData.debtor_id}, ${settlementData.settlement_amount})`;
-
-      // Updating or Insering members balance based on added settlement
-      await GroupDb.updateMembersBalance(membersBalance, transaction);
+      membersBalanceInfo.save({ transaction });
 
       await transaction.commit();
 
@@ -443,8 +456,8 @@ class GroupService {
       throw new ErrorHandler(404, "Group Not Found");
     }
 
-    await this.isUserMemberOfGroup(groupId, userId);
-    const expenses = await GroupDb.getExpenses(groupId, page, pageSize);
+    const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, page, pageSize);
 
     const settlements = await GroupDb.getSettlements(groupId, page, pageSize);
 
@@ -456,6 +469,7 @@ class GroupService {
     // Return the paginated results
     return expensesAndSettlements.slice(0, 20);
   };
+
 }
 
 export default GroupService;

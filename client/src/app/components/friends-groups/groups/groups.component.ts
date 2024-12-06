@@ -1,5 +1,6 @@
 import { NgClass } from "@angular/common";
-import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, signal, viewChild } from "@angular/core";
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, signal, ViewChild, viewChild }
+  from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ToastrService } from "ngx-toastr";
@@ -31,6 +32,8 @@ import { GroupsListComponent } from "./groups-list/groups-list.component";
 export class GroupsComponent implements AfterViewInit, OnDestroy {
   // Reference to the message container element, accessed via ViewChild
   messageContainer = viewChild<ElementRef>("messageContainer");
+  @ViewChild(GroupsListComponent) groupsListComponent!: GroupsListComponent;
+  // groupsListComponent = viewChild<GroupsListComponent>("groupsListComponent");
   private readonly cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
   private readonly toastr = inject(ToastrService);
   private readonly authService = inject(AuthService);
@@ -309,8 +312,9 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     this.groupsService.leaveGroup(this.selectedGroup()!.group_id).subscribe({
       next: () => {
         this.toastr.success("Group Left Successfully", "Success");
+        const groupId = this.selectedGroup()!.group_id;
+        this.groupsListComponent.removeGroup(groupId);
         this.selectedGroup.set(undefined);
-        
       }
     });
   }

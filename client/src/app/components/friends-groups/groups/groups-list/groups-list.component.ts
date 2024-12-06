@@ -154,4 +154,11 @@ export class GroupsListComponent implements OnInit {
     this.currentGroup.set(group);
     this.selectedGroup.emit(group);
   }
+
+  removeGroup(groupId: string): void {
+    this.groups.set(this.groups().filter((group) => group.group_id !== groupId));
+    this.groupList.set(this.groups()); // Update filtered list for UI
+    this.groupInvites.set(this.groupInvites().filter((group) => group.group_id !== groupId));
+    this.invites.set(this.groupInvites()); // Update filtered list for UI
+  }
 }

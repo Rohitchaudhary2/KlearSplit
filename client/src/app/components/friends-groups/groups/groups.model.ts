@@ -49,26 +49,6 @@ export interface MemberData {
     image_url: string;
 }
 
-export interface GroupData {
-    group_id: string;
-    group_name: string;
-    group_description: string;
-    image_url: string;
-    creator_id: string;
-    balance_amount: string;
-    status: string;
-    role: string;
-}
-
-export interface Groups {
-    success: string;
-    message: string;
-    data: {
-        invitedGroups: GroupData[];
-        acceptedGroups: GroupData[];
-    };
-}
-
 export interface GroupMemberData {
     group_membership_id: string;
     group_id: string;
@@ -85,6 +65,27 @@ export interface GroupMemberData {
     createdAt: string;
     updatedAt: string;
     deletedAt: string | null;
+}
+
+export interface GroupData {
+    group_id: string;
+    group_name: string;
+    group_description: string;
+    image_url: string;
+    creator_id: string;
+    balance_amount: string;
+    status: string;
+    role: string;
+    members: GroupMemberData[];
+}
+
+export interface Groups {
+    success: string;
+    message: string;
+    data: {
+        invitedGroups: GroupData[];
+        acceptedGroups: GroupData[];
+    };
 }
 
 export interface GroupResponse {

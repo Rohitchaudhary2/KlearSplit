@@ -14,7 +14,7 @@ const socketHandler = (io) => {
     });
 
     // Listen for new chat message
-    socket.on("sendMessage", async(messageData) => {
+    socket.on("sendConversationMessage", async(messageData) => {
       try {
         const { "conversation_id": conversationId, "sender_id": senderId, message } = messageData;
         // Save message to DB using FriendService
@@ -26,6 +26,24 @@ const socketHandler = (io) => {
 
         // Emit the message to the users in the room
         io.to(conversationId).emit("newMessage", savedMessage);
+      } catch (error) {
+        logger.log({
+          "level": "error",
+          "message": JSON.stringify({ "statusCode": 500, "message": error.message })
+        });
+
+        // Notify the client about the error while sending the message
+        socket.emit("messageError", {
+          "message": "Failed to send the message. Please try again."
+        });
+      }
+    });
+    
+    // Listen for new group chat message
+    socket.on("sendGroupMessage", async(messageData) => {
+      try {
+        // Emit the message to the users in the room
+        io.to(messageData.group_id).emit("newMessage", messageData);
       } catch (error) {
         logger.log({
           "level": "error",

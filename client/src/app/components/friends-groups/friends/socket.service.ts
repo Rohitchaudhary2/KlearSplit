@@ -33,7 +33,7 @@ export class SocketService {
    * @param messageData - The message data object containing conversation ID, sender ID, and message content
    */
   sendConversationMessage(messageData: Partial<MessageData>): void {
-    this.socket.emit("sendMessage", messageData);
+    this.socket.emit("sendConversationMessage", messageData);
   }
 
   /**
@@ -43,7 +43,7 @@ export class SocketService {
    * @param messageData - The message data object containing group ID, sender ID, and message content
    */
   sendGroupMessage(messageData: Partial<GroupMessageData>): void {
-    this.socket.emit("sendMessage", messageData);
+    this.socket.emit("sendGroupMessage", messageData);
   }
 
   /**

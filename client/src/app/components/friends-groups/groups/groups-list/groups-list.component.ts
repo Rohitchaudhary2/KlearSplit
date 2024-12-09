@@ -6,6 +6,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { ToastrService } from "ngx-toastr";
 
+import { ListDisplayComponent } from "../../shared/pending-requests/list-display.component";
 import { SearchBarComponent } from "../../shared/search-bar/search-bar.component";
 import { CreateGroupComponent } from "../create-group/create-group.component";
 import { GroupData } from "../groups.model";
@@ -21,6 +22,7 @@ import { GroupsService } from "../groups.service";
     MatTooltipModule,
     NgClass,
     SearchBarComponent,
+    ListDisplayComponent
   ],
   templateUrl: "./groups-list.component.html",
   styleUrls: [ "./groups-list.component.css", "../../friends/friends.component.css" ]
@@ -116,7 +118,8 @@ export class GroupsListComponent implements OnInit {
    * @param groupId The ID of the group associated with the invite.
    * @param status The status of the invite, either "ACCEPTED" or "REJECTED".
    */
-  onAcceptReject(groupId: string, status: string): void {
+  onAcceptReject(data: {status: string, id: string}): void {
+    const { id: groupId, status } = data;
     this.groupService.acceptRejectInvite(groupId, status).subscribe({
       next: () => {
         this.toastr.success(`Invite ${status} Successfully`, "Success");
@@ -125,7 +128,7 @@ export class GroupsListComponent implements OnInit {
           this.groups().unshift({
             ...this.groupInvites().find(
               (invite) => invite.group_id === groupId
-            )!
+            )!, status: "ACCEPTED"
           });
         }
         // Remove the processed invite from the group invite list
@@ -150,5 +153,12 @@ export class GroupsListComponent implements OnInit {
   onSelectGroup(group: GroupData | undefined): void {
     this.currentGroup.set(group);
     this.selectedGroup.emit(group);
+  }
+
+  removeGroup(groupId: string): void {
+    this.groups.set(this.groups().filter((group) => group.group_id !== groupId));
+    this.groupList.set(this.groups()); // Update filtered list for UI
+    this.groupInvites.set(this.groupInvites().filter((group) => group.group_id !== groupId));
+    this.invites.set(this.groupInvites()); // Update filtered list for UI
   }
 }

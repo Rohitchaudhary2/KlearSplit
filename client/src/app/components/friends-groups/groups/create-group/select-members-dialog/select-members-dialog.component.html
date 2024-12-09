@@ -2,62 +2,82 @@
   Select Members
 </h1>
 <form [formGroup]="form">
-<mat-form-field appearance="outline" class="w-100 px-4 mb-2">
-  <mat-label>Search Users</mat-label>
-  <input
-    matInput
-    formControlName="searchInputControl"
-    placeholder="Search"
-    (ngModelChange)="onSearchInputChange($event)"
-    style="
-      background-color: transparent;
-      outline: none !important;
-      border-color: transparent !important;
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
-    "
-  />
-  @if (getFormErrors("groupName")) {
-    <mat-error>{{ getFormErrors("groupName") }}</mat-error>
-  }
-</mat-form-field>
-
-@if (users().length > 0) {
-  <ul>
-    @for (user of users(); track $index) {
-      <li>
-        {{ user.first_name }} {{ user.last_name || "" }} ({{ user.email }})
-        <button mat-icon-button color="primary" (click)="selectUser(user)">
-          <mat-icon>add</mat-icon>
-        </button>
-      </li>
+  <mat-form-field appearance="outline" class="w-100 px-4 mb-2">
+    <mat-label>Search Users</mat-label>
+    <input
+      matInput
+      #input
+      formControlName="searchInputControl"
+      placeholder="Search"
+      (ngModelChange)="onSearchInputChange($event)"
+      style="
+        background-color: transparent;
+        outline: none !important;
+        border-color: transparent !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+      "
+    />
+    @if (getFormErrors("groupName")) {
+      <mat-error>{{ getFormErrors("groupName") }}</mat-error>
     }
-  </ul>
-}
-</form>
-<h3 class="text-center py-2">Selected Members</h3>
-<ul>
-  @for (user of selectedMembers(); track $index) {
-    <li>
-      {{ user.first_name }} {{ user.last_name || "" }} ({{ user.email }})
-      <mat-form-field>
-        <mat-label>Role</mat-label>
-        <mat-select
-          appearance="outline"
-          [(ngModel)]="user.role"
-          (ngModelChange)="updateRole(user, $event)"
-        >
-          <mat-option value="member">Member</mat-option>
-          <mat-option value="admin">Admin</mat-option>
-          <mat-option value="coadmin">Co-admin</mat-option>
-        </mat-select>
-      </mat-form-field>
-      <button mat-icon-button color="warn" (click)="removeUser(user)">
-        <mat-icon>remove</mat-icon>
-      </button>
-    </li>
+  </mat-form-field>
+
+  @if (users().length > 0) {
+    <ul>
+      @for (user of users(); track $index) {
+        <!-- Change the 'Add' button to make the list item clickable to select the user -->
+        <li (click)="selectUser(user)" style="cursor: pointer">
+          {{ user.first_name }} {{ user.last_name || "" }} ({{ user.email }})
+        </li>
+      }
+    </ul>
   }
-</ul>
+</form>
+
+<h3 class="text-center py-2">Selected Members</h3>
+
+<div>
+  @for (user of selectedMembers(); track $index) {
+    <div
+      class="d-flex flex-column flex-md-row px-2 justify-content-between mb-3"
+    >
+      <!-- User Information Section -->
+      <div class="flex-column mb-2 mb-md-0" style="width: 100%; max-width: 60%">
+        <div>{{ user.first_name }} {{ user.last_name || "" }}</div>
+        <div>({{ user.email }})</div>
+      </div>
+
+      <!-- Role Selection and Remove Button Section -->
+      <div
+        class="d-flex flex-row justify-content-between align-items-top"
+        style="width: 100%; max-width: 40%"
+      >
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Role</mat-label>
+          <mat-select
+            [(ngModel)]="user.role"
+            (ngModelChange)="updateRole(user, $event)"
+          >
+            <mat-option value="member">Member</mat-option>
+            <mat-option value="admin">Admin</mat-option>
+            <mat-option value="coadmin">Co-admin</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <button
+          mat-icon-button
+          color="warn"
+          (click)="removeUser(user)"
+          matTooltip="Remove Member"
+          matTooltipPosition="above"
+          class="mx-2"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+  }
+</div>
 
 <div mat-dialog-actions class="d-flex justify-content-end gap-2 pb-2 px-3">
   <button mat-button color="warn" (click)="onCancel()">Cancel</button>

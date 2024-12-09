@@ -18,7 +18,9 @@ const tsConfig = {
     sourceType: "module",
     globals: {
       window: "readonly",
+      document: "readonly",
       setInterval: "readonly",
+      setTimeout: "readonly",
       clearInterval: "readonly",
       console: "readonly",
       localStorage: "true"

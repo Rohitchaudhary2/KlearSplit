@@ -86,6 +86,18 @@
                   Group Details
                 </button>
               </li>
+              @if (selectedGroup()?.role !== "USER") {
+                <li>
+                  <button class="dropdown-item" (click)="onAddMembers()">
+                    Add Members
+                  </button>
+                </li>
+              }
+              <li>
+                <button class="dropdown-item" (click)="onLeaveGroup()">
+                  Leave Group
+                </button>
+              </li>
             </ul>
           </div>
         </div>
@@ -98,12 +110,12 @@
           [ngClass]="loading ? 'loading' : ''"
           style="max-height: 57vh; overflow-y: auto"
         >
-          <!-- <div
+          <div
             class="message-body col-md-12 col-lg-12 col-xl-12"
             style="height: 100%"
           >
             <ul class="message-body list-unstyled text-white m-0">
-              @if (currentView() === "Messages") {
+              @if (currentView() === "Messages" || currentView() === "All") {
                 @for (message of messages(); track message.group_message_id) {
                   <app-message
                     [message]="{
@@ -111,15 +123,15 @@
                       message: message.message,
                     }"
                     [currentUserId]="user?.user_id"
-                    [imageUrl]="selectedGroup()?.friend?.image_url"
-                    [name]="selectedGroup()?.friend?.first_name"
+                    [imageUrl]="'/profile.png'"
+                    [name]="'dummy'"
                     [currentUserImageUrl]="user?.image_url"
                   >
                   </app-message>
                 }
               }
             </ul>
-          </div> -->
+          </div>
         </div>
 
         <hr class="m-0" />
@@ -134,6 +146,7 @@
               Add Expense
             </button>
           </div>
+          
           <div class="input-field ms-3">
             <input
               class="message-input"
@@ -148,8 +161,8 @@
             />
           </div>
           @if (charCountExceeded) {
-            <div class="char-count error">
-              Max Characters Limit Reached {{ charCount }} / 512
+            <div class="char-count error mx-2">
+              {{ charCount }} / 512
             </div>
           }
           <button (click)="sendMessage()" class="send-message m-3">

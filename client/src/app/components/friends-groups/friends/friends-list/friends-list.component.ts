@@ -15,6 +15,7 @@ import { MatTooltipModule } from "@angular/material/tooltip";
 import { ToastrService } from "ngx-toastr";
 
 import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
+import { ListDisplayComponent } from "../../shared/pending-requests/list-display.component";
 import { SearchBarComponent } from "../../shared/search-bar/search-bar.component";
 import { AddFriendComponent } from "../add-friend/add-friend.component";
 import { FriendData } from "../friend.model";
@@ -29,7 +30,8 @@ import { FriendsService } from "../friends.service";
     MatIconModule,
     MatTooltipModule,
     NgClass,
-    SearchBarComponent
+    SearchBarComponent,
+    ListDisplayComponent
   ],
   templateUrl: "./friends-list.component.html",
   styleUrl: "../friends.component.css",
@@ -149,7 +151,8 @@ export class FriendsListComponent implements OnInit {
    * @param {string} status - The status of the request, either "ACCEPTED" or "REJECTED".
    * @returns {void} This method doesn't return any value but updates the `requests` and `friendList` signals.
    */
-  onAcceptReject(conversationId: string, status: string): void {
+  onAcceptReject(data: {status: string, id: string}): void {
+    const { id: conversationId, status } = data;
     this.friendsService.acceptRejectRequest(conversationId, status).subscribe({
       next: () => {
         this.toastr.success(`Request ${status} Successfully`, "Success", {
@@ -160,7 +163,7 @@ export class FriendsListComponent implements OnInit {
           this.friends().unshift({
             ...this.friendRequests().find(
               (request) => request.conversation_id === conversationId
-            )!
+            )!, status: "ACCEPTED"
           });
         }
         // Remove the processed request from the pending requests list
@@ -183,7 +186,8 @@ export class FriendsListComponent implements OnInit {
    * @param {string} conversationId - The ID of the conversation associated with the friend request to withdraw.
    * @returns {void} This method doesn't return any value but updates the UI and triggers side effects.
    */
-  onWithdrawRequest(conversationId: string): void {
+  onWithdrawRequest(data: {id: string, status: string}): void {
+    const { id: conversationId } = data;
     // Opens a confirmation dialog asking the user if they are sure they want to withdraw the request
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data: "Are you sure you want to withdraw this request?",

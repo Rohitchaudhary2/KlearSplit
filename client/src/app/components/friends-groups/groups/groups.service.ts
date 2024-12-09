@@ -1,9 +1,10 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Observable } from "rxjs";
+import { map, Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
-import { CreateGroupData, CreateGroupResponse, GroupResponse, Groups, SearchedUserResponse } from "./groups.model";
+import { CreateGroupData, CreateGroupResponse, GroupMessageResponse, GroupResponse, Groups, MembersData, SearchedUserResponse }
+  from "./groups.model";
 
 @Injectable({
   providedIn: "root"
@@ -43,6 +44,19 @@ export class GroupsService {
   }
 
   /**
+   * Add members to the group.
+   * @param membersData The member data object which contains the list of members, admins and coadmins depending on roles selected.
+   * @param groupId The ID of the group to add members to.
+   * @returns An observable containing the object with the data of the added members.
+   */
+  addGroupMembers(membersData: MembersData, groupId: string) {
+    return this.httpClient.post(API_URLS.addGroupMembers,
+      { membersData, group_id: groupId },
+      { withCredentials: true }
+    );
+  }
+
+  /**
    * Fetch the list of groups.
    *
    * @returns An observable with the list of groups.
@@ -52,6 +66,7 @@ export class GroupsService {
       withCredentials: true
     });
   }
+
   /**
    * Update group member details.
    *
@@ -67,9 +82,54 @@ export class GroupsService {
     );
   }
 
+  /**
+   * This method fetches the complete details of a particular group.
+   * It fetches the group details and group members.
+   *
+   * @param groupId The ID of the group to fetch details.
+   * @returns An observable with the list of objects for the details of each group member.
+   */
   fetchGroupMembers(groupId: string) {
     return this.httpClient.get<GroupResponse>(
       `${API_URLS.getGroup}/${groupId}`,
+      { withCredentials: true }
+    );
+  }
+
+  /**
+   * This method is used to save the message sent to the group.
+   *
+   *
+   * @param message The message that needs to be sent.
+   * @param groupId The ID of the group to which the message needs to be sent.
+   * @returns The observable indicating the success of the message sending.
+   */
+  saveGroupMessages(message: string, groupId: string) {
+    return this.httpClient.post(
+      `${API_URLS.saveGroupMessages}/${groupId}`,
+      { message },
+      { withCredentials: true }
+    );
+  }
+
+  /**
+   * This method is used to fetch all the messages of a group.
+   *
+   * @param groupId The ID of the group from where the message needs to be fetched.
+   * @returns An observable with the list of messages.
+   */
+  fetchGroupMessages(groupId: string) {
+    return this.httpClient.get<GroupMessageResponse>(
+      `${API_URLS.getGroupMessages}/${groupId}`,
+      { withCredentials: true }
+    ).pipe(
+      map((messages) => messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)))
+    );
+  }
+
+  leaveGroup(groupId: string) {
+    return this.httpClient.delete(
+      `${API_URLS.leaveGroup}/${groupId}`,
       { withCredentials: true }
     );
   }

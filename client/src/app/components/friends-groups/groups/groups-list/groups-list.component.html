@@ -9,7 +9,7 @@
   />
 
   <!-- pending group invites -->
-  <div class="pending-request shadow-lg mt-3 mx-3">
+  <!-- <div class="pending-request shadow-lg mt-3 mx-3">
     <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">
       Group Invites
     </h6>
@@ -108,7 +108,14 @@
         </tbody>
       </table>
     </div>
-  </div>
+  </div> -->
+
+  <app-list-display
+    heading="Group Invites"
+    [items]="invites()"
+    (acceptReject)="onAcceptReject($event)"
+    (selectedGroup)="onSelectGroup($event)"
+  ></app-list-display>
 
   <!-- Groups List -->
   <div class="friend-list d-flex flex-column shadow-lg mt-3 mx-3 flex-grow-1">

@@ -1,5 +1,5 @@
 .group-details-container {
-  max-width: 600px;
+  max-width: 100%;
   padding: 20px;
   box-sizing: border-box;
 }
@@ -57,6 +57,12 @@
   object-fit: cover;
 }
 
+.member-cell {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .member-details {
   flex: 1;
 }
@@ -75,3 +81,47 @@
   background-color: #f9f9f9;
   border-left: 5px solid #2196f3;
 }
+
+.members-table {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.table-row {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #ddd;
+  padding: 0.5rem 0;
+}
+
+.table-header {
+  font-weight: bold;
+  background-color: #f7f7f7;
+}
+
+.table-cell {
+  flex: 1;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.member-profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .table-row {
+    flex-direction: column;
+  }
+
+  .table-cell {
+    width: 100%;
+    padding: 0.25rem 0;
+  }
+}
+

@@ -54,6 +54,12 @@ export class CreateGroupComponent implements OnInit {
     admins: string[];
     coadmins: string[];
   } = { members: [], admins: [], coadmins: [] };
+  
+  membersList: {
+    name: string,
+    email: string,
+    role: string
+  }[] = [];
 
   ngOnInit(): void {
     this.dialogRef.updateSize("30%");
@@ -99,9 +105,17 @@ export class CreateGroupComponent implements OnInit {
     }
   }
 
+  /**
+   * Removes the selected image.
+   */
   removeImage() {
     this.form.controls.image.setValue(null); // Clear the image from the form control
     this.imageName.set("Upload group profile"); // Reset the label to the default value
+
+    const fileInput = document.getElementById("profile-image") as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = ""; // Reset the file input to allow selecting the same file again
+    }
   }
 
   /**
@@ -125,6 +139,8 @@ export class CreateGroupComponent implements OnInit {
       if (!result) {
         return;
       }
+      this.membersList = result.membersToDisplay;
+      delete result.membersToDisplay;
       this.membersData = result;
     });
   }

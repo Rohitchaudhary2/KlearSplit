@@ -1,0 +1,119 @@
+<div class="pending-request shadow-lg mt-3 mx-3">
+  <h6 class="m-0" style="padding-left: 1.5rem; padding-top: 0.2rem">
+    {{ heading() }}
+  </h6>
+  <hr class="m-0 mt-1" />
+  <div class="requests">
+    <table class="table table-hover">
+      <thead>
+        <tr style="display: none">
+          <th scope="col"></th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track $index) {
+          <tr
+            (click)="onSelect(item)"
+            (keyup.enter)="onSelect(item)"
+            class="row equal-height-row d-flex justify-content-between m-0"
+            style="cursor: pointer"
+            tabindex="0"
+          >
+            <td
+              class="col-3 col-md-3 col-lg-2"
+              style="flex: 0 0 auto; text-align: center; align-content: center"
+            >
+              <span
+                ><img
+                  class="profile-image"
+                  [src]="getItemDetails(item).profile"
+                  alt="Profile"
+              /></span>
+            </td>
+            <td class="col-9 col-md-9 col-lg-10" style="flex: 1 1 0">
+              <span class="d-flex justify-content-between align-items-center">
+                <span>{{ getItemDetails(item).name }}</span>
+
+                <span class="text-end pe-3 d-flex align-items-center">
+                  <span class="text-end pe-3">
+                    @if (getBalanceAsNumber(item.balance_amount) < 0) {
+                      <span class="text-danger">{{
+                        -getBalanceAsNumber(item.balance_amount)
+                          | currency: "INR"
+                      }}</span>
+                    } @else {
+                      <span class="text-success">{{
+                        getBalanceAsNumber(item.balance_amount)
+                          | currency: "INR"
+                      }}</span>
+                    }
+                  </span>
+
+                  @if (getRequestStatus(item)) {
+                    <span
+                      class="d-flex align-items-center border bg-success text-white"
+                      matTooltip="Accept Request"
+                      matTooltipPosition="above"
+                    >
+                      <mat-icon
+                        (click)="
+                          onAcceptReject(item, 'ACCEPTED');
+                          $event.stopPropagation()
+                        "
+                        (keyup.enter)="
+                          onAcceptReject(item, 'ACCEPTED');
+                          $event.stopPropagation()
+                        "
+                        >check</mat-icon
+                      >
+                    </span>
+                    <span
+                      class="ms-2 d-flex align-items-center border bg-danger text-white"
+                      matTooltip="Reject Request"
+                      matTooltipPosition="above"
+                    >
+                      <mat-icon
+                        (click)="
+                          onAcceptReject(item, 'REJECTED');
+                          $event.stopPropagation()
+                        "
+                        (keyup.enter)="
+                          onAcceptReject(item, 'REJECTED');
+                          $event.stopPropagation()
+                        "
+                        >close</mat-icon
+                      >
+                    </span>
+                  } @else {
+                    <span
+                      class="d-flex align-items-center border bg-danger text-white"
+                      matTooltip="Withdraw Request"
+                      matTooltipPosition="above"
+                      ><mat-icon
+                        (click)="
+                          onAcceptReject(item, 'WITHDRAW');
+                          $event.stopPropagation()
+                        "
+                        (keyup.enter)="
+                          onAcceptReject(item, 'WITHDRAW');
+                          $event.stopPropagation()
+                        "
+                        >close</mat-icon
+                      >
+                    </span>
+                  }
+                </span>
+              </span>
+              @if (isFriendData(item)) {
+                <span>{{ item.friend.email }}</span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <div class="pt-3 text-center">No {{ heading() }}</div>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -45,7 +45,8 @@ export const groupIdParamValidation = Joi.object({
 
 export const updateGroupMemberSchema = Joi.object({
   "status": Joi.string().valid("PENDING", "ACCEPTED", "REJECTED").optional(),
-  "has_archived": Joi.boolean().optional()
+  "has_archived": Joi.boolean().optional(),
+  "has_blocked": Joi.boolean().optional()
 });
 
 export const saveMessageSchema = Joi.object({

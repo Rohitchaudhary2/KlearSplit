@@ -5,7 +5,7 @@ class GroupDb {
   static createGroup = async(group) => await Group.create(group);
 
   static addMembers = async(members, transaction) => await GroupMember.bulkCreate(members, {
-    "updateOnDuplicate": [ "status", "inviter_id", "role" ],
+    "updateOnDuplicate": [ "status", "inviter_id", "role", "deletedAt" ],
     transaction,
     "returning": true
   });
@@ -70,14 +70,34 @@ class GroupDb {
     }
   });
 
-  static countGroupMembers = async(groupId, members) => await GroupMember.count({
+  static getMemberBlockedGroup = async(groupId, members) => await GroupMember.findAll({
     "where": {
       "group_id": groupId,
-      "group_membership_id": {
+      "member_id": {
         [ Op.in ]: members
-      }
-    }
+      },
+      "has_blocked": true
+    },
+    "attributes": [ "member_id" ],
+    "paranoid": false
   });
+
+  static countGroupMembers = async(groupId, members = null) => {
+    const whereCondition = {
+      "group_id": groupId
+    };
+  
+    // Apply the group_membership_id condition only if members is not empty
+    if (members && members.length > 0) {
+      Object.assign(whereCondition, { "group_membership_id": {
+        [ Op.in ]: members
+      } });
+    }
+    
+    return await GroupMember.count({
+      "where": whereCondition
+    });
+  };
 
   static updateGroup = async(groupId, groupData) => await Group.update(groupData, {
     "where": {

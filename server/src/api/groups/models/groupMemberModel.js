@@ -36,6 +36,11 @@ export default (sequelize) => {
         "type": DataTypes.BOOLEAN,
         "allowNull": false,
         "defaultValue": false
+      },
+      "has_blocked": {
+        "type": DataTypes.BOOLEAN,
+        "allowNull": false,
+        "defaultValue": false
       }
     },
     {

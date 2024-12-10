@@ -47,6 +47,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   user_name = this.getFullNameAndImage(this.user).fullName;
 
   selectedGroup = signal<GroupData | undefined>(undefined);
+  groupMembers = signal<GroupMemberData[] | []>([]);
 
   groupMembers = signal<GroupMemberData[]>([]);
 
@@ -430,6 +431,17 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       }
     });
     return filteredMembers;
+  }
+
+  onBlockGroup() {
+    this.groupsService.blockGroup(this.selectedGroup()!.group_id, !this.currentMember()!.has_blocked).subscribe({
+      next: () => {
+        this.toastr.success("Group Blocked Successfully", "Success");
+        const groupId = this.selectedGroup()!.group_id;
+        this.groupsListComponent.removeGroup(groupId);
+        this.selectedGroup.set(undefined);
+      }
+    });
   }
 
   onLeaveGroup() {

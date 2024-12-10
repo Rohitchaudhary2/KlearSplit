@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 import GroupDb from "./groupDb.js";
 import GroupUtils from "./groupUtils.js";
+import UserDb from "../users/userDb.js";
 
 class GroupService {
   /**
@@ -39,6 +40,12 @@ class GroupService {
    */
   static createGroup = async(groupData, userId) => {
     Object.assign(groupData.group, { "creator_id": userId });
+
+    const isCreatorInMembors = groupData.membersData.members.some((member) => member === userId);
+
+    if (isCreatorInMembors) {
+      throw new ErrorHandler(400, "Creator can't be in members list.");
+    }
     
     // Start a new transaction to ensure atomicity
     const transaction = await sequelize.transaction();
@@ -60,6 +67,10 @@ class GroupService {
 
       // Add the group creator as a member of the group
       const groupCreator = await GroupDb.addMembers(groupCreatorData, transaction);
+
+      if (groupData.membersData.members.length > 99) {
+        throw new ErrorHandler(422, "Only 100 members are allowed.");
+      }
       
       // Assign roles to other members and add them to the group
       await this.assignRolesAndAddMembers(groupData.membersData, groupCreator[ 0 ].dataValues.group_membership_id, group.group_id, transaction);
@@ -101,10 +112,34 @@ class GroupService {
     if (!inviter || inviter.role === "USER") {
       throw new ErrorHandler(403, "You are not allowed to invite members to this group");
     }
+    
+    let membersBlockedGroup = await GroupDb.getMemberBlockedGroup(groupId, membersData.members);
+
+    membersBlockedGroup = membersBlockedGroup.map((member) => member.member_id);
+    let notAddedMembers = [];
+
+    if (membersBlockedGroup) {
+      membersData.members = membersData.members.filter((member) => {
+        const isBlocked = membersBlockedGroup.includes(member);
+
+        if (isBlocked) {
+          notAddedMembers.push(member);
+        }
+        return !isBlocked;
+      });
+    }
+
+    notAddedMembers = await UserDb.getUsers(notAddedMembers);
+
+    const groupMembersCount = await GroupDb.countGroupMembers(groupId);
+    
+    if (groupMembersCount + membersData.members.length > 99) {
+      throw new ErrorHandler(422, "Only 100 members are allowed.");
+    }
 
     const addedMembers = await this.assignRolesAndAddMembers(membersData, inviter.group_membership_id, groupId);
 
-    return addedMembers;
+    return { addedMembers, notAddedMembers };
   };
 
   /**
@@ -229,6 +264,10 @@ class GroupService {
 
     if (groupMemberData.status && userMembershipInfo.status !== "PENDING") {
       throw new ErrorHandler(400, "Status can't be changed once accepted or rejected the group invitation.");
+    }
+
+    if ("has_blocked" in groupMemberData) {
+      groupMemberData.deletedAt = groupMemberData.has_blocked ? new Date().toISOString() : null;
     }
 
     const updatedMember = GroupDb.updateGroupMember(userMembershipInfo.group_membership_id, groupMemberData);

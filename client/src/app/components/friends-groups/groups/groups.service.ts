@@ -3,16 +3,25 @@ import { inject, Injectable } from "@angular/core";
 import { map, Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
-import { CreateGroupData, CreateGroupResponse, GroupMessageResponse, GroupResponse, Groups, MembersData, SearchedUserResponse }
-  from "./groups.model";
+import {
+  CreateGroupData,
+  CreateGroupResponse,
+  GroupExpenseInput,
+  GroupExpenseResponse,
+  GroupMessageResponse,
+  GroupResponse,
+  Groups,
+  MembersData,
+  SearchedUserResponse,
+} from "./groups.model";
 
 @Injectable({
-  providedIn: "root"
+  providedIn: "root",
 })
 export class GroupsService {
   // Injecting the HttpClient to make HTTP requests
   private readonly httpClient = inject(HttpClient);
-  
+
   /**
    * Searching users based on the letters typed.
    *
@@ -36,10 +45,13 @@ export class GroupsService {
    * @param groupData The data to create a new group.
    * @returns An observable indicating the success of the request.
    */
-  createGroup(groupData: CreateGroupData | FormData): Observable<CreateGroupResponse> {
-    return this.httpClient.post<CreateGroupResponse>(`${API_URLS.createGroup}`,
+  createGroup(
+    groupData: CreateGroupData | FormData,
+  ): Observable<CreateGroupResponse> {
+    return this.httpClient.post<CreateGroupResponse>(
+      `${API_URLS.createGroup}`,
       groupData,
-      { withCredentials: true }
+      { withCredentials: true },
     );
   }
 
@@ -50,9 +62,10 @@ export class GroupsService {
    * @returns An observable containing the object with the data of the added members.
    */
   addGroupMembers(membersData: MembersData, groupId: string) {
-    return this.httpClient.post(API_URLS.addGroupMembers,
+    return this.httpClient.post<GroupResponse>(
+      API_URLS.addGroupMembers,
       { membersData, group_id: groupId },
-      { withCredentials: true }
+      { withCredentials: true },
     );
   }
 
@@ -63,7 +76,7 @@ export class GroupsService {
    */
   fetchGroups() {
     return this.httpClient.get<Groups>(API_URLS.getGroups, {
-      withCredentials: true
+      withCredentials: true,
     });
   }
 
@@ -78,7 +91,7 @@ export class GroupsService {
     return this.httpClient.patch(
       `${API_URLS.updateGroupMember}/${groupId}`,
       { status },
-      { withCredentials: true }
+      { withCredentials: true },
     );
   }
 
@@ -92,7 +105,7 @@ export class GroupsService {
   fetchGroupMembers(groupId: string) {
     return this.httpClient.get<GroupResponse>(
       `${API_URLS.getGroup}/${groupId}`,
-      { withCredentials: true }
+      { withCredentials: true },
     );
   }
 
@@ -108,7 +121,7 @@ export class GroupsService {
     return this.httpClient.post(
       `${API_URLS.saveGroupMessages}/${groupId}`,
       { message },
-      { withCredentials: true }
+      { withCredentials: true },
     );
   }
 
@@ -119,12 +132,15 @@ export class GroupsService {
    * @returns An observable with the list of messages.
    */
   fetchGroupMessages(groupId: string) {
-    return this.httpClient.get<GroupMessageResponse>(
-      `${API_URLS.getGroupMessages}/${groupId}`,
-      { withCredentials: true }
-    ).pipe(
-      map((messages) => messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)))
-    );
+    return this.httpClient
+      .get<GroupMessageResponse>(`${API_URLS.getGroupMessages}/${groupId}`, {
+        withCredentials: true,
+      })
+      .pipe(
+        map((messages) =>
+          messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)),
+        ),
+      );
   }
 
   blockGroup(groupId: string, blockStatus: boolean) {
@@ -136,9 +152,23 @@ export class GroupsService {
   }
 
   leaveGroup(groupId: string) {
-    return this.httpClient.delete(
-      `${API_URLS.leaveGroup}/${groupId}`,
-      { withCredentials: true }
+    return this.httpClient.delete(`${API_URLS.leaveGroup}/${groupId}`, {
+      withCredentials: true,
+    });
+  }
+
+  /**
+   * Add a new expense to the conversation.
+   *
+   * @param groupId - The ID of the conversation.
+   * @param expenseData - The data for the new expense.
+   * @returns An observable with the response after adding the expense.
+   */
+  addExpense(groupId: string, expenseData: GroupExpenseInput | FormData) {
+    return this.httpClient.post<GroupExpenseResponse>(
+      `${API_URLS.addExpense}/${groupId}`,
+      expenseData,
+      { withCredentials: true },
     );
   }
 }

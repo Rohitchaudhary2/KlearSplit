@@ -1,0 +1,13 @@
+<app-expense-form
+  [form]="form"
+  [title]="data[0]"
+  [participants]="participants"
+  [splitType]="splitType"
+  [imageName]="imageName()"
+  [payerName]="getPayerName()"
+  (submit)="onAdd()"
+  (cancel)="onCancel()"
+  (payerDialog)="openPayerDialog()"
+  (splitTypeDialog)="openSplitTypeDialog()"
+  (fileSelect)="selectImage($event)"
+></app-expense-form>

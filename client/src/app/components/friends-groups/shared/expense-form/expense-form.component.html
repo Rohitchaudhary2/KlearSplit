@@ -1,9 +1,10 @@
-<!-- <h2 mat-dialog-title class="text-center bg-success text-white py-2">
-  {{ data[0] }}
+<h2 mat-dialog-title class="text-center bg-success text-white py-2">
+  {{ title() }}
 </h2>
 <div mat-dialog-content class="d-flex flex-column align-items-center px-4 pt-4">
-  <form [formGroup]="form" class="w-100">
+  <form [formGroup]="form()!" class="w-100">
     <div class="mb-3">
+      <!-- Expense Name -->
       <mat-form-field appearance="outline" class="w-100 custom-form-field mb-2">
         <mat-label>Expense Name</mat-label>
         <input
@@ -13,9 +14,13 @@
           style="background-color: transparent"
         />
         @if (getFormErrors("expense_name")) {
-          <mat-error>{{ getFormErrors("expense_name") }}</mat-error>
+            <mat-error>
+              {{ getFormErrors("expense_name") }}
+            </mat-error>
         }
       </mat-form-field>
+
+      <!-- Total Amount -->
       <mat-form-field appearance="outline" class="w-100 custom-form-field mb-2">
         <mat-label>Total Amount</mat-label>
         <input
@@ -28,9 +33,13 @@
           max="9999999999.99"
         />
         @if (getFormErrors("total_amount")) {
-          <mat-error>{{ getFormErrors("total_amount") }}</mat-error>
+            <mat-error>
+              {{ getFormErrors("total_amount") }}
+            </mat-error>
         }
       </mat-form-field>
+
+      <!-- Description -->
       <mat-form-field appearance="outline" class="w-100 custom-form-field">
         <mat-label>Description</mat-label>
         <input
@@ -40,29 +49,37 @@
           style="background-color: transparent"
         />
         @if (getFormErrors("description")) {
-          <mat-error>{{ getFormErrors("description") }}</mat-error>
+            <mat-error>
+              {{ getFormErrors("description") }}
+            </mat-error>
         }
       </mat-form-field>
+
+      <!-- Paid By and Split -->
       <div class="d-flex justify-content-center align-items-center mb-3">
         <mat-label>Paid by</mat-label>
         <button
           class="mx-2 text-success"
+          type="button"
           mat-raised-button
-          (click)="openPayerDialog()"
-          [disabled]="form.invalid"
+          (click)="payerDialog.emit()"
+          [disabled]="form()!.invalid"
         >
-          {{ getPayerName() }}
+          {{ payerName() }}
         </button>
         <mat-label>and split</mat-label>
         <button
           class="mx-2 text-success"
+          type="button"
           mat-raised-button
-          (click)="openSplitTypeDialog()"
-          [disabled]="form.invalid"
+          (click)="splitTypeDialog.emit()"
+          [disabled]="form()!.invalid"
         >
-          {{ splitType }}
+          {{ splitType() }}
         </button>
       </div>
+
+      <!-- File Upload -->
       <div class="parent-container">
         <div class="file-upload" style="text-align: center">
           <label
@@ -75,7 +92,7 @@
             type="file"
             id="bill-receipt"
             accept="image/*"
-            (change)="selectImage($event)"
+            (change)="fileSelect.emit($event)"
             class="file-input"
           />
         </div>
@@ -89,7 +106,7 @@
     disableRipple
     class="custom-mat-button"
     color="warn"
-    (click)="onCancel()"
+    (click)="cancel.emit()"
   >
     Cancel
   </button>
@@ -97,23 +114,9 @@
     mat-button
     disableRipple
     class="custom-mat-button"
-    (click)="onAdd()"
-    [disabled]="form.invalid"
+    (click)="submit.emit()"
+    [disabled]="form()!.invalid"
   >
     Submit
   </button>
-</div> -->
-
-<app-expense-form
-  [form]="form"
-  [title]="data[0]"
-  [participants]="participants"
-  [splitType]="splitType"
-  [imageName]="imageName()"
-  [payerName]="getPayerName()"
-  (submit)="onAdd()"
-  (cancel)="onCancel()"
-  (payerDialog)="openPayerDialog()"
-  (splitTypeDialog)="openSplitTypeDialog()"
-  (fileSelect)="selectImage($event)"
-></app-expense-form>
+</div>

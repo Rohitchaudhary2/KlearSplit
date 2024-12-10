@@ -23,7 +23,7 @@ interface AcceptedRejected {
     NgClass,
   ],
   templateUrl: "./list-display.component.html",
-  styleUrls: [ "./list-display.component.css", "../../friends/friends.component.css" ],
+  styleUrls: [ "../../friends/friends.component.css" ],
 })
 export class ListDisplayComponent {
   heading = input.required();

@@ -1,4 +1,4 @@
-<h2 mat-dialog-title class="text-center bg-success text-white py-2">
+<!-- <h2 mat-dialog-title class="text-center bg-success text-white py-2">
   Choose Payer
 </h2>
 <div class="m-2" style="border-radius: 0; overflow-y: auto">
@@ -28,4 +28,10 @@
   >
     Cancel
   </button>
-</div>
+</div> -->
+
+<app-payer
+  [participants]="participantsData"
+  (payer)="sendPayer($event)"
+  (cancel)="onCancel()"
+></app-payer>

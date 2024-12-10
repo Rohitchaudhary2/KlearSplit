@@ -18,11 +18,12 @@ import { MatSelectModule } from "@angular/material/select";
 import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
 import { ExpenseFormComponent } from "../../shared/expense-form/expense-form.component";
-import { FriendsPayerComponent } from "./payer/friends-payer.component";
-import { SplitTypeComponent } from "./split-type/split-type.component";
+import { GroupMemberData } from "../groups.model";
+import { GroupsPayerComponent } from "./groups-payer/groups-payer.component";
+import { GroupsSplitTypeComponent } from "./groups-split-type/groups-split-type.component";
 
 @Component({
-  selector: "app-friends-expense",
+  selector: "app-groups-expense",
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -32,17 +33,18 @@ import { SplitTypeComponent } from "./split-type/split-type.component";
     MatButtonModule,
     ExpenseFormComponent
   ],
-  templateUrl: "./friends-expense.component.html",
-  styleUrl: "./friends-expense.component.css",
+  templateUrl: "./groups-expense.component.html",
+  styleUrl: "./groups-expense.component.css",
 })
-export class FriendsExpenseComponent implements OnInit {
+export class GroupsExpenseComponent implements OnInit {
   private readonly formErrorMessages = inject(FormErrorMessageService);
-  private readonly dialogRef = inject(MatDialogRef<FriendsExpenseComponent>);
+  private readonly dialogRef = inject(MatDialogRef<GroupsExpenseComponent>);
   private readonly dialog = inject(MatDialog);
   data = inject(MAT_DIALOG_DATA);
-  participants;
+  participants!: GroupMemberData[];
   imageName = signal<string>("Upload Bill Receipt");
   splitType = "EQUAL";
+  debtors!: { debtor_id: string, debtor_share: number }[];
 
   /**
    * Sets the shares for the payer and debtor participants.
@@ -56,16 +58,16 @@ export class FriendsExpenseComponent implements OnInit {
    * @param debtorShare - The share amount assigned to the debtor.
    * @returns An object containing `participant1Share` and `participant2Share` as strings.
    */
-  setParticipantShares(payerId: string, userId: string, payerShare: number, debtorShare: number) {
-    if (payerId === userId) {
-      const participant1Share = JSON.stringify(payerShare);
-      const participant2Share = JSON.stringify(debtorShare);
-      return { participant1Share, participant2Share };
-    }
-    const participant1Share = JSON.stringify(debtorShare);
-    const participant2Share = JSON.stringify(payerShare);
-    return { participant1Share, participant2Share };
-  }
+  // setParticipantShares(payerId: string, userId: string, payerShare: number, debtorShare: number) {
+  //   if (payerId === userId) {
+  //     const participant1Share = JSON.stringify(payerShare);
+  //     const participant2Share = JSON.stringify(debtorShare);
+  //     return { participant1Share, participant2Share };
+  //   }
+  //   const participant1Share = JSON.stringify(debtorShare);
+  //   const participant2Share = JSON.stringify(payerShare);
+  //   return { participant1Share, participant2Share };
+  // }
 
   /**
    * Constructor to update the expense form and set up participants based on the type of data passed.
@@ -74,70 +76,11 @@ export class FriendsExpenseComponent implements OnInit {
    */
   constructor() {
     // Check if the first element of `data` is 'Add Expense', indicating this is a new expense.
-    if (this.data[0] === "Add Expense") {
-      // If 'Add Expense', participants are the first and second items from `data` (user and their friend)
-      this.participants = [ this.data[1], this.data[2].friend ];
-      this.form.patchValue({
-        payer_id: this.participants[0]?.user_id,
-      });
-    } else {
-      // Otherwise, it's an existing expense that is being edited
-      // Participants are the third and fourth items from `data` (user and their friend)
-      this.participants = [ this.data[2], this.data[3].friend ];
-      const expenseToBeUpdated = this.data[1];
-      this.splitType =
-        expenseToBeUpdated.split_type !== "PERCENTAGE"
-          ? expenseToBeUpdated.split_type
-          : "PERCENT";
-
-      let participant1Share = "";
-      let participant2Share = "";
-
-      const totalAmount = parseFloat(expenseToBeUpdated.total_amount);
-      const debtorAmount = parseFloat(expenseToBeUpdated.debtor_amount);
-      const payerAmount = totalAmount - debtorAmount;
-
-      switch (this.splitType) {
-        case "UNEQUAL": {
-          const participantShares = this.setParticipantShares(
-            expenseToBeUpdated.payer_id,
-            this.participants[0].user_id,
-            payerAmount,
-            debtorAmount
-          );
-          participant1Share = participantShares.participant1Share;
-          participant2Share = participantShares.participant2Share;
-          break;
-        }
-      
-        case "PERCENT": {
-          const debtorPercentage = (debtorAmount / totalAmount) * 100;
-          const payerPercentage = (payerAmount / totalAmount) * 100;
-          const participantShares = this.setParticipantShares(
-            expenseToBeUpdated.payer_id,
-            this.participants[0].user_id,
-            payerPercentage,
-            debtorPercentage
-          );
-          participant1Share = participantShares.participant1Share;
-          participant2Share = participantShares.participant2Share;
-          break;
-        }
-          
-      }
-
-      // Update the form values with the expense data and the calculated shares
-      this.form.patchValue({
-        expense_name: expenseToBeUpdated.expense_name,
-        total_amount: expenseToBeUpdated.total_amount,
-        description: expenseToBeUpdated.description || "",
-        payer_id: expenseToBeUpdated.payer_id,
-        split_type: expenseToBeUpdated.split_type,
-        receipt: expenseToBeUpdated.receipt || "",
-        participant1_share: participant1Share,
-        participant2_share: participant2Share,
-      });
-    }
+    // If 'Add Expense', participants are the first and second items from `data` (user and their friend)
+    this.participants = this.data[3];
+    this.form.patchValue({
+      payer_id: this.data[1].group_membership_id,
+    });
   }
 
   // Create a new instance of FormGroup with the defined controls for the form
@@ -145,7 +88,7 @@ export class FriendsExpenseComponent implements OnInit {
     expense_name: new FormControl("", {
       validators: [ Validators.required, Validators.maxLength(50) ],
     }),
-    total_amount: new FormControl("", {
+    total_amount: new FormControl(0, {
       validators: [
         Validators.required,
         Validators.min(0.1),
@@ -158,8 +101,6 @@ export class FriendsExpenseComponent implements OnInit {
     payer_id: new FormControl("", {
       validators: [ Validators.required ],
     }),
-    participant1_share: new FormControl(""),
-    participant2_share: new FormControl(""),
     split_type: new FormControl<"EQUAL" | "UNEQUAL" | "PERCENTAGE">("EQUAL", {
       validators: [ Validators.required ],
     }),
@@ -172,31 +113,6 @@ export class FriendsExpenseComponent implements OnInit {
    */
   ngOnInit(): void {
     this.dialogRef.updateSize("30%");
-  }
-
-  /**
-   * Retrieves the error message for a specific form field.
-   *
-   * @param field - The name of the form control field to check for errors.
-   *
-   * @returns A string containing the error message for the field, or null if there are no errors.
-   */
-  getFormErrors(field: string): string | null {
-    return this.formErrorMessages.getErrorMessage(this.form, field);
-  }
-
-  /**
-   * Trims the leading and trailing whitespace from the value of a specific form control.
-   * This is used to ensure no accidental spaces are included in form fields like 'expense_name' or 'description'.
-   *
-   * @param controlName - The name of the form control whose value will be trimmed.
-   */
-  trimInput(controlName: string) {
-    const control = this.form.get(controlName);
-    if (control) {
-      const trimmedValue = control.value.trim();
-      control.setValue(trimmedValue, { emitEvent: false });
-    }
   }
 
   /**
@@ -223,16 +139,10 @@ export class FriendsExpenseComponent implements OnInit {
   onAdd(): void {
     // If the split type is 'EQUAL', divide the total amount equally between both participants
     if (this.form.value.split_type === "EQUAL") {
-      this.form
-        .get("participant1_share")
-        ?.setValue(
-          JSON.stringify(parseFloat(this.form.value.total_amount!) / 2),
-        );
-      this.form
-        .get("participant2_share")
-        ?.setValue(
-          JSON.stringify(parseFloat(this.form.value.total_amount!) / 2),
-        );
+      this.debtors = this.participants.map((participant) => ({
+        debtor_id: participant.group_membership_id,
+        debtor_share: this.form.value.total_amount!/this.participants.length
+      }));
     }
 
     // Exit the function if the form is not valid
@@ -255,33 +165,35 @@ export class FriendsExpenseComponent implements OnInit {
       }
     });
 
+    formData.append("debtors", JSON.stringify(this.debtors));
+
     // Handle debtor share logic for split types UNEQUAL and PERCENTAGE
-    let debtorShare;
-    if (
-      this.form.value.split_type === "UNEQUAL" ||
-      this.form.value.split_type === "PERCENTAGE"
-    ) {
-      debtorShare =
-        this.form.value.payer_id === this.participants[0].user_id
-          ? this.form.value.participant2_share
-          : this.form.value.participant1_share;
-    }
+    // let debtorShare;
+    // if (
+    //   this.form.value.split_type === "UNEQUAL" ||
+    //   this.form.value.split_type === "PERCENTAGE"
+    // ) {
+    //   debtorShare =
+    //     this.form.value.payer_id === this.participants[0].user_id
+    //       ? this.form.value.participant2_share
+    //       : this.form.value.participant1_share;
+    // }
 
-    const debtorId =
-      this.form.value.payer_id === this.participants[0].user_id
-        ? this.participants[1].user_id
-        : this.participants[0].user_id;
+    // const debtorId =
+    //   this.form.value.payer_id === this.participants[0].user_id
+    //     ? this.participants[1].user_id
+    //     : this.participants[0].user_id;
 
-    // If there is a debtor share, append it to the formData
-    if (debtorShare) {
-      formData.append("debtor_share", debtorShare);
-    }
-    formData.append("debtor_id", debtorId as string);
+    // // If there is a debtor share, append it to the formData
+    // if (debtorShare) {
+    //   formData.append("debtor_share", debtorShare);
+    // }
+    // formData.append("debtor_id", debtorId as string);
 
     // Close the dialog and pass the formData and other relevant expense data
     this.dialogRef.close({
       formData: formData,
-      expenseData: { ...this.form.value, debtorId, debtorShare },
+      expenseData: { ...this.form.value, debtors: this.debtors },
     });
   }
 
@@ -295,10 +207,11 @@ export class FriendsExpenseComponent implements OnInit {
    */
   getPayerName(): string {
     const id = this.form.value.payer_id;
-    if (id === this.participants[0].user_id) {
+    if (id === this.data[1].group_membership_id) {
       return "you";
     } else {
-      return `${this.participants[1].first_name} ${ this.participants[1].last_name || ""}`;
+      const payer = this.participants.find((participant) => id === participant.group_membership_id);
+      return `${payer!.first_name} ${ payer!.last_name || ""}`;
     }
   }
 
@@ -309,7 +222,7 @@ export class FriendsExpenseComponent implements OnInit {
    * it updates the form with the selected payer's ID.
    */
   openPayerDialog(): void {
-    const dialogRef = this.dialog.open(FriendsPayerComponent, {
+    const dialogRef = this.dialog.open(GroupsPayerComponent, {
       panelClass: "second-dialog",
       width: "30%",
       data: this.participants,
@@ -338,15 +251,13 @@ export class FriendsExpenseComponent implements OnInit {
     const expenseData = {
       total_amount: this.form.value.total_amount,
       split_type: this.form.value.split_type,
-      participant1_share: this.form.value.participant1_share,
-      participant2_share: this.form.value.participant2_share,
     };
 
     // Open the SplitType dialog and pass the participants and expense data to it
-    const dialogRef = this.dialog.open(SplitTypeComponent, {
+    const dialogRef = this.dialog.open(GroupsSplitTypeComponent, {
       panelClass: "second-dialog",
       width: "30%",
-      data: [ this.participants, expenseData ],
+      data: { participants: this.participants, totalAmount: expenseData },
       backdropClass: "dialog-bg-trans",
       position: {
         right: "7%",
@@ -362,12 +273,7 @@ export class FriendsExpenseComponent implements OnInit {
       this.splitType =
         result.split_type !== "PERCENTAGE" ? result.split_type : "PERCENT";
       this.form.get("split_type")?.setValue(result.split_type);
-      this.form
-        .get("participant1_share")
-        ?.setValue(JSON.stringify(result.participant1Share));
-      this.form
-        .get("participant2_share")
-        ?.setValue(JSON.stringify(result.participant2Share));
+      this.debtors = result.debtors;
     });
   }
 

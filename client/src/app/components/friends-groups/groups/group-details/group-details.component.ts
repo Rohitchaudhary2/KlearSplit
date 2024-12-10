@@ -3,7 +3,7 @@ import { Component, inject, OnInit, signal } from "@angular/core";
 import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 
 import { AuthService } from "../../../auth/auth.service";
-import { GroupData, GroupMemberData } from "../groups.model";
+import { GroupMemberData } from "../groups.model";
 import { GroupsService } from "../groups.service";
 
 @Component({
@@ -17,45 +17,31 @@ export class GroupDetailsComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly groupsService = inject(GroupsService);
   private readonly dialogRef = inject(MatDialogRef<GroupDetailsComponent>);
-  data = inject<GroupData>(MAT_DIALOG_DATA);
-  loading = false;
+  data = inject(MAT_DIALOG_DATA);
 
   groupMembers = signal<GroupMemberData[]>([]);
   currentUserId = this.authService.currentUser()?.user_id;
 
   ngOnInit(): void {
-    this.loading = true;
-    this.data.role = `${this.data.role[0]}${this.data.role.slice(1).toLowerCase()}`;
+    this.data[0].role = `${this.data[0].role[0]}${this.data[0].role.slice(1).toLowerCase()}`;
     this.fetchGroupMembers();
   }
 
   /**
-   * This function calls the service to fetch the group details containing all the members.
-   * The response contains the balance of the current user with each member and the total balance of that member.
+   * This function sets the value of the Group Members array passed from it's parent element in the groupMembers signal.
    */
   fetchGroupMembers() {
-    this.groupsService
-      .fetchGroupMembers(this.data.group_id)
-      .subscribe((response) => {
-        const filteredMembers = response.data.filter(
-          (member) => member.member_id !== this.currentUserId,
-        ).map((member) => {
-          switch (member.role) {
-            case "ADMIN":
-              return { ...member, role: "Admin" };
-            case "COADMIN":
-              return { ...member, role: "Co-Admin" };
-            case "CREATOR":
-              return { ...member, role: "Creator" };
-            case "USER":
-              return { ...member, role: "Member" };
-            default:
-              return member;
-          }
-        });
-        this.groupMembers.set(filteredMembers);
-        this.loading = false;
-      });
+    this.groupMembers.set(this.data[1]);
+  }
+
+  /**
+   * Converts a string representation of a balance amount to a number.
+   *
+   * @param {string} balanceAmount - The balance amount in string format.
+   * @returns {number} The parsed number representing the balance amount.
+   */
+  getBalanceAsNumber(balanceAmount: string): number {
+    return parseFloat(balanceAmount);
   }
 
   closeDialog() {

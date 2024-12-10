@@ -1,6 +1,6 @@
 import { Router } from "express";
 import GroupController from "./groupController.js";
-import { validateBody, validateGroupCreationData, validateGroupUpdationData, validateParams, validateQuery } from "../middlewares/validationMiddleware.js";
+import { validateBody, validateGroupCreationData, validateGroupExpense, validateGroupUpdationData, validateParams, validateQuery } from "../middlewares/validationMiddleware.js";
 import * as groupSchema from "./groupValidations.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import uploadMiddleware from "../middlewares/uploadMiddleware.js";
@@ -35,7 +35,7 @@ groupRouter.get("/getmessages/:group_id", authenticateToken, validateParams(grou
 groupRouter.delete("/leavegroup/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), GroupController.leaveGroup);
 
 // Route for adding expense in the group
-groupRouter.post("/addexpense/:group_id", authenticateToken, uploadMiddleware("groupExpenses", "receipt_url"), validateParams(groupSchema.groupIdParamValidation), validateBody(groupSchema.expenseCreationSchema), GroupController.addExpense);
+groupRouter.post("/addexpense/:group_id", authenticateToken, uploadMiddleware("groupExpenses", "receipt_url"), validateParams(groupSchema.groupIdParamValidation), validateGroupExpense, GroupController.addExpense);
 
 // Route for adding settlement in the group
 groupRouter.post("/addsettlement/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), validateBody(groupSchema.settlementCreationSchema), GroupController.addSettlement);

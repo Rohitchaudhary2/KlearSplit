@@ -122,9 +122,9 @@
                       sender_id: message.sender_id,
                       message: message.message,
                     }"
-                    [currentUserId]="user?.user_id"
-                    [imageUrl]="'/profile.png'"
-                    [name]="'dummy'"
+                    [currentUserId]="currentMember()!.group_membership_id"
+                    [imageUrl]="message.senderImage ?? '/profile.png'"
+                    [name]="message.senderName"
                     [currentUserImageUrl]="user?.image_url"
                   >
                   </app-message>
@@ -141,6 +141,7 @@
           <div class="custom-width">
             <button
               [disabled]="addExpenseLoader"
+              (click)="openAddExpenseDialog()"
               class="btn btn-success w-100"
             >
               Add Expense

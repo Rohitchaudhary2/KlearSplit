@@ -12,8 +12,10 @@ import { MessageComponent } from "../friends/message/message.component";
 import { SocketService } from "../friends/socket.service";
 import { SelectMembersDialogComponent } from "./create-group/select-members-dialog/select-members-dialog.component";
 import { GroupDetailsComponent } from "./group-details/group-details.component";
-import { CombinedGroupExpense, CombinedGroupMessage, GroupData, GroupExpenseData, GroupMessageData } from "./groups.model";
+import { CombinedGroupExpense, CombinedGroupMessage, GroupData, GroupExpenseData, GroupExpenseResponse, GroupMemberData, GroupMessageData }
+  from "./groups.model";
 import { GroupsService } from "./groups.service";
+import { GroupsExpenseComponent } from "./groups-expense/groups-expense.component";
 import { GroupsListComponent } from "./groups-list/groups-list.component";
 
 @Component({
@@ -33,7 +35,6 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   // Reference to the message container element, accessed via ViewChild
   messageContainer = viewChild<ElementRef>("messageContainer");
   @ViewChild(GroupsListComponent) groupsListComponent!: GroupsListComponent;
-  // groupsListComponent = viewChild<GroupsListComponent>("groupsListComponent");
   private readonly cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
   private readonly toastr = inject(ToastrService);
   private readonly authService = inject(AuthService);
@@ -46,6 +47,11 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   user_name = this.getFullNameAndImage(this.user).fullName;
 
   selectedGroup = signal<GroupData | undefined>(undefined);
+
+  groupMembers = signal<GroupMemberData[]>([]);
+
+  // Group member who is currently logged in
+  currentMember = signal<GroupMemberData | undefined>(undefined);
 
   // Signal to control the visibility of message, expenses, or combined data
   currentView = signal<"Messages" | "Expenses" | "All">("All");
@@ -137,6 +143,10 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     this.isImageLoaded = true;
   }
 
+  /**
+   * This method clears all the message and expese signals to empty so that no previous group data is displayed when a new group is selected.
+   * It also leaves the room in socket so that it doesn't listen to the messages from previous group.
+   */
   clearSelectedGroupData() {
     // If there is, send a message to the server to leave the group
     this.socketService.leaveRoom(this.selectedGroup()!.group_id);
@@ -171,7 +181,9 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    //Fetch messages
+    // Fetch group members
+    this.fetchGroupMembers();
+    // Fetch messages
     this.fetchGroupMessages();
     // Join the new conversation room for the selected group
     this.socketService.joinRoom(this.selectedGroup()!.group_id);
@@ -241,7 +253,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       maxHeight: "70vh",
       height: "85%",
       width: "100%",
-      data: this.selectedGroup(),
+      data: [ this.selectedGroup(), this.groupMembers() ],
     });
   }
 
@@ -275,6 +287,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       }, {} as typeof membersData);
       this.groupsService.addGroupMembers(cleanedMembersData, this.selectedGroup()!.group_id).subscribe({
         next: () => {
+          this.fetchGroupMembers();
           this.toastr.success("Member Added Successfully", "Success");
         }
       });
@@ -287,13 +300,106 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   fetchGroupMessages() {
     this.groupsService.fetchGroupMessages(this.selectedGroup()!.group_id).subscribe({
       next: (messages) => {
-        this.messages.set([ ...messages, ...this.messages() ]); // Set the messages in the messages signal
+        const messagesWithName = messages.map((message) => {
+          const sender = this.getFullNameAndImage(this.groupMembers().find((member) =>
+            message.sender_id === member.group_membership_id
+          ));
+          return {
+            ...message,
+            senderName: sender.fullName,
+            senderImage: sender.imageUrl
+          };
+        });
+        this.messages.set([ ...messagesWithName, ...this.messages() ]); // Set the messages in the messages signal
       }
     });
   }
 
   /**
-   * Helper function to generate the full name and image URL from a user or friend's data.
+   * This function calls the service to fetch the group details containing all the members.
+   * The response contains the balance of the current user with each member and the total balance of that member.
+   *
+   * This function also maps over the result to update the roles so that they can be displayed properly.
+   */
+  fetchGroupMembers() {
+    this.groupsService
+      .fetchGroupMembers(this.selectedGroup()!.group_id)
+      .subscribe((response) => {
+        const filteredMembers = this.filterMembers(response.data);
+        this.groupMembers.set(filteredMembers);
+        const currentMember = filteredMembers.find((member) => this.user?.user_id === member.member_id);
+        this.currentMember.set(currentMember);
+      });
+  }
+
+  /**
+   * Opens the dialog to add an expense and handles the process of adding the expense.
+   * After the dialog is closed, it sends the expense data to the server and updates the UI accordingly.
+   */
+  openAddExpenseDialog() {
+    const dialogRef = this.dialog.open(GroupsExpenseComponent, {
+      data: [ "Add Expense", this.currentMember(), this.selectedGroup(), this.groupMembers() ],
+      enterAnimationDuration: "200ms",
+      exitAnimationDuration: "200ms",
+    });
+    // Subscribe to the dialog close event and process the data returned when the dialog is closed.
+    dialogRef.afterClosed().subscribe((data) => {
+      if (!data) {
+        return;
+      }
+      const result = data.formData;
+      const expenseData = data.expenseData;
+
+      this.addExpenseLoader = true;
+      // Temporarily add the new expense to the local view with a unique group_expense_id ('adding') to indicate that it's being processed.
+      this.expenses.set([
+        ...this.expenses(),
+        { ...expenseData, group_expense_id: "adding" },
+      ]);
+      this.combinedView.set([
+        ...this.combinedView(),
+        { ...expenseData, group_expense_id: "adding" },
+      ]);
+      this.cdr.detectChanges();
+      this.scrollToBottom();
+
+      // Make the API call to add the expense on the server.
+      this.groupsService
+        .addExpense(this.selectedGroup()!.group_id, result)
+        .subscribe({
+          next: (response: GroupExpenseResponse) => {
+            if (response.data.payer_id === this.currentMember()?.group_membership_id) {
+              response.data.payer = this.user_name;
+            } else {
+              const payer = this.groupMembers().filter((member) => response.data.payer_id === member.group_membership_id);
+              response.data.payer = this.getFullNameAndImage(
+                payer[0]
+              ).fullName;
+            }
+
+            // Update the expenses list by replacing the temporary 'adding' entry with the actual response data.
+            const currExpenses = this.expenses();
+            currExpenses.pop();
+            this.expenses.set([ ...currExpenses, response.data ]);
+
+            // Update the combined view by replacing the temporary 'adding' entry.
+            const currCombined = this.combinedView();
+            currCombined.pop();
+            this.combinedView.set([
+              ...currCombined,
+              { ...response.data, type: "expense" },
+            ]);
+            this.addExpenseLoader = false;
+            this.cdr.detectChanges();
+            this.scrollToBottom();
+            this.toastr.success("Expense Created successfully", "Success");
+          },
+        });
+    });
+  }
+
+  /**
+   * Helper function to generate the full name and image URL from a user or member's data.
    *
    * This function constructs the full name by concatenating the first name and last name (if present).
    * It also extracts the image URL.
@@ -301,11 +407,29 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    * @param user - The user object (`CurrentUser`).
    * @returns An object containing the `fullName` and the `imageUrl` from the user object.
    */
-  getFullNameAndImage(user: CurrentUser | undefined) {
+  getFullNameAndImage(user: CurrentUser | GroupMemberData | undefined) {
     return {
       fullName: `${user?.first_name} ${ user?.last_name ?? ""}`.trim(),
       imageUrl: user?.image_url,
     };
+  }
+
+  filterMembers(members: GroupMemberData[]) {
+    const filteredMembers = members.map((member) => {
+      switch (member.role) {
+        case "ADMIN":
+          return { ...member, role: "Admin" };
+        case "COADMIN":
+          return { ...member, role: "Co-Admin" };
+        case "CREATOR":
+          return { ...member, role: "Creator" };
+        case "USER":
+          return { ...member, role: "Member" };
+        default:
+          return member;
+      }
+    });
+    return filteredMembers;
   }
 
   onLeaveGroup() {

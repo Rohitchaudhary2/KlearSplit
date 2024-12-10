@@ -52,7 +52,7 @@ class GroupDb {
       left join 
       group_member_balance gmb on gm.group_id = gmb.group_id 
       where 
-      gm.group_id = :groupId and gm.group_membership_id != :groupMembershipId and gm."deletedAt" is null and gmb."deletedAt" is null
+      gm.group_id = :groupId and gm."deletedAt" is null and gmb."deletedAt" is null
       group by gm.group_membership_id) r 
       join 
       users u on r.member_id = u.user_id;`, {

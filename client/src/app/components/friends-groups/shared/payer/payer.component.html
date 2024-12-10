@@ -1,0 +1,32 @@
+<h2 mat-dialog-title class="text-center bg-success text-white py-2">
+  Choose Payer
+</h2>
+<div class="m-2" style="border-radius: 0; overflow-y: auto; max-height: 40%;">
+  <table class="table table-hover" style="cursor: pointer">
+    <thead>
+      <tr>
+        <th style="display: none"></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (participant of participants(); track participant.id) {
+        <tr
+          (click)="sendPayer(participant.id)"
+          (keyup.enter)="sendPayer(participant.id)"
+        >
+          <td>{{ participant.first_name }} {{ participant.last_name }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3">
+  <button
+    mat-button
+    color="warn"
+    (click)="cancel.emit()"
+  >
+    Cancel
+  </button>
+</div>

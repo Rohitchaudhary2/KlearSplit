@@ -76,7 +76,6 @@ export interface GroupData {
     balance_amount: string;
     status: string;
     role: string;
-    members: GroupMemberData[];
 }
 
 export interface Groups {
@@ -98,6 +97,8 @@ export interface GroupMessageData {
     group_message_id: string;
     group_id: string;
     sender_id: string;
+    senderName: string;
+    senderImage?: string;
     message: string;
     createdAt: string;
     updatedAt: string;
@@ -123,6 +124,27 @@ export interface GroupExpenseData {
     updatedAt: string;
     deletedAt: string | null;
     payer: string;
+}
+
+export interface GroupExpenseResponse {
+    success: string;
+    message: string;
+    data: GroupExpenseData;
+}
+
+export interface Debtors {
+    debtor_id: string;
+    debtor_share: number;
+}
+
+export interface GroupExpenseInput {
+    expense_name: string;
+    total_amount: number;
+    payer_id: string;
+    description?: string;
+    split_type: string;
+    payer_share: number;
+    debtors: Debtors[];
 }
 
 export interface CombinedGroupMessage extends GroupMessageData {

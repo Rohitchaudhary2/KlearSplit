@@ -3,7 +3,7 @@ import {
   settleExpenseValidation
 } from "../friends/friendValidations.js";
 import { ErrorHandler } from "./errorHandler.js";
-import { groupCreationSchema, groupUpdationSchema } from "./../groups/groupValidations.js";
+import { expenseCreationSchema, groupCreationSchema, groupUpdationSchema } from "./../groups/groupValidations.js";
 
 const validate = (schema, data) => {
   const { error, value } = schema.validate(data);
@@ -73,6 +73,21 @@ export const validateGroupCreationData = (req, res, next) => {
 export const validateGroupUpdationData = (req, res, next) => {
   try {
     const { error, value } = groupUpdationSchema.validate(req.body);
+
+    if (error) {
+      throw new ErrorHandler(400, error);
+    }
+    req.body = value;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const validateGroupExpense = (req, res, next) => {
+  try {
+    const debtors = JSON.parse(req.body.debtors);
+    const { error, value } = expenseCreationSchema.validate({ ...req.body, debtors });
 
     if (error) {
       throw new ErrorHandler(400, error);

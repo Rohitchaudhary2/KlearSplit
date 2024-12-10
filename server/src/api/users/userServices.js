@@ -92,7 +92,7 @@ class UserService {
           isUserExists.dataValues.user_id,
           transaction
         );
-        
+        createdUser = createdUser[ 0 ].dataValues;
         if (!createdUser) {
           throw new ErrorHandler(400, "Error while Registering");
         }

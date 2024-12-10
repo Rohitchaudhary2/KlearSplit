@@ -165,7 +165,7 @@ class GroupDb {
     });
   };
 
-  static getMemberBalance = async(groupId, payerId, debtorId) => GroupMemberBalance.findOne({
+  static getMemberBalance = async(groupId, payerId, debtorId) => await GroupMemberBalance.findOne({
     "where": {
       "group_id": groupId,
       [ Op.or ]: [
@@ -178,6 +178,12 @@ class GroupDb {
           "participant2_id": payerId
         }
       ]
+    }
+  });
+
+  static getExpense = async(groupExpenseId) => await GroupExpense.findOne({
+    "where": {
+      "group_expense_id": groupExpenseId
     }
   });
 

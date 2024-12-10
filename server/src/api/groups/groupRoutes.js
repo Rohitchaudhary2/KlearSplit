@@ -35,11 +35,15 @@ groupRouter.get("/getmessages/:group_id", authenticateToken, validateParams(grou
 groupRouter.delete("/leavegroup/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), GroupController.leaveGroup);
 
 // Route for adding expense in the group
-groupRouter.post("/addexpense/:group_id", authenticateToken, uploadMiddleware("groupExpenses", "receipt_url"), validateParams(groupSchema.groupIdParamValidation), validateGroupExpense, GroupController.addExpense);
+groupRouter.post("/addexpense/:group_id", authenticateToken, uploadMiddleware("groupExpenses", "receipt"), validateParams(groupSchema.groupIdParamValidation), validateGroupExpense, GroupController.addExpense);
 
 // Route for adding settlement in the group
 groupRouter.post("/addsettlement/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), validateBody(groupSchema.settlementCreationSchema), GroupController.addSettlement);
 
 // Route for fetching expenses for a particular group
-groupRouter.get("/getexpenses/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), validateQuery(paginationValidation), GroupController.getExpenses);
+groupRouter.get("/expensessettlements/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), validateQuery(paginationValidation), GroupController.getExpensesSettlements);
+
+groupRouter.get("/messagesexpensessettlements/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), validateQuery(paginationValidation), GroupController.getMessagesExpensesSettlements);
+
+groupRouter.patch("/updateexpense/:group_id", authenticateToken, uploadMiddleware("groupExpenses", "receipt"), validateParams(groupSchema.groupIdParamValidation), validateGroupExpense, GroupController.updateExpense);
 export default groupRouter;

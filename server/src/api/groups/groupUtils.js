@@ -3,7 +3,7 @@ import { ErrorHandler } from "../middlewares/errorHandler.js";
 class GroupUtils {
   static assignRoles(members, admins, coadmins, inviterId, groupId) {
     return members.map((userId) => {
-      const member = { "inviter_id": inviterId, "group_id": groupId, "member_id": userId };
+      const member = { "inviter_id": inviterId, "group_id": groupId, "member_id": userId, "deletedAt": null };
 
       if (admins && admins.includes(userId)) {
         member.role = "ADMIN";

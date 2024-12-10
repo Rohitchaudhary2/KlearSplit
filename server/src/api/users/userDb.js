@@ -106,6 +106,14 @@ class UserDb {
 
   // Soft deletes user data
   static deleteUser = async(user) => await user.destroy();
+
+  static getUsers = async(users) => await User.findAll({
+    "where": {
+      "user_id": {
+        [ Op.in ]: users
+      }
+    }
+  });
 }
 
 export default UserDb;

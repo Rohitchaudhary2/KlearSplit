@@ -12,7 +12,7 @@ import { MessageComponent } from "../friends/message/message.component";
 import { SocketService } from "../friends/socket.service";
 import { SelectMembersDialogComponent } from "./create-group/select-members-dialog/select-members-dialog.component";
 import { GroupDetailsComponent } from "./group-details/group-details.component";
-import { CombinedGroupExpense, CombinedGroupMessage, GroupData, GroupExpenseData, GroupMessageData } from "./groups.model";
+import { CombinedGroupExpense, CombinedGroupMessage, GroupData, GroupExpenseData, GroupMemberData, GroupMessageData } from "./groups.model";
 import { GroupsService } from "./groups.service";
 import { GroupsListComponent } from "./groups-list/groups-list.component";
 
@@ -46,6 +46,8 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   user_name = this.getFullNameAndImage(this.user).fullName;
 
   selectedGroup = signal<GroupData | undefined>(undefined);
+  currentUserMembershipInfo = signal<GroupMemberData | undefined>(undefined);
+  groupMembers = signal<GroupMemberData[] | []>([]);
 
   // Signal to control the visibility of message, expenses, or combined data
   currentView = signal<"Messages" | "Expenses" | "All">("All");
@@ -171,6 +173,8 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
+    this.fetchGroupMembers();
+    
     //Fetch messages
     this.fetchGroupMessages();
     // Join the new conversation room for the selected group
@@ -275,6 +279,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       }, {} as typeof membersData);
       this.groupsService.addGroupMembers(cleanedMembersData, this.selectedGroup()!.group_id).subscribe({
         next: () => {
+          this.fetchGroupMembers();
           this.toastr.success("Member Added Successfully", "Success");
         }
       });
@@ -293,6 +298,22 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
+   * This function calls the service to fetch the group details containing all the members.
+   * The response contains the balance of the current user with each member and the total balance of that member.
+   *
+   * This function also maps over the result to update the roles so that they can be displayed properly.
+   */
+  fetchGroupMembers() {
+    this.groupsService
+      .fetchGroupMembers(this.selectedGroup()!.group_id)
+      .subscribe((response) => {
+        const filteredMembers = this.filterMembers(response.data);
+        this.groupMembers.set(filteredMembers);
+        this.currentUserMembershipInfo.set(this.groupMembers().find((member) => member.member_id === this.user?.user_id));
+      });
+  }
+
+  /**
    * Helper function to generate the full name and image URL from a user or friend's data.
    *
    * This function constructs the full name by concatenating the first name and last name (if present).
@@ -306,6 +327,35 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       fullName: `${user?.first_name} ${ user?.last_name ?? ""}`.trim(),
       imageUrl: user?.image_url,
     };
+  }
+
+  filterMembers(members: GroupMemberData[]) {
+    const filteredMembers = members.map((member) => {
+      switch (member.role) {
+        case "ADMIN":
+          return { ...member, role: "Admin" };
+        case "COADMIN":
+          return { ...member, role: "Co-Admin" };
+        case "CREATOR":
+          return { ...member, role: "Creator" };
+        case "USER":
+          return { ...member, role: "Member" };
+        default:
+          return member;
+      }
+    });
+    return filteredMembers;
+  }
+
+  onBlockGroup() {
+    this.groupsService.blockGroup(this.selectedGroup()!.group_id, !this.currentUserMembershipInfo()!.has_blocked).subscribe({
+      next: () => {
+        this.toastr.success("Group Blocked Successfully", "Success");
+        const groupId = this.selectedGroup()!.group_id;
+        this.groupsListComponent.removeGroup(groupId);
+        this.selectedGroup.set(undefined);
+      }
+    });
   }
 
   onLeaveGroup() {

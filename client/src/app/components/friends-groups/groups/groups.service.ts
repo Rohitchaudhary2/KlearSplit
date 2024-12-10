@@ -127,6 +127,14 @@ export class GroupsService {
     );
   }
 
+  blockGroup(groupId: string, blockStatus: boolean) {
+    return this.httpClient.patch(
+      `${API_URLS.updateGroupMember}/${groupId}`,
+      { "has_blocked": blockStatus },
+      { withCredentials: true }
+    );
+  }
+
   leaveGroup(groupId: string) {
     return this.httpClient.delete(
       `${API_URLS.leaveGroup}/${groupId}`,

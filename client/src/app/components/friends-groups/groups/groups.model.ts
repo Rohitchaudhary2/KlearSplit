@@ -57,6 +57,7 @@ export interface GroupMemberData {
     status: string;
     role: string;
     has_archived: boolean;
+    has_blocked: boolean;
     balance_with_user: string;
     total_balance: string;
     first_name: string;

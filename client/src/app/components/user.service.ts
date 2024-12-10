@@ -16,11 +16,9 @@ export class UserService {
   private readonly tokenService = inject(TokenService);
   private readonly authService = inject(AuthService);
 
-  private readonly getUserUrl = API_URLS.fetchUser; // URL for getting user without the id part
-
   fetchUserDetails() {
     return this.httpClient
-      .get<FetchResponse>(this.getUserUrl, {
+      .get<FetchResponse>(API_URLS.fetchUser, {
         withCredentials: true,
       })
       .pipe(

@@ -91,7 +91,8 @@ class UserService {
           { ...user, "is_invited": false },
           isUserExists.dataValues.user_id,
           transaction
-        )[ 0 ].dataValues;
+        );
+        
         if (!createdUser) {
           throw new ErrorHandler(400, "Error while Registering");
         }

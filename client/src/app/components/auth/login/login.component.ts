@@ -130,14 +130,15 @@ export class LoginComponent implements OnInit {
     this.isLoading.set(true);
     this.authService.login(user).subscribe({
       next: () => {
-        this.isLoading.set(false);
         this.toastr.success("User logged in successfully", "Success");
         this.router.navigate([ "/dashboard" ]);
       },
       error: () => {
         this.loginFailed.set(true);
-        this.isLoading.set(false);
       },
+      complete: () => {
+        this.isLoading.set(false);
+      }
     });
   }
 
@@ -168,6 +169,7 @@ export class LoginComponent implements OnInit {
     this.isLoading.set(true);
     this.authService.verifyForgotPasswordUser(email).subscribe({
       next: () => this.activateOtpMode(),
+      complete: () => this.isLoading.set(false)
     });
   }
 
@@ -218,6 +220,7 @@ export class LoginComponent implements OnInit {
     if (email && otp) {
       this.authService.forgotPassword(email, otp).subscribe({
         next: () => this.onBackToLogin(),
+        complete: () => this.isLoading.set(false)
       });
     }
   }

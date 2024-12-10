@@ -166,7 +166,7 @@ export class GroupsService {
    */
   addExpense(groupId: string, expenseData: GroupExpenseInput | FormData) {
     return this.httpClient.post<GroupExpenseResponse>(
-      `${API_URLS.addExpense}/${groupId}`,
+      `${API_URLS.addGroupExpense}/${groupId}`,
       expenseData,
       { withCredentials: true },
     );

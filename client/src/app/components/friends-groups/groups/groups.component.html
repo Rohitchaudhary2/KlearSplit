@@ -128,13 +128,30 @@
                       message: message.message,
                     }"
                     [currentUserId]="currentMember()!.group_membership_id"
-                    [imageUrl]="message.senderImage ?? '/profile.png'"
+                    [imageUrl]="message.senderImage"
                     [name]="message.senderName"
                     [currentUserImageUrl]="user?.image_url"
                   >
                   </app-message>
                 }
-              }
+              } @else if (currentView() === "Expenses") {
+                  @for (expense of expenses(); track expense.group_expense_id) {
+                    <app-expense
+                      [expense]="{
+                        expense_id: expense.group_expense_id,
+                        expense_name: expense.expense_name,
+                        total_amount: expense.total_amount,
+                        debtor_amount: expense.total_amount,
+                        payer_id: expense.payer_id,
+                      }"
+                      [currentUserId]="currentMember()!.group_membership_id"
+                      [friendImageUrl]="'/profile.png'"
+                      [friendName]="expense.payer"
+                      [currentUserImageUrl]="currentMember()!.image_url"
+                    >
+                    </app-expense>
+                  }
+                }
             </ul>
           </div>
         </div>

@@ -37,10 +37,7 @@ export const membersDataSchema = Joi.object({
 });
 
 export const groupIdParamValidation = Joi.object({
-  "group_id": Joi.string()
-    .uuid()
-    .required()
-    .trim()
+  "group_id": Joi.string().uuid().required()
 });
 
 export const updateGroupMemberSchema = Joi.object({
@@ -64,8 +61,9 @@ export const expenseCreationSchema = Joi.object({
   "total_amount": Joi.number().positive().max(9999999999.99).required(),
   "description": Joi.string().trim().min(1),
   "split_type": Joi.string().trim().valid("EQUAL", "UNEQUAL", "PERCENTAGE").required(),
-  "payer_share": Joi.number().positive().max(9999999999.98).required(),
-  "debtors": Joi.array().items(debtorSchema).min(1)
+  "payer_share": Joi.number().min(0).max(9999999999.98).required(),
+  "debtors": Joi.array().items(debtorSchema).min(1),
+  "group_expense_id": Joi.string().uuid()
 });
 
 export const settlementCreationSchema = Joi.object({

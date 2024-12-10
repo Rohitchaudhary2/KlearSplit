@@ -5,7 +5,7 @@ import {
 import { ErrorHandler } from "./errorHandler.js";
 import { expenseCreationSchema, groupCreationSchema, groupUpdationSchema } from "./../groups/groupValidations.js";
 
-const validate = (schema, data) => {
+const validateData = (schema, data) => {
   const { error, value } = schema.validate(data);
 
   if (error) {
@@ -14,9 +14,10 @@ const validate = (schema, data) => {
   return value;
 };
 
+
 export const validateBody = (schema) => (req, res, next) => {
   try {
-    req.body = validate(schema, req.body);
+    req.body = validateData(schema, req.body);
     next();
   } catch (error) {
     next(error);
@@ -25,7 +26,7 @@ export const validateBody = (schema) => (req, res, next) => {
 
 export const validateParams = (schema) => (req, res, next) => {
   try {
-    req.params = validate(schema, req.params);
+    req.params = validateData(schema, req.params);
     next();
   } catch (error) {
     next(error);
@@ -34,7 +35,7 @@ export const validateParams = (schema) => (req, res, next) => {
 
 export const validateQuery = (schema) => (req, res, next) => {
   try {
-    req.query = validate(schema, req.query);
+    req.query = validateData(schema, req.query);
     next();
   } catch (error) {
     next(error);
@@ -47,7 +48,7 @@ export const validateExpense = (req, res, next) => {
     const isSettlement = req.body.split_type === "SETTLEMENT";
     const schema = isSettlement ? settleExpenseValidation : addExpenseValidation;
 
-    req.body = validate(schema, req.body);
+    req.body = validateData(schema, req.body);
     next();
   } catch (error) {
     next(error);
@@ -87,6 +88,7 @@ export const validateGroupUpdationData = (req, res, next) => {
 export const validateGroupExpense = (req, res, next) => {
   try {
     const debtors = JSON.parse(req.body.debtors);
+
     const { error, value } = expenseCreationSchema.validate({ ...req.body, debtors });
 
     if (error) {

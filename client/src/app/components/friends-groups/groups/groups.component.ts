@@ -47,8 +47,6 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   user_name = this.getFullNameAndImage(this.user).fullName;
 
   selectedGroup = signal<GroupData | undefined>(undefined);
-  groupMembers = signal<GroupMemberData[] | []>([]);
-
   groupMembers = signal<GroupMemberData[]>([]);
 
   // Group member who is currently logged in

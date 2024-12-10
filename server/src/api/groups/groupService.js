@@ -488,7 +488,7 @@ class GroupService {
   };
 
   // Service to get expenses and settlements combined
-  static getExpenses = async(groupId, userId, page, pageSize) => {
+  static getExpensesSettlements = async(groupId, userId, page, pageSize, round) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -506,9 +506,47 @@ class GroupService {
     expensesAndSettlements.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 
     // Return the paginated results
-    return expensesAndSettlements.slice(0, 20);
+    return expensesAndSettlements.slice(pageSize * round, pageSize * round + 20);
   };
 
+  static getMessagesExpensesSettlements = async(groupId, userId, page, pageSize, round) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+
+    const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+    const messages = await GroupDb.getMessages(groupId, page, pageSize);
+    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, page, pageSize);
+    const settlements = await GroupDb.getSettlements(groupId, page, pageSize);
+
+    // Combine and sort the results by creation time
+    const messagesExpensesSettlements = [ ...messages, ...expenses, ...settlements ];
+
+    messagesExpensesSettlements.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+
+    // Return the paginated results
+    return messagesExpensesSettlements.slice(pageSize * round, pageSize * round + 20);
+  };
+
+  // static updateExpense = async(expenseData, groupId, userId) => {
+  //   const group = await GroupDb.getGroupData(groupId);
+
+  //   if (!group) {
+  //     throw new ErrorHandler(404, "Group Not Found");
+  //   }
+
+  //   // const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+
+  //   // const previousExpense = await GroupDb.getExpense(expenseData.group_expense_id);
+
+  //   // if (!previousExpense) {
+  //   //   throw new ErrorHandler(400, "Expense not found.");
+  //   // }
+
+    
+  // };
 }
 
 export default GroupService;

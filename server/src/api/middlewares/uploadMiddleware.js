@@ -19,7 +19,7 @@ const uploadMiddleware = (folderName, fieldName) => {
   const storage = multer.diskStorage({
     "destination": (req, file, cb) => {
       const uploadPath = path.join(__dirname, "/uploads", folderName); // Construct the upload directory path
-
+      
       // Ensure the directory exists before storing the file
       ensureDirectoryExists(uploadPath);
 

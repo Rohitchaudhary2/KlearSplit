@@ -88,11 +88,24 @@ class GroupController {
   });
 
   // Controller retreiving expenses
-  static getExpenses = asyncHandler(async(req, res) => {
-    const { page, pageSize } = req.query;
-    const expenses = await GroupService.getExpenses(req.body.group_id, req.user.user_id, page, pageSize);
+  static getExpensesSettlements = asyncHandler(async(req, res) => {
+    const { page, pageSize, round } = req.query;
+    const expensesSettlements = await GroupService.getExpensesSettlements(req.params.group_id, req.user.user_id, page, pageSize, round);
   
-    responseHandler(res, 200, "Expenses fetched successfully", expenses);
+    responseHandler(res, 200, "Expenses and Settlements fetched successfully", expensesSettlements);
+  });
+
+  static getMessagesExpensesSettlements = asyncHandler(async(req, res) => {
+    const { page, pageSize, round } = req.query;
+    const messagesExpensesSettlements = await GroupService.getMessagesExpensesSettlements(req.body.group_id, req.user.user_id, page, pageSize, round);
+  
+    responseHandler(res, 200, "Messages, expenses, and settlements fetched successfully", messagesExpensesSettlements);
+  });
+
+  static updateExpense = asyncHandler(async(req, res) => {
+    const updatedExpense = await GroupService.updateExpense(req.body, req.params.group_id, req.user.user_id);
+  
+    responseHandler(res, 200, "Expense updated successfully", updatedExpense);
   });
 }
 

@@ -6,6 +6,7 @@ import { API_URLS } from "../../../constants/api-urls";
 import {
   CreateGroupData,
   CreateGroupResponse,
+  FetchExpenseResponse,
   GroupExpenseInput,
   GroupExpenseResponse,
   GroupMessageResponse,
@@ -128,8 +129,8 @@ export class GroupsService {
   /**
    * This method is used to fetch all the messages of a group.
    *
-   * @param groupId The ID of the group from where the message needs to be fetched.
-   * @returns An observable with the list of messages.
+   * @param groupId - The ID of the group from where the message needs to be fetched.
+   * @returns - An observable with the list of messages.
    */
   fetchGroupMessages(groupId: string) {
     return this.httpClient
@@ -143,6 +144,13 @@ export class GroupsService {
       );
   }
 
+  /**
+   * Block groups for a particular group member.
+   *
+   * @param groupId - The ID of the group.
+   * @param blockStatus - Block status of the group for a particular group member.
+   * @returns - An observable with the updated block status.
+   */
   blockGroup(groupId: string, blockStatus: boolean) {
     return this.httpClient.patch(
       `${API_URLS.updateGroupMember}/${groupId}`,
@@ -151,6 +159,12 @@ export class GroupsService {
     );
   }
 
+  /**
+   * Leave group functionality for a group member.
+   *
+   * @param groupId - The ID of the group.
+   * @returns - An observable with leave group status.
+   */
   leaveGroup(groupId: string) {
     return this.httpClient.delete(`${API_URLS.leaveGroup}/${groupId}`, {
       withCredentials: true,
@@ -158,17 +172,30 @@ export class GroupsService {
   }
 
   /**
-   * Add a new expense to the conversation.
+   * Add a new expense to the group.
    *
-   * @param groupId - The ID of the conversation.
+   * @param groupId - The ID of the group.
    * @param expenseData - The data for the new expense.
-   * @returns An observable with the response after adding the expense.
+   * @returns - An observable with the response after adding the expense.
    */
   addExpense(groupId: string, expenseData: GroupExpenseInput | FormData) {
     return this.httpClient.post<GroupExpenseResponse>(
       `${API_URLS.addGroupExpense}/${groupId}`,
       expenseData,
       { withCredentials: true },
+    );
+  }
+
+  /**
+   * Fetch the expenses and settlements of a group.
+   *
+   * @param groupId - The ID of the group.
+   * @returns - An observable with the expenses and settlements.
+   */
+  fetchExpensesSettlements(groupId: string) {
+    return this.httpClient.get<FetchExpenseResponse>(
+      `${API_URLS.fetchExpensesSettlements}/${groupId}`,
+      { withCredentials: true }
     );
   }
 }

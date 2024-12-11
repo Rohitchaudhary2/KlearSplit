@@ -34,4 +34,5 @@ export const API_URLS = {
   addGroupMembers: `${environment.apiBaseUrl}/groups/addmembers`,
   leaveGroup: `${environment.apiBaseUrl}/groups/leavegroup`,
   addGroupExpense: `${environment.apiBaseUrl}/groups/addexpense`,
+  fetchExpensesSettlements: `${environment.apiBaseUrl}/groups/expensessettlements`,
 };

@@ -173,6 +173,7 @@ export class RegisterComponent {
       },
       error: () => {
         this.registerFailed.set(true);
+        this.isLoading.set(false);
       },
       complete: () => {
         this.isLoading.set(false);
@@ -190,8 +191,9 @@ export class RegisterComponent {
       next: () => {
         this.toastr.success("User registered successfully", "Success");
         this.router.navigate([ "/dashboard" ]);
-        this.isLoading.set(false);
       },
+      error: () => this.isLoading.set(false),
+      complete: () => this.isLoading.set(false)
     });
   }
 
@@ -244,8 +246,9 @@ export class RegisterComponent {
           ]),
         );
         this.startCountdown();
-        this.isLoading.set(false);
       },
+      error: () => this.isLoading.set(false),
+      complete: () => this.isLoading.set(false)
     });
   }
 
@@ -257,8 +260,9 @@ export class RegisterComponent {
       this.authService.verifyUser(userToSend).subscribe({
         next: () => {
           this.startCountdown();
-          this.isLoading.set(false);
         },
+        error: () => this.isLoading.set(false),
+        complete: () => this.isLoading.set(false)
       });
     }
   }
@@ -296,8 +300,9 @@ export class RegisterComponent {
       next: () => {
         this.toastr.success("Account restored successfully", "Success");
         this.router.navigate([ "/dashboard" ]);
-        this.isLoading.set(false);
       },
+      error: () => this.isLoading.set(false),
+      complete: () => this.isLoading.set(false)
     });
   }
 

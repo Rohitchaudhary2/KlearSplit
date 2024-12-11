@@ -33,6 +33,7 @@ export class GroupsSplitTypeComponent implements OnInit {
   ngOnInit(): void {
     this.dialogRef.updateSize("25%");
     this.initializeShares();
+    this.setActive("EQUAL");
   }
 
   initializeShares() {
@@ -91,7 +92,8 @@ export class GroupsSplitTypeComponent implements OnInit {
     }));
     this.dialogRef.close({
       split_type: this.activeItem,
-      debtors
+      debtors,
+      selectedParticipants: this.selectedParticipants
     });
   }
 

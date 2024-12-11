@@ -42,8 +42,10 @@ export class GroupsExpenseComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   data = inject(MAT_DIALOG_DATA);
   participants!: GroupMemberData[];
+  selectedParticipants!: GroupMemberData[];
   imageName = signal<string>("Upload Bill Receipt");
   splitType = "EQUAL";
+  payer_share!: number;
   debtors!: { debtor_id: string, debtor_share: number }[];
 
   /**
@@ -78,6 +80,7 @@ export class GroupsExpenseComponent implements OnInit {
     // Check if the first element of `data` is 'Add Expense', indicating this is a new expense.
     // If 'Add Expense', participants are the first and second items from `data` (user and their friend)
     this.participants = this.data[3];
+    this.selectedParticipants = [ ...this.participants ];
     this.form.patchValue({
       payer_id: this.data[1].group_membership_id,
     });
@@ -139,10 +142,14 @@ export class GroupsExpenseComponent implements OnInit {
   onAdd(): void {
     // If the split type is 'EQUAL', divide the total amount equally between both participants
     if (this.form.value.split_type === "EQUAL") {
-      this.debtors = this.participants.map((participant) => ({
+      this.debtors = this.selectedParticipants.map((participant) => ({
         debtor_id: participant.group_membership_id,
-        debtor_share: this.form.value.total_amount!/this.participants.length
+        debtor_share: this.form.value.total_amount!/(this.selectedParticipants.length ?? 1)
       }));
+      const payer = this.debtors.find((debtor) =>
+        this.form.value.payer_id === debtor.debtor_id);
+      this.payer_share = payer!.debtor_share;
+      this.debtors = this.debtors.filter((debtor) => this.form.value.payer_id !== debtor.debtor_id);
     }
 
     // Exit the function if the form is not valid
@@ -165,6 +172,7 @@ export class GroupsExpenseComponent implements OnInit {
       }
     });
 
+    formData.append("payer_share", JSON.stringify(this.payer_share));
     formData.append("debtors", JSON.stringify(this.debtors));
 
     // Handle debtor share logic for split types UNEQUAL and PERCENTAGE
@@ -193,7 +201,7 @@ export class GroupsExpenseComponent implements OnInit {
     // Close the dialog and pass the formData and other relevant expense data
     this.dialogRef.close({
       formData: formData,
-      expenseData: { ...this.form.value, debtors: this.debtors },
+      expenseData: { ...this.form.value, debtors: this.debtors, payer_share: this.payer_share },
     });
   }
 
@@ -270,10 +278,16 @@ export class GroupsExpenseComponent implements OnInit {
         return;
       }
 
+      this.selectedParticipants = result.selectedParticipants;
+
       this.splitType =
         result.split_type !== "PERCENTAGE" ? result.split_type : "PERCENT";
       this.form.get("split_type")?.setValue(result.split_type);
-      this.debtors = result.debtors;
+      const payer = result.debtors.find((debtor: {debtor_id: string, debtor_share: number}) =>
+        this.form.value.payer_id === debtor.debtor_id);
+      this.payer_share = payer!.debtor_share;
+      this.debtors = result.debtors.filter((debtor: {debtor_id: string, debtor_share: number}) =>
+        this.form.value.payer_id !== debtor.debtor_id);
     });
   }
 

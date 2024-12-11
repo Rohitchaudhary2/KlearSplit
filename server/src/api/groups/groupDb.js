@@ -197,14 +197,14 @@ class GroupDb {
       FROM
         group_expenses ge
       LEFT JOIN
-        expense_participants ep
+        group_expense_participants ep
         ON ge.group_expense_id = ep.group_expense_id
       WHERE
         ge.group_id = :groupId and ge."deletedAt" is null and ep."deletedAt" is null
       GROUP BY
         ge.group_expense_id
       ORDER BY
-        ge.createdAt DESC
+        ge."createdAt" DESC
       LIMIT
         :pageSize
       OFFSET

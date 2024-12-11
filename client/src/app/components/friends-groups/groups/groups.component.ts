@@ -7,6 +7,7 @@ import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
 import { CurrentUser } from "../../shared/types.model";
+import { ExpenseComponent } from "../friends/expense/expense.component";
 import { FriendsListComponent } from "../friends/friends-list/friends-list.component";
 import { MessageComponent } from "../friends/message/message.component";
 import { SocketService } from "../friends/socket.service";
@@ -26,7 +27,8 @@ import { GroupsListComponent } from "./groups-list/groups-list.component";
     NgClass,
     FriendsListComponent,
     GroupsListComponent,
-    MessageComponent
+    MessageComponent,
+    ExpenseComponent
   ],
   templateUrl: "./groups.component.html",
   styleUrls: [ "./groups.component.css", "../friends/friends.component.css" ]
@@ -58,7 +60,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   messageInput = "";
 
   messages = signal<GroupMessageData[]>([]);
-  expenses = signal<GroupExpenseData[] | []>([]);
+  expenses = signal<GroupExpenseData[]>([]);
   // Signal to hold combined view data (messages and expenses)
   combinedView = signal<(CombinedGroupMessage | CombinedGroupExpense)[]>([]);
 
@@ -184,15 +186,29 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     this.fetchGroupMembers();
     // Fetch messages
     this.fetchGroupMessages();
+    // Fetch expenses
+    this.fetchGroupExpensesAndSettlements();
     // Join the new conversation room for the selected group
     this.socketService.joinRoom(this.selectedGroup()!.group_id);
 
     // Listen for new messages from the server for the new room
     this.socketService.onNewGroupMessage((message: GroupMessageData) => {
-      this.messages.set([ ...this.messages(), message ]);
+
+      const sender = this.getFullNameAndImage(this.groupMembers().find((member) =>{
+        const isSender = message.sender_id === member.member_id;
+        message.sender_id = member.group_membership_id;
+        return isSender;
+      }));
+  
+      const messageWithName = {
+        ...message,
+        senderName: sender.fullName,
+        senderImage: sender.imageUrl
+      };
+      this.messages.set([ ...this.messages(), messageWithName ]);
       this.combinedView.set([
         ...this.combinedView(),
-        { ...message, type: "message" },
+        { ...messageWithName, type: "message" },
       ]);
       this.cdr.detectChanges();
       this.scrollToBottom();
@@ -288,7 +304,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
         next: () => {
           this.fetchGroupMembers();
           this.toastr.success("Member Added Successfully", "Success");
-        }
+        },
       });
     });
   }
@@ -310,6 +326,14 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
           };
         });
         this.messages.set([ ...messagesWithName, ...this.messages() ]); // Set the messages in the messages signal
+      }
+    });
+  }
+
+  fetchGroupExpensesAndSettlements() {
+    this.groupsService.fetchExpensesSettlements(this.selectedGroup()!.group_id).subscribe({
+      next: (expenses) => {
+        this.expenses.set(expenses.data);
       }
     });
   }
@@ -349,6 +373,10 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       const result = data.formData;
       const expenseData = data.expenseData;
 
+      expenseData.payer = this.getFullNameAndImage(
+        this.groupMembers().find((member) => expenseData.payer_id === member.group_membership_id)
+      );
+
       this.addExpenseLoader = true;
       // Temporarily add the new expense to the local view with a unique group_expense_id ('adding') to indicate that it's being processed.
       this.expenses.set([
@@ -367,32 +395,39 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
         .addExpense(this.selectedGroup()!.group_id, result)
         .subscribe({
           next: (response: GroupExpenseResponse) => {
-            if (response.data.payer_id === this.currentMember()?.group_membership_id) {
-              response.data.payer = this.user_name;
+            const expense = response.data.expense;
+            const expenseParticipants = response.data.expenseParticipants;
+            // Reduce the above array to add the debtor_amount of each participant into a variable debtor_amount
+            const debtorAmount = expenseParticipants.reduce((acc, val) => acc + parseFloat(val.debtor_amount), 0);
+            expense.debtor_amount = debtorAmount.toString();
+            if (expense.payer_id === this.currentMember()?.group_membership_id) {
+              expense.payer = this.getFullNameAndImage(this.currentMember());
             } else {
-              const payer = this.groupMembers().filter((member) => response.data.payer_id === member.group_membership_id);
-              response.data.payer = this.getFullNameAndImage(
-                payer[0]
-              ).fullName;
+              const payer = this.groupMembers().find((member) => expense.payer_id === member.group_membership_id);
+              expense.payer = this.getFullNameAndImage(
+                payer
+              );
             }
 
             // Update the expenses list by replacing the temporary 'adding' entry with the actual response data.
-            const currExpenses = this.expenses();
+            const currExpenses: GroupExpenseData[] = this.expenses();
             currExpenses.pop();
-            this.expenses.set([ ...currExpenses, response.data ]);
+            this.expenses.set([ ...currExpenses, expense ]);
 
             // Update the combined view by replacing the temporary 'adding' entry.
             const currCombined = this.combinedView();
             currCombined.pop();
             this.combinedView.set([
               ...currCombined,
-              { ...response.data, type: "expense" },
+              { ...expense, type: "expense" },
             ]);
             this.addExpenseLoader = false;
             this.cdr.detectChanges();
             this.scrollToBottom();
             this.toastr.success("Expense Created successfully", "Success");
           },
+          error: () => this.addExpenseLoader = false,
+          complete: () => this.addExpenseLoader = false,
         });
     });
   }

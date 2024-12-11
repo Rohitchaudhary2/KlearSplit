@@ -141,12 +141,12 @@
                         expense_id: expense.group_expense_id,
                         expense_name: expense.expense_name,
                         total_amount: expense.total_amount,
-                        debtor_amount: expense.total_amount,
+                        debtor_amount: expense.debtor_amount,
                         payer_id: expense.payer_id,
                       }"
                       [currentUserId]="currentMember()!.group_membership_id"
-                      [friendImageUrl]="'/profile.png'"
-                      [friendName]="expense.payer"
+                      [friendImageUrl]="expense.payer.imageUrl"
+                      [friendName]="expense.payer.fullName"
                       [currentUserImageUrl]="currentMember()!.image_url"
                     >
                     </app-expense>

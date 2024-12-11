@@ -201,7 +201,7 @@ export class GroupsExpenseComponent implements OnInit {
     // Close the dialog and pass the formData and other relevant expense data
     this.dialogRef.close({
       formData: formData,
-      expenseData: { ...this.form.value, debtors: this.debtors },
+      expenseData: { ...this.form.value, debtors: this.debtors, payer_share: this.payer_share },
     });
   }
 

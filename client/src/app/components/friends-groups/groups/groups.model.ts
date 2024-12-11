@@ -117,7 +117,6 @@ export interface GroupExpenseData {
     group_id: string;
     expense_name: string;
     payer_id: string;
-    payer: string;
     total_amount: string;
     description: string | null;
     receipt_url: string | null;
@@ -125,6 +124,11 @@ export interface GroupExpenseData {
     createdAt: string;
     updatedAt: string;
     deletedAt: string | null;
+    payer: {
+        fullName: string;
+        imageUrl?: string;
+    };
+    debtor_amount: string;
 }
 
 export interface ExpenseParticipant {
@@ -144,6 +148,12 @@ export interface GroupExpenseResponse {
         expense: GroupExpenseData;
         expenseParticipants: ExpenseParticipant[];
     };
+}
+
+export interface FetchExpenseResponse {
+    success: string;
+    message: string;
+    data: GroupExpenseData[]
 }
 
 export interface Debtors {

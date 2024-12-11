@@ -186,6 +186,8 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     this.fetchGroupMembers();
     // Fetch messages
     this.fetchGroupMessages();
+    // Fetch expenses
+    this.fetchGroupExpensesAndSettlements();
     // Join the new conversation room for the selected group
     this.socketService.joinRoom(this.selectedGroup()!.group_id);
 
@@ -328,6 +330,14 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  fetchGroupExpensesAndSettlements() {
+    this.groupsService.fetchExpensesSettlements(this.selectedGroup()!.group_id).subscribe({
+      next: (expenses) => {
+        this.expenses.set(expenses.data);
+      }
+    });
+  }
+
   /**
    * This function calls the service to fetch the group details containing all the members.
    * The response contains the balance of the current user with each member and the total balance of that member.
@@ -363,6 +373,10 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       const result = data.formData;
       const expenseData = data.expenseData;
 
+      expenseData.payer = this.getFullNameAndImage(
+        this.groupMembers().find((member) => expenseData.payer_id === member.group_membership_id)
+      );
+
       this.addExpenseLoader = true;
       // Temporarily add the new expense to the local view with a unique group_expense_id ('adding') to indicate that it's being processed.
       this.expenses.set([
@@ -382,13 +396,17 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
         .subscribe({
           next: (response: GroupExpenseResponse) => {
             const expense = response.data.expense;
+            const expenseParticipants = response.data.expenseParticipants;
+            // Reduce the above array to add the debtor_amount of each participant into a variable debtor_amount
+            const debtorAmount = expenseParticipants.reduce((acc, val) => acc + parseFloat(val.debtor_amount), 0);
+            expense.debtor_amount = debtorAmount.toString();
             if (expense.payer_id === this.currentMember()?.group_membership_id) {
-              expense.payer = this.user_name;
+              expense.payer = this.getFullNameAndImage(this.currentMember());
             } else {
               const payer = this.groupMembers().find((member) => expense.payer_id === member.group_membership_id);
               expense.payer = this.getFullNameAndImage(
                 payer
-              ).fullName;
+              );
             }
 
             // Update the expenses list by replacing the temporary 'adding' entry with the actual response data.
@@ -409,9 +427,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
             this.toastr.success("Expense Created successfully", "Success");
           },
           error: () => this.addExpenseLoader = false,
-          complete: () => {
-            this.addExpenseLoader = false;
-          }
+          complete: () => this.addExpenseLoader = false,
         });
     });
   }

@@ -6,7 +6,9 @@ class GroupController {
   // Controller for creating group
   static createGroup = asyncHandler(async(req, res) => {
     if (req.file) {
-      Object.assign(req.body, { "image_url": req.file.path });
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/groupProfile/${req.file.filename}`;
+
+      Object.assign(req.body.group, { "image_url": imageUrl });
     }
     const createdGroup = await GroupService.createGroup(req.body, req.user.user_id);
   
@@ -73,7 +75,9 @@ class GroupController {
   // Controller for adding expense
   static addExpense = asyncHandler(async(req, res) => {
     if (req.file) {
-      Object.assign(req.body, { "receipt_url": req.file.path });
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/groupExpense/${req.file.filename}`;
+
+      Object.assign(req.body, { "receipt_url": imageUrl });
     }
     const expense = await GroupService.addExpense(req.body, req.params.group_id, req.user.user_id);
   
@@ -89,15 +93,15 @@ class GroupController {
 
   // Controller retreiving expenses
   static getExpensesSettlements = asyncHandler(async(req, res) => {
-    const { page, pageSize, round } = req.query;
-    const expensesSettlements = await GroupService.getExpensesSettlements(req.params.group_id, req.user.user_id, page, pageSize, round);
+    const { page, pageSize, offset } = req.query;
+    const expensesSettlements = await GroupService.getExpensesSettlements(req.params.group_id, req.user.user_id, page, pageSize, offset);
   
     responseHandler(res, 200, "Expenses and Settlements fetched successfully", expensesSettlements);
   });
 
   static getMessagesExpensesSettlements = asyncHandler(async(req, res) => {
-    const { page, pageSize, round } = req.query;
-    const messagesExpensesSettlements = await GroupService.getMessagesExpensesSettlements(req.body.group_id, req.user.user_id, page, pageSize, round);
+    const { page, pageSize, offset } = req.query;
+    const messagesExpensesSettlements = await GroupService.getMessagesExpensesSettlements(req.body.group_id, req.user.user_id, page, pageSize, offset);
   
     responseHandler(res, 200, "Messages, expenses, and settlements fetched successfully", messagesExpensesSettlements);
   });

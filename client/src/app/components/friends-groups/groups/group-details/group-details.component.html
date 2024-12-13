@@ -14,20 +14,16 @@
 
   <!-- User Balance -->
   <div class="user-balance d-flex justify-content-between">
-    <h3>Total Balance:
-      @if (getBalanceAsNumber(data[0].balance_amount) < 0) {
-        <span class="text-danger">{{
-          -getBalanceAsNumber(data[0].balance_amount)
-            | currency: "INR"
-        }}</span>
-      } @else {
-        <span class="text-success">{{
-          getBalanceAsNumber(data[0].balance_amount)
-            | currency: "INR"
-        }}</span>
-      }
+    <h3>
+      Your Balance:
+      <span
+        [class.text-danger]="getBalanceAsNumber(data[0].balance_amount) < 0"
+        [class.text-success]="getBalanceAsNumber(data[0].balance_amount) >= 0"
+        >{{
+          -getBalanceAsNumber(data[0].balance_amount) | currency: "INR"
+        }}</span
+      >
     </h3>
-    <h3>{{ data[0].role }}</h3>
   </div>
 
   <!-- Members List -->
@@ -46,9 +42,7 @@
 
       <!-- Table Body -->
       @for (member of groupMembers(); track $index) {
-        <div
-          class="table-row"
-        >
+        <div class="table-row">
           <div class="table-cell member-cell">
             <div class="member-details">
               <img
@@ -56,37 +50,42 @@
                 alt="Profile Picture"
                 class="member-profile-pic"
               />
-              <span class="member-name">
-                {{ member.first_name }} {{ member.last_name || "" }}
-              </span>
+              @if (!member.deletedAt) {
+                <span class="member-name">
+                  {{ member.first_name }} {{ member.last_name || "" }}
+                </span>
+              } @else {
+                <span class="member-name" [class.left-user]="member.deletedAt">
+                  {{ member.first_name }} {{ member.last_name || "" }} (Exited
+                  Group)
+                </span>
+              }
             </div>
           </div>
           <div class="table-cell">{{ member.role }}</div>
           <div class="table-cell">
-            @if (getBalanceAsNumber(member.balance_with_user) < 0) {
-              <span class="text-danger">{{
-                -getBalanceAsNumber(member.balance_with_user)
-                  | currency: "INR"
-              }}</span>
-            } @else {
-              <span class="text-success">{{
-                getBalanceAsNumber(member.balance_with_user)
-                  | currency: "INR"
-              }}</span>
-            }
+            <span
+              [class.text-success]="
+                getBalanceAsNumber(member.balance_with_user) < 0
+              "
+              [class.text-danger]="
+                getBalanceAsNumber(member.balance_with_user) >= 0
+              "
+              >{{
+                getBalanceAsNumber(member.balance_with_user) | currency: "INR"
+              }}</span
+            >
           </div>
           <div class="table-cell">
-            @if (getBalanceAsNumber(member.total_balance) < 0) {
-              <span class="text-danger">{{
-                -getBalanceAsNumber(member.total_balance)
-                  | currency: "INR"
-              }}</span>
-            } @else {
-              <span class="text-success">{{
-                getBalanceAsNumber(member.total_balance)
-                  | currency: "INR"
-              }}</span>
-            }
+            <span
+              [class.text-danger]="getBalanceAsNumber(member.total_balance) < 0"
+              [class.text-success]="
+                getBalanceAsNumber(member.total_balance) >= 0
+              "
+              >{{
+                getBalanceAsNumber(member.total_balance) | currency: "INR"
+              }}</span
+            >
           </div>
         </div>
       }

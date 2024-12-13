@@ -51,7 +51,7 @@ export class FriendsService {
   ) {
     const messagesUrl = `${API_URLS.getMessages}/${conversationId}?page=${pageMessage}&pageSize=${pageSize}`;
     const expensesUrl = `${API_URLS.getExpenses}/${conversationId}?page=${pageExpense}&pageSize=${pageSize}`;
-    const combinedUrl = `${API_URLS.getCombined}/${conversationId}?page=${pageCombined}&pageSize=${pageSize}`;
+    const combinedUrl = `${API_URLS.getCombined}/${conversationId}?page=${pageCombined}&pageSize=${pageSize * 2}`;
     // If all messages, expenses, and combined need to be loaded
     if (loadMessages && loadExpenses) {
       return this.httpClient

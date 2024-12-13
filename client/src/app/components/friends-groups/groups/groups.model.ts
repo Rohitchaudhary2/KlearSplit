@@ -128,7 +128,8 @@ export interface GroupExpenseData {
         fullName: string;
         imageUrl?: string;
     };
-    debtor_amount: string;
+    total_debt_amount?: string;
+    user_debt: string;
 }
 
 export interface ExpenseParticipant {

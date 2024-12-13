@@ -33,6 +33,8 @@ app.use(passport.initialize());
 app.use(cors(corsOptions)); // Enable Cross-Origin Resource Sharing (CORS) to allow requests from different origins
 app.use(cookieParser()); // Parse cookies from incoming requests and make them available under req.cookies
 
+app.use("/uploads", express.static("uploads")); // Serve static files from the uploads directory
+
 await sequelize.sync(); // Sync the Sequelize models with the database, creating tables if they don't exist
 
 app.use(loggerMiddleware);

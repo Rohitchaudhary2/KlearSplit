@@ -488,7 +488,7 @@ class GroupService {
   };
 
   // Service to get expenses and settlements combined
-  static getExpensesSettlements = async(groupId, userId, page, pageSize, round) => {
+  static getExpensesSettlements = async(groupId, userId, page, pageSize, offset) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -506,10 +506,10 @@ class GroupService {
     expensesAndSettlements.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 
     // Return the paginated results
-    return expensesAndSettlements.slice(pageSize * round, pageSize * round + 20);
+    return expensesAndSettlements.slice(pageSize * offset, pageSize * offset + 20);
   };
 
-  static getMessagesExpensesSettlements = async(groupId, userId, page, pageSize, round) => {
+  static getMessagesExpensesSettlements = async(groupId, userId, page, pageSize, offset) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -527,7 +527,7 @@ class GroupService {
     messagesExpensesSettlements.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 
     // Return the paginated results
-    return messagesExpensesSettlements.slice(pageSize * round, pageSize * round + 20);
+    return messagesExpensesSettlements.slice(pageSize * offset, pageSize * offset + 20);
   };
 
   // static updateExpense = async(expenseData, groupId, userId) => {

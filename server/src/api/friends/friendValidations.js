@@ -16,6 +16,7 @@ const paginationValidation = Joi.object({
   "page": Joi.number().integer().min(1).label("Page"), // Ensures `page` is a positive integer
   "pageSize": Joi.number().integer().min(1).label("Page Size"), // Ensures `pageSize` is a positive integer
   "offset": Joi.number().min(0).max(2).optional(),
+  "timestamp": Joi.date(),
   "fetchAll": Joi.boolean().optional() // Optional boolean to fetch all results
 });
 

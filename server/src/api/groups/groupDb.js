@@ -30,7 +30,7 @@ class GroupDb {
       (select g.*, gm.group_membership_id, gm.status, gm.role, gm.has_archived, gm."deletedAt"
       from groups g 
       join 
-      group_members gm on g.group_id = gm.group_id where gm.member_id = :userId and gm.status!='REJECTED' and g."deletedAt" is null and gm."deletedAt" is null) r 
+      group_members gm on g.group_id = gm.group_id where gm.member_id = :userId and gm.status!='REJECTED' and g."deletedAt" is null) r 
       left join 
       group_member_balance gmb on gmb.group_id = r.group_id 
       where
@@ -43,25 +43,39 @@ class GroupDb {
     return groups;
   };
 
-  static getGroup = async(groupId, groupMembershipId) => {
-    const group = await sequelize.query(
-      `select r.*, u.first_name, u.last_name, u.image_url from (select gm.*, sum(case when gmb.participant1_id = gm.group_membership_id and gmb.participant2_id = :groupMembershipId then gmb.balance_amount when gmb.participant1_id = :groupMembershipId and gmb.participant2_id = gm.group_membership_id then -gmb.balance_amount else 0 end) as balance_with_user, 
-      sum(case when gmb.participant1_id = gm.group_membership_id	then gmb.balance_amount when gmb.participant2_id = gm.group_membership_id then -gmb.balance_amount else 0 end) as total_balance 
+  static getGroup = async(groupId, groupMembershipId, isBlocked) => {
+    if (!isBlocked) {
+      return await sequelize.query(
+        `select r.*, u.first_name, u.last_name, u.image_url from (select gm.*, sum(case when gmb.participant1_id = gm.group_membership_id and gmb.participant2_id = :groupMembershipId then gmb.balance_amount when gmb.participant1_id = :groupMembershipId and gmb.participant2_id = gm.group_membership_id then -gmb.balance_amount else 0 end) as balance_with_user, 
+        sum(case when gmb.participant1_id = gm.group_membership_id	then gmb.balance_amount when gmb.participant2_id = gm.group_membership_id then -gmb.balance_amount else 0 end) as total_balance 
+        from 
+        group_members gm 
+        left join 
+        group_member_balance gmb on gm.group_id = gmb.group_id 
+        where 
+        gm.group_id = :groupId and gmb."deletedAt" is null
+        group by gm.group_membership_id) r 
+        join 
+        users u on r.member_id = u.user_id;`, {
+          "replacements": { groupMembershipId, groupId },
+          "type": QueryTypes.SELECT
+        }
+      );
+    }
+    return await sequelize.query(
+      `select gm.group_membership_id, gm.member_id, u.first_name, u.last_name, u.image_url 
       from 
       group_members gm 
-      left join 
-      group_member_balance gmb on gm.group_id = gmb.group_id 
-      where 
-      gm.group_id = :groupId and gm."deletedAt" is null and gmb."deletedAt" is null
-      group by gm.group_membership_id) r 
       join 
-      users u on r.member_id = u.user_id;`, {
-        "replacements": { groupMembershipId, groupId },
+      users u 
+      on 
+      gm.member_id = u.user_id 
+      where 
+      gm.group_id = :groupId`, {
+        "replacements": { groupId },
         "type": QueryTypes.SELECT
       }
     );
-
-    return group;
   };
 
   static getGroupMembers = async(groupId) => await GroupMember.findAll({
@@ -70,7 +84,7 @@ class GroupDb {
     }
   });
 
-  static getMemberBlockedGroup = async(groupId, members) => await GroupMember.findAll({
+  static getMembersBlockedGroup = async(groupId, members) => await GroupMember.findAll({
     "where": {
       "group_id": groupId,
       "member_id": {
@@ -122,12 +136,15 @@ class GroupDb {
 
   static saveMessage = async(messageData, groupId, groupMembershipId) => await GroupMessage.create({ ...messageData, "group_id": groupId, "sender_id": groupMembershipId });
 
-  static getMessages = async(groupId, page = 1, pageSize = 10) => {
+  static getMessages = async(groupId, page = 1, pageSize = 10, timestamp) => {
     const offset = (page - 1) * pageSize;
 
     return await GroupMessage.findAll({
       "where": {
-        "group_id": groupId
+        "group_id": groupId,
+        "createdAt": {
+          [ Op.lt ]: timestamp
+        }
       },
       "order": [ [ "createdAt", "DESC" ] ],
       "limit": pageSize,
@@ -187,7 +204,7 @@ class GroupDb {
     }
   });
 
-  static getExpenses = async(groupId, groupMembershipId, page = 1, pageSize = 20) => {
+  static getExpenses = async(groupId, groupMembershipId, page = 1, pageSize = 20, timestamp) => {
     const offset = (page - 1) * pageSize;
 
     return await sequelize.query(`SELECT
@@ -200,7 +217,7 @@ class GroupDb {
         group_expense_participants ep
         ON ge.group_expense_id = ep.group_expense_id
       WHERE
-        ge.group_id = :groupId and ge."deletedAt" is null and ep."deletedAt" is null
+        ge.group_id = :groupId and ge."deletedAt" is null and ep."deletedAt" is null and "createdAt" < :timestamp
       GROUP BY
         ge.group_expense_id
       ORDER BY
@@ -209,17 +226,20 @@ class GroupDb {
         :pageSize
       OFFSET
         :offset;`, {
-      "replacements": { groupMembershipId, groupId, pageSize, offset },
+      "replacements": { groupMembershipId, groupId, pageSize, offset, timestamp },
       "type": QueryTypes.SELECT
     });
   };
 
-  static getSettlements = async(groupId, page = 1, pageSize = 20) => {
+  static getSettlements = async(groupId, page = 1, pageSize = 20, timestamp) => {
     const offset = (page - 1) * pageSize;
 
     return await GroupSettlement.findAll({
       "where": {
-        "group_id": groupId
+        "group_id": groupId,
+        "createdAt": {
+          [ Op.lt ]: timestamp
+        }
       },
       "order": [ [ "createdAt", "DESC" ] ],
       "limit": pageSize,

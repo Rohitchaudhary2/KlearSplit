@@ -108,12 +108,12 @@ class GroupService {
     // Check if the inviter is a member of the group and has appropriate permissions
     const inviter = await GroupDb.getGroupMember(groupId, userId);
 
-    // Throw an error if the inviter does not have membership or role
-    if (!inviter || inviter.role === "USER") {
+    // Throw an error if the inviter does not have membership or appropriate role
+    if (!inviter || inviter.has_blocked || inviter.role === "USER") {
       throw new ErrorHandler(403, "You are not allowed to invite members to this group");
     }
     
-    let membersBlockedGroup = await GroupDb.getMemberBlockedGroup(groupId, membersData.members);
+    let membersBlockedGroup = await GroupDb.getMembersBlockedGroup(groupId, membersData.members);
 
     membersBlockedGroup = membersBlockedGroup.map((member) => member.member_id);
     let notAddedMembers = [];
@@ -208,7 +208,7 @@ class GroupService {
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
 
     // Retrieve the group members data using the group ID and the user's membership ID
-    const group = await GroupDb.getGroup(groupId, userMembershipInfo.group_membership_id);
+    const group = await GroupDb.getGroup(groupId, userMembershipInfo.group_membership_id, userMembershipInfo.has_blocked);
 
     return group;
   };
@@ -232,7 +232,11 @@ class GroupService {
     }
     
     // Check if the user is a member of the group. If not, this will throw an error.
-    await this.isUserMemberOfGroup(groupId, userId);
+    const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+
+    if (userMembershipInfo.has_blocked) {
+      throw new ErrorHandler(400, "You are not allowed to update the group.");
+    }
 
     const updatedGroup = await GroupDb.updateGroup(groupId, groupData);
 
@@ -243,7 +247,7 @@ class GroupService {
    * Updates the membership data for a specific user in the group.
    *
    * @param {uuid} groupId - The unique identifier of the group where the member's data will be updated.
-   * @param {Object} groupMemberData - The data to be updated for the group member (status, role).
+   * @param {Object} groupMemberData - The data to be updated for the group member (status, role, blocking status).
    * @param {uuid} userId - The unique identifier of the user requesting the membership update.
    *
    * @throws {ErrorHandler} - Throws an error if:
@@ -262,12 +266,12 @@ class GroupService {
     
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
 
-    if (groupMemberData.status && userMembershipInfo.status !== "PENDING") {
-      throw new ErrorHandler(400, "Status can't be changed once accepted or rejected the group invitation.");
+    if (userMembershipInfo.has_blocked && (groupMemberData.status || groupMemberData.role)) {
+      throw new ErrorHandler(400, "You cannot update the status or role while the group is blocked.");
     }
 
-    if ("has_blocked" in groupMemberData) {
-      groupMemberData.deletedAt = groupMemberData.has_blocked ? new Date().toISOString() : null;
+    if (groupMemberData.status && userMembershipInfo.status !== "PENDING") {
+      throw new ErrorHandler(400, "Status can't be changed once accepted or rejected the group invitation.");
     }
 
     const updatedMember = GroupDb.updateGroupMember(userMembershipInfo.group_membership_id, groupMemberData);
@@ -297,6 +301,10 @@ class GroupService {
     
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
 
+    if (userMembershipInfo.has_blocked) {
+      throw new ErrorHandler(400, "You have blocked the group.");
+    }
+
     const message = GroupDb.saveMessage(messageData, groupId, userMembershipInfo.group_membership_id);
 
     return message;
@@ -316,16 +324,18 @@ class GroupService {
    *
    * @returns {Promise<Array>} - A promise that resolves to an array of messages from the group.
    */
-  static getMessages = async(groupId, userId, page, pageSize) => {
+  static getMessages = async(groupId, userId, page, pageSize, timestamp) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
       throw new ErrorHandler(404, "Group Not Found");
     }
     
-    await this.isUserMemberOfGroup(groupId, userId);
+    const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
 
-    const messages = GroupDb.getMessages(groupId, page, pageSize);
+    const updatedTimestamp = userMembershipInfo.has_blocked ? userMembershipInfo.updatedAt : timestamp;
+
+    const messages = GroupDb.getMessages(groupId, page, pageSize, updatedTimestamp);
 
     return messages;
   };
@@ -375,7 +385,11 @@ class GroupService {
       throw new ErrorHandler(404, "Group Not Found");
     }
 
-    await this.isUserMemberOfGroup(groupId, userId);
+    const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+
+    if (userMembershipInfo.has_blocked) {
+      throw new ErrorHandler(400, "You have blocked the group.");
+    }
 
     // Verify that payer is not in the list of debtors
     GroupUtils.isPayerInDebtors(expenseData.debtors, expenseData.payer_id);
@@ -446,7 +460,11 @@ class GroupService {
       throw new ErrorHandler(404, "Group Not Found");
     }
 
-    await this.isUserMemberOfGroup(groupId, userId);
+    const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+
+    if (userMembershipInfo.has_blocked) {
+      throw new ErrorHandler(400, "You have blocked the group.");
+    }
 
     // Verifying that both payer and debtor are members of group.
     const count = GroupDb.countGroupMembers(groupId, [ settlementData.payer_id, settlementData.debtor_id ]);
@@ -487,8 +505,19 @@ class GroupService {
     }
   };
 
-  // Service to get expenses and settlements combined
-  static getExpensesSettlements = async(groupId, userId, page, pageSize, offset) => {
+  /**
+ * Fetches and combines the expenses and settlements of a group and returns them in a paginated manner.
+ *
+ * @param {uuid} groupId - The ID of the group whose expenses and settlements are to be fetched.
+ * @param {uuid} userId - The ID of the user requesting the expenses and settlements data.
+ * @param {number} [page=1] - The page number for pagination (default is 1).
+ * @param {number} [pageSize=20] - The number of items per page (default is 20).
+ * @param {number} offset - The offset for the pagination used for determining which slice of data to return.
+ * @returns {Array} - A paginated list of expenses and settlements combined and sorted by creation date.
+ *
+ * @throws {ErrorHandler} - Throws an error if the group is not found or if any database query fails.
+ */
+  static getExpensesSettlements = async(groupId, userId, page = 1, pageSize = 20, offset, timestamp) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -496,20 +525,32 @@ class GroupService {
     }
 
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
-    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, page, pageSize);
-
-    const settlements = await GroupDb.getSettlements(groupId, page, pageSize);
+    const updatedTimestamp = userMembershipInfo.has_blocked ? userMembershipInfo.updatedAt : timestamp;
+    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, page, pageSize, updatedTimestamp);
+    const settlements = await GroupDb.getSettlements(groupId, page, pageSize, updatedTimestamp);
 
     // Combine and sort the results by creation time
     const expensesAndSettlements = [ ...expenses, ...settlements ];
 
     expensesAndSettlements.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-
     // Return the paginated results
+    
     return expensesAndSettlements.slice(pageSize * offset, pageSize * offset + 20);
   };
 
-  static getMessagesExpensesSettlements = async(groupId, userId, page, pageSize, offset) => {
+  /**
+   * Fetches and combines the messages, expenses, and settlements of a group and returns them in a paginated manner.
+   *
+   * @param {uuid} groupId - The ID of the group whose messages, expenses, and settlements are to be fetched.
+   * @param {uuid} userId - The ID of the user requesting the messages, expenses, and settlements data.
+   * @param {number} [page=1] - The page number for pagination (default is 1).
+   * @param {number} [pageSize=20] - The number of items per page (default is 20).
+   * @param {number} offset - The offset or round for pagination used to determine which slice of data to return.
+   * @returns {Array} - A paginated list of messages, expenses, and settlements combined and sorted by creation date.
+   *
+   * @throws {ErrorHandler} - Throws an error if the group is not found or if any database query fails.
+   */
+  static getMessagesExpensesSettlements = async(groupId, userId, page = 1, pageSize = 20, offset, timestamp) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -517,9 +558,10 @@ class GroupService {
     }
 
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
-    const messages = await GroupDb.getMessages(groupId, page, pageSize);
-    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, page, pageSize);
-    const settlements = await GroupDb.getSettlements(groupId, page, pageSize);
+    const updatedTimestamp = userMembershipInfo.has_blocked ? userMembershipInfo.updatedAt : timestamp;
+    const messages = await GroupDb.getMessages(groupId, page, pageSize, updatedTimestamp);
+    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, page, pageSize, updatedTimestamp);
+    const settlements = await GroupDb.getSettlements(groupId, page, pageSize, updatedTimestamp);
 
     // Combine and sort the results by creation time
     const messagesExpensesSettlements = [ ...messages, ...expenses, ...settlements ];
@@ -537,13 +579,13 @@ class GroupService {
   //     throw new ErrorHandler(404, "Group Not Found");
   //   }
 
-  //   // const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+  //   const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
 
-  //   // const previousExpense = await GroupDb.getExpense(expenseData.group_expense_id);
+  //   const previousExpense = await GroupDb.getExpense(expenseData.group_expense_id);
 
-  //   // if (!previousExpense) {
-  //   //   throw new ErrorHandler(400, "Expense not found.");
-  //   // }
+  //   if (!previousExpense) {
+  //     throw new ErrorHandler(400, "Expense Not Found.");
+  //   }
 
     
   // };

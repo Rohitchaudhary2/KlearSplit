@@ -30,8 +30,16 @@
                 class="profile-image"
                 [src]="selectedGroup()?.image_url || '/group-profile.png'"
                 alt="Group"
+                (click)="openGroupDetails()"
+                (keyup.enter)="openGroupDetails()"
+                style="cursor: pointer"
             /></span>
-            <span class="ms-3 fs-4" style="vertical-align: middle"
+            <span
+              class="ms-3 fs-4"
+              style="vertical-align: middle"
+              (click)="openGroupDetails()"
+              (keyup.enter)="openGroupDetails()"
+              style="cursor: pointer"
               >{{ selectedGroup()?.group_name }}</span
             >
           </div>
@@ -135,23 +143,23 @@
                   </app-message>
                 }
               } @else if (currentView() === "Expenses") {
-                  @for (expense of expenses(); track expense.group_expense_id) {
-                    <app-expense
-                      [expense]="{
-                        expense_id: expense.group_expense_id,
-                        expense_name: expense.expense_name,
-                        total_amount: expense.total_amount,
-                        debtor_amount: expense.user_debt,
-                        payer_id: expense.payer_id,
-                      }"
-                      [currentUserId]="currentMember()!.group_membership_id"
-                      [friendImageUrl]="expense.payer.imageUrl"
-                      [friendName]="expense.payer.fullName"
-                      [currentUserImageUrl]="currentMember()!.image_url"
-                    >
-                    </app-expense>
-                  }
+                @for (expense of expenses(); track expense.group_expense_id) {
+                  <app-expense
+                    [expense]="{
+                      expense_id: expense.group_expense_id,
+                      expense_name: expense.expense_name,
+                      total_amount: expense.total_amount,
+                      debtor_amount: expense.user_debt,
+                      payer_id: expense.payer_id,
+                    }"
+                    [currentUserId]="currentMember()!.group_membership_id"
+                    [friendImageUrl]="expense.payer.imageUrl"
+                    [friendName]="expense.payer.fullName"
+                    [currentUserImageUrl]="currentMember()!.image_url"
+                  >
+                  </app-expense>
                 }
+              }
             </ul>
           </div>
         </div>
@@ -169,7 +177,7 @@
               Add Expense
             </button>
           </div>
-          
+
           <div class="input-field ms-3">
             <input
               class="message-input"
@@ -184,9 +192,7 @@
             />
           </div>
           @if (charCountExceeded) {
-            <div class="char-count error mx-2">
-              {{ charCount }} / 512
-            </div>
+            <div class="char-count error mx-2">{{ charCount }} / 512</div>
           }
           <button (click)="sendMessage()" class="send-message m-3">
             <i class="fa fa-paper-plane"></i>

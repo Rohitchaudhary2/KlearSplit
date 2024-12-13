@@ -24,18 +24,18 @@ class GroupDb {
 
   static getUserGroups = async(userId) => {
     const groups = await sequelize.query(
-      `select r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, r.status, r.role, r.has_archived, 
+      `select r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, r.status, r.role, r.has_archived, r.has_blocked, 
       sum(case when gmb.participant1_id = r.group_membership_id	then gmb.balance_amount when gmb.participant2_id = r.group_membership_id then -gmb.balance_amount else 0 end) as balance_amount 
       from 
-      (select g.*, gm.group_membership_id, gm.status, gm.role, gm.has_archived, gm."deletedAt"
+      (select g.*, gm.group_membership_id, gm.status, gm.role, gm.has_archived, gm.has_blocked, gm."deletedAt"
       from groups g 
       join 
-      group_members gm on g.group_id = gm.group_id where gm.member_id = :userId and gm.status!='REJECTED' and g."deletedAt" is null) r 
+      group_members gm on g.group_id = gm.group_id where gm.member_id = :userId and gm.status!='REJECTED' and g."deletedAt" is null and gm."deletedAt" is null) r 
       left join 
       group_member_balance gmb on gmb.group_id = r.group_id 
       where
       gmb."deletedAt" is null
-      group by r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, r.status, r.role, r.has_archived;`, {
+      group by r.group_id, r.group_name, r.group_description, r.image_url, r.creator_id, r.status, r.role, r.has_archived, r.has_blocked;`, {
         "replacements": { userId },
         "type": QueryTypes.SELECT
       });
@@ -217,7 +217,7 @@ class GroupDb {
         group_expense_participants ep
         ON ge.group_expense_id = ep.group_expense_id
       WHERE
-        ge.group_id = :groupId and ge."deletedAt" is null and ep."deletedAt" is null and "createdAt" < :timestamp
+        ge.group_id = :groupId and ge."deletedAt" is null and ep."deletedAt" is null and ge."createdAt" < :timestamp
       GROUP BY
         ge.group_expense_id
       ORDER BY

@@ -132,11 +132,13 @@ export class GroupsService {
    * @param groupId - The ID of the group from where the message needs to be fetched.
    * @returns - An observable with the list of messages.
    */
-  fetchGroupMessages(groupId: string) {
+  fetchGroupMessages(groupId: string, page: number, pageSize: number, offset: number, timestamp: string) {
     return this.httpClient
-      .get<GroupMessageResponse>(`${API_URLS.getGroupMessages}/${groupId}`, {
-        withCredentials: true,
-      })
+      .get<GroupMessageResponse>(
+        `${API_URLS.getGroupMessages}/${groupId}?page=${page}&pageSize=${pageSize}&offset=${offset}&timestamp=${timestamp}`,
+        {
+          withCredentials: true,
+        })
       .pipe(
         map((messages) =>
           messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)),
@@ -192,9 +194,9 @@ export class GroupsService {
    * @param groupId - The ID of the group.
    * @returns - An observable with the expenses and settlements.
    */
-  fetchExpensesSettlements(groupId: string, page: number, pageSize: number, offset: number) {
+  fetchExpensesSettlements(groupId: string, page: number, pageSize: number, offset: number, timestamp: string) {
     return this.httpClient.get<FetchExpenseResponse>(
-      `${API_URLS.fetchExpensesSettlements}/${groupId}?page=${page}&pageSize=${pageSize}&offset=${offset}`,
+      `${API_URLS.fetchExpensesSettlements}/${groupId}?page=${page}&pageSize=${pageSize}&offset=${offset}&timestamp=${timestamp}`,
       { withCredentials: true }
     );
   }

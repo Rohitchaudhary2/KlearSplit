@@ -361,6 +361,12 @@ class GroupService {
 
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
 
+    const balance = await GroupDb.userBalanceInGroup(groupId, userMembershipInfo.group_membership_id).amount;
+
+    if (balance !== 0) {
+      throw new ErrorHandler(400, "Settle up before this action. ");
+    }
+
     await GroupDb.leaveGroup(userMembershipInfo.group_membership_id);
   };
 

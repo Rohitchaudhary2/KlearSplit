@@ -30,7 +30,7 @@ class GroupDb {
       (select g.*, gm.group_membership_id, gm.status, gm.role, gm.has_archived, gm."deletedAt"
       from groups g 
       join 
-      group_members gm on g.group_id = gm.group_id where gm.member_id = :userId and gm.status!='REJECTED' and g."deletedAt" is null) r 
+      group_members gm on g.group_id = gm.group_id where gm.member_id = :userId and gm.status!='REJECTED' and g."deletedAt" is null and gm."deletedAt" is null) r 
       left join 
       group_member_balance gmb on gmb.group_id = r.group_id 
       where
@@ -198,6 +198,15 @@ class GroupDb {
     }
   });
 
+  static userBalanceInGroup = async(groupId, groupMembershipId) => {
+    return await sequelize.query(
+      "select sum(balance_amount) as amount from group_member_balance where group_id = :groupId and (participant1_id = :groupMembershipId or participant2_id = :groupMembershipId) group by group_id;", {
+        "replacements": { groupId, groupMembershipId },
+        "type": QueryTypes.SELECT
+      }
+    );
+  };
+
   static getExpense = async(groupExpenseId) => await GroupExpense.findOne({
     "where": {
       "group_expense_id": groupExpenseId
@@ -217,7 +226,7 @@ class GroupDb {
         group_expense_participants ep
         ON ge.group_expense_id = ep.group_expense_id
       WHERE
-        ge.group_id = :groupId and ge."deletedAt" is null and ep."deletedAt" is null and "createdAt" < :timestamp
+        ge.group_id = :groupId and ge."deletedAt" is null and ep."deletedAt" is null and ge."createdAt" < :timestamp
       GROUP BY
         ge.group_expense_id
       ORDER BY

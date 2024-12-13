@@ -25,7 +25,6 @@ export class GroupDetailsComponent implements OnInit {
   ngOnInit(): void {
     this.data[0].role = this.data[0].role !== "USER" ? `${this.data[0].role[0]}${this.data[0].role.slice(1).toLowerCase()}` : "Member";
     this.fetchGroupMembers();
-    this.groupMembers.set(this.groupMembers().filter((member) => this.currentUserId !== member.member_id));
   }
 
   /**

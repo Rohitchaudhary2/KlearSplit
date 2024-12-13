@@ -109,6 +109,10 @@
   object-fit: cover;
 }
 
+.left-user {
+  opacity: 0.5;
+}
+
 @media (max-width: 768px) {
   .table-row {
     flex-direction: column;

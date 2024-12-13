@@ -6,7 +6,9 @@ class GroupController {
   // Controller for creating group
   static createGroup = asyncHandler(async(req, res) => {
     if (req.file) {
-      Object.assign(req.body.group, { "image_url": req.file.path });
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/groupProfile/${req.file.filename}`;
+
+      Object.assign(req.body.group, { "image_url": imageUrl });
     }
     const createdGroup = await GroupService.createGroup(req.body, req.user.user_id);
   
@@ -73,7 +75,9 @@ class GroupController {
   // Controller for adding expense
   static addExpense = asyncHandler(async(req, res) => {
     if (req.file) {
-      Object.assign(req.body, { "receipt_url": req.file.path });
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/groupExpense/${req.file.filename}`;
+
+      Object.assign(req.body, { "receipt_url": imageUrl });
     }
     const expense = await GroupService.addExpense(req.body, req.params.group_id, req.user.user_id);
   

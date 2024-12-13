@@ -6,6 +6,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
+import { ConfirmationDialogComponent } from "../../confirmation-dialog/confirmation-dialog.component";
 import { CurrentUser } from "../../shared/types.model";
 import { ExpenseComponent } from "../friends/expense/expense.component";
 import { FriendsListComponent } from "../friends/friends-list/friends-list.component";
@@ -74,8 +75,9 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   // Pagination related variables for message and expense loading
   pageMessage = 1;
   pageExpense = 1;
-  pageSize = 10;
+  pageSize = 20;
   pageCombined = 1;
+  offset = 0;
 
   // Flag to indicate if data is still being loaded
   loading = false;
@@ -331,9 +333,19 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   }
 
   fetchGroupExpensesAndSettlements() {
-    this.groupsService.fetchExpensesSettlements(this.selectedGroup()!.group_id).subscribe({
+    this.groupsService.fetchExpensesSettlements(
+      this.selectedGroup()!.group_id,
+      this.pageExpense,
+      this.pageSize,
+      this.offset
+    ).subscribe({
       next: (expenses) => {
         this.expenses.set(expenses.data);
+        this.offset++;
+        if (this.offset === 3) {
+          this.offset = 0;
+          this.pageExpense++;
+        }
       }
     });
   }
@@ -399,7 +411,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
             const expenseParticipants = response.data.expenseParticipants;
             // Reduce the above array to add the debtor_amount of each participant into a variable debtor_amount
             const debtorAmount = expenseParticipants.reduce((acc, val) => acc + parseFloat(val.debtor_amount), 0);
-            expense.debtor_amount = debtorAmount.toString();
+            expense.user_debt = debtorAmount.toString();
             if (expense.payer_id === this.currentMember()?.group_membership_id) {
               expense.payer = this.getFullNameAndImage(this.currentMember());
             } else {
@@ -469,21 +481,42 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   onBlockGroup() {
     this.groupsService.blockGroup(this.selectedGroup()!.group_id, !this.currentMember()!.has_blocked).subscribe({
       next: () => {
-        this.toastr.success("Group Blocked Successfully", "Success");
-        const groupId = this.selectedGroup()!.group_id;
-        this.groupsListComponent.removeGroup(groupId);
-        this.selectedGroup.set(undefined);
+        const confirmationDialogRef = this.dialog.open(
+          ConfirmationDialogComponent,
+          {
+            data: "Your changes would be lost. Would you like to continue?",
+          },
+        );
+    
+        confirmationDialogRef.afterClosed().subscribe((result) => {
+          // If user confirms closing of Add Expense dialog box.
+          if (result) {
+            this.toastr.success("Group Blocked Successfully", "Success");
+          }
+        });
       }
     });
   }
 
   onLeaveGroup() {
-    this.groupsService.leaveGroup(this.selectedGroup()!.group_id).subscribe({
-      next: () => {
-        this.toastr.success("Group Left Successfully", "Success");
-        const groupId = this.selectedGroup()!.group_id;
-        this.groupsListComponent.removeGroup(groupId);
-        this.selectedGroup.set(undefined);
+    const confirmationDialogRef = this.dialog.open(
+      ConfirmationDialogComponent,
+      {
+        data: "Your changes would be lost. Would you like to continue?",
+      },
+    );
+
+    confirmationDialogRef.afterClosed().subscribe((result) => {
+      // If user confirms closing of Add Expense dialog box.
+      if (result) {
+        this.groupsService.leaveGroup(this.selectedGroup()!.group_id).subscribe({
+          next: () => {
+            this.toastr.success("Group Left Successfully", "Success");
+            const groupId = this.selectedGroup()!.group_id;
+            this.groupsListComponent.removeGroup(groupId);
+            this.selectedGroup.set(undefined);
+          }
+        });
       }
     });
   }

@@ -192,9 +192,9 @@ export class GroupsService {
    * @param groupId - The ID of the group.
    * @returns - An observable with the expenses and settlements.
    */
-  fetchExpensesSettlements(groupId: string) {
+  fetchExpensesSettlements(groupId: string, page: number, pageSize: number, offset: number) {
     return this.httpClient.get<FetchExpenseResponse>(
-      `${API_URLS.fetchExpensesSettlements}/${groupId}`,
+      `${API_URLS.fetchExpensesSettlements}/${groupId}?page=${page}&pageSize=${pageSize}&offset=${offset}`,
       { withCredentials: true }
     );
   }

@@ -15,6 +15,7 @@ const optionalFieldsForGroup = {
 export const groupCreationSchema = Joi.object({
   "group": {
     "group_name": Joi.string().trim().min(2).max(50).required().messages({
+      "string.min": "Group name must be at least 2 characters long.",
       "string.max": "Group name must be between 2 to 50 characters.",
       "any.required": "Group name is required."
     }),
@@ -25,6 +26,7 @@ export const groupCreationSchema = Joi.object({
 
 export const groupUpdationSchema = Joi.object({
   "group_name": Joi.string().trim().min(2).max(50).messages({
+    "string.min": "Group name must be at least 2 characters long.",
     "string.max": "Group name must be between 2 to 50 characters.",
     "any.required": "Group name is required."
   }),

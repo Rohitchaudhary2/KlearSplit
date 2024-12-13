@@ -6,7 +6,7 @@ class GroupController {
   // Controller for creating group
   static createGroup = asyncHandler(async(req, res) => {
     if (req.file) {
-      Object.assign(req.body, { "image_url": req.file.path });
+      Object.assign(req.body.group, { "image_url": req.file.path });
     }
     const createdGroup = await GroupService.createGroup(req.body, req.user.user_id);
   
@@ -57,8 +57,8 @@ class GroupController {
 
   // Controller for retreiving messages for a particular group
   static getMessages = asyncHandler(async(req, res) => {
-    const { page, pageSize } = req.query;
-    const messages = await GroupService.getMessages(req.params.group_id, req.user.user_id, page, pageSize);
+    const { page, pageSize, timestamp } = req.query;
+    const messages = await GroupService.getMessages(req.params.group_id, req.user.user_id, page, pageSize, timestamp);
   
     responseHandler(res, 200, "Messages fetched successfully", messages);
   });
@@ -89,15 +89,15 @@ class GroupController {
 
   // Controller retreiving expenses
   static getExpensesSettlements = asyncHandler(async(req, res) => {
-    const { page, pageSize, round } = req.query;
-    const expensesSettlements = await GroupService.getExpensesSettlements(req.params.group_id, req.user.user_id, page, pageSize, round);
+    const { page, pageSize, offset, timestamp } = req.query;
+    const expensesSettlements = await GroupService.getExpensesSettlements(req.params.group_id, req.user.user_id, page, pageSize, offset, timestamp);
   
     responseHandler(res, 200, "Expenses and Settlements fetched successfully", expensesSettlements);
   });
 
   static getMessagesExpensesSettlements = asyncHandler(async(req, res) => {
-    const { page, pageSize, round } = req.query;
-    const messagesExpensesSettlements = await GroupService.getMessagesExpensesSettlements(req.body.group_id, req.user.user_id, page, pageSize, round);
+    const { page, pageSize, offset, timestamp } = req.query;
+    const messagesExpensesSettlements = await GroupService.getMessagesExpensesSettlements(req.body.group_id, req.user.user_id, page, pageSize, offset, timestamp);
   
     responseHandler(res, 200, "Messages, expenses, and settlements fetched successfully", messagesExpensesSettlements);
   });

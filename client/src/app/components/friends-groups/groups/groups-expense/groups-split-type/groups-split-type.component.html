@@ -32,59 +32,66 @@
 <hr class="my-2" style="border: 0; height: 2px; background-color: green" />
 
 <!-- Equal Split -->
-<div *ngIf="activeItem === 'EQUAL'" class="p-2">
-  <div
-    *ngFor="let participant of participants"
-    class="d-flex align-items-center justify-content-between"
-  >
-    <span> {{ participant.first_name }} {{ participant.last_name }} </span>
-    <input
-      type="checkbox"
-      class="form-check-input ms-3"
-      [checked]="selectedParticipants.includes(participant)"
-      (change)="toggleParticipant(participant)"
-    />
+@if (activeItem === 'EQUAL') {
+  <div class="p-2">
+    @for (participant of participants; track $index) {
+      <div
+        class="d-flex align-items-center justify-content-between"
+      >
+        <span> {{ participant.first_name }} {{ participant.last_name }} </span>
+        <input
+          type="checkbox"
+          class="form-check-input ms-3"
+          [checked]="selectedParticipants.includes(participant)"
+          (change)="toggleParticipant(participant)"
+        />
+      </div>
+    }
   </div>
-</div>
-
-<!-- Unequal/Percentage Split -->
-<div *ngIf="activeItem !== 'EQUAL'" class="p-2">
-  <div
-    *ngFor="let participant of participants"
-    class="d-flex align-items-center justify-content-between mb-2"
-  >
-    <label class="me-3"
-      >{{ participant.first_name }} {{ participant.last_name }}</label
-    >
-    <div class="input-container">
-      <input
-        type="number"
-        class="input-field"
-        [(ngModel)]="calculatedShares[participant.group_membership_id]"
-        (input)="updateTotal()"
-      />
+} @else {
+  <!-- Unequal/Percentage Split -->
+  <div class="p-2">
+    @for (participant of participants; track $index) {
+      <div
+        class="d-flex align-items-center justify-content-between mb-2"
+      >
+        <label class="me-3"
+          >{{ participant.first_name }} {{ participant.last_name }}</label
+        >
+        <div class="input-container">
+          <input
+            type="number"
+            class="input-field"
+            [(ngModel)]="calculatedShares[participant.group_membership_id]"
+            (input)="updateTotal()"
+          />
+        </div>
+      </div>
+    }
+    <div class="text-center mt-3">
+      <span>Remaining:</span>
+      <span
+        [class.text-danger]="remainingTotal < 0"
+        [class.text-success]="remainingTotal >= 0"
+      >
+        {{ remainingTotal }}
+      </span>
+      <span> of </span>
+      <span class="text-success">{{
+        activeItem === "UNEQUAL" ? totalAmount : "100%"
+      }}</span>
+  
+      <!-- Validation Message -->
+      @if (!isValidSplit()) {
+        <div class="text-danger mt-2">
+          Total does not match the expected
+          {{ activeItem === "UNEQUAL" ? "amount" : "percentage" }}.
+        </div>
+      }
     </div>
   </div>
-  <div class="text-center mt-3">
-    <span>Remaining:</span>
-    <span
-      [class.text-danger]="remainingTotal < 0"
-      [class.text-success]="remainingTotal >= 0"
-    >
-      {{ remainingTotal }}
-    </span>
-    <span> of </span>
-    <span class="text-success">{{
-      activeItem === "UNEQUAL" ? totalAmount : "100%"
-    }}</span>
+}
 
-    <!-- Validation Message -->
-    <div *ngIf="!isValidSplit()" class="text-danger mt-2">
-      Total does not match the expected
-      {{ activeItem === "UNEQUAL" ? "amount" : "percentage" }}.
-    </div>
-  </div>
-</div>
 
 <div mat-dialog-actions class="d-flex justify-content-end gap-2 p-3">
   <button

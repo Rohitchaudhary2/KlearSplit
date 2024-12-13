@@ -579,7 +579,8 @@ class FriendService {
    * Service to fetch both expenses and messages together
    *
    * Fetches both expenses and messages for a conversation, sorted by creation time.
-   * Supports pagination.
+   * Supports pagination and dynamically adjusts page numbers for messages and expenses
+   * once the current batch is exhausted.
    *
    * @param {UUID} conversationId - The ID of the conversation.
    * @param {number} [page=1] - The page number to retrieve (default: 1).
@@ -588,29 +589,41 @@ class FriendService {
    * @returns {Promise<Array<Object>>} - Returns an array of expenses and messages.
    */
   static getBoth = async(conversationId, page = 1, pageSize = 20) => {
-    const totalMessages = await FriendDb.countMessages(conversationId);
-    const totalExpenses = await FriendDb.countExpenses(conversationId);
-    const totalItems = totalMessages + totalExpenses;
+    let messagesPage = page;
+    let expensesPage = page;
+    let fetchedMessages = [];
+    let fetchedExpenses = [];
+    const results = [];
 
-    // Calculate offset for pagination
-    const offset = (page - 1) * pageSize;
+    while (results.length < pageSize) {
+    // Fetch messages if current batch is exhausted
+      if (!fetchedMessages.length) {
+        fetchedMessages = await this.getMessages(conversationId, messagesPage, pageSize);
+        messagesPage++;
+      }
 
-    // Return an empty array if the offset exceeds total items
-    if (offset >= totalItems) {
-      return [];
+      // Fetch expenses if current batch is exhausted
+      if (!fetchedExpenses.length) {
+        fetchedExpenses = await this.getExpenses(conversationId, expensesPage, pageSize);
+        expensesPage++;
+      }
+
+      // Break if no more data to fetch
+      if (!fetchedMessages.length && !fetchedExpenses.length) {
+        break;
+      }
+
+      // Merge the next item from each batch in order of creation time
+      if (fetchedMessages.length && (!fetchedExpenses.length || fetchedMessages[ 0 ].createdAt >= fetchedExpenses[ 0 ].createdAt)) {
+        results.push(fetchedMessages.shift());
+      } else if (fetchedExpenses.length) {
+        results.push(fetchedExpenses.shift());
+      }
     }
 
-    const messages = await this.getMessages(conversationId, 1, pageSize * 2);
-    const expenses = await this.getExpenses(conversationId, 1, pageSize * 2);
-
-    // Combine and sort the results by creation time
-    const messagesAndExpenses = [ ...messages, ...expenses ];
-
-    messagesAndExpenses.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-
-    // Return the paginated results
-    return messagesAndExpenses.slice(offset, offset + pageSize);
+    return results;
   };
+
 }
 
 export default FriendService;

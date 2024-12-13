@@ -6,6 +6,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
+import { ConfirmationDialogComponent } from "../../confirmation-dialog/confirmation-dialog.component";
 import { CurrentUser } from "../../shared/types.model";
 import { ExpenseComponent } from "../friends/expense/expense.component";
 import { FriendsListComponent } from "../friends/friends-list/friends-list.component";
@@ -74,8 +75,10 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   // Pagination related variables for message and expense loading
   pageMessage = 1;
   pageExpense = 1;
-  pageSize = 10;
+  pageSize = 20;
   pageCombined = 1;
+  offset = 0;
+  timestamp = new Date().toISOString();
 
   // Flag to indicate if data is still being loaded
   loading = false;
@@ -122,6 +125,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     // Check if the user has scrolled to the top and if loading is not in progress
     if (element.scrollTop === 0 && !this.loading) {
       this.scrollPosition = element.scrollHeight;
+      this.loadItems(element);
     }
   }
 
@@ -185,9 +189,9 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     // Fetch group members
     this.fetchGroupMembers();
     // Fetch messages
-    this.fetchGroupMessages();
+    this.fetchGroupMessages(true, null);
     // Fetch expenses
-    this.fetchGroupExpensesAndSettlements();
+    this.fetchGroupExpensesAndSettlements(true, null);
     // Join the new conversation room for the selected group
     this.socketService.joinRoom(this.selectedGroup()!.group_id);
 
@@ -224,6 +228,21 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     this.currentView.set(filter);
     this.cdr.detectChanges();
     this.scrollToBottom();
+  }
+
+  // Method to load the appropriate data based on the current view
+  loadItems(element: HTMLElement) {
+    switch (this.currentView()) {
+      case "All":
+        this.fetchGroupMessages(true, element); // Load combined view
+        break;
+      case "Messages":
+        this.fetchGroupMessages(true, element); // Load only messages
+        break;
+      case "Expenses":
+        this.fetchGroupExpensesAndSettlements(true, element); // Load only expenses
+        break;
+    }
   }
 
   /**
@@ -310,11 +329,51 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
+   * Checks whether all messages, expenses, or combined data have been completely loaded,
+   * and sets the appropriate loader state accordingly.
+   *
+   * @param loadedKey - The key indicating which data type's load status to check. It can be one of:
+   *   - `"allMessagesLoaded"` for messages,
+   *   - `"allExpensesLoaded"` for expenses,
+   *   - `"allCombinedLoaded"` for combined messages and expenses.
+   * @param loadCondition - A boolean indicating whether the data should be considered loaded based on the condition.
+   * @param items - The array of items (messages, expenses, or combined data) to check the length against.
+   * @param pageSize - The number of items that should be loaded per page. If the number of items is less than this, it indicates all data is loaded.
+   */
+  checkAndSetLoaded(loadedKey: "allMessagesLoaded" | "allExpensesLoaded" |"allCombinedLoaded", loadCondition: boolean,
+    items: (GroupMessageData | GroupExpenseData)[], pageSize: number) {
+    if (!this[loadedKey] && loadCondition && items.length < pageSize) {
+      this[loadedKey] = true;
+    }
+  }
+
+  /**
    * Fetches the messages of a particular group.
    */
-  fetchGroupMessages() {
-    this.groupsService.fetchGroupMessages(this.selectedGroup()!.group_id).subscribe({
+  fetchGroupMessages(
+    loadMessages: boolean,
+    element: HTMLElement | null,
+  ) {
+    // Prevent making multiple requests if one is already in progress
+    if (this.loading ||
+      (loadMessages && this.allMessagesLoaded)
+    ) {
+      return;
+    }
+
+    // Set loading to true to prevent subsequent requests until this one is complete
+    this.loading = true;
+
+    this.groupsService.fetchGroupMessages(
+      this.selectedGroup()!.group_id,
+      this.pageExpense,
+      this.pageSize,
+      this.offset,
+      this.timestamp
+    ).subscribe({
       next: (messages) => {
+        // Check if all data has already been loaded for the current view and set the flag accordingly
+        this.checkAndSetLoaded("allMessagesLoaded", loadMessages, messages, this.pageSize);
         const messagesWithName = messages.map((message) => {
           const sender = this.getFullNameAndImage(this.groupMembers().find((member) =>
             message.sender_id === member.group_membership_id
@@ -326,14 +385,90 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
           };
         });
         this.messages.set([ ...messagesWithName, ...this.messages() ]); // Set the messages in the messages signal
+        this.offset++;
+        this.timestamp = this.messages()[0].createdAt;
+        if (this.offset === 3) {
+          this.offset = 0;
+          this.pageExpense++;
+        }
+        // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
+        if (
+          this.pageMessage === 1
+        ) {
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        } else {
+          this.cdr.detectChanges();
+          // After loading new items, calculate the new scroll position
+          const newScrollHeight = element!.scrollHeight;
+
+          // Adjust the scroll position to keep the view consistent
+          const scrollDiff = newScrollHeight - this.scrollPosition;
+          element!.scrollTop = element!.scrollTop + scrollDiff - 100;
+        }
+
+        // Increment the page number for the next data fetch
+        this.pageMessage += Number(loadMessages);
+
+        // Reset loading state to allow future requests
+        this.loading = false;
       }
     });
   }
 
-  fetchGroupExpensesAndSettlements() {
-    this.groupsService.fetchExpensesSettlements(this.selectedGroup()!.group_id).subscribe({
+  fetchGroupExpensesAndSettlements(
+    loadExpense: boolean,
+    element: HTMLElement | null,
+  ) {
+    // Prevent making multiple requests if one is already in progress
+    if (this.loading ||
+      (loadExpense && this.allExpensesLoaded)
+    ) {
+      return;
+    }
+
+    // Set loading to true to prevent subsequent requests until this one is complete
+    this.loading = true;
+
+    // Fetch group expenses and settlements
+    this.groupsService.fetchExpensesSettlements(
+      this.selectedGroup()!.group_id,
+      this.pageExpense,
+      this.pageSize,
+      this.offset,
+      this.timestamp
+    ).subscribe({
       next: (expenses) => {
+        // Check if all data has already been loaded for the current view and set the flag accordingly
+        this.checkAndSetLoaded("allExpensesLoaded", loadExpense, expenses.data, this.pageSize);
+
         this.expenses.set(expenses.data);
+        this.offset++;
+        if (this.offset === 3) {
+          this.offset = 0;
+          this.pageExpense++;
+        }
+        // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
+        if (
+          this.pageExpense === 1
+        ) {
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        } else {
+          this.cdr.detectChanges();
+          // After loading new items, calculate the new scroll position
+          const newScrollHeight = element!.scrollHeight;
+
+          // Adjust the scroll position to keep the view consistent
+          const scrollDiff = newScrollHeight - this.scrollPosition;
+          element!.scrollTop = element!.scrollTop + scrollDiff - 100;
+        }
+
+        // Increment the page number for the next data fetch
+        this.pageExpense += Number(loadExpense);
+
+        // Reset loading state to allow future requests
+        this.loading = false;
       }
     });
   }
@@ -399,7 +534,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
             const expenseParticipants = response.data.expenseParticipants;
             // Reduce the above array to add the debtor_amount of each participant into a variable debtor_amount
             const debtorAmount = expenseParticipants.reduce((acc, val) => acc + parseFloat(val.debtor_amount), 0);
-            expense.debtor_amount = debtorAmount.toString();
+            expense.user_debt = debtorAmount.toString();
             if (expense.payer_id === this.currentMember()?.group_membership_id) {
               expense.payer = this.getFullNameAndImage(this.currentMember());
             } else {
@@ -469,21 +604,46 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   onBlockGroup() {
     this.groupsService.blockGroup(this.selectedGroup()!.group_id, !this.currentMember()!.has_blocked).subscribe({
       next: () => {
-        this.toastr.success("Group Blocked Successfully", "Success");
-        const groupId = this.selectedGroup()!.group_id;
-        this.groupsListComponent.removeGroup(groupId);
-        this.selectedGroup.set(undefined);
+        const confirmationDialogRef = this.dialog.open(
+          ConfirmationDialogComponent,
+          {
+            data: "Your changes would be lost. Would you like to continue?",
+          },
+        );
+    
+        confirmationDialogRef.afterClosed().subscribe((result) => {
+          // If user confirms closing of Add Expense dialog box.
+          if (result) {
+            this.toastr.success("Group Blocked Successfully", "Success");
+          }
+        });
       }
     });
   }
 
   onLeaveGroup() {
-    this.groupsService.leaveGroup(this.selectedGroup()!.group_id).subscribe({
-      next: () => {
-        this.toastr.success("Group Left Successfully", "Success");
-        const groupId = this.selectedGroup()!.group_id;
-        this.groupsListComponent.removeGroup(groupId);
-        this.selectedGroup.set(undefined);
+    if (parseFloat(this.currentMember()!.total_balance) !== 0) {
+      this.toastr.warning("You have outstanding balance in this group. Please settle it before leaving.", "Warning");
+      return;
+    }
+    const confirmationDialogRef = this.dialog.open(
+      ConfirmationDialogComponent,
+      {
+        data: "Are you sure you want to leave this group?",
+      },
+    );
+
+    confirmationDialogRef.afterClosed().subscribe((result) => {
+      // If user confirms closing of Add Expense dialog box.
+      if (result) {
+        this.groupsService.leaveGroup(this.selectedGroup()!.group_id).subscribe({
+          next: () => {
+            this.toastr.success("Group Left Successfully", "Success");
+            const groupId = this.selectedGroup()!.group_id;
+            this.groupsListComponent.removeGroup(groupId);
+            this.selectedGroup.set(undefined);
+          }
+        });
       }
     });
   }

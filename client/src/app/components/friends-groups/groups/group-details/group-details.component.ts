@@ -4,7 +4,6 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 
 import { AuthService } from "../../../auth/auth.service";
 import { GroupMemberData } from "../groups.model";
-import { GroupsService } from "../groups.service";
 
 @Component({
   selector: "app-group-details",
@@ -15,7 +14,6 @@ import { GroupsService } from "../groups.service";
 })
 export class GroupDetailsComponent implements OnInit {
   private readonly authService = inject(AuthService);
-  private readonly groupsService = inject(GroupsService);
   private readonly dialogRef = inject(MatDialogRef<GroupDetailsComponent>);
   data = inject(MAT_DIALOG_DATA);
 
@@ -25,7 +23,6 @@ export class GroupDetailsComponent implements OnInit {
   ngOnInit(): void {
     this.data[0].role = this.data[0].role !== "USER" ? `${this.data[0].role[0]}${this.data[0].role.slice(1).toLowerCase()}` : "Member";
     this.fetchGroupMembers();
-    this.groupMembers.set(this.groupMembers().filter((member) => this.currentUserId !== member.member_id));
   }
 
   /**

@@ -1,21 +1,26 @@
 import { CurrencyPipe } from "@angular/common";
 import { Component, inject } from "@angular/core";
-import { MatDialogRef } from "@angular/material/dialog";
+import { MatButtonModule } from "@angular/material/button";
 
 import { AuthService } from "../../../auth/auth.service";
 import { AbsoluteValuePipe } from "../../../shared/pipes/absolute-value.pipe";
 import { GroupsService } from "../groups.service";
+import { GroupsListComponent } from "../groups-list/groups-list.component";
 
 @Component({
-  selector: "app-group-details",
+  selector: "app-groups-details",
   standalone: true,
-  imports: [ CurrencyPipe, AbsoluteValuePipe ],
-  templateUrl: "./group-details.component.html",
-  styleUrl: "./group-details.component.css",
+  imports: [
+    CurrencyPipe,
+    AbsoluteValuePipe,
+    GroupsListComponent,
+    MatButtonModule
+  ],
+  templateUrl: "./groups-details.component.html",
+  styleUrls: [ "./groups-details.component.css", "../../friends/friends.component.css" ]
 })
-export class GroupDetailsComponent {
+export class GroupsDetailsComponent {
   private readonly authService = inject(AuthService);
-  private readonly dialogRef = inject(MatDialogRef<GroupDetailsComponent>);
 
   private readonly groupsService = inject(GroupsService);
 
@@ -40,11 +45,10 @@ export class GroupDetailsComponent {
    * @param {string} balanceAmount - The balance amount in string format.
    * @returns {number} The parsed number representing the balance amount.
    */
-  getBalanceAsNumber(balanceAmount: string): number {
+  getBalanceAsNumber(balanceAmount: string | undefined): number {
+    if (!balanceAmount) {
+      return 0;
+    }
     return parseFloat(balanceAmount);
-  }
-
-  closeDialog() {
-    this.dialogRef.close();
   }
 }

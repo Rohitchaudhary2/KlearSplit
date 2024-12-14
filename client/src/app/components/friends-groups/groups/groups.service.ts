@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { inject, Injectable } from "@angular/core";
+import { inject, Injectable, Signal, signal } from "@angular/core";
 import { map, Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
@@ -7,8 +7,10 @@ import {
   CreateGroupData,
   CreateGroupResponse,
   FetchExpenseResponse,
+  GroupData,
   GroupExpenseInput,
   GroupExpenseResponse,
+  GroupMemberData,
   GroupMessageResponse,
   GroupResponse,
   Groups,
@@ -22,6 +24,39 @@ import {
 export class GroupsService {
   // Injecting the HttpClient to make HTTP requests
   private readonly httpClient = inject(HttpClient);
+  private _selectedGroup = signal<GroupData | undefined>(undefined);
+  private _groupMembers = signal<GroupMemberData[]>([]);
+  private _currentMember = signal<GroupMemberData | undefined>(undefined);
+
+  // Getter for selectedGroup
+  get selectedGroup(): Signal<GroupData | undefined> {
+    return this._selectedGroup;
+  }
+
+  // Setter for selectedGroup
+  setSelectedGroup(group: GroupData | undefined): void {
+    this._selectedGroup.set(group);
+  }
+
+  // Getter for groupMembers
+  get groupMembers(): Signal<GroupMemberData[]> {
+    return this._groupMembers;
+  }
+
+  // Setter for groupMembers
+  setGroupMembers(members: GroupMemberData[]): void {
+    this._groupMembers.set(members);
+  }
+
+  // Getter for currentMember
+  get currentMember(): Signal<GroupMemberData | undefined> {
+    return this._currentMember;
+  }
+
+  // Setter for currentMember
+  setCurrentMember(member: GroupMemberData | undefined): void {
+    this._currentMember.set(member);
+  }
 
   /**
    * Searching users based on the letters typed.
@@ -198,6 +233,10 @@ export class GroupsService {
     return this.httpClient.get<FetchExpenseResponse>(
       `${API_URLS.fetchExpensesSettlements}/${groupId}?page=${page}&pageSize=${pageSize}&offset=${offset}&timestamp=${timestamp}`,
       { withCredentials: true }
+    ).pipe(
+      map((expenses) =>
+        expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)),
+      ),
     );
   }
 }

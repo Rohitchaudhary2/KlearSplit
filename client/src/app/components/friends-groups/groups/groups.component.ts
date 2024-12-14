@@ -3,6 +3,7 @@ import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, 
   from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
+import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
@@ -13,7 +14,6 @@ import { FriendsListComponent } from "../friends/friends-list/friends-list.compo
 import { MessageComponent } from "../friends/message/message.component";
 import { SocketService } from "../friends/socket.service";
 import { SelectMembersDialogComponent } from "./create-group/select-members-dialog/select-members-dialog.component";
-import { GroupDetailsComponent } from "./group-details/group-details.component";
 import { CombinedGroupExpense, CombinedGroupMessage, GroupData, GroupExpenseData, GroupExpenseResponse, GroupMemberData, GroupMessageData }
   from "./groups.model";
 import { GroupsService } from "./groups.service";
@@ -29,7 +29,7 @@ import { GroupsListComponent } from "./groups-list/groups-list.component";
     FriendsListComponent,
     GroupsListComponent,
     MessageComponent,
-    ExpenseComponent
+    ExpenseComponent,
   ],
   templateUrl: "./groups.component.html",
   styleUrls: [ "./groups.component.css", "../friends/friends.component.css" ]
@@ -44,16 +44,11 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   private readonly socketService = inject(SocketService);
   private readonly groupsService = inject(GroupsService);
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
 
   // Current user data from authService
   user = this.authService.currentUser();
   user_name = this.getFullNameAndImage(this.user).fullName;
-
-  selectedGroup = signal<GroupData | undefined>(undefined);
-  groupMembers = signal<GroupMemberData[]>([]);
-
-  // Group member who is currently logged in
-  currentMember = signal<GroupMemberData | undefined>(undefined);
 
   // Signal to control the visibility of message, expenses, or combined data
   currentView = signal<"Messages" | "Expenses" | "All">("All");
@@ -77,8 +72,10 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   pageExpense = 1;
   pageSize = 20;
   pageCombined = 1;
-  offset = 0;
-  timestamp = new Date().toISOString();
+  offsetMessage = 0;
+  offsetExpense = 0;
+  timestampMessage = new Date().toISOString();
+  timestampExpense = new Date().toISOString();
 
   // Flag to indicate if data is still being loaded
   loading = false;
@@ -92,6 +89,19 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   scrollPosition = 0;
 
   addExpenseLoader = false;
+
+  // Access signals from the GroupsService
+  get selectedGroup() {
+    return this.groupsService.selectedGroup()!;
+  }
+
+  get groupMembers() {
+    return this.groupsService.groupMembers()!;
+  }
+
+  get currentMember() {
+    return this.groupsService.currentMember()!;
+  }
 
   /**
    * This lifecycle hook is triggered after the view has been initialized.
@@ -107,8 +117,8 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    * user properly leaves the room and disconnected from the socket.
    */
   ngOnDestroy(): void {
-    if (this.selectedGroup()) {
-      this.socketService.leaveRoom(this.selectedGroup()!.group_id);
+    if (this.selectedGroup) {
+      this.socketService.leaveRoom(this.selectedGroup!.group_id);
       this.socketService.disconnect();
     }
   }
@@ -154,7 +164,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    */
   clearSelectedGroupData() {
     // If there is, send a message to the server to leave the group
-    this.socketService.leaveRoom(this.selectedGroup()!.group_id);
+    this.socketService.leaveRoom(this.selectedGroup!.group_id);
     // Remove the existing 'onNewGroupMessage' listener for the previous group
     this.socketService.removeNewMessageListener();
     // Clear previous data (messages, expenses, and combined view)
@@ -174,15 +184,15 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
 
   onSelectGroup(group: GroupData | undefined) {
     // Check if there is a previously selected group
-    if (this.selectedGroup()) {
+    if (this.groupsService.selectedGroup()) {
       this.clearSelectedGroupData();
     }
 
     // Set the selected group as the new selected group
-    this.selectedGroup.set(group);
+    this.groupsService.setSelectedGroup(group);
 
     // If no group is selected, then return
-    if (!this.selectedGroup()) {
+    if (!this.selectedGroup) {
       return;
     }
 
@@ -193,12 +203,12 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     // Fetch expenses
     this.fetchGroupExpensesAndSettlements(true, null);
     // Join the new conversation room for the selected group
-    this.socketService.joinRoom(this.selectedGroup()!.group_id);
+    this.socketService.joinRoom(this.selectedGroup!.group_id);
 
     // Listen for new messages from the server for the new room
     this.socketService.onNewGroupMessage((message: GroupMessageData) => {
 
-      const sender = this.getFullNameAndImage(this.groupMembers().find((member) =>{
+      const sender = this.getFullNameAndImage(this.groupMembers.find((member) =>{
         const isSender = message.sender_id === member.member_id;
         message.sender_id = member.group_membership_id;
         return isSender;
@@ -257,12 +267,12 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const messageData = {
-      group_id: this.selectedGroup()!.group_id,
+      group_id: this.selectedGroup!.group_id,
       sender_id: this.user!.user_id,
       message: this.messageInput,
     };
     this.socketService.sendGroupMessage(messageData);
-    this.groupsService.saveGroupMessages(this.messageInput, this.selectedGroup()!.group_id).subscribe();
+    this.groupsService.saveGroupMessages(this.messageInput, this.selectedGroup!.group_id).subscribe();
     this.messageInput = "";
   }
 
@@ -282,13 +292,13 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    * Opens the dialog for viewing a group's details such as balance of the current user with each member.
    */
   openGroupDetails() {
-    this.dialog.open(GroupDetailsComponent, {
-      maxWidth: "80vw",
-      maxHeight: "70vh",
-      height: "85%",
-      width: "100%",
-      data: [ this.selectedGroup(), this.groupMembers() ],
-    });
+    // this.dialog.open(GroupDetailsComponent, {
+    //   maxWidth: "50vw",
+    //   maxHeight: "70vh",
+    //   height: "70%",
+    //   width: "100%",
+    // });
+    this.router.navigate([ "/groups/details" ]);// Navigate to the group details page
   }
 
   /**
@@ -319,7 +329,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
         }
         return acc;
       }, {} as typeof membersData);
-      this.groupsService.addGroupMembers(cleanedMembersData, this.selectedGroup()!.group_id).subscribe({
+      this.groupsService.addGroupMembers(cleanedMembersData, this.selectedGroup!.group_id).subscribe({
         next: () => {
           this.fetchGroupMembers();
           this.toastr.success("Member Added Successfully", "Success");
@@ -365,17 +375,17 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     this.loading = true;
 
     this.groupsService.fetchGroupMessages(
-      this.selectedGroup()!.group_id,
+      this.selectedGroup!.group_id,
       this.pageExpense,
       this.pageSize,
-      this.offset,
-      this.timestamp
+      this.offsetMessage,
+      this.timestampMessage
     ).subscribe({
       next: (messages) => {
         // Check if all data has already been loaded for the current view and set the flag accordingly
         this.checkAndSetLoaded("allMessagesLoaded", loadMessages, messages, this.pageSize);
         const messagesWithName = messages.map((message) => {
-          const sender = this.getFullNameAndImage(this.groupMembers().find((member) =>
+          const sender = this.getFullNameAndImage(this.groupMembers.find((member) =>
             message.sender_id === member.group_membership_id
           ));
           return {
@@ -385,10 +395,10 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
           };
         });
         this.messages.set([ ...messagesWithName, ...this.messages() ]); // Set the messages in the messages signal
-        this.offset++;
-        this.timestamp = this.messages()[0].createdAt;
-        if (this.offset === 3) {
-          this.offset = 0;
+        this.offsetMessage++;
+        this.timestampMessage = this.messages()[0].createdAt;
+        if (this.offsetMessage === 3) {
+          this.offsetMessage = 0;
           this.pageExpense++;
         }
         // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
@@ -432,20 +442,31 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
 
     // Fetch group expenses and settlements
     this.groupsService.fetchExpensesSettlements(
-      this.selectedGroup()!.group_id,
+      this.selectedGroup!.group_id,
       this.pageExpense,
       this.pageSize,
-      this.offset,
-      this.timestamp
+      this.offsetExpense,
+      this.timestampExpense
     ).subscribe({
       next: (expenses) => {
-        // Check if all data has already been loaded for the current view and set the flag accordingly
-        this.checkAndSetLoaded("allExpensesLoaded", loadExpense, expenses.data, this.pageSize);
+        expenses.forEach((expense) => {
+          if (expense.payer_id === this.currentMember?.group_membership_id) {
+            expense.payer = this.getFullNameAndImage(this.currentMember);;
+          } else {
+            const payer = this.groupMembers.find((member) => expense.payer_id === member.group_membership_id);
+            expense.payer = this.getFullNameAndImage(
+              payer
+            );
+          }
+        });
 
-        this.expenses.set(expenses.data);
-        this.offset++;
-        if (this.offset === 3) {
-          this.offset = 0;
+        // Check if all data has already been loaded for the current view and set the flag accordingly
+        this.checkAndSetLoaded("allExpensesLoaded", loadExpense, expenses, this.pageSize);
+
+        this.expenses.set(expenses);
+        this.offsetExpense++;
+        if (this.offsetExpense === 3) {
+          this.offsetExpense = 0;
           this.pageExpense++;
         }
         // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
@@ -481,12 +502,12 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    */
   fetchGroupMembers() {
     this.groupsService
-      .fetchGroupMembers(this.selectedGroup()!.group_id)
+      .fetchGroupMembers(this.selectedGroup!.group_id)
       .subscribe((response) => {
         const filteredMembers = this.filterMembers(response.data);
-        this.groupMembers.set(filteredMembers);
+        this.groupsService.setGroupMembers(filteredMembers);
         const currentMember = filteredMembers.find((member) => this.user?.user_id === member.member_id);
-        this.currentMember.set(currentMember);
+        this.groupsService.setCurrentMember(currentMember);
       });
   }
 
@@ -496,7 +517,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    */
   openAddExpenseDialog() {
     const dialogRef = this.dialog.open(GroupsExpenseComponent, {
-      data: [ "Add Expense", this.currentMember(), this.selectedGroup(), this.groupMembers() ],
+      data: [ "Add Expense", this.currentMember, this.selectedGroup, this.groupMembers ],
       enterAnimationDuration: "200ms",
       exitAnimationDuration: "200ms",
     });
@@ -509,7 +530,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       const expenseData = data.expenseData;
 
       expenseData.payer = this.getFullNameAndImage(
-        this.groupMembers().find((member) => expenseData.payer_id === member.group_membership_id)
+        this.groupMembers.find((member) => expenseData.payer_id === member.group_membership_id)
       );
 
       this.addExpenseLoader = true;
@@ -527,21 +548,25 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
 
       // Make the API call to add the expense on the server.
       this.groupsService
-        .addExpense(this.selectedGroup()!.group_id, result)
+        .addExpense(this.selectedGroup!.group_id, result)
         .subscribe({
           next: (response: GroupExpenseResponse) => {
             const expense = response.data.expense;
             const expenseParticipants = response.data.expenseParticipants;
             // Reduce the above array to add the debtor_amount of each participant into a variable debtor_amount
-            const debtorAmount = expenseParticipants.reduce((acc, val) => acc + parseFloat(val.debtor_amount), 0);
-            expense.user_debt = debtorAmount.toString();
-            if (expense.payer_id === this.currentMember()?.group_membership_id) {
-              expense.payer = this.getFullNameAndImage(this.currentMember());
+            const totalDebtAmount = expenseParticipants.reduce((acc, val) => acc + parseFloat(val.debtor_amount), 0);
+            expense.total_debt_amount = totalDebtAmount.toString();
+            if (expense.payer_id === this.currentMember?.group_membership_id) {
+              expense.payer = this.getFullNameAndImage(this.currentMember);
+              expense.user_debt = (expenseParticipants.find(
+                (participant) => participant.debtor_id === this.currentMember!.group_membership_id)!.debtor_amount);
             } else {
-              const payer = this.groupMembers().find((member) => expense.payer_id === member.group_membership_id);
+              const payer = this.groupMembers.find((member) => expense.payer_id === member.group_membership_id);
               expense.payer = this.getFullNameAndImage(
                 payer
               );
+              expense.user_debt = (expenseParticipants.find(
+                (participant) => participant.debtor_id === payer?.group_membership_id)!.debtor_amount);
             }
 
             // Update the expenses list by replacing the temporary 'adding' entry with the actual response data.
@@ -585,6 +610,10 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
 
   filterMembers(members: GroupMemberData[]) {
     const filteredMembers = members.map((member) => {
+      if (member.member_id === this.user?.user_id) {
+        member.first_name = "You";
+        member.last_name = "";
+      }
       switch (member.role) {
         case "ADMIN":
           return { ...member, role: "Admin" };
@@ -602,19 +631,34 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   }
 
   onBlockGroup() {
-    this.groupsService.blockGroup(this.selectedGroup()!.group_id, !this.currentMember()!.has_blocked).subscribe({
-      next: () => {
-        const confirmationDialogRef = this.dialog.open(
-          ConfirmationDialogComponent,
-          {
-            data: "Your changes would be lost. Would you like to continue?",
-          },
-        );
-    
-        confirmationDialogRef.afterClosed().subscribe((result) => {
-          // If user confirms closing of Add Expense dialog box.
-          if (result) {
-            this.toastr.success("Group Blocked Successfully", "Success");
+    if (parseFloat(this.currentMember!.total_balance) !== 0) {
+      this.toastr.warning("You have outstanding balance in this group. Please settle it before leaving.", "Warning");
+      return;
+    }
+    const newBlockStatus = !this.currentMember!.has_blocked;
+    const confirmationDialogRef = this.dialog.open(
+      ConfirmationDialogComponent,
+      {
+        data: "Are you sure you want to block this group?",
+      },
+    );
+
+    confirmationDialogRef.afterClosed().subscribe((result) => {
+      // If user confirms closing of Add Expense dialog box.
+      if (result) {
+        const updatedMember = {
+          ...this.currentMember!,
+          has_blocked: newBlockStatus,
+        };
+  
+        // Update the signal with the new current member data
+        this.groupsService.setCurrentMember(updatedMember);
+
+        this.groupsService.blockGroup(
+          this.selectedGroup!.group_id, newBlockStatus
+        ).subscribe({
+          next: () => {
+            this.toastr.success(`Group ${newBlockStatus ? "Blocked" : "Unblocked"} Successfully`, "Success");
           }
         });
       }
@@ -622,7 +666,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   }
 
   onLeaveGroup() {
-    if (parseFloat(this.currentMember()!.total_balance) !== 0) {
+    if (parseFloat(this.currentMember!.total_balance) !== 0) {
       this.toastr.warning("You have outstanding balance in this group. Please settle it before leaving.", "Warning");
       return;
     }
@@ -636,12 +680,12 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     confirmationDialogRef.afterClosed().subscribe((result) => {
       // If user confirms closing of Add Expense dialog box.
       if (result) {
-        this.groupsService.leaveGroup(this.selectedGroup()!.group_id).subscribe({
+        this.groupsService.leaveGroup(this.selectedGroup!.group_id).subscribe({
           next: () => {
             this.toastr.success("Group Left Successfully", "Success");
-            const groupId = this.selectedGroup()!.group_id;
+            const groupId = this.selectedGroup!.group_id;
             this.groupsListComponent.removeGroup(groupId);
-            this.selectedGroup.set(undefined);
+            this.groupsService.setSelectedGroup(undefined);
           }
         });
       }

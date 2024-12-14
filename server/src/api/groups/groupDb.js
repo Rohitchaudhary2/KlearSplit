@@ -210,7 +210,7 @@ class GroupDb {
     return await sequelize.query(`SELECT
       ge.*,
       SUM(ep.debtor_amount) AS total_debt_amount,
-      MAX(CASE WHEN ep.debtor_id = :groupMembershipId THEN ep.debtor_amount ELSE NULL END) AS user_debt
+      MAX(CASE WHEN ep.debtor_id = :groupMembershipId THEN ep.debtor_amount ELSE 0 END) AS user_debt
       FROM
         group_expenses ge
       LEFT JOIN

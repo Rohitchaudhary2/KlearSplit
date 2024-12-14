@@ -2,29 +2,27 @@
   <!-- Group Info Section -->
   <div class="group-header">
     <img
-      src="/group-profile.png"
-      alt="{{ data.group_name }}"
+      [src]="selectedGroup.image_url ?? '/group-profile.png'"
+      alt="{{ selectedGroup.group_name }}"
       class="group-profile-pic"
     />
-    <div class="group-info">
-      <h2 class="group-name">{{ data[0].group_name }}</h2>
-      <p class="group-description">{{ data[0].group_description }}</p>
-    </div>
+    <span class="group-info">
+      <h2 class="group-name">{{ selectedGroup.group_name }}</h2>
+      <p class="group-description">{{ selectedGroup.group_description }}</p>
+    </span>
+    <span class="user-balance d-flex justify-content-between">
+      <h3>Your Balance:
+        <span
+          [class.text-danger]="getBalanceAsNumber(selectedGroup.balance_amount) < 0"
+          [class.text-success]="getBalanceAsNumber(selectedGroup.balance_amount) >= 0">{{
+          getBalanceAsNumber(selectedGroup.balance_amount)
+            | absoluteValue | currency: "INR"
+        }}</span>
+      </h3>
+    </span>
   </div>
 
   <!-- User Balance -->
-  <div class="user-balance d-flex justify-content-between">
-    <h3>
-      Your Balance:
-      <span
-        [class.text-danger]="getBalanceAsNumber(data[0].balance_amount) < 0"
-        [class.text-success]="getBalanceAsNumber(data[0].balance_amount) >= 0"
-        >{{
-          -getBalanceAsNumber(data[0].balance_amount) | currency: "INR"
-        }}</span
-      >
-    </h3>
-  </div>
 
   <!-- Members List -->
   <div class="members-list">
@@ -33,17 +31,19 @@
     </div>
     <div class="members-table">
       <!-- Table Header -->
-      <div class="table-row table-header">
-        <div class="table-cell member-cell">Member</div>
-        <div class="table-cell">Role</div>
-        <div class="table-cell">Balance with You</div>
-        <div class="table-cell">Total Balance in Group</div>
+      <div class="table-row table-header row">
+        <div class="table-cell member-cell col-4">Member</div>
+        <div class="table-cell col-2">Role</div>
+        <div class="table-cell col-3">Balance with You</div>
+        <div class="table-cell col-3">Total Balance in Group</div>
       </div>
 
       <!-- Table Body -->
-      @for (member of groupMembers(); track $index) {
-        <div class="table-row" [class.current-user]="member.member_id === currentUserId">
-          <div class="table-cell member-cell">
+      @for (member of groupMembers; track $index) {
+        <div
+          class="table-row row"
+        >
+          <div class="table-cell member-cell col-4">
             <div class="member-details">
               <img
                 [src]="member.image_url || '/profile.png'"
@@ -54,47 +54,35 @@
                 {{ member.first_name }} {{ member.last_name || "" }}
               </span>
               @if (member.deletedAt) {
-                <span class="text-danger">
-                  (Left)
-                </span>
+                <span class="text-danger">(Left)</span>
               }
             </div>
           </div>
-          <div class="table-cell">{{ member.role }}</div>
-          <div class="table-cell">
+          <div class="table-cell col-2">{{ member.role }}</div>
+          <div class="table-cell col-3">
             @if (member.deletedAt || member.member_id === currentUserId) {
-              <span>
-                --
-              </span>
+              <span>--</span>
             } @else {
               <span
-                [class.text-success]="
-                  getBalanceAsNumber(member.balance_with_user) <= 0
-                "
-                [class.text-danger]="
-                  getBalanceAsNumber(member.balance_with_user) > 0
-                "
-                >{{
-                  getBalanceAsNumber(member.balance_with_user) | currency: "INR"
-                }}</span
-              >
+                [class.text-success]="getBalanceAsNumber(member.balance_with_user) < 0"
+                [class.text-danger]="getBalanceAsNumber(member.balance_with_user) >= 0"
+              >{{
+                getBalanceAsNumber(member.balance_with_user)
+                  | absoluteValue | currency: "INR"
+              }}</span>
             }
           </div>
-          <div class="table-cell">
+          <div class="table-cell col-3">
             @if (member.deletedAt) {
-              <span>
-                --
-              </span>
+              <span>--</span>
             } @else {
               <span
-                [class.text-danger]="getBalanceAsNumber(member.total_balance) < 0"
-                [class.text-success]="
-                  getBalanceAsNumber(member.total_balance) >= 0
-                "
+                  [class.text-danger]="getBalanceAsNumber(member.balance_with_user) < 0"
+                  [class.text-success]="getBalanceAsNumber(member.balance_with_user) >= 0"
                 >{{
-                  getBalanceAsNumber(member.total_balance) | currency: "INR"
-                }}</span
-              >
+                  getBalanceAsNumber(member.balance_with_user)
+                    | absoluteValue | currency: "INR"
+                }}</span>
             }
           </div>
         </div>

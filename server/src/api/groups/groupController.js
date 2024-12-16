@@ -59,8 +59,8 @@ class GroupController {
 
   // Controller for retreiving messages for a particular group
   static getMessages = asyncHandler(async(req, res) => {
-    const { page, pageSize, timestamp } = req.query;
-    const messages = await GroupService.getMessages(req.params.group_id, req.user.user_id, page, pageSize, timestamp);
+    const { pageSize, timestamp } = req.query;
+    const messages = await GroupService.getMessages(req.params.group_id, req.user.user_id, pageSize, timestamp);
   
     responseHandler(res, 200, "Messages fetched successfully", messages);
   });
@@ -93,15 +93,15 @@ class GroupController {
 
   // Controller retreiving expenses
   static getExpensesSettlements = asyncHandler(async(req, res) => {
-    const { page, pageSize, offset, timestamp } = req.query;
-    const expensesSettlements = await GroupService.getExpensesSettlements(req.params.group_id, req.user.user_id, page, pageSize, offset, timestamp);
+    const { pageSize, timestamp } = req.query;
+    const expensesSettlements = await GroupService.getExpensesSettlements(req.params.group_id, req.user.user_id, pageSize, timestamp);
   
     responseHandler(res, 200, "Expenses and Settlements fetched successfully", expensesSettlements);
   });
 
   static getMessagesExpensesSettlements = asyncHandler(async(req, res) => {
-    const { page, pageSize, offset, timestamp } = req.query;
-    const messagesExpensesSettlements = await GroupService.getMessagesExpensesSettlements(req.params.group_id, req.user.user_id, page, pageSize, offset, timestamp);
+    const { pageSize, timestamp } = req.query;
+    const messagesExpensesSettlements = await GroupService.getMessagesExpensesSettlements(req.body.group_id, req.user.user_id, pageSize, timestamp);
   
     responseHandler(res, 200, "Messages, expenses, and settlements fetched successfully", messagesExpensesSettlements);
   });
@@ -110,6 +110,22 @@ class GroupController {
     const updatedExpense = await GroupService.updateExpense(req.body, req.params.group_id, req.user.user_id);
   
     responseHandler(res, 200, "Expense updated successfully", updatedExpense);
+  });
+
+  static updateSettlement = asyncHandler(async(req, res) => {
+    const updatedSettlement = await GroupService.updateSettlement(req.body, req.params.group_id, req.user.user_id);
+
+    responseHandler(res, 200, "Settlement updated successfully", updatedSettlement);
+  });
+
+  static deleteExpense = asyncHandler(async(req, res) => {
+    await GroupService.deleteExpense(req.params.group_id, req.user.user_id, req.body.group_expense_id);
+    responseHandler(res, 200, "Expense deleted succesfully");
+  });
+
+  static deleteSettlement = asyncHandler(async(req, res) => {
+    await GroupService.deleteSettlement(req.params.group_id, req.user.user_id, req.body.group_settlement_id);
+    responseHandler(res, 200, "Settlement deleted succesfully");
   });
 }
 

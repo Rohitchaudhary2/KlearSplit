@@ -324,7 +324,7 @@ class GroupService {
    *
    * @returns {Promise<Array>} - A promise that resolves to an array of messages from the group.
    */
-  static getMessages = async(groupId, userId, page, pageSize, timestamp) => {
+  static getMessages = async(groupId, userId, pageSize, timestamp) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -335,7 +335,7 @@ class GroupService {
 
     const updatedTimestamp = userMembershipInfo.has_blocked ? userMembershipInfo.updatedAt : timestamp;
 
-    const messages = GroupDb.getMessages(groupId, page, pageSize, updatedTimestamp);
+    const messages = GroupDb.getMessages(groupId, pageSize, updatedTimestamp);
 
     return messages;
   };
@@ -360,6 +360,12 @@ class GroupService {
     }
 
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+
+    const balance = await GroupDb.userBalanceInGroup(groupId, userMembershipInfo.group_membership_id).amount;
+
+    if (balance !== 0) {
+      throw new ErrorHandler(400, "Settle up before this action. ");
+    }
 
     await GroupDb.leaveGroup(userMembershipInfo.group_membership_id);
   };
@@ -475,22 +481,28 @@ class GroupService {
 
     Object.assign(settlementData, { "group_id": groupId });
 
+    const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
+
+    if (!membersBalanceInfo || membersBalanceInfo.balance_amount === 0) {
+      throw new ErrorHandler(400, "All settled.");
+    }
+
+    if ((membersBalanceInfo.balance_amount < 0 && membersBalanceInfo.participant1_id !== settlementData.payer_id) || (membersBalanceInfo.balance_amount > 0 && membersBalanceInfo.participant2_id !== settlementData.payer_id)
+    ) {
+      throw new ErrorHandler(422, "Transaction mismatch: payer is not the correct participant for this balance");
+    }
+
+    GroupUtils.validateSettlementAmount(membersBalanceInfo.balance_amount, settlementData.settlement_amount);
+
+    const balanceAmount = membersBalanceInfo.balance_amount + settlementData.settlement_amount;
+
+    Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
+
     // Start a new transaction to ensure atomicity
     const transaction = await sequelize.transaction();
 
     try {
       // Adding settlement in the database
-      const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
-
-      if (!membersBalanceInfo || membersBalanceInfo.balance_amount === 0) {
-        throw new ErrorHandler(400, "All settled.");
-      }
-
-      if ((membersBalanceInfo.balance_amount < 0 && membersBalanceInfo.participant1_id !== settlementData.payer_id) || (membersBalanceInfo.balance_amount > 0 && membersBalanceInfo.participant2_id !== settlementData.payer_id)
-      ) {
-        throw new ErrorHandler(422, "Transaction mismatch: payer is not the correct participant for this balance");
-      }
-
       const settlement = GroupDb.addSettlement(settlementData, transaction);
 
       membersBalanceInfo.save({ transaction });
@@ -513,11 +525,11 @@ class GroupService {
  * @param {number} [page=1] - The page number for pagination (default is 1).
  * @param {number} [pageSize=20] - The number of items per page (default is 20).
  * @param {number} offset - The offset for the pagination used for determining which slice of data to return.
- * @returns {Array} - A paginated list of expenses and settlements combined and sorted by creation date.
+ * @returns {Promise<Array>} - A paginated list of expenses and settlements combined and sorted by creation date.
  *
  * @throws {ErrorHandler} - Throws an error if the group is not found or if any database query fails.
  */
-  static getExpensesSettlements = async(groupId, userId, page = 1, pageSize = 20, offset, timestamp) => {
+  static getExpensesSettlements = async(groupId, userId, pageSize = 20, timestamp) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -526,8 +538,8 @@ class GroupService {
 
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
     const updatedTimestamp = userMembershipInfo.has_blocked ? userMembershipInfo.updatedAt : timestamp;
-    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, page, pageSize, updatedTimestamp);
-    const settlements = await GroupDb.getSettlements(groupId, page, pageSize, updatedTimestamp);
+    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, pageSize, updatedTimestamp);
+    const settlements = await GroupDb.getSettlements(groupId, pageSize, updatedTimestamp);
 
     // Combine and sort the results by creation time
     const expensesAndSettlements = [ ...expenses, ...settlements ];
@@ -535,7 +547,7 @@ class GroupService {
     expensesAndSettlements.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
     // Return the paginated results
     
-    return expensesAndSettlements.slice(pageSize * offset, pageSize * offset + 20);
+    return expensesAndSettlements.slice(0, 20);
   };
 
   /**
@@ -546,11 +558,11 @@ class GroupService {
    * @param {number} [page=1] - The page number for pagination (default is 1).
    * @param {number} [pageSize=20] - The number of items per page (default is 20).
    * @param {number} offset - The offset or round for pagination used to determine which slice of data to return.
-   * @returns {Array} - A paginated list of messages, expenses, and settlements combined and sorted by creation date.
+   * @returns {Promise<Array>} - A paginated list of messages, expenses, and settlements combined and sorted by creation date.
    *
    * @throws {ErrorHandler} - Throws an error if the group is not found or if any database query fails.
    */
-  static getMessagesExpensesSettlements = async(groupId, userId, offset, timestamp, page = 1, pageSize = 20) => {
+  static getMessagesExpensesSettlements = async(groupId, userId, pageSize = 20, timestamp) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -559,9 +571,9 @@ class GroupService {
 
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
     const updatedTimestamp = userMembershipInfo.has_blocked ? userMembershipInfo.updatedAt : timestamp;
-    const messages = await GroupDb.getMessages(groupId, page, pageSize, updatedTimestamp);
-    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, page, pageSize, updatedTimestamp);
-    const settlements = await GroupDb.getSettlements(groupId, page, pageSize, updatedTimestamp);
+    const messages = await GroupDb.getMessages(groupId, pageSize, updatedTimestamp);
+    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, pageSize, updatedTimestamp);
+    const settlements = await GroupDb.getSettlements(groupId, pageSize, updatedTimestamp);
 
     // Combine and sort the results by creation time
     const messagesExpensesSettlements = [ ...messages, ...expenses, ...settlements ];
@@ -569,26 +581,134 @@ class GroupService {
     messagesExpensesSettlements.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 
     // Return the paginated results
-    return messagesExpensesSettlements.slice(pageSize * offset, pageSize * offset + 20);
+    return messagesExpensesSettlements.slice(0, 20);
   };
 
-  // static updateExpense = async(expenseData, groupId, userId) => {
-  //   const group = await GroupDb.getGroupData(groupId);
+  static updateExpense = async(expenseData, groupId, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
 
-  //   if (!group) {
-  //     throw new ErrorHandler(404, "Group Not Found");
-  //   }
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
 
-  //   const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+    await this.isUserMemberOfGroup(groupId, userId);
 
-  //   const previousExpense = await GroupDb.getExpense(expenseData.group_expense_id);
+    const previousExpense = await GroupDb.getExpense(expenseData.group_expense_id);
 
-  //   if (!previousExpense) {
-  //     throw new ErrorHandler(400, "Expense Not Found.");
-  //   }
+    if (!previousExpense) {
+      throw new ErrorHandler(400, "Expense Not Found.");
+    }
 
     
-  // };
+  };
+
+  static updateSettlement = async(settlementData, groupId, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+
+    await this.isUserMemberOfGroup(groupId, userId);
+
+    const settlement = await GroupDb.getSettlement(settlementData.group_settlement_id);
+
+    if (!settlement) {
+      throw new ErrorHandler(400, "Settlement Not Found.");
+    }
+
+    const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
+
+    let balanceAmount;
+    
+    if (settlement.payer_id === membersBalanceInfo.participant1_id) {
+      balanceAmount = membersBalanceInfo.balance_amount - settlement.settlement_amount;
+
+      GroupUtils.validateSettlementAmount(balanceAmount, settlement.settlement_amount);
+
+      balanceAmount = membersBalanceInfo.balance_amount - settlementData.settlement_amount;
+
+    } else {
+      balanceAmount = membersBalanceInfo.balance_amount + settlement.settlement_amount;
+
+      GroupUtils.validateSettlementAmount(balanceAmount, settlement.settlement_amount);
+
+      balanceAmount = membersBalanceInfo.balance_amount + settlementData.settlement_amount;
+    }
+
+    Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
+    Object.assign(settlement, settlementData);
+
+    // Start a new transaction to ensure atomicity
+    const transaction = await sequelize.transaction();
+
+    try {
+      // Adding settlement in the database
+      settlement.save({ transaction });
+
+      membersBalanceInfo.save({ transaction });
+
+      await transaction.commit();
+
+      return settlement;
+    } catch (error) {
+      // Rollback the transaction in case of an error
+      await transaction.rollback();
+      throw error;
+    }
+  };
+
+  static deleteExpense = async(groupId, userId, groupExpenseId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+
+    await this.isUserMemberOfGroup(groupId, userId);
+
+    await GroupDb.deleteExpense(groupExpenseId);
+    await GroupDb.deleteExpenseParticipants(groupExpenseId);
+  };
+
+  static deleteSettlement = async(groupId, userId, groupSettlementId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+
+    await this.isUserMemberOfGroup(groupId, userId);
+
+    const settlement = await GroupDb.getSettlement(groupSettlementId);
+
+    if (!settlement) {
+      throw new ErrorHandler(400, "Settlement not found.");
+    }
+
+    const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlement.payer_id, settlement.debtor_id);
+
+    if (membersBalanceInfo.participant1_id === settlement.payer_id) {
+      const balanceAmount = membersBalanceInfo.balance_amount - settlement.settlement_amount;
+
+      Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
+    } else {
+      const balanceAmount = membersBalanceInfo.balance_amount + settlement.settlement_amount;
+
+      Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      await membersBalanceInfo.save({ transaction });
+      await settlement.destroy({ transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  };
 }
 
 export default GroupService;

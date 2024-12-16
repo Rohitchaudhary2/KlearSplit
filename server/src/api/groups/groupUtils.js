@@ -53,6 +53,12 @@ class GroupUtils {
       }
     }
   };
+
+  static validateSettlementAmount = (balanceAmount, settlementAmount) => {
+    if (balanceAmount < 0 && -balanceAmount < settlementAmount || balanceAmount > 0 && balanceAmount < settlementAmount) {
+      throw new ErrorHandler(400, "Settlement amount can't be more than balance amount.");
+    }
+  };
 }
 
 export default GroupUtils;

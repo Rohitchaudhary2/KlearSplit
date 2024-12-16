@@ -136,9 +136,7 @@ class GroupDb {
 
   static saveMessage = async(messageData, groupId, groupMembershipId) => await GroupMessage.create({ ...messageData, "group_id": groupId, "sender_id": groupMembershipId });
 
-  static getMessages = async(groupId, timestamp, page = 1, pageSize = 10) => {
-    const offset = (page - 1) * pageSize;
-
+  static getMessages = async(groupId, pageSize = 10, timestamp) => {
     return await GroupMessage.findAll({
       "where": {
         "group_id": groupId,
@@ -147,8 +145,7 @@ class GroupDb {
         }
       },
       "order": [ [ "createdAt", "DESC" ] ],
-      "limit": pageSize,
-      offset
+      "limit": pageSize
     });
   };
 
@@ -198,15 +195,22 @@ class GroupDb {
     }
   });
 
+  static userBalanceInGroup = async(groupId, groupMembershipId) => {
+    return await sequelize.query(
+      "select sum(balance_amount) as amount from group_member_balance where group_id = :groupId and (participant1_id = :groupMembershipId or participant2_id = :groupMembershipId) group by group_id;", {
+        "replacements": { groupId, groupMembershipId },
+        "type": QueryTypes.SELECT
+      }
+    );
+  };
+
   static getExpense = async(groupExpenseId) => await GroupExpense.findOne({
     "where": {
       "group_expense_id": groupExpenseId
     }
   });
 
-  static getExpenses = async(groupId, groupMembershipId, page = 1, pageSize = 20, timestamp) => {
-    const offset = (page - 1) * pageSize;
-
+  static getExpenses = async(groupId, groupMembershipId, pageSize = 20, timestamp) => {
     return await sequelize.query(`SELECT
       ge.*,
       SUM(ep.debtor_amount) AS total_debt_amount,
@@ -223,17 +227,13 @@ class GroupDb {
       ORDER BY
         ge."createdAt" DESC
       LIMIT
-        :pageSize
-      OFFSET
-        :offset;`, {
-      "replacements": { groupMembershipId, groupId, pageSize, offset, timestamp },
+        :pageSize;`, {
+      "replacements": { groupMembershipId, groupId, pageSize, timestamp },
       "type": QueryTypes.SELECT
     });
   };
 
-  static getSettlements = async(groupId, page = 1, pageSize = 20, timestamp) => {
-    const offset = (page - 1) * pageSize;
-
+  static getSettlements = async(groupId, pageSize = 20, timestamp) => {
     return await GroupSettlement.findAll({
       "where": {
         "group_id": groupId,
@@ -242,8 +242,7 @@ class GroupDb {
         }
       },
       "order": [ [ "createdAt", "DESC" ] ],
-      "limit": pageSize,
-      offset
+      "limit": pageSize
     });
   };
 }

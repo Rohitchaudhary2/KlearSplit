@@ -550,7 +550,7 @@ class GroupService {
    *
    * @throws {ErrorHandler} - Throws an error if the group is not found or if any database query fails.
    */
-  static getMessagesExpensesSettlements = async(groupId, userId, page = 1, pageSize = 20, offset, timestamp) => {
+  static getMessagesExpensesSettlements = async(groupId, userId, offset, timestamp, page = 1, pageSize = 20) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {

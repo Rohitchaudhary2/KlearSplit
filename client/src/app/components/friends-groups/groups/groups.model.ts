@@ -77,6 +77,7 @@ export interface GroupData {
     balance_amount: string;
     status: string;
     role: string;
+    has_blocked: boolean;
 }
 
 export interface Groups {
@@ -170,6 +171,13 @@ export interface GroupExpenseInput {
     split_type: string;
     payer_share: number;
     debtors: Debtors[];
+}
+
+export interface GroupSettlementInput {
+    payer_id: string;
+    debtor_id: string;
+    settlement_amount: number;
+    description?: string;
 }
 
 export interface CombinedGroupMessage extends GroupMessageData {

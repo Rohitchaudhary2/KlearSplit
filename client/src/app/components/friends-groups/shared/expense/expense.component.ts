@@ -18,8 +18,8 @@ interface Expense {
 export class ExpenseComponent {
   expense = input<Expense>();
   currentUserId = input<string>();
-  friendImageUrl = input<string>();
-  friendName = input<string>();
+  imageUrl = input<string>();
+  name = input<string>();
   currentUserImageUrl = input<string>();
   onRetry = output<string>();
 

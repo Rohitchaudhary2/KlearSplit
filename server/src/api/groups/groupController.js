@@ -101,7 +101,7 @@ class GroupController {
 
   static getMessagesExpensesSettlements = asyncHandler(async(req, res) => {
     const { page, pageSize, offset, timestamp } = req.query;
-    const messagesExpensesSettlements = await GroupService.getMessagesExpensesSettlements(req.body.group_id, req.user.user_id, page, pageSize, offset, timestamp);
+    const messagesExpensesSettlements = await GroupService.getMessagesExpensesSettlements(req.params.group_id, req.user.user_id, page, pageSize, offset, timestamp);
   
     responseHandler(res, 200, "Messages, expenses, and settlements fetched successfully", messagesExpensesSettlements);
   });

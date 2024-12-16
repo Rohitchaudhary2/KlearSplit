@@ -33,21 +33,30 @@
             </td>
             <td class="col-9 col-md-9 col-lg-10" style="flex: 1 1 0">
               <span class="d-flex justify-content-between align-items-center">
-                <span>{{ getItemDetails(item).name }}</span>
+                <div>
+                  <span>{{ getItemDetails(item).name }}</span>
+                  @if (getItemDetails(item).has_blocked) {
+                    <span class="text-danger">
+                      <mat-icon>block</mat-icon>
+                    </span>
+                  }
+                </div>
 
                 <span class="text-end pe-3 d-flex align-items-center">
-                  <span class="text-end pe-3">
-                    @if (getBalanceAsNumber(item.balance_amount) < 0) {
-                      <span class="text-danger">{{
-                        -getBalanceAsNumber(item.balance_amount)
-                          | currency: "INR"
-                      }}</span>
-                    } @else {
-                      <span class="text-success">{{
-                        getBalanceAsNumber(item.balance_amount)
-                          | currency: "INR"
-                      }}</span>
-                    }
+                  <span
+                    class="text-end pe-3"
+                    [class.text-danger]="
+                      getBalanceAsNumber(item.balance_amount) < 0
+                    "
+                    [class.text-success]="
+                      getBalanceAsNumber(item.balance_amount) >= 0
+                    "
+                  >
+                    {{
+                      getBalanceAsNumber(item.balance_amount)
+                        | absoluteValue
+                        | currency: "INR"
+                    }}
                   </span>
 
                   @if (getRequestStatus(item)) {

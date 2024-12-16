@@ -136,7 +136,7 @@ class GroupDb {
 
   static saveMessage = async(messageData, groupId, groupMembershipId) => await GroupMessage.create({ ...messageData, "group_id": groupId, "sender_id": groupMembershipId });
 
-  static getMessages = async(groupId, page = 1, pageSize = 10, timestamp) => {
+  static getMessages = async(groupId, timestamp, page = 1, pageSize = 10) => {
     const offset = (page - 1) * pageSize;
 
     return await GroupMessage.findAll({

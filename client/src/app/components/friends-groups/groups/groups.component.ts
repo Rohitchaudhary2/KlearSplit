@@ -9,10 +9,10 @@ import { ToastrService } from "ngx-toastr";
 import { AuthService } from "../../auth/auth.service";
 import { ConfirmationDialogComponent } from "../../confirmation-dialog/confirmation-dialog.component";
 import { CurrentUser } from "../../shared/types.model";
-import { ExpenseComponent } from "../friends/expense/expense.component";
 import { FriendsListComponent } from "../friends/friends-list/friends-list.component";
-import { MessageComponent } from "../friends/message/message.component";
 import { SocketService } from "../friends/socket.service";
+import { ExpenseComponent } from "../shared/expense/expense.component";
+import { MessageComponent } from "../shared/message/message.component";
 import { SelectMembersDialogComponent } from "./create-group/select-members-dialog/select-members-dialog.component";
 import { CombinedGroupExpense, CombinedGroupMessage, GroupData, GroupExpenseData, GroupExpenseResponse, GroupMemberData, GroupMessageData }
   from "./groups.model";
@@ -72,10 +72,10 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   pageExpense = 1;
   pageSize = 20;
   pageCombined = 1;
-  offsetMessage = 0;
-  offsetExpense = 0;
-  timestampMessage = new Date().toISOString();
-  timestampExpense = new Date().toISOString();
+  offset = 0;
+  timestampMessages = new Date().toISOString();
+  timestampExpenses = new Date().toISOString();
+  timestampCombined = new Date().toISOString();
 
   // Flag to indicate if data is still being loaded
   loading = false;
@@ -198,10 +198,8 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
 
     // Fetch group members
     this.fetchGroupMembers();
-    // Fetch messages
-    this.fetchGroupMessages(true, null);
-    // Fetch expenses
-    this.fetchGroupExpensesAndSettlements(true, null);
+    // Fetch messages, expenses, and combined data (messages + expenses) for the selected group
+    this.fetchMessagesAndExpenses(true, true, true, null);
     // Join the new conversation room for the selected group
     this.socketService.joinRoom(this.selectedGroup!.group_id);
 
@@ -244,13 +242,13 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   loadItems(element: HTMLElement) {
     switch (this.currentView()) {
       case "All":
-        this.fetchGroupMessages(true, element); // Load combined view
+        this.fetchMessagesAndExpenses(false, false, true, element); // Load combined view
         break;
       case "Messages":
-        this.fetchGroupMessages(true, element); // Load only messages
+        this.fetchMessagesAndExpenses(true, false, false, element); // Load only messages
         break;
       case "Expenses":
-        this.fetchGroupExpensesAndSettlements(true, element); // Load only expenses
+        this.fetchMessagesAndExpenses(false, true, false, element); // Load only expenses
         break;
     }
   }
@@ -292,12 +290,6 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    * Opens the dialog for viewing a group's details such as balance of the current user with each member.
    */
   openGroupDetails() {
-    // this.dialog.open(GroupDetailsComponent, {
-    //   maxWidth: "50vw",
-    //   maxHeight: "70vh",
-    //   height: "70%",
-    //   width: "100%",
-    // });
     this.router.navigate([ "/groups/details" ]);// Navigate to the group details page
   }
 
@@ -357,142 +349,247 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  // Method to fetch messages, expenses, and combined data based on flags
+  fetchMessagesAndExpenses(
+    loadMessages: boolean,
+    loadExpenses: boolean,
+    loadCombined: boolean,
+    element: HTMLElement | null,
+  ) {
+    // Prevent making multiple requests if one is already in progress
+    if (this.loading ||
+      (loadMessages && this.allMessagesLoaded) ||
+      (loadExpenses && this.allExpensesLoaded) ||
+      (loadCombined && this.allCombinedLoaded)) {
+      return;
+    }
+
+    // Set loading to true to prevent subsequent requests until this one is complete
+    this.loading = true;
+
+    // Call the service to fetch the data (messages, expenses, and/or combined view)
+    this.groupsService
+      .fetchMessagesAndExpenses(
+        this.selectedGroup!.group_id,
+        loadMessages,
+        loadExpenses,
+        this.pageMessage,
+        this.pageExpense,
+        this.pageCombined,
+        this.pageSize,
+        this.offset,
+        this.timestampMessages,
+        this.timestampExpenses,
+        this.timestampCombined
+      )
+      .subscribe({
+        next: ({ messages, expenses, combined }) => {
+          expenses.forEach((expense) => {
+            if (expense.payer_id === this.currentMember?.group_membership_id) {
+              expense.payer = this.getFullNameAndImage(this.currentMember);;
+            } else {
+              const payer = this.groupMembers.find((member) => expense.payer_id === member.group_membership_id);
+              expense.payer = this.getFullNameAndImage(
+                payer
+              );
+            }
+          });
+          const messagesWithName = messages.map((message) => {
+            const sender = this.getFullNameAndImage(this.groupMembers.find((member) =>
+              message.sender_id === member.group_membership_id
+            ));
+            return {
+              ...message,
+              senderName: sender.fullName,
+              senderImage: sender.imageUrl
+            };
+          });
+          
+          // Check if all data has already been loaded for the current view and set the flag accordingly
+          this.checkAndSetLoaded("allMessagesLoaded", loadMessages, messages, this.pageSize);
+          this.checkAndSetLoaded("allExpensesLoaded", loadExpenses, expenses, this.pageSize);
+          this.checkAndSetLoaded("allCombinedLoaded", loadCombined, combined, this.pageSize);
+          
+          this.messages.set([ ...messagesWithName, ...this.messages() ]);
+          this.expenses.set([ ...expenses, ...this.expenses() ]);
+          this.combinedView.set([ ...combined, ...this.combinedView() ]);
+          
+          this.offset++;
+          this.timestampMessages = this.messages()[0].createdAt;
+          this.timestampExpenses = this.expenses()[0].createdAt;
+          this.timestampCombined = this.combinedView()[0].createdAt;
+          if (this.offset === 3) {
+            this.offset = 0;
+            this.pageExpense++;
+            this.pageMessage++;
+            this.pageCombined++;
+          }
+
+          // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
+          if (
+            this.pageMessage === 1 ||
+            this.pageExpense === 1 ||
+            this.pageCombined === 1
+          ) {
+            this.cdr.detectChanges();
+            this.scrollToBottom();
+          } else {
+            this.cdr.detectChanges();
+            // After loading new items, calculate the new scroll position
+            const newScrollHeight = element!.scrollHeight;
+
+            // Adjust the scroll position to keep the view consistent
+            const scrollDiff = newScrollHeight - this.scrollPosition;
+            element!.scrollTop = element!.scrollTop + scrollDiff - 100;
+          }
+
+          // Increment the page number for the next data fetch
+          this.pageMessage += Number(loadMessages);
+          this.pageExpense += Number(loadExpenses);
+          this.pageCombined += Number(loadCombined);
+
+          // Reset loading state to allow future requests
+          this.loading = false;
+        },
+      });
+  }
+
   /**
    * Fetches the messages of a particular group.
    */
-  fetchGroupMessages(
-    loadMessages: boolean,
-    element: HTMLElement | null,
-  ) {
-    // Prevent making multiple requests if one is already in progress
-    if (this.loading ||
-      (loadMessages && this.allMessagesLoaded)
-    ) {
-      return;
-    }
+  // fetchGroupMessages(
+  //   loadMessages: boolean,
+  //   element: HTMLElement | null,
+  // ) {
+  //   // Prevent making multiple requests if one is already in progress
+  //   if (this.loading ||
+  //     (loadMessages && this.allMessagesLoaded)
+  //   ) {
+  //     return;
+  //   }
 
-    // Set loading to true to prevent subsequent requests until this one is complete
-    this.loading = true;
+  //   // Set loading to true to prevent subsequent requests until this one is complete
+  //   this.loading = true;
 
-    this.groupsService.fetchGroupMessages(
-      this.selectedGroup!.group_id,
-      this.pageExpense,
-      this.pageSize,
-      this.offsetMessage,
-      this.timestampMessage
-    ).subscribe({
-      next: (messages) => {
-        // Check if all data has already been loaded for the current view and set the flag accordingly
-        this.checkAndSetLoaded("allMessagesLoaded", loadMessages, messages, this.pageSize);
-        const messagesWithName = messages.map((message) => {
-          const sender = this.getFullNameAndImage(this.groupMembers.find((member) =>
-            message.sender_id === member.group_membership_id
-          ));
-          return {
-            ...message,
-            senderName: sender.fullName,
-            senderImage: sender.imageUrl
-          };
-        });
-        this.messages.set([ ...messagesWithName, ...this.messages() ]); // Set the messages in the messages signal
-        this.offsetMessage++;
-        this.timestampMessage = this.messages()[0].createdAt;
-        if (this.offsetMessage === 3) {
-          this.offsetMessage = 0;
-          this.pageExpense++;
-        }
-        // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
-        if (
-          this.pageMessage === 1
-        ) {
-          this.cdr.detectChanges();
-          this.scrollToBottom();
-        } else {
-          this.cdr.detectChanges();
-          // After loading new items, calculate the new scroll position
-          const newScrollHeight = element!.scrollHeight;
+  //   this.groupsService.fetchGroupMessages(
+  //     this.selectedGroup!.group_id,
+  //     this.pageMessage,
+  //     this.pageSize,
+  //     this.offsetMessage,
+  //     this.timestampMessage
+  //   ).subscribe({
+  //     next: (messages) => {
+  //       // Check if all data has already been loaded for the current view and set the flag accordingly
+  //       this.checkAndSetLoaded("allMessagesLoaded", loadMessages, messages, this.pageSize);
+  //       const messagesWithName = messages.map((message) => {
+  //         const sender = this.getFullNameAndImage(this.groupMembers.find((member) =>
+  //           message.sender_id === member.group_membership_id
+  //         ));
+  //         return {
+  //           ...message,
+  //           senderName: sender.fullName,
+  //           senderImage: sender.imageUrl
+  //         };
+  //       });
+  //       this.messages.set([ ...messagesWithName, ...this.messages() ]); // Set the messages in the messages signal
+  //       this.offsetMessage++;
+  //       this.timestampMessage = this.messages()[0].createdAt;
+  //       if (this.offsetMessage === 3) {
+  //         this.offsetMessage = 0;
+  //         this.pageMessage++;
+  //       }
+  //       // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
+  //       if (
+  //         this.pageMessage === 1
+  //       ) {
+  //         this.cdr.detectChanges();
+  //         this.scrollToBottom();
+  //       } else {
+  //         this.cdr.detectChanges();
+  //         // After loading new items, calculate the new scroll position
+  //         const newScrollHeight = element!.scrollHeight;
 
-          // Adjust the scroll position to keep the view consistent
-          const scrollDiff = newScrollHeight - this.scrollPosition;
-          element!.scrollTop = element!.scrollTop + scrollDiff - 100;
-        }
+  //         // Adjust the scroll position to keep the view consistent
+  //         const scrollDiff = newScrollHeight - this.scrollPosition;
+  //         element!.scrollTop = element!.scrollTop + scrollDiff - 100;
+  //       }
 
-        // Increment the page number for the next data fetch
-        this.pageMessage += Number(loadMessages);
+  //       // Increment the page number for the next data fetch
+  //       this.pageMessage += Number(loadMessages);
 
-        // Reset loading state to allow future requests
-        this.loading = false;
-      }
-    });
-  }
+  //       // Reset loading state to allow future requests
+  //       this.loading = false;
+  //     }
+  //   });
+  // }
 
-  fetchGroupExpensesAndSettlements(
-    loadExpense: boolean,
-    element: HTMLElement | null,
-  ) {
-    // Prevent making multiple requests if one is already in progress
-    if (this.loading ||
-      (loadExpense && this.allExpensesLoaded)
-    ) {
-      return;
-    }
+  // fetchGroupExpensesAndSettlements(
+  //   loadExpense: boolean,
+  //   element: HTMLElement | null,
+  // ) {
+  //   // Prevent making multiple requests if one is already in progress
+  //   if (this.loading ||
+  //     (loadExpense && this.allExpensesLoaded)
+  //   ) {
+  //     return;
+  //   }
 
-    // Set loading to true to prevent subsequent requests until this one is complete
-    this.loading = true;
+  //   // Set loading to true to prevent subsequent requests until this one is complete
+  //   this.loading = true;
 
-    // Fetch group expenses and settlements
-    this.groupsService.fetchExpensesSettlements(
-      this.selectedGroup!.group_id,
-      this.pageExpense,
-      this.pageSize,
-      this.offsetExpense,
-      this.timestampExpense
-    ).subscribe({
-      next: (expenses) => {
-        expenses.forEach((expense) => {
-          if (expense.payer_id === this.currentMember?.group_membership_id) {
-            expense.payer = this.getFullNameAndImage(this.currentMember);;
-          } else {
-            const payer = this.groupMembers.find((member) => expense.payer_id === member.group_membership_id);
-            expense.payer = this.getFullNameAndImage(
-              payer
-            );
-          }
-        });
+  //   // Fetch group expenses and settlements
+  //   this.groupsService.fetchExpensesSettlements(
+  //     this.selectedGroup!.group_id,
+  //     this.pageExpense,
+  //     this.pageSize,
+  //     this.offsetExpense,
+  //     this.timestampExpense
+  //   ).subscribe({
+  //     next: (expenses) => {
+  //       expenses.forEach((expense) => {
+  //         if (expense.payer_id === this.currentMember?.group_membership_id) {
+  //           expense.payer = this.getFullNameAndImage(this.currentMember);;
+  //         } else {
+  //           const payer = this.groupMembers.find((member) => expense.payer_id === member.group_membership_id);
+  //           expense.payer = this.getFullNameAndImage(
+  //             payer
+  //           );
+  //         }
+  //       });
 
-        // Check if all data has already been loaded for the current view and set the flag accordingly
-        this.checkAndSetLoaded("allExpensesLoaded", loadExpense, expenses, this.pageSize);
+  //       // Check if all data has already been loaded for the current view and set the flag accordingly
+  //       this.checkAndSetLoaded("allExpensesLoaded", loadExpense, expenses, this.pageSize);
 
-        this.expenses.set(expenses);
-        this.offsetExpense++;
-        if (this.offsetExpense === 3) {
-          this.offsetExpense = 0;
-          this.pageExpense++;
-        }
-        // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
-        if (
-          this.pageExpense === 1
-        ) {
-          this.cdr.detectChanges();
-          this.scrollToBottom();
-        } else {
-          this.cdr.detectChanges();
-          // After loading new items, calculate the new scroll position
-          const newScrollHeight = element!.scrollHeight;
+  //       this.expenses.set(expenses);
+  //       this.offsetExpense++;
+  //       if (this.offsetExpense === 3) {
+  //         this.offsetExpense = 0;
+  //         this.pageExpense++;
+  //       }
+  //       // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
+  //       if (
+  //         this.pageExpense === 1
+  //       ) {
+  //         this.cdr.detectChanges();
+  //         this.scrollToBottom();
+  //       } else {
+  //         this.cdr.detectChanges();
+  //         // After loading new items, calculate the new scroll position
+  //         const newScrollHeight = element!.scrollHeight;
 
-          // Adjust the scroll position to keep the view consistent
-          const scrollDiff = newScrollHeight - this.scrollPosition;
-          element!.scrollTop = element!.scrollTop + scrollDiff - 100;
-        }
+  //         // Adjust the scroll position to keep the view consistent
+  //         const scrollDiff = newScrollHeight - this.scrollPosition;
+  //         element!.scrollTop = element!.scrollTop + scrollDiff - 100;
+  //       }
 
-        // Increment the page number for the next data fetch
-        this.pageExpense += Number(loadExpense);
+  //       // Increment the page number for the next data fetch
+  //       this.pageExpense += Number(loadExpense);
 
-        // Reset loading state to allow future requests
-        this.loading = false;
-      }
-    });
-  }
+  //       // Reset loading state to allow future requests
+  //       this.loading = false;
+  //     }
+  //   });
+  // }
 
   /**
    * This function calls the service to fetch the group details containing all the members.
@@ -631,7 +728,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   }
 
   onBlockGroup() {
-    if (parseFloat(this.currentMember!.total_balance) !== 0) {
+    if (this.currentMember!.total_balance && parseFloat(this.currentMember!.total_balance) !== 0) {
       this.toastr.warning("You have outstanding balance in this group. Please settle it before leaving.", "Warning");
       return;
     }
@@ -639,7 +736,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     const confirmationDialogRef = this.dialog.open(
       ConfirmationDialogComponent,
       {
-        data: "Are you sure you want to block this group?",
+        data: `Are you sure you want to ${newBlockStatus ? "block" : "unblock"} this group?`,
       },
     );
 

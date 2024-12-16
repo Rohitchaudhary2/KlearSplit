@@ -6,6 +6,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { ToastrService } from "ngx-toastr";
 
+import { AbsoluteValuePipe } from "../../../shared/pipes/absolute-value.pipe";
 import { ListDisplayComponent } from "../../shared/pending-requests/list-display.component";
 import { SearchBarComponent } from "../../shared/search-bar/search-bar.component";
 import { CreateGroupComponent } from "../create-group/create-group.component";
@@ -22,7 +23,8 @@ import { GroupsService } from "../groups.service";
     MatTooltipModule,
     NgClass,
     SearchBarComponent,
-    ListDisplayComponent
+    ListDisplayComponent,
+    AbsoluteValuePipe
   ],
   templateUrl: "./groups-list.component.html",
   styleUrls: [ "./groups-list.component.css", "../../friends/friends.component.css" ]

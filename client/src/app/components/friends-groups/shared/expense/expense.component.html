@@ -7,7 +7,7 @@
 >
   @if (!isCurrentUserPayer()) {
     <img
-      [src]="friendImageUrl() || '/profile.png'"
+      [src]="imageUrl() || '/profile.png'"
       alt="avatar"
       class="rounded-circle d-inline-flex align-self-end me-3 shadow-1-strong"
       width="40"
@@ -105,7 +105,7 @@
           "
         >
           <p class="fw-bold mb-0">
-            {{ isCurrentUserPayer() ? "You paid" : friendName() + " paid" }}
+            {{ isCurrentUserPayer() ? "You paid" : name() + " paid" }}
           </p>
         </div>
         <div class="card-body" style="max-width: 9vw">
@@ -122,7 +122,7 @@
           "
         >
           <p class="fw-bold mb-0">
-            {{ isCurrentUserPayer() ? "You lent" : friendName() + " lent you" }}
+            {{ isCurrentUserPayer() ? "You lent" : name() + " lent you" }}
           </p>
         </div>
         <div class="card-body" style="max-width: 9vw">

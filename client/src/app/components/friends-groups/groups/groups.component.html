@@ -103,7 +103,7 @@
               }
               <li>
                 <button class="dropdown-item" (click)="onBlockGroup()">
-                  Block Group
+                  {{ selectedGroup.has_blocked ? "Unblock" : "Block" }} Group
                 </button>
               </li>
               <li>
@@ -153,8 +153,8 @@
                       payer_id: expense.payer_id,
                     }"
                     [currentUserId]="currentMember?.group_membership_id"
-                    [friendImageUrl]="expense.payer.imageUrl"
-                    [friendName]="expense.payer.fullName"
+                    [imageUrl]="expense.payer.imageUrl"
+                    [name]="expense.payer.fullName"
                     [currentUserImageUrl]="currentMember?.image_url"
                   >
                   </app-expense>

@@ -17,7 +17,8 @@ import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
 import { CurrentUser } from "../../shared/types.model";
-import { ExpenseComponent } from "./expense/expense.component";
+import { ExpenseComponent } from "../shared/expense/expense.component";
+import { MessageComponent } from "../shared/message/message.component";
 import {
   AddedFriend,
   CombinedExpense,
@@ -33,7 +34,6 @@ import { FriendsExpenseComponent } from "./friends-expense/friends-expense.compo
 import { SettlementComponent } from "./friends-expense/settlement/settlement.component";
 import { ViewExpensesComponent } from "./friends-expense/view-expenses/view-expenses.component";
 import { FriendsListComponent } from "./friends-list/friends-list.component";
-import { MessageComponent } from "./message/message.component";
 import { SocketService } from "./socket.service";
 
 @Component({

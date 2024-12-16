@@ -146,8 +146,8 @@
                       payer_id: expense.payer_id,
                     }"
                     [currentUserId]="user?.user_id"
-                    [friendImageUrl]="selectedUser()?.friend?.image_url"
-                    [friendName]="selectedUser()?.friend?.first_name"
+                    [imageUrl]="selectedUser()?.friend?.image_url"
+                    [name]="selectedUser()?.friend?.first_name"
                     [currentUserImageUrl]="user?.image_url"
                   >
                   </app-expense>
@@ -177,8 +177,8 @@
                         payer_id: item.payer_id,
                       }"
                       [currentUserId]="user?.user_id"
-                      [friendImageUrl]="selectedUser()?.friend?.image_url"
-                      [friendName]="selectedUser()?.friend?.first_name"
+                      [imageUrl]="selectedUser()?.friend?.image_url"
+                      [name]="selectedUser()?.friend?.first_name"
                       [currentUserImageUrl]="user?.image_url"
                     >
                     </app-expense>

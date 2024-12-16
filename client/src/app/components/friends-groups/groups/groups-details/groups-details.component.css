@@ -61,6 +61,7 @@
   display: flex;
   align-items: center;
   gap: 15px;
+  text-align: left !important;
 }
 
 .member-details {
@@ -97,6 +98,7 @@
 }
 
 .table-cell {
+  flex: 1;
   padding: 0.5rem;
   text-align: center;
 }
@@ -123,4 +125,3 @@
     padding: 0.25rem 0;
   }
 }
-

@@ -1,0 +1,134 @@
+<div class="d-flex row justify-content-center align-items-center m-5">
+  <div class="col-md-4" style="flex: 0 0 auto">
+    <app-groups-list
+      [balanceAmount]="selectedGroup?.balance_amount || '0'"
+    />
+  </div>
+
+  <!-- detail box -->
+  <div
+    class="col-md-8 ps-md-5 d-md-block"
+    style="flex: 1 1 0; max-height: 80vh; overflow-y: auto;"
+  >
+    <div
+      class="chat-box d-flex flex-column justify-content-between subcontainer shadow-lg mx-3"
+    >
+      <div class="group-details-container">
+        <!-- Group Info Section -->
+        <div class="group-header">
+          <img
+            [src]="selectedGroup?.image_url ?? '/group-profile.png'"
+            alt="{{ selectedGroup?.group_name }}"
+            class="group-profile-pic"
+          />
+          <span class="group-info">
+            <h2 class="group-name">{{ selectedGroup?.group_name }}</h2>
+            <p class="group-description">
+              {{ selectedGroup?.group_description }}
+            </p>
+          </span>
+          <span class="user-balance d-flex justify-content-between">
+            <h3>
+              Your Balance:
+              <span
+                [class.text-danger]="
+                  getBalanceAsNumber(selectedGroup?.balance_amount) < 0
+                "
+                [class.text-success]="
+                  getBalanceAsNumber(selectedGroup?.balance_amount) >= 0
+                "
+                >{{
+                  getBalanceAsNumber(selectedGroup?.balance_amount)
+                    | absoluteValue
+                    | currency: "INR"
+                }}</span
+              >
+            </h3>
+          </span>
+        </div>
+
+        <!-- User Balance -->
+
+        <!-- Members List -->
+        <div class="members-list">
+          <div class="d-flex align-items-center">
+            <h3>Group Members</h3>
+          </div>
+          <div class="members-table">
+            <!-- Table Header -->
+            <div class="table-row table-header">
+              <div class="table-cell member-cell col-4">Member</div>
+              <div class="table-cell">Role</div>
+              <div class="table-cell">Balance with You</div>
+              <div class="table-cell">Balance in Group</div>
+              <div class="table-cell">Actions</div>
+            </div>
+
+            <!-- Table Body -->
+            @for (member of groupMembers; track $index) {
+              <div class="table-row" [class.current-user]="member.member_id === currentUserId">
+                <div class="table-cell member-cell">
+                  <div class="member-details">
+                    <img
+                      [src]="member.image_url || '/profile.png'"
+                      alt="Profile Picture"
+                      class="member-profile-pic"
+                    />
+                    <span class="member-name">
+                      {{ member.first_name }} {{ member.last_name || "" }}
+                    </span>
+                    @if (member.deletedAt) {
+                      <span class="text-danger">(Left)</span>
+                    }
+                  </div>
+                </div>
+                <div class="table-cell">{{ member.role }}</div>
+                <div class="table-cell">
+                  @if (member.deletedAt || member.member_id === currentUserId) {
+                    <span>--</span>
+                  } @else {
+                    <span
+                      [class.text-success]="
+                        getBalanceAsNumber(member.balance_with_user) <= 0
+                      "
+                      [class.text-danger]="
+                        getBalanceAsNumber(member.balance_with_user) > 0
+                      "
+                      >{{
+                        getBalanceAsNumber(member.balance_with_user)
+                          | absoluteValue
+                          | currency: "INR"
+                      }}</span
+                    >
+                  }
+                </div>
+                <div class="table-cell">
+                  @if (member.deletedAt) {
+                    <span>--</span>
+                  } @else {
+                    <span
+                      [class.text-danger]="
+                        getBalanceAsNumber(member.total_balance) < 0
+                      "
+                      [class.text-success]="
+                        getBalanceAsNumber(member.total_balance) >= 0
+                      "
+                      >{{
+                        getBalanceAsNumber(member.total_balance)
+                          | absoluteValue
+                          | currency: "INR"
+                      }}</span
+                    >
+                  }
+                </div>
+                <div class="table-cell">
+                    <mat-button>Settle</mat-button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

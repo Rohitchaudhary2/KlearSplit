@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from "@angular/material/tooltip";
 
+import { AbsoluteValuePipe } from "../../../shared/pipes/absolute-value.pipe";
 import { FriendData } from "../../friends/friend.model";
 import { GroupData } from "../../groups/groups.model";
 
@@ -21,6 +22,7 @@ interface AcceptedRejected {
     MatIconModule,
     MatTooltipModule,
     NgClass,
+    AbsoluteValuePipe
   ],
   templateUrl: "./list-display.component.html",
   styleUrls: [ "../../friends/friends.component.css" ],
@@ -67,6 +69,7 @@ export class ListDisplayComponent {
     return {
       name: item.group_name,
       profile: `${item.image_url ?? "/group-profile.png"}`,
+      has_blocked: item.has_blocked,
     };
   }
 

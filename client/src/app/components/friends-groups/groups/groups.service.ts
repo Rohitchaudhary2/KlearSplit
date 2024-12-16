@@ -1,17 +1,24 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { inject, Injectable } from "@angular/core";
-import { map, Observable } from "rxjs";
+import { inject, Injectable, Signal, signal } from "@angular/core";
+import { concatMap, map, Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
 import {
+  CombinedGroupExpense,
+  CombinedGroupMessage,
+  CombinedView,
   CreateGroupData,
   CreateGroupResponse,
   FetchExpenseResponse,
+  GroupData,
   GroupExpenseInput,
   GroupExpenseResponse,
+  GroupMemberData,
+  GroupMessageData,
   GroupMessageResponse,
   GroupResponse,
   Groups,
+  GroupSettlementInput,
   MembersData,
   SearchedUserResponse,
 } from "./groups.model";
@@ -22,6 +29,45 @@ import {
 export class GroupsService {
   // Injecting the HttpClient to make HTTP requests
   private readonly httpClient = inject(HttpClient);
+
+  sortBycreatedAt(data: (CombinedGroupMessage | CombinedGroupExpense)[]) {
+    return data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+  }
+
+  private _selectedGroup = signal<GroupData | undefined>(undefined);
+  private _groupMembers = signal<GroupMemberData[]>([]);
+  private _currentMember = signal<GroupMemberData | undefined>(undefined);
+  messages = signal<GroupMessageData[]>([]);
+
+  // Getter for selectedGroup
+  get selectedGroup(): Signal<GroupData | undefined> {
+    return this._selectedGroup;
+  }
+
+  // Setter for selectedGroup
+  setSelectedGroup(group: GroupData | undefined): void {
+    this._selectedGroup.set(group);
+  }
+
+  // Getter for groupMembers
+  get groupMembers(): Signal<GroupMemberData[]> {
+    return this._groupMembers;
+  }
+
+  // Setter for groupMembers
+  setGroupMembers(members: GroupMemberData[]): void {
+    this._groupMembers.set(members);
+  }
+
+  // Getter for currentMember
+  get currentMember(): Signal<GroupMemberData | undefined> {
+    return this._currentMember;
+  }
+
+  // Setter for currentMember
+  setCurrentMember(member: GroupMemberData | undefined): void {
+    this._currentMember.set(member);
+  }
 
   /**
    * Searching users based on the letters typed.
@@ -188,6 +234,14 @@ export class GroupsService {
     );
   }
 
+  addSettlements(groupId: string, settlementData: GroupSettlementInput) {
+    return this.httpClient.post(
+      `${API_URLS.addGroupSettlements}/${groupId}`,
+      settlementData,
+      { withCredentials: true },
+    );
+  }
+
   /**
    * Fetch the expenses and settlements of a group.
    *
@@ -198,6 +252,108 @@ export class GroupsService {
     return this.httpClient.get<FetchExpenseResponse>(
       `${API_URLS.fetchExpensesSettlements}/${groupId}?page=${page}&pageSize=${pageSize}&offset=${offset}&timestamp=${timestamp}`,
       { withCredentials: true }
+    ).pipe(
+      map((expenses) =>
+        expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)),
+      ),
     );
+  }
+
+  /**
+   * Fetches messages, expenses, and combined data for a specific conversation.
+   * It handles loading conditions based on flags: loadMessages, loadExpenses, loadCombined.
+   *
+   * @param conversationId - The ID of the conversation to fetch data for.
+   * @param loadMessages - Flag to determine if messages are to be loaded.
+   * @param loadExpenses - Flag to determine if expenses are to be loaded.
+   * @param pageMessage - Page number for message data.
+   * @param pageExpense - Page number for expense data.
+   * @param pageCombined - Page number for combined data.
+   * @param pageSize - Page size for message, expense, and combined data.
+   * @returns An observable with the data for messages, expenses, and combined.
+   */
+  fetchMessagesAndExpenses(
+    groupId: string,
+    loadMessages: boolean,
+    loadExpenses: boolean,
+    pageMessage: number,
+    pageExpense: number,
+    pageCombined: number,
+    pageSize: number,
+    offset: number,
+    timestampMessage: string,
+    timestampExpense: string,
+    timestampCombined: string,
+  ) {
+    const messagesUrl = `${API_URLS.getGroupMessages}/${groupId}?page=${pageMessage}&pageSize=${pageSize}&offset=${offset}
+      &timestamp=${timestampMessage}`;
+    const expensesUrl = `${API_URLS.fetchExpensesSettlements}/${groupId}?page=${pageExpense}&pageSize=${pageSize}&offset=${offset}
+      &timestamp=${timestampExpense}`;
+    const combinedUrl = `${API_URLS.fetchGroupCombined}/${groupId}?page=${pageCombined}&pageSize=${pageSize * 2}&offset=${offset}
+      &timestamp=${timestampCombined}`;
+    // If all messages, expenses, and combined need to be loaded
+    if (loadMessages && loadExpenses) {
+      return this.httpClient
+        .get<GroupMessageResponse>(messagesUrl, { withCredentials: true })
+        .pipe(
+          concatMap((messages) => {
+            // Sort messages by creation date
+            messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+
+            // Fetch expenses after messages
+            return this.httpClient
+              .get<FetchExpenseResponse>(expensesUrl, { withCredentials: true })
+              .pipe(
+                concatMap((expenses) => {
+                  // Sort expenses by creation date
+                  expenses.data.sort((a, b) =>
+                    a.createdAt < b.createdAt ? -1 : 1,
+                  );
+                  // Fetch combined data after expenses
+                  return this.httpClient
+                    .get<CombinedView>(combinedUrl, { withCredentials: true })
+                    .pipe(
+                      map((combined) => {
+                        // Sort combined data by creation date
+                        combined.data = this.sortBycreatedAt(combined.data);
+                        return {
+                          messages: messages.data,
+                          expenses: expenses.data,
+                          combined: combined.data,
+                        };
+                      }),
+                    );
+                }),
+              );
+          }),
+        );
+    } else if (loadMessages) {
+      return this.httpClient
+        .get<GroupMessageResponse>(messagesUrl, { withCredentials: true })
+        .pipe(
+          map((messages) => {
+            messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+            return { messages: messages.data, expenses: [], combined: [] };
+          }),
+        );
+    } else if (loadExpenses) {
+      return this.httpClient
+        .get<FetchExpenseResponse>(expensesUrl, { withCredentials: true })
+        .pipe(
+          map((expenses) => {
+            expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+            return { messages: [], expenses: expenses.data, combined: [] };
+          }),
+        );
+    }
+    // If only combined data needs to be loaded
+    return this.httpClient
+      .get<CombinedView>(combinedUrl, { withCredentials: true })
+      .pipe(
+        map((combined) => {
+          combined.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+          return { messages: [], expenses: [], combined: combined.data };
+        }),
+      );
   }
 }

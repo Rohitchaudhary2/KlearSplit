@@ -2,20 +2,20 @@
   <div class="col-md-4" style="flex: 0 0 auto">
     <app-groups-list
       (selectedGroup)="onSelectGroup($event)"
-      [balanceAmount]="selectedGroup()?.balance_amount"
+      [balanceAmount]="selectedGroup?.balance_amount || '0'"
     />
   </div>
 
   <!-- chatbox -->
   <div
     class="col-md-8 ps-md-5 d-md-block"
-    [ngClass]="{ 'd-none': !selectedGroup() }"
+    [ngClass]="{ 'd-none': !selectedGroup }"
     style="flex: 1 1 0"
   >
     <div
       class="chat-box d-flex flex-column justify-content-between subcontainer shadow-lg mx-3"
     >
-      @if (selectedGroup()) {
+      @if (selectedGroup) {
         <div class="d-flex justify-content-between align-items-center p-2">
           <div>
             <span
@@ -28,7 +28,7 @@
             <span
               ><img
                 class="profile-image"
-                [src]="selectedGroup()?.image_url || '/group-profile.png'"
+                [src]="selectedGroup.image_url || '/group-profile.png'"
                 alt="Group"
                 (click)="openGroupDetails()"
                 (keyup.enter)="openGroupDetails()"
@@ -40,7 +40,7 @@
               (click)="openGroupDetails()"
               (keyup.enter)="openGroupDetails()"
               style="cursor: pointer"
-              >{{ selectedGroup()?.group_name }}</span
+              >{{ selectedGroup.group_name }}</span
             >
           </div>
           <div class="d-flex align-items-center">
@@ -94,7 +94,7 @@
                   Group Details
                 </button>
               </li>
-              @if (selectedGroup()?.role !== "USER") {
+              @if (selectedGroup.role !== "USER") {
                 <li>
                   <button class="dropdown-item" (click)="onAddMembers()">
                     Add Members
@@ -103,7 +103,7 @@
               }
               <li>
                 <button class="dropdown-item" (click)="onBlockGroup()">
-                  Block Group
+                  {{ selectedGroup.has_blocked ? "Unblock" : "Block" }} Group
                 </button>
               </li>
               <li>
@@ -135,7 +135,7 @@
                       sender_id: message.sender_id,
                       message: message.message,
                     }"
-                    [currentUserId]="currentMember()!.group_membership_id"
+                    [currentUserId]="currentMember?.group_membership_id"
                     [imageUrl]="message.senderImage"
                     [name]="message.senderName"
                     [currentUserImageUrl]="user?.image_url"
@@ -149,13 +149,13 @@
                       expense_id: expense.group_expense_id,
                       expense_name: expense.expense_name,
                       total_amount: expense.total_amount,
-                      debtor_amount: expense.user_debt,
+                      debtor_amount: expense.payer_id === currentMember?.group_membership_id ? expense.total_debt_amount : expense.user_debt,
                       payer_id: expense.payer_id,
                     }"
-                    [currentUserId]="currentMember()!.group_membership_id"
-                    [friendImageUrl]="expense.payer.imageUrl"
-                    [friendName]="expense.payer.fullName"
-                    [currentUserImageUrl]="currentMember()!.image_url"
+                    [currentUserId]="currentMember?.group_membership_id"
+                    [imageUrl]="expense.payer.imageUrl"
+                    [name]="expense.payer.fullName"
+                    [currentUserImageUrl]="currentMember?.image_url"
                   >
                   </app-expense>
                 }

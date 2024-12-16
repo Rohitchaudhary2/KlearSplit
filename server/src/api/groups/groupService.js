@@ -324,7 +324,7 @@ class GroupService {
    *
    * @returns {Promise<Array>} - A promise that resolves to an array of messages from the group.
    */
-  static getMessages = async(groupId, userId, page, pageSize, timestamp) => {
+  static getMessages = async(groupId, userId, pageSize, timestamp) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -335,7 +335,7 @@ class GroupService {
 
     const updatedTimestamp = userMembershipInfo.has_blocked ? userMembershipInfo.updatedAt : timestamp;
 
-    const messages = GroupDb.getMessages(groupId, page, pageSize, updatedTimestamp);
+    const messages = GroupDb.getMessages(groupId, pageSize, updatedTimestamp);
 
     return messages;
   };
@@ -525,11 +525,11 @@ class GroupService {
  * @param {number} [page=1] - The page number for pagination (default is 1).
  * @param {number} [pageSize=20] - The number of items per page (default is 20).
  * @param {number} offset - The offset for the pagination used for determining which slice of data to return.
- * @returns {Array} - A paginated list of expenses and settlements combined and sorted by creation date.
+ * @returns {Promise<Array>} - A paginated list of expenses and settlements combined and sorted by creation date.
  *
  * @throws {ErrorHandler} - Throws an error if the group is not found or if any database query fails.
  */
-  static getExpensesSettlements = async(groupId, userId, page = 1, pageSize = 20, offset, timestamp) => {
+  static getExpensesSettlements = async(groupId, userId, pageSize = 20, timestamp) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -538,8 +538,8 @@ class GroupService {
 
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
     const updatedTimestamp = userMembershipInfo.has_blocked ? userMembershipInfo.updatedAt : timestamp;
-    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, page, pageSize, updatedTimestamp);
-    const settlements = await GroupDb.getSettlements(groupId, page, pageSize, updatedTimestamp);
+    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, pageSize, updatedTimestamp);
+    const settlements = await GroupDb.getSettlements(groupId, pageSize, updatedTimestamp);
 
     // Combine and sort the results by creation time
     const expensesAndSettlements = [ ...expenses, ...settlements ];
@@ -547,7 +547,7 @@ class GroupService {
     expensesAndSettlements.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
     // Return the paginated results
     
-    return expensesAndSettlements.slice(pageSize * offset, pageSize * offset + 20);
+    return expensesAndSettlements.slice(0, 20);
   };
 
   /**
@@ -558,11 +558,11 @@ class GroupService {
    * @param {number} [page=1] - The page number for pagination (default is 1).
    * @param {number} [pageSize=20] - The number of items per page (default is 20).
    * @param {number} offset - The offset or round for pagination used to determine which slice of data to return.
-   * @returns {Array} - A paginated list of messages, expenses, and settlements combined and sorted by creation date.
+   * @returns {Promise<Array>} - A paginated list of messages, expenses, and settlements combined and sorted by creation date.
    *
    * @throws {ErrorHandler} - Throws an error if the group is not found or if any database query fails.
    */
-  static getMessagesExpensesSettlements = async(groupId, userId, page = 1, pageSize = 20, offset, timestamp) => {
+  static getMessagesExpensesSettlements = async(groupId, userId, pageSize = 20, timestamp) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -571,9 +571,9 @@ class GroupService {
 
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
     const updatedTimestamp = userMembershipInfo.has_blocked ? userMembershipInfo.updatedAt : timestamp;
-    const messages = await GroupDb.getMessages(groupId, page, pageSize, updatedTimestamp);
-    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, page, pageSize, updatedTimestamp);
-    const settlements = await GroupDb.getSettlements(groupId, page, pageSize, updatedTimestamp);
+    const messages = await GroupDb.getMessages(groupId, pageSize, updatedTimestamp);
+    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, pageSize, updatedTimestamp);
+    const settlements = await GroupDb.getSettlements(groupId, pageSize, updatedTimestamp);
 
     // Combine and sort the results by creation time
     const messagesExpensesSettlements = [ ...messages, ...expenses, ...settlements ];
@@ -581,7 +581,7 @@ class GroupService {
     messagesExpensesSettlements.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 
     // Return the paginated results
-    return messagesExpensesSettlements.slice(pageSize * offset, pageSize * offset + 20);
+    return messagesExpensesSettlements.slice(0, 20);
   };
 
   static updateExpense = async(expenseData, groupId, userId) => {

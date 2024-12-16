@@ -46,4 +46,11 @@ groupRouter.get("/expensessettlements/:group_id", authenticateToken, validatePar
 groupRouter.get("/messagesexpensessettlements/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), validateQuery(paginationValidation), GroupController.getMessagesExpensesSettlements);
 
 groupRouter.patch("/updateexpense/:group_id", authenticateToken, uploadMiddleware("groupExpenses", "receipt"), validateParams(groupSchema.groupIdParamValidation), validateGroupExpense, GroupController.updateExpense);
+
+groupRouter.patch("/updatesettlement/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), validateBody(groupSchema.settlementUpdation), GroupController.updateSettlement);
+
+groupRouter.delete("/deleteexpense/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), validateBody(groupSchema.groupExpenseId), GroupController.deleteExpense);
+
+groupRouter.delete("/deletesettlement/:group_id", authenticateToken, validateParams(groupSchema.groupIdParamValidation), validateBody(groupSchema.groupSettlementId), GroupController.deleteSettlement);
+
 export default groupRouter;

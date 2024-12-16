@@ -481,22 +481,28 @@ class GroupService {
 
     Object.assign(settlementData, { "group_id": groupId });
 
+    const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
+
+    if (!membersBalanceInfo || membersBalanceInfo.balance_amount === 0) {
+      throw new ErrorHandler(400, "All settled.");
+    }
+
+    if ((membersBalanceInfo.balance_amount < 0 && membersBalanceInfo.participant1_id !== settlementData.payer_id) || (membersBalanceInfo.balance_amount > 0 && membersBalanceInfo.participant2_id !== settlementData.payer_id)
+    ) {
+      throw new ErrorHandler(422, "Transaction mismatch: payer is not the correct participant for this balance");
+    }
+
+    GroupUtils.validateSettlementAmount(membersBalanceInfo.balance_amount, settlementData.settlement_amount);
+
+    const balanceAmount = membersBalanceInfo.balance_amount + settlementData.settlement_amount;
+
+    Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
+
     // Start a new transaction to ensure atomicity
     const transaction = await sequelize.transaction();
 
     try {
       // Adding settlement in the database
-      const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
-
-      if (!membersBalanceInfo || membersBalanceInfo.balance_amount === 0) {
-        throw new ErrorHandler(400, "All settled.");
-      }
-
-      if ((membersBalanceInfo.balance_amount < 0 && membersBalanceInfo.participant1_id !== settlementData.payer_id) || (membersBalanceInfo.balance_amount > 0 && membersBalanceInfo.participant2_id !== settlementData.payer_id)
-      ) {
-        throw new ErrorHandler(422, "Transaction mismatch: payer is not the correct participant for this balance");
-      }
-
       const settlement = GroupDb.addSettlement(settlementData, transaction);
 
       membersBalanceInfo.save({ transaction });
@@ -578,23 +584,131 @@ class GroupService {
     return messagesExpensesSettlements.slice(pageSize * offset, pageSize * offset + 20);
   };
 
-  // static updateExpense = async(expenseData, groupId, userId) => {
-  //   const group = await GroupDb.getGroupData(groupId);
+  static updateExpense = async(expenseData, groupId, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
 
-  //   if (!group) {
-  //     throw new ErrorHandler(404, "Group Not Found");
-  //   }
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
 
-  //   const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
+    await this.isUserMemberOfGroup(groupId, userId);
 
-  //   const previousExpense = await GroupDb.getExpense(expenseData.group_expense_id);
+    const previousExpense = await GroupDb.getExpense(expenseData.group_expense_id);
 
-  //   if (!previousExpense) {
-  //     throw new ErrorHandler(400, "Expense Not Found.");
-  //   }
+    if (!previousExpense) {
+      throw new ErrorHandler(400, "Expense Not Found.");
+    }
 
     
-  // };
+  };
+
+  static updateSettlement = async(settlementData, groupId, userId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+
+    await this.isUserMemberOfGroup(groupId, userId);
+
+    const settlement = await GroupDb.getSettlement(settlementData.group_settlement_id);
+
+    if (!settlement) {
+      throw new ErrorHandler(400, "Settlement Not Found.");
+    }
+
+    const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
+
+    let balanceAmount;
+    
+    if (settlement.payer_id === membersBalanceInfo.participant1_id) {
+      balanceAmount = membersBalanceInfo.balance_amount - settlement.settlement_amount;
+
+      GroupUtils.validateSettlementAmount(balanceAmount, settlement.settlement_amount);
+
+      balanceAmount = membersBalanceInfo.balance_amount - settlementData.settlement_amount;
+
+    } else {
+      balanceAmount = membersBalanceInfo.balance_amount + settlement.settlement_amount;
+
+      GroupUtils.validateSettlementAmount(balanceAmount, settlement.settlement_amount);
+
+      balanceAmount = membersBalanceInfo.balance_amount + settlementData.settlement_amount;
+    }
+
+    Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
+    Object.assign(settlement, settlementData);
+
+    // Start a new transaction to ensure atomicity
+    const transaction = await sequelize.transaction();
+
+    try {
+      // Adding settlement in the database
+      settlement.save({ transaction });
+
+      membersBalanceInfo.save({ transaction });
+
+      await transaction.commit();
+
+      return settlement;
+    } catch (error) {
+      // Rollback the transaction in case of an error
+      await transaction.rollback();
+      throw error;
+    }
+  };
+
+  static deleteExpense = async(groupId, userId, groupExpenseId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+
+    await this.isUserMemberOfGroup(groupId, userId);
+
+    await GroupDb.deleteExpense(groupExpenseId);
+    await GroupDb.deleteExpenseParticipants(groupExpenseId);
+  };
+
+  static deleteSettlement = async(groupId, userId, groupSettlementId) => {
+    const group = await GroupDb.getGroupData(groupId);
+
+    if (!group) {
+      throw new ErrorHandler(404, "Group Not Found");
+    }
+
+    await this.isUserMemberOfGroup(groupId, userId);
+
+    const settlement = await GroupDb.getSettlement(groupSettlementId);
+
+    if (!settlement) {
+      throw new ErrorHandler(400, "Settlement not found.");
+    }
+
+    const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlement.payer_id, settlement.debtor_id);
+
+    if (membersBalanceInfo.participant1_id === settlement.payer_id) {
+      const balanceAmount = membersBalanceInfo.balance_amount - settlement.settlement_amount;
+
+      Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
+    } else {
+      const balanceAmount = membersBalanceInfo.balance_amount + settlement.settlement_amount;
+
+      Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      await membersBalanceInfo.save({ transaction });
+      await settlement.destroy({ transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  };
 }
 
 export default GroupService;

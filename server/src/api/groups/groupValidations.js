@@ -57,6 +57,10 @@ const debtorSchema = Joi.object({
   "debtor_share": Joi.number().positive().max(9999999999.98).required()
 });
 
+const expenseId = {
+  "group_expense_id": Joi.string().uuid()
+};
+
 export const expenseCreationSchema = Joi.object({
   "expense_name": Joi.string().trim().max(50).required(),
   "payer_id": Joi.string().trim().uuid().required(),
@@ -65,8 +69,16 @@ export const expenseCreationSchema = Joi.object({
   "split_type": Joi.string().trim().valid("EQUAL", "UNEQUAL", "PERCENTAGE").required(),
   "payer_share": Joi.number().min(0).max(9999999999.98).required(),
   "debtors": Joi.array().items(debtorSchema).min(1),
-  "group_expense_id": Joi.string().uuid()
+  ...expenseId
 });
+
+export const groupExpenseId = Joi.object({
+  "group_expense_id": expenseId.group_expense_id.required()
+});
+
+const settementId = {
+  "group_settlement_id": Joi.string().trim().uuid().required()
+};
 
 export const settlementCreationSchema = Joi.object({
   "payer_id": Joi.string().trim().uuid().required(),
@@ -74,3 +86,11 @@ export const settlementCreationSchema = Joi.object({
   "settlement_amount": Joi.number().positive().max(9999999999.99).required(),
   "description": Joi.string().trim().min(1)
 });
+
+export const settlementUpdation = Joi.object({
+  ...settementId,
+  "settlement_amount": Joi.number().positive().max(9999999999.99).required(),
+  "description": Joi.string().trim().min(1)
+});
+
+export const groupSettlementId = Joi.object(settementId);

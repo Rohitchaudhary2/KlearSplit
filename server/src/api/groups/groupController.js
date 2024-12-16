@@ -111,6 +111,22 @@ class GroupController {
   
     responseHandler(res, 200, "Expense updated successfully", updatedExpense);
   });
+
+  static updateSettlement = asyncHandler(async(req, res) => {
+    const updatedSettlement = await GroupService.updateSettlement(req.body, req.params.group_id, req.user.user_id);
+
+    responseHandler(res, 200, "Settlement updated successfully", updatedSettlement);
+  });
+
+  static deleteExpense = asyncHandler(async(req, res) => {
+    await GroupService.deleteExpense(req.params.group_id, req.user.user_id, req.body.group_expense_id);
+    responseHandler(res, 200, "Expense deleted succesfully");
+  });
+
+  static deleteSettlement = asyncHandler(async(req, res) => {
+    await GroupService.deleteSettlement(req.params.group_id, req.user.user_id, req.body.group_settlement_id);
+    responseHandler(res, 200, "Settlement deleted succesfully");
+  });
 }
 
 export default GroupController;

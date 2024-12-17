@@ -1,15 +1,17 @@
-import { NgClass } from "@angular/common";
+import { DatePipe, NgClass } from "@angular/common";
 import { Component, input } from "@angular/core";
 
 interface Message {
   sender_id: string;
   message: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 @Component({
   selector: "app-message",
   standalone: true,
-  imports: [ NgClass ],
+  imports: [ NgClass, DatePipe ],
   templateUrl: "./message.component.html",
 })
 export class MessageComponent {

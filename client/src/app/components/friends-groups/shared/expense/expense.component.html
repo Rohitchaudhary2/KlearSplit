@@ -128,6 +128,18 @@
         <div class="card-body" style="max-width: 9vw">
           <p class="mb-0">{{ expense()?.debtor_amount }}</p>
         </div>
+        <div
+          class="card-footer d-flex justify-content-end align-items-center"
+          style="
+            width: 100%;
+            font-size: 0.85em;
+            color: rgba(0, 0, 0, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            background: transparent;
+            "
+        >
+          <span>{{ expense()?.createdAt | date: "shortTime" }}</span>
+        </div>
       </div>
     }
   </div>

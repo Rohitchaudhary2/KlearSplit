@@ -1,0 +1,9 @@
+<app-settlement
+  [payerName]="payer_name"
+  [debtorName]="debtor_name"
+  [payerImage]="payer_image"
+  [debtorImage]="debtor_image"
+  [totalAmount]="total_amount"
+  (submitSettlement)="sendSplitType($event)"
+  (cancelSettlement)="onCancel()"
+></app-settlement>

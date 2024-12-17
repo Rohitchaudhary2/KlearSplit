@@ -1,16 +1,18 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { inject, Injectable, Signal, signal } from "@angular/core";
+import { inject, Injectable, signal } from "@angular/core";
 import { concatMap, map, Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
 import {
   CombinedGroupExpense,
   CombinedGroupMessage,
+  CombinedGroupSettlement,
   CombinedView,
   CreateGroupData,
   CreateGroupResponse,
   FetchExpenseResponse,
   GroupData,
+  GroupExpenseData,
   GroupExpenseInput,
   GroupExpenseResponse,
   GroupMemberData,
@@ -18,7 +20,9 @@ import {
   GroupMessageResponse,
   GroupResponse,
   Groups,
+  GroupSettlementData,
   GroupSettlementInput,
+  GroupSettlementResponse,
   MembersData,
   SearchedUserResponse,
 } from "./groups.model";
@@ -30,44 +34,17 @@ export class GroupsService {
   // Injecting the HttpClient to make HTTP requests
   private readonly httpClient = inject(HttpClient);
 
-  sortBycreatedAt(data: (CombinedGroupMessage | CombinedGroupExpense)[]) {
+  sortBycreatedAt(data: (CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement)[]) {
     return data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
   }
 
-  private _selectedGroup = signal<GroupData | undefined>(undefined);
-  private _groupMembers = signal<GroupMemberData[]>([]);
-  private _currentMember = signal<GroupMemberData | undefined>(undefined);
+  selectedGroup = signal<GroupData | undefined>(undefined);
+  groupMembers = signal<GroupMemberData[]>([]);
+  currentMember = signal<GroupMemberData | undefined>(undefined);
   messages = signal<GroupMessageData[]>([]);
-
-  // Getter for selectedGroup
-  get selectedGroup(): Signal<GroupData | undefined> {
-    return this._selectedGroup;
-  }
-
-  // Setter for selectedGroup
-  setSelectedGroup(group: GroupData | undefined): void {
-    this._selectedGroup.set(group);
-  }
-
-  // Getter for groupMembers
-  get groupMembers(): Signal<GroupMemberData[]> {
-    return this._groupMembers;
-  }
-
-  // Setter for groupMembers
-  setGroupMembers(members: GroupMemberData[]): void {
-    this._groupMembers.set(members);
-  }
-
-  // Getter for currentMember
-  get currentMember(): Signal<GroupMemberData | undefined> {
-    return this._currentMember;
-  }
-
-  // Setter for currentMember
-  setCurrentMember(member: GroupMemberData | undefined): void {
-    this._currentMember.set(member);
-  }
+  expenses = signal<(GroupExpenseData | GroupSettlementData)[]>([]);
+  // Signal to hold combined view data (messages and expenses)
+  combinedView = signal<(CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement)[]>([]);
 
   /**
    * Searching users based on the letters typed.
@@ -173,26 +150,6 @@ export class GroupsService {
   }
 
   /**
-   * This method is used to fetch all the messages of a group.
-   *
-   * @param groupId - The ID of the group from where the message needs to be fetched.
-   * @returns - An observable with the list of messages.
-   */
-  fetchGroupMessages(groupId: string, page: number, pageSize: number, offset: number, timestamp: string) {
-    return this.httpClient
-      .get<GroupMessageResponse>(
-        `${API_URLS.getGroupMessages}/${groupId}?page=${page}&pageSize=${pageSize}&offset=${offset}&timestamp=${timestamp}`,
-        {
-          withCredentials: true,
-        })
-      .pipe(
-        map((messages) =>
-          messages.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)),
-        ),
-      );
-  }
-
-  /**
    * Block groups for a particular group member.
    *
    * @param groupId - The ID of the group.
@@ -235,27 +192,10 @@ export class GroupsService {
   }
 
   addSettlements(groupId: string, settlementData: GroupSettlementInput) {
-    return this.httpClient.post(
+    return this.httpClient.post<GroupSettlementResponse>(
       `${API_URLS.addGroupSettlements}/${groupId}`,
       settlementData,
       { withCredentials: true },
-    );
-  }
-
-  /**
-   * Fetch the expenses and settlements of a group.
-   *
-   * @param groupId - The ID of the group.
-   * @returns - An observable with the expenses and settlements.
-   */
-  fetchExpensesSettlements(groupId: string, page: number, pageSize: number, offset: number, timestamp: string) {
-    return this.httpClient.get<FetchExpenseResponse>(
-      `${API_URLS.fetchExpensesSettlements}/${groupId}?page=${page}&pageSize=${pageSize}&offset=${offset}&timestamp=${timestamp}`,
-      { withCredentials: true }
-    ).pipe(
-      map((expenses) =>
-        expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)),
-      ),
     );
   }
 
@@ -276,21 +216,14 @@ export class GroupsService {
     groupId: string,
     loadMessages: boolean,
     loadExpenses: boolean,
-    pageMessage: number,
-    pageExpense: number,
-    pageCombined: number,
     pageSize: number,
-    offset: number,
-    timestampMessage: string,
-    timestampExpense: string,
-    timestampCombined: string,
+    timestampMessage: string = new Date().toISOString(),
+    timestampExpense: string = new Date().toISOString(),
+    timestampCombined: string = new Date().toISOString(),
   ) {
-    const messagesUrl = `${API_URLS.getGroupMessages}/${groupId}?page=${pageMessage}&pageSize=${pageSize}&offset=${offset}
-      &timestamp=${timestampMessage}`;
-    const expensesUrl = `${API_URLS.fetchExpensesSettlements}/${groupId}?page=${pageExpense}&pageSize=${pageSize}&offset=${offset}
-      &timestamp=${timestampExpense}`;
-    const combinedUrl = `${API_URLS.fetchGroupCombined}/${groupId}?page=${pageCombined}&pageSize=${pageSize * 2}&offset=${offset}
-      &timestamp=${timestampCombined}`;
+    const messagesUrl = `${API_URLS.getGroupMessages}/${groupId}?pageSize=${pageSize}&timestamp=${timestampMessage}`;
+    const expensesUrl = `${API_URLS.fetchExpensesSettlements}/${groupId}?pageSize=${pageSize}&timestamp=${timestampExpense}`;
+    const combinedUrl = `${API_URLS.fetchGroupCombined}/${groupId}?pageSize=${pageSize * 2}&timestamp=${timestampCombined}`;
     // If all messages, expenses, and combined need to be loaded
     if (loadMessages && loadExpenses) {
       return this.httpClient

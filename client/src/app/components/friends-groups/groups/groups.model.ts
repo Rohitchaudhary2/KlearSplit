@@ -152,10 +152,34 @@ export interface GroupExpenseResponse {
     };
 }
 
+export interface GroupSettlementData {
+    group_settlement_id: string;
+    settlement_amount: string;
+    payer_id: string;
+    debtor_id: string;
+    group_id: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+    description: string | null;
+    payer: {
+        fullName: string;
+        imageUrl?: string;
+    };
+}
+
+export interface GroupSettlementResponse {
+    success: string;
+    message: string;
+    data: GroupSettlementData;
+}
+
+
+
 export interface FetchExpenseResponse {
     success: string;
     message: string;
-    data: GroupExpenseData[]
+    data: (GroupExpenseData | GroupSettlementData)[]
 }
 
 export interface Debtors {
@@ -188,8 +212,12 @@ export interface CombinedGroupExpense extends GroupExpenseData {
     type: string;
 }
 
+export interface CombinedGroupSettlement extends GroupSettlementData {
+    type: string;
+}
+
 export interface CombinedView {
     success: string;
     message: string;
-    data: (CombinedGroupExpense | CombinedGroupMessage)[];
+    data: (CombinedGroupExpense | CombinedGroupSettlement | CombinedGroupMessage)[];
 }

@@ -127,6 +127,8 @@
                     [message]="{
                       sender_id: message.sender_id,
                       message: message.message,
+                      createdAt: message.createdAt,
+                      updatedAt: message.updatedAt,
                     }"
                     [currentUserId]="user?.user_id"
                     [imageUrl]="selectedUser()?.friend?.image_url"
@@ -144,6 +146,8 @@
                       total_amount: expense.total_amount,
                       debtor_amount: expense.debtor_amount,
                       payer_id: expense.payer_id,
+                      createdAt: expense.createdAt,
+                      updatedAt: expense.updatedAt,
                     }"
                     [currentUserId]="user?.user_id"
                     [imageUrl]="selectedUser()?.friend?.image_url"
@@ -159,6 +163,8 @@
                       [message]="{
                         sender_id: item.sender_id,
                         message: item.message,
+                        createdAt: item.createdAt,
+                        updatedAt: item.updatedAt,
                       }"
                       [currentUserId]="user?.user_id"
                       [imageUrl]="selectedUser()?.friend?.image_url"
@@ -175,6 +181,8 @@
                         total_amount: item.total_amount,
                         debtor_amount: item.debtor_amount,
                         payer_id: item.payer_id,
+                        createdAt: item.createdAt,
+                        updatedAt: item.updatedAt,
                       }"
                       [currentUserId]="user?.user_id"
                       [imageUrl]="selectedUser()?.friend?.image_url"

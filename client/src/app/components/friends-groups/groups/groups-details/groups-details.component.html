@@ -1,7 +1,7 @@
 <div class="d-flex row justify-content-center align-items-center m-5">
   <div class="col-md-4" style="flex: 0 0 auto">
     <app-groups-list
-      [balanceAmount]="selectedGroup?.balance_amount || '0'"
+      [balanceAmount]="selectedGroup()?.balance_amount || '0'"
     />
   </div>
 
@@ -17,14 +17,14 @@
         <!-- Group Info Section -->
         <div class="group-header">
           <img
-            [src]="selectedGroup?.image_url ?? '/group-profile.png'"
-            alt="{{ selectedGroup?.group_name }}"
+            [src]="selectedGroup()?.image_url ?? '/group-profile.png'"
+            alt="{{ selectedGroup()?.group_name }}"
             class="group-profile-pic"
           />
           <span class="group-info">
-            <h2 class="group-name">{{ selectedGroup?.group_name }}</h2>
+            <h2 class="group-name">{{ selectedGroup()?.group_name }}</h2>
             <p class="group-description">
-              {{ selectedGroup?.group_description }}
+              {{ selectedGroup()?.group_description }}
             </p>
           </span>
           <span class="user-balance d-flex justify-content-between">
@@ -32,13 +32,13 @@
               Your Balance:
               <span
                 [class.text-danger]="
-                  getBalanceAsNumber(selectedGroup?.balance_amount) < 0
+                  getBalanceAsNumber(selectedGroup()?.balance_amount) < 0
                 "
                 [class.text-success]="
-                  getBalanceAsNumber(selectedGroup?.balance_amount) >= 0
+                  getBalanceAsNumber(selectedGroup()?.balance_amount) >= 0
                 "
                 >{{
-                  getBalanceAsNumber(selectedGroup?.balance_amount)
+                  getBalanceAsNumber(selectedGroup()?.balance_amount)
                     | absoluteValue
                     | currency: "INR"
                 }}</span
@@ -65,7 +65,7 @@
             </div>
 
             <!-- Table Body -->
-            @for (member of groupMembers; track $index) {
+            @for (member of groupMembers(); track $index) {
               <div class="table-row" [class.current-user]="member.member_id === currentUserId">
                 <div class="table-cell member-cell">
                   <div class="member-details">
@@ -122,7 +122,12 @@
                   }
                 </div>
                 <div class="table-cell">
-                    <mat-button>Settle</mat-button>
+                  <button
+                    (click)="onSettleBalance(member.group_membership_id)"
+                    class="btn btn-success w-75"
+                  >
+                    {{ !getSettleUpStatus(member.balance_with_user) ? "Settle" : "All Settled" }}
+                  </button>
                 </div>
               </div>
             }

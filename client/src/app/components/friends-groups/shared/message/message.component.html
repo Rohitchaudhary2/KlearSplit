@@ -45,6 +45,17 @@
     <div class="card-body px-4" style="max-width: 28vw">
       <p class="mb-0">{{ message()!.message }}</p>
     </div>
+    <div
+      class="card-footer d-flex justify-content-end align-items-center px-4"
+      style="
+        font-size: 0.75em;
+        color: rgba(0, 0, 0, 0.7);
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        background: transparent;
+      "
+    >
+      <span>{{ message()?.createdAt | date: "shortTime" }}</span>
+    </div>
   </div>
 
   @if (isCurrentUserMessage()) {

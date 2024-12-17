@@ -473,7 +473,7 @@ class GroupService {
     }
 
     // Verifying that both payer and debtor are members of group.
-    const count = GroupDb.countGroupMembers(groupId, [ settlementData.payer_id, settlementData.debtor_id ]);
+    const count = await GroupDb.countGroupMembers(groupId, [ settlementData.payer_id, settlementData.debtor_id ]);
 
     if (count !== 2) {
       throw new ErrorHandler(400, "Both payer and debtor must be in the group.");
@@ -483,6 +483,8 @@ class GroupService {
 
     const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
 
+    Object.assign(membersBalanceInfo, { "balance_amount": parseFloat(membersBalanceInfo.balance_amount) });
+    
     if (!membersBalanceInfo || membersBalanceInfo.balance_amount === 0) {
       throw new ErrorHandler(400, "All settled.");
     }
@@ -494,7 +496,13 @@ class GroupService {
 
     GroupUtils.validateSettlementAmount(membersBalanceInfo.balance_amount, settlementData.settlement_amount);
 
-    const balanceAmount = membersBalanceInfo.balance_amount + settlementData.settlement_amount;
+    let balanceAmount;
+
+    if (membersBalanceInfo.balance_amount < 0) {
+      balanceAmount = membersBalanceInfo.balance_amount + settlementData.settlement_amount;
+    } else {
+      balanceAmount = membersBalanceInfo.balance_amount - settlementData.settlement_amount;
+    }
 
     Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
 
@@ -503,9 +511,9 @@ class GroupService {
 
     try {
       // Adding settlement in the database
-      const settlement = GroupDb.addSettlement(settlementData, transaction);
+      const settlement = await GroupDb.addSettlement(settlementData, transaction);
 
-      membersBalanceInfo.save({ transaction });
+      await membersBalanceInfo.save({ transaction });
 
       await transaction.commit();
 

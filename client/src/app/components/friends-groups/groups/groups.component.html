@@ -2,7 +2,7 @@
   <div class="col-md-4" style="flex: 0 0 auto">
     <app-groups-list
       (selectedGroup)="onSelectGroup($event)"
-      [balanceAmount]="selectedGroup?.balance_amount || '0'"
+      [balanceAmount]="selectedGroup()?.balance_amount || '0'"
     />
   </div>
 
@@ -15,7 +15,7 @@
     <div
       class="chat-box d-flex flex-column justify-content-between subcontainer shadow-lg mx-3"
     >
-      @if (selectedGroup) {
+      @if (selectedGroup()) {
         <div class="d-flex justify-content-between align-items-center p-2">
           <div>
             <span
@@ -28,7 +28,7 @@
             <span
               ><img
                 class="profile-image"
-                [src]="selectedGroup.image_url || '/group-profile.png'"
+                [src]="selectedGroup()?.image_url ?? '/group-profile.png'"
                 alt="Group"
                 (click)="openGroupDetails()"
                 (keyup.enter)="openGroupDetails()"
@@ -40,7 +40,7 @@
               (click)="openGroupDetails()"
               (keyup.enter)="openGroupDetails()"
               style="cursor: pointer"
-              >{{ selectedGroup.group_name }}</span
+              >{{ selectedGroup()?.group_name }}</span
             >
           </div>
           <div class="d-flex align-items-center">
@@ -94,7 +94,7 @@
                   Group Details
                 </button>
               </li>
-              @if (selectedGroup.role !== "USER") {
+              @if (selectedGroup()?.role !== "USER") {
                 <li>
                   <button class="dropdown-item" (click)="onAddMembers()">
                     Add Members
@@ -102,8 +102,13 @@
                 </li>
               }
               <li>
+                <button class="dropdown-item" (click)="openGroupDetails()">
+                  Settle Up
+                </button>
+              </li>
+              <li>
                 <button class="dropdown-item" (click)="onBlockGroup()">
-                  {{ selectedGroup.has_blocked ? "Unblock" : "Block" }} Group
+                  {{ selectedGroup()?.has_blocked ? "Unblock" : "Block" }} Group
                 </button>
               </li>
               <li>
@@ -128,14 +133,16 @@
             style="height: 100%"
           >
             <ul class="message-body list-unstyled text-white m-0">
-              @if (currentView() === "Messages" || currentView() === "All") {
+              @if (currentView() === "Messages") {
                 @for (message of messages(); track message.group_message_id) {
                   <app-message
                     [message]="{
                       sender_id: message.sender_id,
                       message: message.message,
+                      createdAt: message.createdAt,
+                      updatedAt: message.updatedAt,
                     }"
-                    [currentUserId]="currentMember?.group_membership_id"
+                    [currentUserId]="currentMember()?.group_membership_id"
                     [imageUrl]="message.senderImage"
                     [name]="message.senderName"
                     [currentUserImageUrl]="user?.image_url"
@@ -143,21 +150,92 @@
                   </app-message>
                 }
               } @else if (currentView() === "Expenses") {
-                @for (expense of expenses(); track expense.group_expense_id) {
-                  <app-expense
-                    [expense]="{
-                      expense_id: expense.group_expense_id,
-                      expense_name: expense.expense_name,
-                      total_amount: expense.total_amount,
-                      debtor_amount: expense.payer_id === currentMember?.group_membership_id ? expense.total_debt_amount : expense.user_debt,
-                      payer_id: expense.payer_id,
-                    }"
-                    [currentUserId]="currentMember?.group_membership_id"
-                    [imageUrl]="expense.payer.imageUrl"
-                    [name]="expense.payer.fullName"
-                    [currentUserImageUrl]="currentMember?.image_url"
-                  >
-                  </app-expense>
+                @for (expense of expenses(); track $index) {
+                  @if (isGroupExpense(expense)) {
+                    <app-expense
+                      [expense]="{
+                        expense_id: expense.group_expense_id,
+                        expense_name: expense.expense_name,
+                        total_amount: expense.total_amount,
+                        debtor_amount: expense.payer_id === currentMember()?.group_membership_id ? expense.total_debt_amount : expense.user_debt,
+                        payer_id: expense.payer_id,
+                        createdAt: expense.createdAt,
+                        updatedAt: expense.updatedAt,
+                      }"
+                      [currentUserId]="currentMember()?.group_membership_id"
+                      [imageUrl]="expense.payer.imageUrl"
+                      [name]="expense.payer.fullName"
+                      [currentUserImageUrl]="currentMember()?.image_url"
+                    >
+                    </app-expense>
+                  } @else {
+                    <app-settlement-display
+                      [settlement]="{
+                        settlement_id: expense.group_settlement_id,
+                        settlement_amount: expense.settlement_amount,
+                        payerId: expense.payer_id,
+                        debtorId: expense.debtor_id,
+                        description: expense.description,
+                        createdAt: expense.createdAt,
+                        updatedAt: expense.updatedAt,
+                      }"
+                      [currentUserId]="currentMember()?.group_membership_id"
+                      [otherUserName]="expense.payer.fullName"
+                      [currentUserImageUrl]="currentMember()?.image_url"
+                      [otherUserImageUrl]="expense.payer.imageUrl"
+                    ></app-settlement-display>
+                  }
+                }
+              } @else {
+                @for (item of combinedView(); track $index) {
+                  @if (isCombinedMessage(item)) {
+                    <app-message
+                      [message]="{
+                        sender_id: item.sender_id,
+                        message: item.message,
+                        createdAt: item.createdAt,
+                        updatedAt: item.updatedAt,
+                      }"
+                      [currentUserId]="currentMember()?.group_membership_id"
+                      [imageUrl]="item.senderImage"
+                      [name]="item.senderName"
+                      [currentUserImageUrl]="user?.image_url"
+                    >
+                    </app-message>
+                  } @else if (isCombinedExpense(item)) {
+                    <app-expense
+                      [expense]="{
+                        expense_id: item.group_expense_id,
+                        expense_name: item.expense_name,
+                        total_amount: item.total_amount,
+                        debtor_amount: item.payer_id === currentMember()?.group_membership_id ? item.total_debt_amount : item.user_debt,
+                        payer_id: item.payer_id,
+                        createdAt: item.createdAt,
+                        updatedAt: item.updatedAt,
+                      }"
+                      [currentUserId]="currentMember()?.group_membership_id"
+                      [imageUrl]="item.payer.imageUrl"
+                      [name]="item.payer.fullName"
+                      [currentUserImageUrl]="currentMember()?.image_url"
+                    >
+                    </app-expense>
+                  } @else if (isCombinedSettlement(item)) {
+                    <app-settlement-display
+                      [settlement]="{
+                        settlement_id: item.group_settlement_id,
+                        settlement_amount: item.settlement_amount,
+                        payerId: item.payer_id,
+                        debtorId: item.debtor_id,
+                        description: item.description,
+                        createdAt: item.createdAt,
+                        updatedAt: item.updatedAt,
+                      }"
+                      [currentUserId]="currentMember()?.group_membership_id"
+                      [otherUserName]="item.payer.fullName"
+                      [currentUserImageUrl]="currentMember()?.image_url"
+                      [otherUserImageUrl]="item.payer.imageUrl"
+                    ></app-settlement-display>
+                  }
                 }
               }
             </ul>

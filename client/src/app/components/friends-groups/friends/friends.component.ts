@@ -16,11 +16,10 @@ import { MatIconModule } from "@angular/material/icon";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
-import { CurrentUser } from "../../shared/types.model";
 import { ExpenseComponent } from "../shared/expense/expense.component";
+import { FriendsGroupsService } from "../shared/friends-groups.service";
 import { MessageComponent } from "../shared/message/message.component";
 import {
-  AddedFriend,
   CombinedExpense,
   CombinedMessage,
   ExpenseData,
@@ -31,7 +30,7 @@ import {
 } from "./friend.model";
 import { FriendsService } from "./friends.service";
 import { FriendsExpenseComponent } from "./friends-expense/friends-expense.component";
-import { SettlementComponent } from "./friends-expense/settlement/settlement.component";
+import { FriendsSettlementComponent } from "./friends-expense/friends-settlement/friends-settlement.component";
 import { ViewExpensesComponent } from "./friends-expense/view-expenses/view-expenses.component";
 import { FriendsListComponent } from "./friends-list/friends-list.component";
 import { SocketService } from "./socket.service";
@@ -59,11 +58,12 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   private readonly friendsService = inject(FriendsService);
   private readonly authService = inject(AuthService);
   private readonly socketService = inject(SocketService);
+  private readonly commonService = inject(FriendsGroupsService);
   private readonly dialog = inject(MatDialog);
 
   // Current user data from authService
   user = this.authService.currentUser();
-  user_name = this.getFullNameAndImage(this.user).fullName;
+  user_name = this.commonService.getFullNameAndImage(this.user).fullName;
 
   // Signal to hold the selected user/friend data
   selectedUser = signal<FriendData | undefined>(undefined);
@@ -110,7 +110,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
    * Here, we automatically scroll the message container to the bottom.
    */
   ngAfterViewInit() {
-    this.scrollToBottom();
+    this.commonService.scrollToBottom(this.messageContainer()!);
   }
 
   /**
@@ -196,7 +196,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         { ...message, type: "message" },
       ]);
       this.cdr.detectChanges();
-      this.scrollToBottom();
+      this.commonService.scrollToBottom(this.messageContainer()!);
     });
   }
 
@@ -281,7 +281,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             this.pageCombined === 1
           ) {
             this.cdr.detectChanges();
-            this.scrollToBottom();
+            this.commonService.scrollToBottom(this.messageContainer()!);
           } else {
             this.cdr.detectChanges();
             // After loading new items, calculate the new scroll position
@@ -348,18 +348,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   toggleView(filter: "Messages" | "Expenses" | "All") {
     this.currentView.set(filter);
     this.cdr.detectChanges();
-    this.scrollToBottom();
-  }
-
-  /**
-   * Scrolls the message container to the bottom.
-   */
-  scrollToBottom() {
-    if (!this.messageContainer()) {
-      return;
-    }
-    const container = this.messageContainer()?.nativeElement;
-    container.scrollTop = container.scrollHeight;
+    this.commonService.scrollToBottom(this.messageContainer()!);
   }
 
   /**
@@ -475,14 +464,14 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.expenses.set(totalExpenses);
 
     // Update balance for previous expense
-    this.selectedUser()!.balance_amount = this.updateBalance(
+    this.selectedUser()!.balance_amount = this.commonService.updateBalance(
       this.selectedUser()!.balance_amount,
       parseFloat(previousExpense.debtor_amount),
       previousExpense.payer_id !== this.user?.user_id,
     );
 
     // Update balance for updated expense
-    this.selectedUser()!.balance_amount = this.updateBalance(
+    this.selectedUser()!.balance_amount = this.commonService.updateBalance(
       this.selectedUser()!.balance_amount,
       parseFloat(updatedExpense.debtor_amount),
       updatedExpense.payer_id === this.user?.user_id,
@@ -499,25 +488,6 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
       },
     );
     this.combinedView.set(updatedCombinedView);
-  }
-
-  /**
-   * Updates the user's balance by either adding or subtracting the given amount.
-   *
-   * @param userBalance - The current balance of the user (as a string).
-   * @param amount - The amount to be added or subtracted from the balance.
-   * @param isAddition - A boolean flag indicating whether the amount should be added (true) or subtracted (false).
-   *
-   * @returns A string representing the updated balance after performing the addition or subtraction.
-   */
-  private updateBalance(
-    userBalance: string,
-    amount: number,
-    isAddition: boolean,
-  ): string {
-    return JSON.stringify(
-      parseFloat(userBalance) + (isAddition ? amount : -amount),
-    );
   }
 
   /**
@@ -539,15 +509,15 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
 
     // Assign payer and debtor details using destructuring
     const { fullName: payerName, imageUrl: payerImage } = isUserPayer
-      ? this.getFullNameAndImage(this.user) // User is the payer
-      : this.getFullNameAndImage(this.selectedUser()?.friend); // Friend is the payer
+      ? this.commonService.getFullNameAndImage(this.user) // User is the payer
+      : this.commonService.getFullNameAndImage(this.selectedUser()?.friend); // Friend is the payer
 
     const { fullName: debtorName, imageUrl: debtorImage } = isUserPayer
-      ? this.getFullNameAndImage(this.selectedUser()?.friend) // Friend is the debtor
-      : this.getFullNameAndImage(this.user); // User is the debtor
+      ? this.commonService.getFullNameAndImage(this.selectedUser()?.friend) // Friend is the debtor
+      : this.commonService.getFullNameAndImage(this.user); // User is the debtor
 
     // Open a dialog for the user for the settlement
-    const dialogRef = this.dialog.open(SettlementComponent, {
+    const dialogRef = this.dialog.open(FriendsSettlementComponent, {
       data: {
         payerName,
         debtorName,
@@ -569,19 +539,19 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             if (response.data.payer_id === this.user?.user_id) {
               response.data.payer = this.user_name;
             } else {
-              response.data.payer = this.getFullNameAndImage(
+              response.data.payer = this.commonService.getFullNameAndImage(
                 this.selectedUser()?.friend,
               ).fullName;
             }
             this.expenses.set([ ...this.expenses(), response.data ]);
             const combinedData = [
               ...this.combinedView(),
-              { ...response.data, type: "message" },
+              { ...response.data, type: "expense" },
             ];
             this.combinedView.set(combinedData);
             this.cdr.detectChanges();
-            this.scrollToBottom();
-            this.selectedUser()!.balance_amount = this.updateBalance(
+            this.commonService.scrollToBottom(this.messageContainer()!);
+            this.selectedUser()!.balance_amount = this.commonService.updateBalance(
               this.selectedUser()!.balance_amount,
               parseFloat(response.data.debtor_amount),
               response.data.payer_id === this.user?.user_id,
@@ -590,22 +560,6 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           },
         });
     });
-  }
-
-  /**
-   * Helper function to generate the full name and image URL from a user or friend's data.
-   *
-   * This function constructs the full name by concatenating the first name and last name (if present).
-   * It also extracts the image URL.
-   *
-   * @param user - The user or friend object (either `CurrentUser` or `AddedFriend`).
-   * @returns An object containing the `fullName` and the `imageUrl` from the user object.
-   */
-  getFullNameAndImage(user: CurrentUser | AddedFriend | undefined) {
-    return {
-      fullName: `${user?.first_name} ${ user?.last_name ?? ""}`,
-      imageUrl: user?.image_url,
-    };
   }
 
   /**
@@ -757,7 +711,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         { ...expenseData, friend_expense_id: "adding" },
       ]);
       this.cdr.detectChanges();
-      this.scrollToBottom();
+      this.commonService.scrollToBottom(this.messageContainer()!);
 
       // Make the API call to add the expense on the server.
       this.friendsService
@@ -767,7 +721,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             if (response.data.payer_id === this.user?.user_id) {
               response.data.payer = this.user_name;
             } else {
-              response.data.payer = this.getFullNameAndImage(
+              response.data.payer = this.commonService.getFullNameAndImage(
                 this.selectedUser()?.friend,
               ).fullName;
             }
@@ -786,9 +740,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
             ]);
             this.addExpenseLoader = false;
             this.cdr.detectChanges();
-            this.scrollToBottom();
+            this.commonService.scrollToBottom(this.messageContainer()!);
             // Updating balance amount accordingly
-            this.selectedUser()!.balance_amount = this.updateBalance(
+            this.selectedUser()!.balance_amount = this.commonService.updateBalance(
               this.selectedUser()!.balance_amount,
               parseFloat(response.data.debtor_amount),
               response.data.payer_id === this.user?.user_id,
@@ -857,7 +811,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           if (response.data.payer_id === this.user?.user_id) {
             response.data.payer = this.user_name;
           } else {
-            response.data.payer = this.getFullNameAndImage(
+            response.data.payer = this.commonService.getFullNameAndImage(
               this.selectedUser()?.friend,
             ).fullName;
           }
@@ -876,9 +830,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
           this.combinedView.set(updatedCombinedView);
           this.addExpenseLoader = false;
           this.cdr.detectChanges();
-          this.scrollToBottom();
+          this.commonService.scrollToBottom(this.messageContainer()!);
           // Updating balance amount accordingly
-          this.selectedUser()!.balance_amount = this.updateBalance(
+          this.selectedUser()!.balance_amount = this.commonService.updateBalance(
             this.selectedUser()!.balance_amount,
             parseFloat(response.data.debtor_amount),
             response.data.payer_id === this.user?.user_id,

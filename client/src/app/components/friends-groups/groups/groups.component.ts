@@ -396,7 +396,9 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     },
     settlement: (item: CombinedGroupSettlement) => {
       const payer = this.groupMembers().find((member) => item.payer_id === member.group_membership_id);
+      const debtor = this.groupMembers().find((member) => item.debtor_id === member.group_membership_id);
       item.payer = this.commonService.getFullNameAndImage(payer);
+      item.debtor = this.commonService.getFullNameAndImage(debtor);
     },
   };
 
@@ -448,6 +450,10 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
               expense.payer = this.commonService.getFullNameAndImage(
                 payer
               );
+            }
+            if (!this.isGroupExpense(expense)) {
+              const debtor = this.groupMembers().find((member) => expense.debtor_id === member.group_membership_id);
+              expense.debtor = this.commonService.getFullNameAndImage(debtor);
             }
           });
           const messagesWithName = messages.map((message) => {

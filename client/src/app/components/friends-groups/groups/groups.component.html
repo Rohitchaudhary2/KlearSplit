@@ -180,9 +180,11 @@
                         updatedAt: expense.updatedAt,
                       }"
                       [currentUserId]="currentMember()?.group_membership_id"
-                      [otherUserName]="expense.payer.fullName"
+                      [payerName]="expense.payer.fullName"
                       [currentUserImageUrl]="currentMember()?.image_url"
-                      [otherUserImageUrl]="expense.payer.imageUrl"
+                      [payerImageUrl]="expense.payer.imageUrl"
+                      [debtorName]="expense.debtor.fullName"
+                      [debtorImageUrl]="expense.debtor.imageUrl"
                     ></app-settlement-display>
                   }
                 }
@@ -231,9 +233,11 @@
                         updatedAt: item.updatedAt,
                       }"
                       [currentUserId]="currentMember()?.group_membership_id"
-                      [otherUserName]="item.payer.fullName"
+                      [payerName]="item.payer.fullName"
                       [currentUserImageUrl]="currentMember()?.image_url"
-                      [otherUserImageUrl]="item.payer.imageUrl"
+                      [payerImageUrl]="item.payer.imageUrl"
+                      [debtorName]="item.debtor.fullName"
+                      [debtorImageUrl]="item.debtor.imageUrl"
                     ></app-settlement-display>
                   }
                 }

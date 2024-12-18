@@ -1,6 +1,7 @@
-import { CurrencyPipe } from "@angular/common";
+import { CurrencyPipe, NgClass } from "@angular/common";
 import { ChangeDetectorRef, Component, ElementRef, inject, viewChild } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
+import { MatIconModule } from "@angular/material/icon";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../../auth/auth.service";
@@ -17,6 +18,8 @@ import { GroupsListComponent } from "../groups-list/groups-list.component";
     CurrencyPipe,
     AbsoluteValuePipe,
     GroupsListComponent,
+    MatIconModule,
+    NgClass
   ],
   templateUrl: "./groups-details.component.html",
   styleUrls: [ "./groups-details.component.css", "../../friends/friends.component.css" ]

@@ -25,9 +25,11 @@ interface GenericSettlement {
 export class SettlementDisplayComponent {
   settlement = input<GenericSettlement>();
   currentUserId = input<string>();
-  otherUserName = input<string>();
+  payerName = input<string>();
   currentUserImageUrl = input<string>();
-  otherUserImageUrl = input<string>();
+  payerImageUrl = input<string>();
+  debtorName = input<string>();
+  debtorImageUrl = input<string>();
 
   /**
    * Checks if the current user is the payer for the settlement.

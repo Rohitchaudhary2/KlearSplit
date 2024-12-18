@@ -166,6 +166,10 @@ export interface GroupSettlementData {
         fullName: string;
         imageUrl?: string;
     };
+    debtor: {
+        fullName: string;
+        imageUrl?: string;
+    };
 }
 
 export interface GroupSettlementResponse {

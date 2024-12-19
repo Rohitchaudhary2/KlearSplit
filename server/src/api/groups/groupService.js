@@ -708,31 +708,11 @@ class GroupService {
     });
 
     membersBalance.forEach((member) => {
-      let balanceAmount;
+      let balanceAmount = member.balance_amount;
 
-      deletedParticipants.forEach((participant) => {
-        if (participant.debtor_id === member.participant1_id) {
-          balanceAmount = member.balance_amount + participant.debtor_amount;
-        } else if (participant.debtor_id === member.participant2_id) {
-          balanceAmount = member.balance_amount - participant.debtor_amount;
-        }
-      });
-
-      prevParticipants.forEach((participant) => {
-        if (participant.debtor_id === member.participant1_id) {
-          balanceAmount = member.balance_amount + participant.debtor_amount;
-        } else if (participant.debtor_id === member.participant2_id) {
-          balanceAmount = member.balance_amount - participant.debtor_amount;
-        }
-      });
-
-      newParticipants.forEach((participant) => {
-        if (participant.debtor_id === member.participant1_id) {
-          balanceAmount = member.balance_amount - participant.debtor_amount;
-        } else if (participant.debtor_id === member.participant2_id) {
-          balanceAmount = member.balance_amount + participant.debtor_amount;
-        }
-      });
+      balanceAmount = GroupUtils.updateBalance(deletedParticipants, member, balanceAmount);
+      balanceAmount = GroupUtils.updateBalance(prevParticipants, member, balanceAmount);
+      balanceAmount = GroupUtils.updateBalance(newParticipants, member, balanceAmount, true);
 
       Object.assign(member, { "balance_amount": balanceAmount });
     });

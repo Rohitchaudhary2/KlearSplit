@@ -267,7 +267,14 @@ class GroupDb {
   static getExpense = async(groupExpenseId) => await GroupExpense.findOne({
     "where": {
       "group_expense_id": groupExpenseId
-    }
+    },
+    "include": [
+      {
+        "model": GroupExpenseParticipant,
+        "as": "participants", // The alias for the association
+        "required": false // Optional: makes it a left join
+      }
+    ]
   });
 
   static getExpenseParticipants = async(groupExpenseId) => await GroupExpenseParticipant.findAll({

@@ -30,7 +30,7 @@ export default (sequelize) => {
       "indexes": [
         {
           "unique": true,
-          "fields": [ "group_id", "member_id" ]
+          "fields": [ "group_expense_id", "debtor_id" ]
         }
       ]
     }

@@ -148,7 +148,7 @@ export class GroupsExpenseComponent implements OnInit {
       }));
       const payer = this.debtors.find((debtor) =>
         this.form.value.payer_id === debtor.debtor_id);
-      this.payer_share = payer!.debtor_share;
+      this.payer_share = payer ? payer.debtor_share : 0;
       this.debtors = this.debtors.filter((debtor) => this.form.value.payer_id !== debtor.debtor_id);
     }
 
@@ -285,7 +285,7 @@ export class GroupsExpenseComponent implements OnInit {
       this.form.get("split_type")?.setValue(result.split_type);
       const payer = result.debtors.find((debtor: {debtor_id: string, debtor_share: number}) =>
         this.form.value.payer_id === debtor.debtor_id);
-      this.payer_share = payer!.debtor_share;
+      this.payer_share = payer ? payer.debtor_share : 0;
       this.debtors = result.debtors.filter((debtor: {debtor_id: string, debtor_share: number}) =>
         this.form.value.payer_id !== debtor.debtor_id);
     });

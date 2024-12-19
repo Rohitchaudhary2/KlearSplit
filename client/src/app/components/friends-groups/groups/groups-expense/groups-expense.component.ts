@@ -49,29 +49,6 @@ export class GroupsExpenseComponent implements OnInit {
   debtors!: { debtor_id: string, debtor_share: number }[];
 
   /**
-   * Sets the shares for the payer and debtor participants.
-   * If the payerId is the same as userId, the payer's share is assigned to participant1 and the debtor's share to participant2.
-   * If payerId is different from userId, the shares are reversed.
-   * The shares are returned as strings.
-   *
-   * @param payerId - The ID of the payer. Used to determine which participant is the payer.
-   * @param userId - The ID of the current user. Used to check if they are the payer or debtor.
-   * @param payerShare - The share amount assigned to the payer.
-   * @param debtorShare - The share amount assigned to the debtor.
-   * @returns An object containing `participant1Share` and `participant2Share` as strings.
-   */
-  // setParticipantShares(payerId: string, userId: string, payerShare: number, debtorShare: number) {
-  //   if (payerId === userId) {
-  //     const participant1Share = JSON.stringify(payerShare);
-  //     const participant2Share = JSON.stringify(debtorShare);
-  //     return { participant1Share, participant2Share };
-  //   }
-  //   const participant1Share = JSON.stringify(debtorShare);
-  //   const participant2Share = JSON.stringify(payerShare);
-  //   return { participant1Share, participant2Share };
-  // }
-
-  /**
    * Constructor to update the expense form and set up participants based on the type of data passed.
    * It handles two cases: adding an expense or editing an existing one. It also calculates and patches the share
    * for each participant based on the split type (UNEQUAL or PERCENT).
@@ -148,7 +125,7 @@ export class GroupsExpenseComponent implements OnInit {
       }));
       const payer = this.debtors.find((debtor) =>
         this.form.value.payer_id === debtor.debtor_id);
-      this.payer_share = payer!.debtor_share;
+      this.payer_share = payer ? payer.debtor_share : 0;
       this.debtors = this.debtors.filter((debtor) => this.form.value.payer_id !== debtor.debtor_id);
     }
 
@@ -174,29 +151,6 @@ export class GroupsExpenseComponent implements OnInit {
 
     formData.append("payer_share", JSON.stringify(this.payer_share));
     formData.append("debtors", JSON.stringify(this.debtors));
-
-    // Handle debtor share logic for split types UNEQUAL and PERCENTAGE
-    // let debtorShare;
-    // if (
-    //   this.form.value.split_type === "UNEQUAL" ||
-    //   this.form.value.split_type === "PERCENTAGE"
-    // ) {
-    //   debtorShare =
-    //     this.form.value.payer_id === this.participants[0].user_id
-    //       ? this.form.value.participant2_share
-    //       : this.form.value.participant1_share;
-    // }
-
-    // const debtorId =
-    //   this.form.value.payer_id === this.participants[0].user_id
-    //     ? this.participants[1].user_id
-    //     : this.participants[0].user_id;
-
-    // // If there is a debtor share, append it to the formData
-    // if (debtorShare) {
-    //   formData.append("debtor_share", debtorShare);
-    // }
-    // formData.append("debtor_id", debtorId as string);
 
     // Close the dialog and pass the formData and other relevant expense data
     this.dialogRef.close({
@@ -285,7 +239,7 @@ export class GroupsExpenseComponent implements OnInit {
       this.form.get("split_type")?.setValue(result.split_type);
       const payer = result.debtors.find((debtor: {debtor_id: string, debtor_share: number}) =>
         this.form.value.payer_id === debtor.debtor_id);
-      this.payer_share = payer!.debtor_share;
+      this.payer_share = payer ? payer.debtor_share : 0;
       this.debtors = result.debtors.filter((debtor: {debtor_id: string, debtor_share: number}) =>
         this.form.value.payer_id !== debtor.debtor_id);
     });

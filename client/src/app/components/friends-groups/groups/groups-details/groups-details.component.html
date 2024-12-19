@@ -16,17 +16,41 @@
       <div class="group-details-container">
         <!-- Group Info Section -->
         <div class="group-header">
-          <img
-            [src]="selectedGroup()?.image_url ?? '/group-profile.png'"
-            alt="{{ selectedGroup()?.group_name }}"
-            class="group-profile-pic"
-          />
+          <!-- Image with Hover Overlay -->
+          <div class="group-image-container position-relative">
+            <img
+              [src]="selectedGroup()?.image_url ?? '/group-profile.png'"
+              alt="{{ selectedGroup()?.group_name }}"
+              class="group-profile-pic"
+            />
+            <div
+              class="image-overlay d-flex justify-content-center align-items-center"
+              (mouseover)="hoveringImage = true"
+              (mouseleave)="hoveringImage = false"
+              [class.show-overlay]="hoveringImage"
+            >
+              <mat-icon class="edit-icon">edit</mat-icon>
+            </div>
+          </div>
+
+          <!-- Editable Group Info -->
           <span class="group-info">
-            <h2 class="group-name">{{ selectedGroup()?.group_name }}</h2>
-            <p class="group-description">
-              {{ selectedGroup()?.group_description }}
-            </p>
+            <div class="d-flex align-items-center gap-2">
+              <h2 class="group-name">{{ selectedGroup()?.group_name }}</h2>
+              <button
+                class="btn btn-sm"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <p class="group-description">
+                {{ selectedGroup()?.group_description }}
+              </p>
+            </div>
           </span>
+
+          <!-- User Balance -->
           <span class="user-balance d-flex justify-content-between">
             <h3>
               Your Balance:
@@ -125,30 +149,34 @@
                   }
                 </div>
                 <div class="table-cell">
-                  <button
-                    (click)="onSettleBalance(member.group_membership_id)"
-                    class="btn"
-                    [ngClass]="{
-                      'btn-success': !getSettleUpStatus(member.balance_with_user),
-                      'btn-outline-success': getSettleUpStatus(
-                        member.balance_with_user
-                      )
-                    }"
-                    style="display: flex; align-items: center; gap: 0.5rem; width: 100%;"
-                  >
-                    <mat-icon>
+                  @if (member.member_id === currentUserId) {
+                    <span>--</span>
+                  } @else {
+                    <button
+                      (click)="onSettleBalance(member.group_membership_id)"
+                      class="btn"
+                      [ngClass]="{
+                        'btn-success': !getSettleUpStatus(member.balance_with_user),
+                        'btn-outline-success': getSettleUpStatus(
+                          member.balance_with_user
+                        )
+                      }"
+                      style="display: flex; align-items: center; gap: 0.5rem; width: 100%;"
+                    >
+                      <mat-icon>
+                        {{
+                          !getSettleUpStatus(member.balance_with_user)
+                            ? 'account_balance'
+                            : 'check_circle'
+                        }}
+                      </mat-icon>
                       {{
                         !getSettleUpStatus(member.balance_with_user)
-                          ? 'account_balance'
-                          : 'check_circle'
+                          ? 'Settle'
+                          : 'All Clear'
                       }}
-                    </mat-icon>
-                    {{
-                      !getSettleUpStatus(member.balance_with_user)
-                        ? 'Settle'
-                        : 'All Clear'
-                    }}
-                  </button>
+                    </button>
+                  }
                 </div>
               </div>
             }

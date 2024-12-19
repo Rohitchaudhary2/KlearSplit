@@ -5,6 +5,7 @@
 <div class="pt-2 text-center">
   <span
     class="underline px-2"
+    tabindex="0"
     [class.active]="activeItem === 'EQUAL'"
     (click)="setActive('EQUAL')"
     (keydown)="setActive('EQUAL')"
@@ -13,6 +14,7 @@
   </span>
   <span
     class="underline px-2"
+    tabindex="0"
     [class.active]="activeItem === 'UNEQUAL'"
     (click)="setActive('UNEQUAL')"
     (keydown)="setActive('UNEQUAL')"
@@ -21,6 +23,7 @@
   </span>
   <span
     class="underline px-2"
+    tabindex="0"
     [class.active]="activeItem === 'PERCENTAGE'"
     (click)="setActive('PERCENTAGE')"
     (keydown)="setActive('PERCENTAGE')"
@@ -63,7 +66,8 @@
             type="number"
             class="input-field"
             [(ngModel)]="calculatedShares[participant.group_membership_id]"
-            (input)="updateTotal()"
+            (change)="onInputChange($event, participant.group_membership_id)"
+            [min]="0"
           />
         </div>
       </div>
@@ -88,6 +92,11 @@
           {{ activeItem === "UNEQUAL" ? "amount" : "percentage" }}.
         </div>
       }
+      @if (validationError.length > 0) {
+        <div class="text-danger mt-2">
+          {{ validationError }}
+        </div>
+      }
     </div>
   </div>
 }
@@ -102,7 +111,7 @@
   >
     Cancel
   </button>
-  <button mat-button class="custom-mat-button" [disabled]="!isValidSplit()" (click)="sendSplitType()">
+  <button mat-button class="custom-mat-button" [disabled]="!isValidSplit() || validationError.length > 0" (click)="sendSplitType()">
     Submit
   </button>
 </div>

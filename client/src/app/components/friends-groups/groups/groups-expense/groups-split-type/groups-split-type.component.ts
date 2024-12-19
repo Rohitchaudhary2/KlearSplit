@@ -30,6 +30,8 @@ export class GroupsSplitTypeComponent implements OnInit {
   calculatedShares: Record<string, number> = {};
   remainingTotal: number = this.totalAmount;
 
+  validationError = "";
+
   ngOnInit(): void {
     this.dialogRef.updateSize("25%");
     this.initializeShares();
@@ -72,6 +74,31 @@ export class GroupsSplitTypeComponent implements OnInit {
 
   updateTotal() {
     this.updateRemainingTotal();
+
+    // If any calculated share is negative, set the validation flag
+    this.checkForNegativeValues();
+  }
+
+  onInputChange(event: Event, groupMembershipId: string) {
+    const inputElement = event.target as HTMLInputElement;
+    let value = parseFloat(inputElement.value);
+
+    // Ensure the value is non-negative
+    if (value < 0) {
+      value = 0; // Prevent negative numbers by resetting to 0
+    }
+
+    this.calculatedShares[groupMembershipId] = value;
+    this.updateTotal();
+  }
+
+  checkForNegativeValues() {
+    const hasNegativeValues = Object.values(this.calculatedShares).some((share) => share < 0);
+    if (hasNegativeValues) {
+      this.validationError = "Amounts cannot be negative";
+    } else {
+      this.validationError = "";
+    }
   }
 
   updateRemainingTotal() {

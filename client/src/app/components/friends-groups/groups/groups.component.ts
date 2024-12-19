@@ -447,9 +447,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
               expense.payer = this.commonService.getFullNameAndImage(this.currentMember());;
             } else {
               const payer = this.groupMembers().find((member) => expense.payer_id === member.group_membership_id);
-              expense.payer = this.commonService.getFullNameAndImage(
-                payer
-              );
+              expense.payer = this.commonService.getFullNameAndImage(payer);
             }
             if (!this.isGroupExpense(expense)) {
               const debtor = this.groupMembers().find((member) => expense.debtor_id === member.group_membership_id);
@@ -529,7 +527,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    */
   openAddExpenseDialog() {
     const dialogRef = this.dialog.open(GroupsExpenseComponent, {
-      data: [ "Add Expense", this.currentMember, this.selectedGroup, this.groupMembers ],
+      data: [ "Add Expense", this.currentMember(), this.selectedGroup(), this.groupMembers() ],
       enterAnimationDuration: "200ms",
       exitAnimationDuration: "200ms",
     });

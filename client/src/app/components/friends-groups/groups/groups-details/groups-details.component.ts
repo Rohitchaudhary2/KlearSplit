@@ -33,6 +33,7 @@ export class GroupsDetailsComponent {
   private readonly commonService = inject(FriendsGroupsService);
   private readonly toastr = inject(ToastrService);
   private readonly dialog = inject(MatDialog);
+  hoveringImage = false;
 
   // Access signals from the GroupsService
   selectedGroup = this.groupsService.selectedGroup;

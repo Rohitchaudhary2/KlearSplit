@@ -1,4 +1,4 @@
-import { NgClass } from "@angular/common";
+import { DatePipe, NgClass } from "@angular/common";
 import { Component, input, output } from "@angular/core";
 
 interface Expense {
@@ -7,12 +7,14 @@ interface Expense {
   total_amount: string;
   debtor_amount: string;
   payer_id: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 @Component({
   selector: "app-expense",
   standalone: true,
-  imports: [ NgClass ],
+  imports: [ NgClass, DatePipe ],
   templateUrl: "./expense.component.html",
 })
 export class ExpenseComponent {

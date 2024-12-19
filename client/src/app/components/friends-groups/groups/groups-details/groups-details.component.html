@@ -1,11 +1,11 @@
 <div class="d-flex row justify-content-center align-items-center m-5">
   <div class="col-md-4" style="flex: 0 0 auto">
     <app-groups-list
-      [balanceAmount]="selectedGroup?.balance_amount || '0'"
-    />
+      [balanceAmount]="selectedGroup()?.balance_amount || '0'"
+    ></app-groups-list>
   </div>
 
-  <!-- detail box -->
+  <!-- Detail Box -->
   <div
     class="col-md-8 ps-md-5 d-md-block"
     style="flex: 1 1 0; max-height: 80vh; overflow-y: auto;"
@@ -17,14 +17,14 @@
         <!-- Group Info Section -->
         <div class="group-header">
           <img
-            [src]="selectedGroup?.image_url ?? '/group-profile.png'"
-            alt="{{ selectedGroup?.group_name }}"
+            [src]="selectedGroup()?.image_url ?? '/group-profile.png'"
+            alt="{{ selectedGroup()?.group_name }}"
             class="group-profile-pic"
           />
           <span class="group-info">
-            <h2 class="group-name">{{ selectedGroup?.group_name }}</h2>
+            <h2 class="group-name">{{ selectedGroup()?.group_name }}</h2>
             <p class="group-description">
-              {{ selectedGroup?.group_description }}
+              {{ selectedGroup()?.group_description }}
             </p>
           </span>
           <span class="user-balance d-flex justify-content-between">
@@ -32,13 +32,13 @@
               Your Balance:
               <span
                 [class.text-danger]="
-                  getBalanceAsNumber(selectedGroup?.balance_amount) < 0
+                  getBalanceAsNumber(selectedGroup()?.balance_amount) < 0
                 "
                 [class.text-success]="
-                  getBalanceAsNumber(selectedGroup?.balance_amount) >= 0
+                  getBalanceAsNumber(selectedGroup()?.balance_amount) >= 0
                 "
                 >{{
-                  getBalanceAsNumber(selectedGroup?.balance_amount)
+                  getBalanceAsNumber(selectedGroup()?.balance_amount)
                     | absoluteValue
                     | currency: "INR"
                 }}</span
@@ -46,8 +46,6 @@
             </h3>
           </span>
         </div>
-
-        <!-- User Balance -->
 
         <!-- Members List -->
         <div class="members-list">
@@ -65,21 +63,26 @@
             </div>
 
             <!-- Table Body -->
-            @for (member of groupMembers; track $index) {
-              <div class="table-row" [class.current-user]="member.member_id === currentUserId">
+            @for (member of groupMembers(); track $index) {
+              <div
+                class="table-row"
+                [class.current-user]="member.member_id === currentUserId"
+              >
                 <div class="table-cell member-cell">
-                  <div class="member-details">
+                  <div class="member-details d-flex flex-row gap-2">
                     <img
                       [src]="member.image_url || '/profile.png'"
                       alt="Profile Picture"
                       class="member-profile-pic"
                     />
-                    <span class="member-name">
-                      {{ member.first_name }} {{ member.last_name || "" }}
-                    </span>
-                    @if (member.deletedAt) {
-                      <span class="text-danger">(Left)</span>
-                    }
+                    <div>
+                      <div class="member-name">
+                        {{ member.first_name }} {{ member.last_name || "" }}
+                      </div>
+                      @if (member.deletedAt) {
+                        <div class="text-danger">(Left)</div>
+                      }
+                    </div>
                   </div>
                 </div>
                 <div class="table-cell">{{ member.role }}</div>
@@ -122,7 +125,30 @@
                   }
                 </div>
                 <div class="table-cell">
-                    <mat-button>Settle</mat-button>
+                  <button
+                    (click)="onSettleBalance(member.group_membership_id)"
+                    class="btn"
+                    [ngClass]="{
+                      'btn-success': !getSettleUpStatus(member.balance_with_user),
+                      'btn-outline-success': getSettleUpStatus(
+                        member.balance_with_user
+                      )
+                    }"
+                    style="display: flex; align-items: center; gap: 0.5rem; width: 100%;"
+                  >
+                    <mat-icon>
+                      {{
+                        !getSettleUpStatus(member.balance_with_user)
+                          ? 'account_balance'
+                          : 'check_circle'
+                      }}
+                    </mat-icon>
+                    {{
+                      !getSettleUpStatus(member.balance_with_user)
+                        ? 'Settle'
+                        : 'All Clear'
+                    }}
+                  </button>
                 </div>
               </div>
             }

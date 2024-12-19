@@ -38,6 +38,7 @@ export interface MessageData {
   message: string;
   is_read: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Message {

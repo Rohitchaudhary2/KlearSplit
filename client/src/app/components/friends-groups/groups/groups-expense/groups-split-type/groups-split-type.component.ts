@@ -89,7 +89,7 @@ export class GroupsSplitTypeComponent implements OnInit {
     const debtors = this.selectedParticipants.map((participant) => ({
       debtor_id: participant.group_membership_id, // Assuming this is the unique identifier for a participant
       debtor_share: this.calculatedShares[participant.group_membership_id] || 0, // Use the calculated share or default to 0
-    }));
+    })).filter((debtor) => debtor.debtor_share !== 0);
     this.dialogRef.close({
       split_type: this.activeItem,
       debtors,

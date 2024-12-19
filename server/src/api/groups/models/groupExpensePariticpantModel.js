@@ -26,7 +26,13 @@ export default (sequelize) => {
     },
     {
       "timestamps": true,
-      "paranoid": true
+      "paranoid": true,
+      "indexes": [
+        {
+          "unique": true,
+          "fields": [ "group_id", "member_id" ]
+        }
+      ]
     }
   );
 

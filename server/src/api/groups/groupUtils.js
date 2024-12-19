@@ -59,6 +59,20 @@ class GroupUtils {
       throw new ErrorHandler(400, "Settlement amount can't be more than balance amount.");
     }
   };
+
+  static updateBalance = (participants, member, balanceAmount, isNewParticipants = false) => {
+    let balance;
+
+    participants.forEach((participant) => {
+      if (participant.debtor_id === member.participant1_id) {
+        balance = balanceAmount + isNewParticipants ? -participant.debtor_amount : participant.debtor_amount;
+      } else if (participant.debtor_id === member.participant2_id) {
+        balance = balanceAmount + isNewParticipants ? participant.debtor_amount : -participant.debtor_amount;
+      }
+    });
+    
+    return balance;
+  };
 }
 
 export default GroupUtils;

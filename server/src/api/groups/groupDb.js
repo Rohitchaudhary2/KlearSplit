@@ -136,7 +136,7 @@ class GroupDb {
 
   static saveMessage = async(messageData, groupId, groupMembershipId) => await GroupMessage.create({ ...messageData, "group_id": groupId, "sender_id": groupMembershipId });
 
-  static getMessages = async(groupId, pageSize = 10, timestamp) => {
+  static getMessages = async(groupId, pageSize, timestamp) => {
     return await GroupMessage.findAll({
       "where": {
         "group_id": groupId,
@@ -159,7 +159,45 @@ class GroupDb {
     return await GroupExpense.create(expenseData, { transaction });
   };
 
-  static addExpenseParticipants = async(debtors, transaction) => await GroupExpenseParticipant.bulkCreate(debtors, { transaction });
+  static updateExpense = async(expenseData, transaction) => await Group.update(expenseData, {
+    "where": {
+      "group_expense_id": expenseData.group_expense_id
+    },
+    transaction,
+    "returning": true
+  });
+
+  static deleteExpense = async(groupExpenseId, transaction) => await GroupExpense.destroy({
+    "where": {
+      "group_expense_id": groupExpenseId
+    },
+    transaction
+  });
+
+  static addExpenseParticipants = async(debtors, transaction) => await GroupExpenseParticipant.bulkCreate(debtors, {
+    "updateOnDuplicate": [ "debtor_amount" ],
+    "conflictFields": [ "group_expense_id", "debtor_id" ],
+    transaction
+  });
+
+  static deleteExpenseParticipants = async(groupExpenseId, transaction, participants = []) => {
+    const whereCondition = {
+      "group_expense_id": groupExpenseId
+    };
+
+    if (participants.length !== 0) {
+      const debtorIds = participants.map((participant) => participant.debtor_id);
+
+      Object.assign(whereCondition, { "debtor_id": {
+        [ Op.in ]: debtorIds
+      } });
+    }
+
+    return await GroupExpenseParticipant.destroy({
+      "where": whereCondition,
+      transaction
+    });
+  };
 
   static addSettlement = async(settlementData, transaction) => await GroupSettlement.create(settlementData, { transaction });
 
@@ -179,6 +217,12 @@ class GroupDb {
     });
   };
 
+  static updateMemberBalanceByPk = async(membersBalance, transaction = null) => await GroupMemberBalance.bulkCreate(membersBalance, {
+    "updateOnDuplicate": [ "balance_amount" ],
+    "conflictFields": [ "balance_id" ],
+    transaction
+  });
+
   static getMemberBalance = async(groupId, payerId, debtorId) => await GroupMemberBalance.findOne({
     "where": {
       "group_id": groupId,
@@ -195,6 +239,22 @@ class GroupDb {
     }
   });
 
+  static getMembersBalance = async(groupId, members) => {
+    const whereConditions = members.map((member) => ({
+      [ Op.or ]: [
+        { "participant1_id": member.payer_id, "participant2_id": member.debtor_id },
+        { "participant1_id": member.debtor_id, "participant2_id": member.payer_id }
+      ]
+    }));
+
+    return GroupMemberBalance.findAll({
+      "where": {
+        "group_id": groupId,
+        ...whereConditions
+      }
+    });
+  };
+
   static userBalanceInGroup = async(groupId, groupMembershipId) => {
     return await sequelize.query(
       "select sum(balance_amount) as amount from group_member_balance where group_id = :groupId and (participant1_id = :groupMembershipId or participant2_id = :groupMembershipId) group by group_id;", {
@@ -210,7 +270,13 @@ class GroupDb {
     }
   });
 
-  static getExpenses = async(groupId, groupMembershipId, pageSize = 20, timestamp) => {
+  static getExpenseParticipants = async(groupExpenseId) => await GroupExpenseParticipant.findAll({
+    "where": {
+      "group_expense_id": groupExpenseId
+    }
+  });
+
+  static getExpenses = async(groupId, groupMembershipId, pageSize, timestamp) => {
     return await sequelize.query(`SELECT
       ge.*,
       SUM(ep.debtor_amount) AS total_debt_amount,
@@ -233,7 +299,7 @@ class GroupDb {
     });
   };
 
-  static getSettlements = async(groupId, pageSize = 20, timestamp) => {
+  static getSettlements = async(groupId, pageSize, timestamp) => {
     return await GroupSettlement.findAll({
       "where": {
         "group_id": groupId,
@@ -245,6 +311,8 @@ class GroupDb {
       "limit": pageSize
     });
   };
+
+  static getSettlement = async(groupSettlementId) => await GroupSettlement.findByPk(groupSettlementId);
 }
 
 export default GroupDb;

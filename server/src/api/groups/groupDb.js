@@ -217,11 +217,27 @@ class GroupDb {
     });
   };
 
-  static updateMemberBalanceByPk = async(membersBalance, transaction = null) => await GroupMemberBalance.bulkCreate(membersBalance, {
-    "updateOnDuplicate": [ "balance_amount" ],
-    "conflictFields": [ "balance_id" ],
-    transaction
-  });
+  static updateMemberBalanceByPk = async(membersBalance, transaction = null) => {
+
+    return await sequelize.query(`
+      INSERT INTO group_member_balance (balance_id, group_id, participant1_id, participant2_id, balance_amount, "createdAt", "updatedAt")
+      VALUES 
+        ${membersBalance}
+      ON CONFLICT (balance_id)
+      DO UPDATE 
+        SET balance_amount = EXCLUDED.balance_amount,
+          "updatedAt" = EXCLUDED."updatedAt";
+      `, {
+      "type": QueryTypes.INSERT,
+      transaction
+    });
+
+    // return await GroupMemberBalance.bulkCreate(membersBalance, {
+    //   "updateOnDuplicate": [ "balance_amount", "updatedAt" ],
+    //   transaction,
+    //   "returning": true
+    // });
+  };
 
   static getMemberBalance = async(groupId, payerId, debtorId) => await GroupMemberBalance.findOne({
     "where": {
@@ -240,18 +256,20 @@ class GroupDb {
   });
 
   static getMembersBalance = async(groupId, members) => {
-    const whereConditions = members.map((member) => ({
-      [ Op.or ]: [
-        { "participant1_id": member.payer_id, "participant2_id": member.debtor_id },
-        { "participant1_id": member.debtor_id, "participant2_id": member.payer_id }
-      ]
-    }));
+    const orConditions = [];
+
+    members.forEach((member) => orConditions.push(
+      { "participant1_id": member.payer_id, "participant2_id": member.debtor_id },
+      { "participant1_id": member.debtor_id, "participant2_id": member.payer_id }
+    ));
+    
 
     return GroupMemberBalance.findAll({
       "where": {
         "group_id": groupId,
-        ...whereConditions
-      }
+        [ Op.or ]: orConditions
+      },
+      "raw": true
     });
   };
 
@@ -271,7 +289,6 @@ class GroupDb {
     "include": [
       {
         "model": GroupExpenseParticipant,
-        "as": "participants", // The alias for the association
         "required": false // Optional: makes it a left join
       }
     ]

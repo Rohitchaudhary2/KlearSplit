@@ -835,25 +835,27 @@ class GroupService {
       throw new ErrorHandler(400, "Expense not found.");
     }
 
-    const expenseParticipants = await GroupDb.getExpenseParticipants(groupExpenseId);
+    const expenseParticipants = expense.group_expense_participants;
 
-    const members = expenseParticipants.map((participant) => ([ expense.payer_id, participant.debtor_id ]));
+    const members = expenseParticipants.map((participant) => ({ "payer_id": expense.payer_id, "debtor_id": participant.debtor_id }));
 
-    const membersBalanceDeleted = GroupDb.getMembersBalance(groupId, members);
+    const membersBalanceDeleted = await GroupDb.getMembersBalance(groupId, members);
 
     membersBalanceDeleted.forEach((member) => {
       let balanceAmount;
 
       expenseParticipants.forEach((participant) => {
         if (participant.debtor_id === member.participant1_id) {
-          balanceAmount = member.balance_amount + participant.debtor_amount;
+          balanceAmount = parseFloat(member.balance_amount) + parseFloat(participant.debtor_amount);
         } else if (participant.debtor_id === member.participant2_id) {
-          balanceAmount = member.balance_amount - participant.debtor_amount;
+          balanceAmount = parseFloat(member.balance_amount) - parseFloat(participant.debtor_amount);
         }
       });
 
-      Object.assign(member, { "balance_amount": balanceAmount });
+      Object.assign(member, { "balance_amount": parseFloat(balanceAmount.toFixed(2)) });
     });
+
+    const membersBalance = membersBalanceDeleted.map((member) => `('${member.balance_id}', '${groupId}', '${ member.participant1_id }', '${member.participant2_id}', ${member.balance_amount}, '${member.createdAt}', '${new Date().toISOString()}')`).join(",");
 
     // Start a new transaction to ensure atomicity
     const transaction = await sequelize.transaction();
@@ -861,7 +863,7 @@ class GroupService {
     try {
       await GroupDb.deleteExpense(groupExpenseId, transaction);
       await GroupDb.deleteExpenseParticipants(groupExpenseId, transaction);
-      await GroupDb.updateMemberBalanceByPk(membersBalanceDeleted, transaction);
+      await GroupDb.updateMemberBalanceByPk(membersBalance, transaction);
       
       await transaction.commit();
     } catch (error) {

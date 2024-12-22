@@ -60,14 +60,16 @@ class GroupUtils {
     }
   };
 
-  static updateBalance = (participants, member, balanceAmount, isNewParticipants = false) => {
-    let balance;
+  static updateBalance = (participants, member, balanceAmount, payerId, isNewParticipants = false) => {
+    let balance = balanceAmount;
 
     participants.forEach((participant) => {
-      if (participant.debtor_id === member.participant1_id) {
-        balance = balanceAmount + isNewParticipants ? -participant.debtor_amount : participant.debtor_amount;
-      } else if (participant.debtor_id === member.participant2_id) {
-        balance = balanceAmount + isNewParticipants ? participant.debtor_amount : -participant.debtor_amount;
+      const debtorAmount = parseFloat(participant.debtor_amount);
+
+      if (participant.debtor_id === member.participant1_id && payerId === member.participant2_id) {
+        balance += isNewParticipants ? -debtorAmount : debtorAmount;
+      } else if (payerId === member.participant1_id && participant.debtor_id === member.participant2_id) {
+        balance += isNewParticipants ? debtorAmount : -debtorAmount;
       }
     });
     

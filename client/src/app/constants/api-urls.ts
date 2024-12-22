@@ -28,7 +28,7 @@ export const API_URLS = {
   createGroup: `${environment.apiBaseUrl}/groups/create`,
   getGroups: `${environment.apiBaseUrl}/groups/usergroups`,
   updateGroupMember: `${environment.apiBaseUrl}/groups/updatemember`,
-  getGroup: `${environment.apiBaseUrl}/groups`,
+  group: `${environment.apiBaseUrl}/groups`,
   saveGroupMessages: `${environment.apiBaseUrl}/groups/savemessage`,
   getGroupMessages: `${environment.apiBaseUrl}/groups/getmessages`,
   addGroupMembers: `${environment.apiBaseUrl}/groups/addmembers`,

@@ -86,7 +86,7 @@
                         >
                           <mat-label>OTP</mat-label>
                           <mat-icon matPrefix>key</mat-icon>
-                          <input matInput formControlName="otp" />
+                          <input #otp matInput formControlName="otp" />
                           @if (getFormErrors("otp")) {
                             <mat-error>{{ getFormErrors("otp") }}</mat-error>
                           }
@@ -173,7 +173,7 @@
                       >
                         <mat-label>OTP</mat-label>
                         <mat-icon matPrefix>key</mat-icon>
-                        <input matInput formControlName="otp" />
+                        <input #otp matInput formControlName="otp" />
                         @if (getFormErrors("otp")) {
                           <mat-error>{{ getFormErrors("otp") }}</mat-error>
                         }

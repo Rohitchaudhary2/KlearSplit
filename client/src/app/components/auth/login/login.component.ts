@@ -1,5 +1,5 @@
 import { NgClass } from "@angular/common";
-import { Component, inject, OnInit, signal } from "@angular/core";
+import { Component, ElementRef, inject, OnInit, signal, ViewChild } from "@angular/core";
 import {
   FormControl,
   FormGroup,
@@ -34,6 +34,7 @@ import { LoginUser } from "../login-types.model";
   styleUrl: "./login.component.css",
 })
 export class LoginComponent implements OnInit {
+  @ViewChild("otp", { static: false }) otp!: ElementRef<HTMLInputElement>;
   private readonly formErrorMessages = inject(FormErrorMessageService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -198,6 +199,7 @@ export class LoginComponent implements OnInit {
       );
     }
     this.isLoading.set(false);
+    setTimeout(() => this.otp.nativeElement.focus(), 0);
     this.startCountdown();
   }
 

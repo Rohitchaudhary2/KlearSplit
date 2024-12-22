@@ -276,7 +276,7 @@ class GroupDb {
     }
   });
 
-  static getExpenses = async(groupId, groupMembershipId, pageSize, timestamp) => {
+  static getExpenses = async(groupId, groupMembershipId, pageSize, timestamp, fetchAll) => {
     return await sequelize.query(`SELECT
       ge.*,
       SUM(ep.debtor_amount) AS total_debt_amount,
@@ -292,24 +292,28 @@ class GroupDb {
         ge.group_expense_id
       ORDER BY
         ge."createdAt" DESC
-      LIMIT
-        :pageSize;`, {
-      "replacements": { groupMembershipId, groupId, pageSize, timestamp },
+      ${fetchAll ? "" : "LIMIT :pageSize"};`, {
+      "replacements": { groupMembershipId, groupId, pageSize, timestamp, fetchAll },
       "type": QueryTypes.SELECT
     });
   };
 
-  static getSettlements = async(groupId, pageSize, timestamp) => {
-    return await GroupSettlement.findAll({
+  static getSettlements = async(groupId, pageSize, timestamp, fetchAll) => {
+    const options = {
       "where": {
         "group_id": groupId,
         "createdAt": {
           [ Op.lt ]: timestamp
         }
       },
-      "order": [ [ "createdAt", "DESC" ] ],
-      "limit": pageSize
-    });
+      "order": [ [ "createdAt", "DESC" ] ]
+    };
+
+    if (!fetchAll) {
+      options.limit = pageSize;
+    }
+
+    return await GroupSettlement.findAll(options);
   };
 
   static getSettlement = async(groupSettlementId) => await GroupSettlement.findByPk(groupSettlementId);

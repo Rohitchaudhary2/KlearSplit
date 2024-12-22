@@ -2,11 +2,13 @@ import { CurrencyPipe, NgClass } from "@angular/common";
 import { ChangeDetectorRef, Component, ElementRef, inject, viewChild } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { MatIconModule } from "@angular/material/icon";
+import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../../auth/auth.service";
 import { AbsoluteValuePipe } from "../../../shared/pipes/absolute-value.pipe";
 import { FriendsGroupsService } from "../../shared/friends-groups.service";
+import { CreateGroupComponent } from "../create-group/create-group.component";
 import { GroupsService } from "../groups.service";
 import { GroupsSettlementComponent } from "../groups-expense/groups-settlement/groups-settlement.component";
 import { GroupsListComponent } from "../groups-list/groups-list.component";
@@ -32,6 +34,7 @@ export class GroupsDetailsComponent {
   private readonly groupsService = inject(GroupsService);
   private readonly commonService = inject(FriendsGroupsService);
   private readonly toastr = inject(ToastrService);
+  private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   hoveringImage = false;
 
@@ -41,6 +44,8 @@ export class GroupsDetailsComponent {
   currentMember = this.groupsService.currentMember;
   expenses = this.groupsService.expenses;
   combinedView = this.groupsService.combinedView;
+  groupInvites = this.groupsService.groupInvites;
+  groups = this.groupsService.groups;
 
   currentUserId = this.authService.currentUser()?.user_id;
 
@@ -144,6 +149,50 @@ export class GroupsDetailsComponent {
             this.toastr.success("Settled up successfully", "Success");
           }
         });
+    });
+  }
+
+  onUpdateGroupDetails() {
+    const dialogRef = this.dialog.open(CreateGroupComponent, {
+      width: "500px",
+      data: "Update Group",
+      enterAnimationDuration: "500ms",
+      exitAnimationDuration: "500ms",
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result) {
+        return;
+      }
+
+      const groupData = result.formData;
+      // Call the createGroup method in the GroupService to send a group invite to the selected users
+      this.groupsService.updateGroup(this.selectedGroup()!.group_id, groupData).subscribe({
+        next: (response) => {
+          const updatedGroup = response.data[1][0];
+          this.toastr.success("Group updated successfully", "Success");
+          this.selectedGroup.update((group) =>
+            ({ ...group,
+              ...updatedGroup,
+              // Explicitly fill in the missing fields with undefined to match the expected type
+              balance_amount: group!.balance_amount,
+              status: group!.status,
+              role: group!.role,
+              has_blocked: group!.has_blocked,
+            })
+          );
+          this.groups().forEach((group) => {
+            if (group.group_id === this.selectedGroup()?.group_id) {
+              Object.assign(group, updatedGroup);
+            }
+          });
+          this.groupInvites().forEach((group) => {
+            if (group.group_id === this.selectedGroup()?.group_id) {
+              Object.assign(group, updatedGroup);
+            }
+          });
+        }
+      });
     });
   }
 }

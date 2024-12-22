@@ -107,6 +107,11 @@
                 </button>
               </li>
               <li>
+                <button class="dropdown-item" (click)="viewExpense()">
+                  View Expenses
+                </button>
+              </li>
+              <li>
                 <button class="dropdown-item" (click)="onBlockGroup()">
                   {{ selectedGroup()?.has_blocked ? "Unblock" : "Block" }} Group
                 </button>

@@ -2,7 +2,7 @@ import { NgClass } from "@angular/common";
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, signal, ViewChild, viewChild }
   from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { MatDialog } from "@angular/material/dialog";
+import { DialogPosition, MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 
@@ -28,6 +28,7 @@ import {
 } from "./groups.model";
 import { GroupsService } from "./groups.service";
 import { GroupsExpenseComponent } from "./groups-expense/groups-expense.component";
+import { ViewGroupExpensesComponent } from "./groups-expense/view-group-expenses/view-group-expenses.component";
 import { GroupsListComponent } from "./groups-list/groups-list.component";
 
 @Component({
@@ -167,6 +168,9 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     this.allMessagesLoaded = false;
     this.allExpensesLoaded = false;
     this.allCombinedLoaded = false;
+    this.timestampMessages = undefined;
+    this.timestampExpenses = undefined;
+    this.timestampCombined = undefined;
   }
 
   onSelectGroup(group: GroupData | undefined) {
@@ -382,7 +386,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     return (item as GroupExpenseData).group_expense_id !== undefined;
   }
 
-  private typeHandlers = {
+  private readonly typeHandlers = {
     expense: (item: CombinedGroupExpense) => {
       const payer = this.groupMembers().find((member) => item.payer_id === member.group_membership_id);
       item.payer = this.commonService.getFullNameAndImage(payer);
@@ -494,9 +498,9 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
             element!.scrollTop = element!.scrollTop + scrollDiff - 100;
           }
 
-          this.timestampMessages = this.messages()[0].createdAt;
-          this.timestampExpenses = this.expenses()[0].createdAt;
-          this.timestampCombined = this.combinedView()[0].createdAt;
+          this.timestampMessages = this.messages()[0] ? this.messages()[0].createdAt : new Date().toISOString();
+          this.timestampExpenses = this.expenses()[0] ? this.expenses()[0].createdAt : new Date().toISOString();
+          this.timestampCombined = this.combinedView()[0] ? this.combinedView()[0].createdAt : new Date().toISOString();
 
           // Reset loading state to allow future requests
           this.loading = false;
@@ -655,6 +659,30 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   //     new FormData(),
   //   )
   // }
+
+  /**
+     * Opens a dialog to view expenses for the selected group.
+     *
+     * @returns void
+     * Opens the `ViewGroupExpensesComponent` dialog, passing the the current group.
+     * Subscribes to `expenseDeleted` and `updatedExpense` events from the dialog, and handles the respective updates.
+     */
+  viewExpense() {
+    const dialogPosition: DialogPosition = {
+      top: "5%",
+    };
+    const dialogRef = this.dialog.open(ViewGroupExpensesComponent, {
+      data: [ this.user, this.selectedGroup() ],
+      maxWidth: "91vw",
+      maxHeight: "85vh",
+      height: "85%",
+      width: "100%",
+      position: dialogPosition,
+      enterAnimationDuration: "200ms",
+      exitAnimationDuration: "200ms",
+    });
+    dialogRef.afterClosed().subscribe();
+  }
 
   filterMembers(members: GroupMemberData[]) {
     const filteredMembers = members.map((member) => {

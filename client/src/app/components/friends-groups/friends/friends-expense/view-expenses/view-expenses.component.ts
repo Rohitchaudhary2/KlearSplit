@@ -12,6 +12,8 @@ import autoTable from "jspdf-autotable";
 import { ToastrService } from "ngx-toastr";
 
 import { ConfirmationDialogComponent } from "../../../../confirmation-dialog/confirmation-dialog.component";
+import { ExpenseDeletedEvent } from "../../../groups/groups.model";
+import { ExpenseTableComponent } from "../../../shared/expense-table/expense-table.component";
 import { ExpenseData, ExpenseResponse } from "../../friend.model";
 import { FriendsService } from "../../friends.service";
 import { FriendsExpenseComponent } from "../friends-expense.component";
@@ -19,7 +21,7 @@ import { FriendsExpenseComponent } from "../friends-expense.component";
 @Component({
   selector: "app-view-expenses",
   standalone: true,
-  imports: [ MatIconModule, MatButtonModule, DatePipe ],
+  imports: [ MatIconModule, MatButtonModule, DatePipe, ExpenseTableComponent ],
   templateUrl: "./view-expenses.component.html",
   styleUrl: "./view-expenses.component.css",
   providers: [ DatePipe ],
@@ -43,7 +45,7 @@ export class ViewExpensesComponent implements OnInit {
   totalExpenses = signal<ExpenseData[] | []>([]);
 
   // A boolean flag to track the loading state while fetching expenses
-  loading = false;
+  loading = signal(false);
 
   updateLoader = "";
 
@@ -69,16 +71,16 @@ export class ViewExpensesComponent implements OnInit {
    * `totalExpenses` signal and the loading flag is set to false once the data is fetched.
    */
   ngOnInit() {
-    this.loading = true;
+    this.loading.set(true);
     this.friendsService
       .fetchAllExpenses(this.selectedUser.conversation_id)
       .subscribe({
         next: (expenses) => {
           this.totalExpenses.set(expenses);
-          this.loading = false;
+          this.loading.set(false);
         },
         error: () => {
-          this.loading = false;
+          this.loading.set(false);
         },
       });
   }
@@ -91,7 +93,7 @@ export class ViewExpensesComponent implements OnInit {
    * @param payerId - The ID of the payer (used to update the balance)
    * @param debtorAmount - The amount that the debtor owes (used to update the balance)
    */
-  onDeleteExpense(id: string, payerId: string, debtorAmount: string) {
+  onDeleteExpense({ id, payerId, debtorAmount }: ExpenseDeletedEvent) {
     // Open a confirmation dialog to ask the user if they are sure they want to delete the expense
     const confirmationDialogRef = this.dialog.open(
       ConfirmationDialogComponent,

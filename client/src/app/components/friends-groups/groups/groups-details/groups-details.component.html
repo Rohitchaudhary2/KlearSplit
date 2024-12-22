@@ -8,7 +8,7 @@
   <!-- Detail Box -->
   <div
     class="col-md-8 ps-md-5 d-md-block"
-    style="flex: 1 1 0; max-height: 80vh; overflow-y: auto;"
+    style="flex: 1 1 0; max-height: 80vh;"
   >
     <div
       class="chat-box d-flex flex-column justify-content-between subcontainer shadow-lg mx-3"
@@ -28,6 +28,8 @@
               (mouseover)="hoveringImage = true"
               (mouseleave)="hoveringImage = false"
               [class.show-overlay]="hoveringImage"
+              (click)="onUpdateGroupDetails()"
+              (keydown)="onUpdateGroupDetails()"
             >
               <mat-icon class="edit-icon">edit</mat-icon>
             </div>
@@ -39,6 +41,8 @@
               <h2 class="group-name">{{ selectedGroup()?.group_name }}</h2>
               <button
                 class="btn btn-sm"
+                (click)="onUpdateGroupDetails()"
+                (keydown)="onUpdateGroupDetails()"
               >
                 <mat-icon>edit</mat-icon>
               </button>
@@ -87,99 +91,104 @@
             </div>
 
             <!-- Table Body -->
-            @for (member of groupMembers(); track $index) {
-              <div
-                class="table-row"
-                [class.current-user]="member.member_id === currentUserId"
-              >
-                <div class="table-cell member-cell">
-                  <div class="member-details d-flex flex-row gap-2">
-                    <img
-                      [src]="member.image_url || '/profile.png'"
-                      alt="Profile Picture"
-                      class="member-profile-pic"
-                    />
-                    <div>
-                      <div class="member-name">
-                        {{ member.first_name }} {{ member.last_name || "" }}
+            <div style="max-height: 50vh; overflow-y: auto">
+              @for (member of groupMembers(); track $index) {
+                <div
+                  class="table-row"
+                  [class.current-user]="member.member_id === currentUserId"
+                >
+                  <div class="table-cell member-cell">
+                    <div class="member-details d-flex flex-row gap-2">
+                      <img
+                        [src]="member.image_url || '/profile.png'"
+                        alt="Profile Picture"
+                        class="member-profile-pic"
+                      />
+                      <div>
+                        <div class="member-name">
+                          {{ member.first_name }} {{ member.last_name || "" }}
+                        </div>
+                        @if (member.deletedAt) {
+                          <div class="text-danger">(Left)</div>
+                        }
                       </div>
-                      @if (member.deletedAt) {
-                        <div class="text-danger">(Left)</div>
-                      }
                     </div>
                   </div>
-                </div>
-                <div class="table-cell">{{ member.role }}</div>
-                <div class="table-cell">
-                  @if (member.deletedAt || member.member_id === currentUserId) {
-                    <span>--</span>
-                  } @else {
-                    <span
-                      [class.text-success]="
-                        getBalanceAsNumber(member.balance_with_user) <= 0
-                      "
-                      [class.text-danger]="
-                        getBalanceAsNumber(member.balance_with_user) > 0
-                      "
-                      >{{
-                        getBalanceAsNumber(member.balance_with_user)
-                          | absoluteValue
-                          | currency: "INR"
-                      }}</span
-                    >
-                  }
-                </div>
-                <div class="table-cell">
-                  @if (member.deletedAt) {
-                    <span>--</span>
-                  } @else {
-                    <span
-                      [class.text-danger]="
-                        getBalanceAsNumber(member.total_balance) < 0
-                      "
-                      [class.text-success]="
-                        getBalanceAsNumber(member.total_balance) >= 0
-                      "
-                      >{{
-                        getBalanceAsNumber(member.total_balance)
-                          | absoluteValue
-                          | currency: "INR"
-                      }}</span
-                    >
-                  }
-                </div>
-                <div class="table-cell">
-                  @if (member.member_id === currentUserId) {
-                    <span>--</span>
-                  } @else {
-                    <button
-                      (click)="onSettleBalance(member.group_membership_id)"
-                      class="btn"
-                      [ngClass]="{
-                        'btn-success': !getSettleUpStatus(member.balance_with_user),
-                        'btn-outline-success': getSettleUpStatus(
-                          member.balance_with_user
-                        )
-                      }"
-                      style="display: flex; align-items: center; gap: 0.5rem; width: 100%;"
-                    >
-                      <mat-icon>
+                  <div class="table-cell">{{ member.role }}</div>
+                  <div class="table-cell">
+                    @if (member.deletedAt || member.member_id === currentUserId) {
+                      <span>--</span>
+                    } @else {
+                      <span
+                        [class.text-success]="
+                          getBalanceAsNumber(member.balance_with_user) <= 0
+                        "
+                        [class.text-danger]="
+                          getBalanceAsNumber(member.balance_with_user) > 0
+                        "
+                        >{{
+                          getBalanceAsNumber(member.balance_with_user)
+                            | absoluteValue
+                            | currency: "INR"
+                        }}</span
+                      >
+                    }
+                  </div>
+                  <div class="table-cell">
+                    @if (member.deletedAt) {
+                      <span>--</span>
+                    } @else {
+                      <span
+                        [class.text-danger]="
+                          getBalanceAsNumber(member.total_balance) < 0
+                        "
+                        [class.text-success]="
+                          getBalanceAsNumber(member.total_balance) >= 0
+                        "
+                        >{{
+                          getBalanceAsNumber(member.total_balance)
+                            | absoluteValue
+                            | currency: "INR"
+                        }}</span
+                      >
+                    }
+                  </div>
+                  <div class="table-cell">
+                    @if (member.member_id === currentUserId) {
+                      <span>--</span>
+                    } @else {
+                      <button
+                        (click)="onSettleBalance(member.group_membership_id)"
+                        class="btn"
+                        [ngClass]="{
+                          'btn-success': !getSettleUpStatus(member.balance_with_user),
+                          'btn-outline-success': getSettleUpStatus(
+                            member.balance_with_user
+                          )
+                        }"
+                        style="display: flex; align-items: center; gap: 0.5rem; width: 100%;"
+                      >
+                        <mat-icon>
+                          {{
+                            !getSettleUpStatus(member.balance_with_user)
+                              ? 'account_balance'
+                              : 'check_circle'
+                          }}
+                        </mat-icon>
                         {{
                           !getSettleUpStatus(member.balance_with_user)
-                            ? 'account_balance'
-                            : 'check_circle'
+                            ? 'Settle'
+                            : 'All Clear'
                         }}
-                      </mat-icon>
-                      {{
-                        !getSettleUpStatus(member.balance_with_user)
-                          ? 'Settle'
-                          : 'All Clear'
-                      }}
-                    </button>
-                  }
+                      </button>
+                    }
+                  </div>
                 </div>
-              </div>
-            }
+              }
+            </div>
+            <div class="d-flex w-100 justify-content-end align-items-center mt-2 p-3">
+              <button class="btn btn-outline-success">Save Changes</button>
+            </div>
           </div>
         </div>
       </div>

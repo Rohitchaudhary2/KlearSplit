@@ -1,5 +1,5 @@
 <h1 mat-dialog-title class="text-center bg-primary text-white py-2">
-  Create Group
+  {{ data }}
 </h1>
 <div mat-dialog-content class="d-flex flex-column align-items-center px-1 pt-4">
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -59,15 +59,17 @@
         </button>
       }
     </div>
-    <button
-      mat-raised-button
-      color="primary"
-      type="button"
-      (click)="openMembersDialog()"
-      class="mt-2 w-100"
-    >
-      Add Members
-    </button>
+    @if (data === "Create Group") {
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="openMembersDialog()"
+        class="mt-2 w-100"
+      >
+        Add Members
+      </button>
+    }
   </form>
   @if (membersData.members.length > 0 || membersData.admins.length > 0 || membersData.coadmins.length > 0) {
     <div class="mt-3 w-100 px-1">

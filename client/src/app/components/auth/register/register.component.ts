@@ -1,5 +1,5 @@
 import { NgClass } from "@angular/common";
-import { Component, inject, signal } from "@angular/core";
+import { Component, ElementRef, inject, signal, ViewChild } from "@angular/core";
 import {
   FormControl,
   FormGroup,
@@ -35,6 +35,7 @@ import { RegisterUser } from "../register-types.model";
   styleUrls: [ "./register.component.css" ], // Fix: styleUrl -> styleUrls
 })
 export class RegisterComponent {
+  @ViewChild("otp", { static: false }) otp!: ElementRef<HTMLInputElement>;
   private readonly router = inject(Router);
   private readonly toastr = inject(ToastrService);
   private readonly authService = inject(AuthService);
@@ -169,6 +170,7 @@ export class RegisterComponent {
       next: () => {
         this.isOtpMode.set(true);
         this.addOtpControl();
+        setTimeout(() => this.otp.nativeElement.focus(), 0);
         this.startCountdown();
       },
       error: () => {
@@ -245,6 +247,7 @@ export class RegisterComponent {
             Validators.pattern(/^\d{6}$/),
           ]),
         );
+        setTimeout(() => this.otp.nativeElement.focus(), 0);
         this.startCountdown();
       },
       error: () => this.isLoading.set(false),

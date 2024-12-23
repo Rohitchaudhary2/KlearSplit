@@ -587,12 +587,14 @@ class GroupService {
   };
 
   static updateExpense = async(expenseData, groupId, userId) => {
+    // Fetch group data to validate if the group exists
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
       throw new ErrorHandler(404, "Group Not Found");
     }
 
+    // Check if the user is a member of the group and hasn't blocked the group
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
 
     if (userMembershipInfo.has_blocked) {
@@ -602,14 +604,17 @@ class GroupService {
     // Verify that payer is not in the list of debtors
     GroupUtils.isPayerInDebtors(expenseData.debtors, expenseData.payer_id);
 
+    // Calculate updated debtors based on split type and amounts
     const debtors = GroupUtils.updatedDebtors(expenseData.debtors, expenseData.split_type, expenseData.total_amount, expenseData.payer_share);
 
     // Removing debtors list and payer_share from expense data and adding group_id expense data
     delete expenseData.debtors;
     delete expenseData.payer_share;
 
+    // Extract debtor IDs for group membership validation
     const debtorIds = debtors.map((debtor) => debtor.debtor_id);
     
+    // Check if all debtors and payer are members of the group
     const count = await GroupDb.countGroupMembers(groupId, [ expenseData.payer_id, ...debtorIds ]);
     
     if (count !== debtors.length + 1) {
@@ -622,100 +627,58 @@ class GroupService {
       throw new ErrorHandler(400, "Expense Not Found.");
     }
 
-    const expenseParticipants = GroupDb.getExpenseParticipants(previousExpense.group_expense_id);
-
-    if (previousExpense.payer_id !== expenseData.payer_id) {
-      const members = expenseParticipants.map((participant) => ([ previousExpense.payer_id, participant.debtor_id ]));
-
-      const membersBalanceDeleted = GroupDb.getMembersBalance(groupId, members);
-
-      membersBalanceDeleted.forEach((member) => {
-        let balanceAmount;
-
-        expenseParticipants.forEach((participant) => {
-          if (participant.debtor_id === member.participant1_id) {
-            balanceAmount = member.balance_amount + participant.debtor_amount;
-          } else if (participant.debtor_id === member.participant2_id) {
-            balanceAmount = member.balance_amount - participant.debtor_amount;
-          }
-        });
-
-        Object.assign(member, { "balance_amount": balanceAmount });
-      });
-
-      // Start a new transaction to ensure atomicity
-      const transaction = await sequelize.transaction();
-
-      try {
-        // Adding expense data in the database
-        const expense = await GroupDb.updateExpense(expenseData, transaction);
-  
-        // Processing data to update balance or insert in members' balance table
-        const membersBalance = debtors.map((debtor) => `('${crypto.randomUUID()}', '${groupId}', '${ expenseData.payer_id }', '${debtor.debtor_id}', ${debtor.debtor_amount}, '${new Date().toISOString()}', '${new Date().toISOString()}')`).join(",");
-  
-        debtors.forEach((debtor) => Object.assign(debtor, { "group_expense_id": expense.group_expense_id }));
-
-        await GroupDb.deleteExpenseParticipants(previousExpense.group_expense_id, transaction);
-  
-        // Adding expense participnts in database
-        const updatedExpenseParticipants = await GroupDb.addExpenseParticipants(debtors, transaction);
-  
-        // Updating or Insering members balance based on added expense
-        await GroupDb.updateMembersBalance(membersBalance, transaction);
-
-        await GroupDb.updateMemberBalanceByPk(membersBalanceDeleted, transaction);
-        
-        await transaction.commit();
-        return { expense, updatedExpenseParticipants };
-      } catch (error) {
-        // Rollback the transaction in case of an error
-        await transaction.rollback();
-        throw error;
-      }
-    }
+    // Get the list of participants for the previous expense
+    const expenseParticipants = previousExpense.group_expense_participants;
     
     const deletedParticipants = [];
     const prevParticipants = [];
-
+  
     expenseParticipants.forEach((participant) => {
       let flag = false;
-
+  
       debtors.forEach((debtor) => {
         if (participant.debtor_id === debtor.debtor_id) {
           prevParticipants.push(participant);
           flag = true;
         }
       });
-      
+        
       if (!flag) {
         deletedParticipants.push(participant);
       }
     });
 
-    const gmb1 = deletedParticipants.map((participant) => ([ previousExpense.payer_id, participant.debtor_id ]));
-    const gmb2 = debtors.map((debtor) => ([ expenseData.payer_id, debtor.debtor_id ]));
+    const gmb1 = expenseParticipants.map((participant) => ({ "payer_id": previousExpense.payer_id, "debtor_id": participant.debtor_id }));
+    const gmb2 = debtors.map((debtor) => ({ "payer_id": expenseData.payer_id, "debtor_id": debtor.debtor_id }));
     const members = [ ...gmb1, ...gmb2 ];
     
-    const membersBalance = GroupDb.getMembersBalance(groupId, members);
-
-    const newParticipants = debtors.filter((debtor) => {
-      expenseParticipants.forEach((participant) => {
-        if (participant.debtor_id === debtor.debtor_id) {
-          return true;
-        }
-      });
-      return false;
-    });
+    const membersBalance = await GroupDb.getMembersBalance(groupId, members);
 
     membersBalance.forEach((member) => {
-      let balanceAmount = member.balance_amount;
+      let balanceAmount = parseFloat(member.balance_amount);
 
-      balanceAmount = GroupUtils.updateBalance(deletedParticipants, member, balanceAmount);
-      balanceAmount = GroupUtils.updateBalance(prevParticipants, member, balanceAmount);
-      balanceAmount = GroupUtils.updateBalance(newParticipants, member, balanceAmount, true);
+      balanceAmount = GroupUtils.updateBalance(deletedParticipants, member, balanceAmount, previousExpense.payer_id);
+      balanceAmount = GroupUtils.updateBalance(prevParticipants, member, balanceAmount, previousExpense.payer_id);
+      balanceAmount = GroupUtils.updateBalance(debtors, member, balanceAmount, expenseData.payer_id, true);
 
       Object.assign(member, { "balance_amount": balanceAmount });
     });
+
+    debtors.forEach((participant) => {
+      let flag = false;
+
+      membersBalance.forEach((member) => {
+        if ((participant.debtor_id === member.participant1_id && expenseData.payer_id === member.participant2_id) || (participant.debtor_id === member.participant2_id && expenseData.payer_id === member.participant1_id)) {
+          flag = true;
+        }
+      });
+
+      if (!flag) {
+        membersBalance.push({ "balance_id": `${crypto.randomUUID()}`, "group_id": `${groupId}`, "participant1_id": `${ expenseData.payer_id }`, "participant2_id": `${participant.debtor_id}`, "balance_amount": participant.debtor_amount, "createdAt": new Date(), "updatedAt": new Date() });
+      }
+    });
+    
+    const updatedMembersBalance = membersBalance.map((member) => `('${member.balance_id}', '${groupId}', '${ member.participant1_id }', '${member.participant2_id}', ${member.balance_amount}, '${member.createdAt.toISOString()}', '${member.updatedAt.toISOString()}')`).join(",");
 
     // Start a new transaction to ensure atomicity
     const transaction = await sequelize.transaction();
@@ -724,9 +687,6 @@ class GroupService {
       // Adding expense data in the database
       const expense = await GroupDb.updateExpense(expenseData, transaction);
 
-      // Processing data to update balance or insert in members' balance table
-      const newMembersBalance = newParticipants.map((debtor) => `('${crypto.randomUUID()}', '${groupId}', '${ expenseData.payer_id }', '${debtor.debtor_id}', ${debtor.debtor_amount}, '${new Date().toISOString()}', '${new Date().toISOString()}')`).join(",");
-
       debtors.forEach((debtor) => Object.assign(debtor, { "group_expense_id": expenseData.group_expense_id }));
 
       await GroupDb.deleteExpenseParticipants(expenseData.group_expense_id, transaction, deletedParticipants);
@@ -734,10 +694,7 @@ class GroupService {
       // Adding expense participnts in database
       const updatedExpenseParticipants = await GroupDb.addExpenseParticipants(debtors, transaction);
 
-      // Updating or Insering members balance based on added expense
-      await GroupDb.updateMembersBalance(newMembersBalance, transaction);
-
-      await GroupDb.updateMemberBalanceByPk(membersBalance, transaction);
+      await GroupDb.updateMemberBalanceByPk(updatedMembersBalance, transaction);
       
       await transaction.commit();
       return { expense, updatedExpenseParticipants };
@@ -765,7 +722,7 @@ class GroupService {
 
     Object.assign(settlement, { "settlement_amount": parseFloat(settlement.settlement_amount) });
 
-    const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
+    const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlement.payer_id, settlement.debtor_id);
 
     Object.assign(membersBalanceInfo, { "balance_amount": parseFloat(membersBalanceInfo.balance_amount) });
 
@@ -776,14 +733,14 @@ class GroupService {
 
       GroupUtils.validateSettlementAmount(balanceAmount, settlementData.settlement_amount);
 
-      balanceAmount = membersBalanceInfo.balance_amount - settlementData.settlement_amount;
+      balanceAmount = membersBalanceInfo.balance_amount + settlementData.settlement_amount;
 
     } else {
       balanceAmount = membersBalanceInfo.balance_amount + settlement.settlement_amount;
 
       GroupUtils.validateSettlementAmount(balanceAmount, settlementData.settlement_amount);
 
-      balanceAmount = membersBalanceInfo.balance_amount + settlementData.settlement_amount;
+      balanceAmount = membersBalanceInfo.balance_amount - settlementData.settlement_amount;
     }
 
     Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
@@ -823,25 +780,27 @@ class GroupService {
       throw new ErrorHandler(400, "Expense not found.");
     }
 
-    const expenseParticipants = await GroupDb.getExpenseParticipants(groupExpenseId);
+    const expenseParticipants = expense.group_expense_participants;
 
-    const members = expenseParticipants.map((participant) => ([ expense.payer_id, participant.debtor_id ]));
+    const members = expenseParticipants.map((participant) => ({ "payer_id": expense.payer_id, "debtor_id": participant.debtor_id }));
 
-    const membersBalanceDeleted = GroupDb.getMembersBalance(groupId, members);
+    const membersBalanceDeleted = await GroupDb.getMembersBalance(groupId, members);
 
     membersBalanceDeleted.forEach((member) => {
       let balanceAmount;
 
       expenseParticipants.forEach((participant) => {
         if (participant.debtor_id === member.participant1_id) {
-          balanceAmount = member.balance_amount + participant.debtor_amount;
+          balanceAmount = parseFloat(member.balance_amount) + parseFloat(participant.debtor_amount);
         } else if (participant.debtor_id === member.participant2_id) {
-          balanceAmount = member.balance_amount - participant.debtor_amount;
+          balanceAmount = parseFloat(member.balance_amount) - parseFloat(participant.debtor_amount);
         }
       });
 
-      Object.assign(member, { "balance_amount": balanceAmount });
+      Object.assign(member, { "balance_amount": parseFloat(balanceAmount.toFixed(2)) });
     });
+
+    const membersBalance = membersBalanceDeleted.map((member) => `('${member.balance_id}', '${groupId}', '${ member.participant1_id }', '${member.participant2_id}', ${member.balance_amount}, '${member.createdAt.toISOString()}', '${new Date().toISOString()}')`).join(",");
 
     // Start a new transaction to ensure atomicity
     const transaction = await sequelize.transaction();
@@ -849,7 +808,7 @@ class GroupService {
     try {
       await GroupDb.deleteExpense(groupExpenseId, transaction);
       await GroupDb.deleteExpenseParticipants(groupExpenseId, transaction);
-      await GroupDb.updateMemberBalanceByPk(membersBalanceDeleted, transaction);
+      await GroupDb.updateMemberBalanceByPk(membersBalance, transaction);
       
       await transaction.commit();
     } catch (error) {

@@ -1,5 +1,6 @@
 import { Op, QueryTypes } from "sequelize";
 import { Group, GroupExpense, GroupExpenseParticipant, GroupMember, GroupMemberBalance, GroupMessage, GroupSettlement, sequelize } from "../../config/db.connection.js";
+import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 class GroupDb {
   static createGroup = async(group) => await Group.create(group);
@@ -159,13 +160,21 @@ class GroupDb {
     return await GroupExpense.create(expenseData, { transaction });
   };
 
-  static updateExpense = async(expenseData, transaction) => await Group.update(expenseData, {
-    "where": {
-      "group_expense_id": expenseData.group_expense_id
-    },
-    transaction,
-    "returning": true
-  });
+  static updateExpense = async(expenseData, transaction) => {
+    const [ affectedCount, updatedRows ] = await GroupExpense.update(expenseData, {
+      "where": {
+        "group_expense_id": expenseData.group_expense_id
+      },
+      transaction,
+      "returning": true
+    });
+  
+    if (affectedCount === 0) {
+      throw new ErrorHandler(400, "No records updated. Expense not found.");
+    }
+  
+    return updatedRows;
+  };
 
   static deleteExpense = async(groupExpenseId, transaction) => await GroupExpense.destroy({
     "where": {
@@ -180,12 +189,12 @@ class GroupDb {
     transaction
   });
 
-  static deleteExpenseParticipants = async(groupExpenseId, transaction, participants = []) => {
+  static deleteExpenseParticipants = async(groupExpenseId, transaction, participants) => {
     const whereCondition = {
       "group_expense_id": groupExpenseId
     };
 
-    if (participants.length !== 0) {
+    if (participants) {
       const debtorIds = participants.map((participant) => participant.debtor_id);
 
       Object.assign(whereCondition, { "debtor_id": {
@@ -217,11 +226,20 @@ class GroupDb {
     });
   };
 
-  static updateMemberBalanceByPk = async(membersBalance, transaction = null) => await GroupMemberBalance.bulkCreate(membersBalance, {
-    "updateOnDuplicate": [ "balance_amount" ],
-    "conflictFields": [ "balance_id" ],
-    transaction
-  });
+  static updateMemberBalanceByPk = async(membersBalance, transaction = null) => {
+    return await sequelize.query(`
+      INSERT INTO group_member_balance (balance_id, group_id, participant1_id, participant2_id, balance_amount, "createdAt", "updatedAt")
+      VALUES 
+        ${membersBalance}
+      ON CONFLICT (balance_id)
+      DO UPDATE 
+        SET balance_amount = EXCLUDED.balance_amount,
+          "updatedAt" = EXCLUDED."updatedAt";
+      `, {
+      "type": QueryTypes.INSERT,
+      transaction
+    });
+  };
 
   static getMemberBalance = async(groupId, payerId, debtorId) => await GroupMemberBalance.findOne({
     "where": {
@@ -240,18 +258,20 @@ class GroupDb {
   });
 
   static getMembersBalance = async(groupId, members) => {
-    const whereConditions = members.map((member) => ({
-      [ Op.or ]: [
-        { "participant1_id": member.payer_id, "participant2_id": member.debtor_id },
-        { "participant1_id": member.debtor_id, "participant2_id": member.payer_id }
-      ]
-    }));
+    const orConditions = [];
+
+    members.forEach((member) => orConditions.push(
+      { "participant1_id": member.payer_id, "participant2_id": member.debtor_id },
+      { "participant1_id": member.debtor_id, "participant2_id": member.payer_id }
+    ));
+    
 
     return GroupMemberBalance.findAll({
       "where": {
         "group_id": groupId,
-        ...whereConditions
-      }
+        [ Op.or ]: orConditions
+      },
+      "raw": true
     });
   };
 
@@ -267,7 +287,13 @@ class GroupDb {
   static getExpense = async(groupExpenseId) => await GroupExpense.findOne({
     "where": {
       "group_expense_id": groupExpenseId
-    }
+    },
+    "include": [
+      {
+        "model": GroupExpenseParticipant,
+        "required": true
+      }
+    ]
   });
 
   static getExpenseParticipants = async(groupExpenseId) => await GroupExpenseParticipant.findAll({

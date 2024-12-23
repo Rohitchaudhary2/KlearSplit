@@ -320,7 +320,7 @@ export class GroupsService {
   }
 
   /**
-     * Fetch all expenses for a given group.
+     * Fetch all expenses and settlements for a given group.
      *
      * @param groupId - The ID of the group.
      * @returns An observable with the list of all expenses and settlements.
@@ -337,9 +337,17 @@ export class GroupsService {
       })
       .pipe(
         map((expenses) => {
-          expenses.data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
           return expenses.data;
         }),
       );
+  }
+
+  deleteExpenseAndSettlement(groupId: string, isExpense: boolean, id: string) {
+    const url = isExpense ? API_URLS.deleteGroupExpense : API_URLS.deleteGroupSettlement;
+    const body = isExpense ? { group_expense_id: id } : { group_settlement_id: id };
+    return this.httpClient.delete(`${url}/${groupId}`, {
+      body,
+      withCredentials: true,
+    });
   }
 }

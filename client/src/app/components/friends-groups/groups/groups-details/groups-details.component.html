@@ -1,7 +1,7 @@
 <div class="d-flex row justify-content-center align-items-center m-5">
   <div class="col-md-4" style="flex: 0 0 auto">
     <app-groups-list
-      [balanceAmount]="selectedGroup()?.balance_amount || '0'"
+      [balanceAmount]="selectedGroup()?.balance_amount ?? '0'"
     ></app-groups-list>
   </div>
 
@@ -186,11 +186,11 @@
                 </div>
               }
             </div>
-            <div class="d-flex w-100 justify-content-end align-items-center mt-2 p-3">
-              <button class="btn btn-outline-success">Save Changes</button>
-            </div>
           </div>
         </div>
+      </div>
+      <div class="d-flex w-100 justify-content-end align-items-center mt-2 p-3">
+        <button class="btn btn-outline-success">Save Changes</button>
       </div>
     </div>
   </div>

@@ -19,6 +19,7 @@ import {
   CombinedGroupExpense,
   CombinedGroupMessage,
   CombinedGroupSettlement,
+  ExpenseDeletedEvent,
   GroupData,
   GroupExpenseData,
   GroupExpenseResponse,
@@ -682,6 +683,47 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       exitAnimationDuration: "200ms",
     });
     dialogRef.afterClosed().subscribe();
+  }
+
+  /**
+   * Handles the deletion of an expense.
+   * Updates the balance of conversation, and removes the expense from both the expenses list and the combined view.
+   *
+   * @param {ExpenseDeletedEvent} expense - The event data containing the expense details.
+   * @param {string} expense.id - The ID of the expense being deleted.
+   * @param {string} expense.payer_id - The ID of the user who paid the expense.
+   * @param {number} expense.debtor_amount - The amount that the debtor owe.
+   *
+   * @returns void
+   * Updates the balance for the conversation and removes the expense from the list and combined view.
+   */
+  onDeleteExpense({ id, payerId, debtorAmount }: ExpenseDeletedEvent) {
+    const balanceAmount = parseFloat(this.selectedGroup()!.balance_amount);
+    const debtAmount = parseFloat(debtorAmount);
+    this.selectedGroup()!.balance_amount =
+      this.currentMember()?.group_membership_id === payerId
+        ? JSON.stringify(balanceAmount - debtAmount)
+        : JSON.stringify(balanceAmount + debtAmount);
+    const updatedExpenses = this.expenses().filter(
+      (expense: GroupExpenseData | GroupSettlementData) => {
+        if (this.isGroupExpense(expense)) {
+          return expense.group_expense_id !== id;
+        }
+        return expense.group_settlement_id !== id;
+      },
+    );
+    this.expenses.set(updatedExpenses);
+    const updatedCombinedView = this.combinedView().filter(
+      (item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement) => {
+        if (this.isCombinedExpense(item)) {
+          return item.group_expense_id !== id;
+        } else if (this.isCombinedSettlement(item)) {
+          return item.group_settlement_id !== id;
+        }
+        return false;
+      },
+    );
+    this.combinedView.set(updatedCombinedView);
   }
 
   filterMembers(members: GroupMemberData[]) {

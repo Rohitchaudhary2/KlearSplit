@@ -6,6 +6,8 @@ import { MatIconModule } from "@angular/material/icon";
 import { ExpenseData } from "../../friends/friend.model";
 import { GroupExpenseData, GroupSettlementData } from "../../groups/groups.model";
 
+
+type ExpenseType = ExpenseData | GroupExpenseData | GroupSettlementData
 @Component({
   selector: "app-expense-table",
   standalone: true,
@@ -14,9 +16,9 @@ import { GroupExpenseData, GroupSettlementData } from "../../groups/groups.model
   styleUrls: [ "./expense-table.component.css" ],
 })
 export class ExpenseTableComponent {
-  expenses = input<(ExpenseData | GroupExpenseData | GroupSettlementData)[]>(); // Array of ExpenseData or GroupExpenseData
+  expenses = input<ExpenseType[]>(); // Array of ExpenseData or GroupExpenseData
   loading = input<boolean>(false); // Input for loading state
-  updateExpense = output<ExpenseData | GroupExpenseData | GroupSettlementData>(); // Event for updating expense
+  updateExpense = output<ExpenseType>(); // Event for updating expense
   deleteExpense = output<{
     id: string;
     payerId: string;
@@ -25,17 +27,11 @@ export class ExpenseTableComponent {
   downloadExpenses = output<void>(); // Event for downloading expenses
   cancel = output<void>(); // Event for closing the modal
 
-  onUpdateExpense(expense: ExpenseData | GroupExpenseData | GroupSettlementData) {
-    if (this.isExpenseData(expense)) {
-      // Now TypeScript knows that `expense` is of type `ExpenseData`
-      this.updateExpense.emit(expense);
-    } else {
-      // Handle GroupExpenseData case
-      this.updateExpense.emit(expense);
-    }
+  onUpdateExpense(expense: ExpenseType) {
+    this.updateExpense.emit(expense);
   }
 
-  onDeleteExpense(expense: ExpenseData | GroupExpenseData | GroupSettlementData) {
+  onDeleteExpense(expense: ExpenseType) {
     if (this.isExpenseData(expense)) {
       this.deleteExpense.emit({
         id: expense.friend_expense_id,
@@ -66,12 +62,12 @@ export class ExpenseTableComponent {
   }
 
   // Type guard to differentiate between ExpenseData, GroupExpenseData, and GroupSettlementData
-  isExpenseData(expense: ExpenseData | GroupExpenseData | GroupSettlementData): expense is ExpenseData {
+  isExpenseData(expense: ExpenseType): expense is ExpenseData {
     return (expense as ExpenseData).friend_expense_id !== undefined;
   }
 
   // Type guard to differentiate between ExpenseData, GroupExpenseData, and GroupSettlementData
-  isGroupExpenseData(expense: ExpenseData | GroupExpenseData | GroupSettlementData): expense is GroupExpenseData {
+  isGroupExpenseData(expense: ExpenseType): expense is GroupExpenseData {
     return (expense as GroupExpenseData).group_expense_id !== undefined;
   }
 }

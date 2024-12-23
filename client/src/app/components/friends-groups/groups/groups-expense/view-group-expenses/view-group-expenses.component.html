@@ -1,6 +1,7 @@
 <app-expense-table
   [expenses]="totalExpenses()"
   [loading]="loading()"
+  (deleteExpense)="onDeleteExpense($event)"
   (downloadExpenses)="downloadExpenses()"
   (cancel)="onCancel()"
 ></app-expense-table>

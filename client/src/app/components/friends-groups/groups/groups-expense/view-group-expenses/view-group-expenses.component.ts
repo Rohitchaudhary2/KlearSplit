@@ -3,13 +3,16 @@ import { Component, inject, OnInit, output, signal } from "@angular/core";
 import { MatButtonModule } from "@angular/material/button";
 import {
   MAT_DIALOG_DATA,
+  MatDialog,
   MatDialogRef,
 } from "@angular/material/dialog";
 import { MatIconModule } from "@angular/material/icon";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ToastrService } from "ngx-toastr";
 
-import { GroupExpenseData, GroupSettlementData } from "../../../groups/groups.model";
+import { ConfirmationDialogComponent } from "../../../../confirmation-dialog/confirmation-dialog.component";
+import { ExpenseDeletedEvent, GroupExpenseData, GroupSettlementData } from "../../../groups/groups.model";
 import { ExpenseTableComponent } from "../../../shared/expense-table/expense-table.component";
 import { FriendsGroupsService } from "../../../shared/friends-groups.service";
 import { GroupsService } from "../../groups.service";
@@ -33,9 +36,11 @@ export class ViewGroupExpensesComponent implements OnInit {
   private readonly data = inject(MAT_DIALOG_DATA);
   private readonly commonService = inject(FriendsGroupsService);
   private readonly groupsService = inject(GroupsService);
+  private readonly dialog = inject(MatDialog);
+  private readonly toastr = inject(ToastrService);
 
   user = this.data[0]; // Logged in user
-  selectedGroup = this.data[1]; // Friend associated in expenses
+  selectedGroup = this.groupsService.selectedGroup;
 
   totalExpenses = signal<(GroupExpenseData | GroupSettlementData)[] | []>([]);
 
@@ -68,7 +73,7 @@ export class ViewGroupExpensesComponent implements OnInit {
   ngOnInit() {
     this.loading.set(true);
     this.groupsService
-      .fetchAllExpensesAndSettlements(this.selectedGroup.group_id)
+      .fetchAllExpensesAndSettlements(this.selectedGroup()!.group_id)
       .subscribe({
         next: (expenses) => {
           expenses.forEach((expense) => {
@@ -92,35 +97,47 @@ export class ViewGroupExpensesComponent implements OnInit {
    * @param payerId - The ID of the payer (used to update the balance)
    * @param debtorAmount - The amount that the debtor owes (used to update the balance)
    */
-  // onDeleteExpense({ id, payerId, debtorAmount }: ExpenseDeletedEvent) {
-  //   // Open a confirmation dialog to ask the user if they are sure they want to delete the expense
-  //   const confirmationDialogRef = this.dialog.open(
-  //     ConfirmationDialogComponent,
-  //     {
-  //       data: "Are you sure you want to delete this expense?",
-  //     },
-  //   );
+  onDeleteExpense({ id, payerId, debtorAmount }: ExpenseDeletedEvent) {
+    const expenseToDelete = this.totalExpenses().find((expense) => {
+      if (this.isGroupExpenseData(expense)) {
+        return expense.group_expense_id === id;
+      }
+      return expense.group_settlement_id === id;
+    });
+    
+    // Open a confirmation dialog to ask the user if they are sure they want to delete the expense
+    const confirmationDialogRef = this.dialog.open(
+      ConfirmationDialogComponent,
+      {
+        data: `Are you sure you want to delete this ${this.isGroupExpenseData(expenseToDelete!) ? "expense" : "settlement"}?`,
+      },
+    );
 
-  //   confirmationDialogRef.afterClosed().subscribe((result) => {
-  //     if (!result) {
-  //       return;
-  //     }
+    confirmationDialogRef.afterClosed().subscribe((result) => {
+      if (!result) {
+        return;
+      }
 
-  //     // API call to back-end to delete the expense
-  //     this.groupsService
-  //       .deleteExpense(this.selectedGroup.conversation_id, id)
-  //       .subscribe({
-  //         next: () => {
-  //           const updatedExpenses = this.totalExpenses().filter(
-  //             (expense: GroupExpenseData) => expense.group_expense_id !== id,
-  //           );
-  //           this.totalExpenses.set(updatedExpenses);
-  //           this.toastr.success("Expense Deleted successfully", "Success");
-  //         },
-  //       });
-  //     this.expenseDeleted.emit({ id, payerId, debtorAmount });
-  //   });
-  // }
+      // API call to back-end to delete the expense
+      this.groupsService
+        .deleteExpenseAndSettlement(this.selectedGroup()!.group_id, this.isGroupExpenseData(expenseToDelete!), id)
+        .subscribe({
+          next: () => {
+            const updatedExpenses = this.totalExpenses().filter(
+              (expense: GroupExpenseData | GroupSettlementData) => {
+                if (this.isGroupExpenseData(expense)) {
+                  return expense.group_expense_id !== id;
+                }
+                return expense.group_settlement_id !== id;
+              },
+            );
+            this.totalExpenses.set(updatedExpenses);
+            this.toastr.success(`${this.isGroupExpenseData(expenseToDelete!) ? "Expense" : "Settlement"} Deleted successfully`, "Success");
+          },
+        });
+      this.expenseDeleted.emit({ id, payerId, debtorAmount });
+    });
+  }
 
   /**
    * Opens a dialog to update an existing expense. Passes the current expense data
@@ -167,7 +184,7 @@ export class ViewGroupExpensesComponent implements OnInit {
   // }
 
   /**
-   * Generates a PDF report of all expenses, formatted into a table with relevant details.
+   * Generates a PDF report of all expenses and settlements, formatted into a table with relevant details.
    *
    * Dependencies:
    * - jsPDF: For creating the PDF document.
@@ -220,7 +237,7 @@ export class ViewGroupExpensesComponent implements OnInit {
       body,
     });
 
-    // Save the generated PDF with the filename 'expense_report.pdf'
+    // Save the generated PDF with the filename 'group_expense_report.pdf'
     doc.save("group_expense_report.pdf");
   }
 
@@ -233,7 +250,7 @@ export class ViewGroupExpensesComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  // Type guard to differentiate between ExpenseData and GroupExpenseData
+  // Type guard to differentiate between GroupExpenseData and GroupSettlementData
   isGroupExpenseData(expense: GroupExpenseData | GroupSettlementData): expense is GroupExpenseData {
     return (expense as GroupExpenseData).group_expense_id !== undefined;
   }

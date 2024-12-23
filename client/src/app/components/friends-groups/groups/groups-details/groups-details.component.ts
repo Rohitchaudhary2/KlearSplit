@@ -146,6 +146,7 @@ export class GroupsDetailsComponent {
               parseFloat(response.data.settlement_amount),
               isPayer
             );
+            this.cdr.detectChanges();
             this.toastr.success("Settled up successfully", "Success");
           }
         });

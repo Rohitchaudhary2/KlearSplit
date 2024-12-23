@@ -2,6 +2,7 @@ import { DatePipe } from "@angular/common";
 import { Component, input, output } from "@angular/core";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
+import { MatTooltipModule } from "@angular/material/tooltip";
 
 import { ExpenseData } from "../../friends/friend.model";
 import { GroupExpenseData, GroupSettlementData } from "../../groups/groups.model";
@@ -11,7 +12,7 @@ type ExpenseType = ExpenseData | GroupExpenseData | GroupSettlementData
 @Component({
   selector: "app-expense-table",
   standalone: true,
-  imports: [ MatIconModule, MatButtonModule, DatePipe ],
+  imports: [ MatIconModule, MatButtonModule, DatePipe, MatTooltipModule ],
   templateUrl: "./expense-table.component.html",
   styleUrls: [ "./expense-table.component.css" ],
 })

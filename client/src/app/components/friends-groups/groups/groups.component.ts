@@ -179,7 +179,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     if (this.selectedGroup()) {
       this.clearSelectedGroupData();
     }
-
+    
     // Set the selected group as the new selected group
     this.selectedGroup.set(group);
 
@@ -206,15 +206,16 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       const sender = this.commonService.getFullNameAndImage(member);
       
   
-      const messageWithName = {
+      const messageWithNameAndTime = {
         ...message,
         senderName: sender.fullName,
-        senderImage: sender.imageUrl
+        senderImage: sender.imageUrl,
+        createdAt: new Date().toISOString(),
       };
-      this.messages.set([ ...this.messages(), messageWithName ]);
+      this.messages.set([ ...this.messages(), messageWithNameAndTime ]);
       this.combinedView.set([
         ...this.combinedView(),
-        { ...messageWithName, type: "message" },
+        { ...messageWithNameAndTime, type: "message" },
       ]);
       this.cdr.detectChanges();
       this.commonService.scrollToBottom(this.messageContainer()!);

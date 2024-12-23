@@ -57,8 +57,9 @@
                 class="hover me-2"
                 (click)="onUpdateExpense(expense)"
                 (keyup.enter)="onUpdateExpense(expense)"
-                >edit</mat-icon
-              >
+                matTooltip="Update"
+                matTooltipPosition="above"
+              >edit</mat-icon>
               <mat-icon
                 matPrefix
                 class="hover"
@@ -68,8 +69,9 @@
                 (keyup.enter)="
                   onDeleteExpense(expense)
                 "
-                >delete</mat-icon
-              >
+                matTooltip="Delete"
+                matTooltipPosition="above"
+                >delete</mat-icon>
             </td>
           </tr>
         }

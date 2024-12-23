@@ -108,8 +108,20 @@
             {{ isCurrentUserPayer() ? "You paid" : name() + " paid" }}
           </p>
         </div>
-        <div class="card-body" style="max-width: 9vw">
-          <p class="mb-0">{{ expense()?.total_amount }}</p>
+        <div class="card-body w-100 px-2 py-1">
+          <div>
+            <p class="mb-0">{{ expense()?.total_amount }}</p>
+          </div>
+          <div
+            class="d-flex justify-content-end align-items-end"
+            style="
+              width: 100%;
+              font-size: 0.85em;
+              color: rgba(0, 0, 0, 0.7);
+            "
+          >
+            &nbsp;
+          </div>
         </div>
       </div>
 
@@ -125,20 +137,20 @@
             {{ isCurrentUserPayer() ? "You lent" : name() + " lent you" }}
           </p>
         </div>
-        <div class="card-body" style="max-width: 9vw">
-          <p class="mb-0">{{ expense()?.debtor_amount }}</p>
-        </div>
-        <div
-          class="card-footer d-flex justify-content-end align-items-center"
-          style="
-            width: 100%;
-            font-size: 0.85em;
-            color: rgba(0, 0, 0, 0.7);
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            background: transparent;
+        <div class="card-body w-100 px-3 py-1">
+          <div>
+            <p class="mb-0">{{ expense()?.debtor_amount }}</p>
+          </div>
+          <div
+            class="d-flex justify-content-end align-items-end"
+            style="
+              width: 100%;
+              font-size: 0.85em;
+              color: rgba(0, 0, 0, 0.7);
             "
-        >
-          <span>{{ expense()?.createdAt | date: "shortTime" }}</span>
+          >
+            <span>{{ expense()?.createdAt | date: "shortTime" }}</span>
+          </div>
         </div>
       </div>
     }

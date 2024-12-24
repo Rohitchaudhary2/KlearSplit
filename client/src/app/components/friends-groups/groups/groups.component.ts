@@ -55,7 +55,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   private readonly toastr = inject(ToastrService);
   private readonly authService = inject(AuthService);
   private readonly socketService = inject(SocketService);
-  private readonly groupsService = inject(GroupsService);
+  readonly groupsService = inject(GroupsService);
   private readonly commonService = inject(FriendsGroupsService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
@@ -120,8 +120,8 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    * user properly leaves the room and disconnected from the socket.
    */
   ngOnDestroy(): void {
-    if (this.selectedGroup()) {
-      this.socketService.leaveRoom(this.selectedGroup()!.group_id);
+    if (this.groupsService.selectedGroup()) {
+      this.socketService.leaveRoom(this.groupsService.selectedGroup()!.group_id);
       this.socketService.disconnect();
     }
   }
@@ -345,40 +345,6 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Type guard to check if an item is of type CombinedGroupExpense.
-   *
-   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
-   * @returns True if the item is a CombinedGroupExpense, false otherwise.
-   */
-  isCombinedExpense(
-    item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement,
-  ): item is CombinedGroupExpense {
-    return (item as CombinedGroupExpense).group_expense_id !== undefined;
-  }
-
-  /**
-   * Type guard to check if an item is of type CombinedGroupSettlement.
-   *
-   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
-   * @returns True if the item is a CombinedGroupSettlement, false otherwise.
-   */
-  isCombinedSettlement(
-    item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement,
-  ): item is CombinedGroupSettlement {
-    return (item as CombinedGroupSettlement).group_settlement_id !== undefined;
-  }
-
-  /**
-   * Type guard to check if an item is of type CombinedGroupMessage.
-   *
-   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
-   * @returns True if the item is a CombinedGroupMessage, false otherwise.
-   */
-  isCombinedMessage(item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement): item is CombinedGroupMessage {
-    return (item as CombinedGroupMessage).sender_id !== undefined;
-  }
-
-  /**
    * Type guard to check if an item is of type GroupExpenseData.
    *
    * @param item - The item to check. Can be either a GroupExpenseData, or a GroupSettlementData.
@@ -440,11 +406,11 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
       .subscribe({
         next: ({ messages, expenses, combined }) => {
           combined.forEach((item) => {
-            if (this.isCombinedExpense(item)) {
+            if (this.groupsService.isCombinedExpense(item)) {
               this.typeHandlers.expense(item);
-            } else if (this.isCombinedMessage(item)) {
+            } else if (this.groupsService.isCombinedMessage(item)) {
               this.typeHandlers.message(item);
-            } else if (this.isCombinedSettlement(item)) {
+            } else if (this.groupsService.isCombinedSettlement(item)) {
               this.typeHandlers.settlement(item);
             }
           });
@@ -616,7 +582,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
             this.expenses.set(currExpenses);
             const expense = [ ...this.combinedView() ]
               .reverse()
-              .find((item) => this.isCombinedExpense(item));
+              .find((item) => this.groupsService.isCombinedExpense(item));
             if (expense) {
               expense.group_expense_id = `error${this.errorNumber}`;
             }
@@ -644,7 +610,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   //   expense.group_expense_id = `retrying${this.errorNumber}`;
   //   // Update the combined view to reflect the retry state
   //   const combinedExpense = this.combinedView().find(
-  //     (item) => this.isCombinedExpense(item)
+  //     (item) => this.groupsService.isCombinedExpense(item)
   //   );
   //   if (combinedExpense) {
   //     combinedExpense.group_expense_id = `retrying${this.errorNumber}`;
@@ -716,15 +682,16 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
     this.expenses.set(updatedExpenses);
     const updatedCombinedView = this.combinedView().filter(
       (item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement) => {
-        if (this.isCombinedExpense(item)) {
+        if (this.groupsService.isCombinedExpense(item)) {
           return item.group_expense_id !== id;
-        } else if (this.isCombinedSettlement(item)) {
+        } else if (this.groupsService.isCombinedSettlement(item)) {
           return item.group_settlement_id !== id;
         }
         return false;
       },
     );
     this.combinedView.set(updatedCombinedView);
+    this.cdr.detectChanges();
   }
 
   filterMembers(members: GroupMemberData[]) {

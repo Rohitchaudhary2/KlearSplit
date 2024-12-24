@@ -1,5 +1,5 @@
 import { DatePipe } from "@angular/common";
-import { Component, inject, OnInit, output, signal } from "@angular/core";
+import { ChangeDetectorRef, Component, inject, OnInit, output, signal } from "@angular/core";
 import { MatButtonModule } from "@angular/material/button";
 import {
   MAT_DIALOG_DATA,
@@ -12,7 +12,8 @@ import autoTable from "jspdf-autotable";
 import { ToastrService } from "ngx-toastr";
 
 import { ConfirmationDialogComponent } from "../../../../confirmation-dialog/confirmation-dialog.component";
-import { ExpenseDeletedEvent, GroupExpenseData, GroupSettlementData } from "../../../groups/groups.model";
+import { CombinedGroupExpense, CombinedGroupMessage, CombinedGroupSettlement, ExpenseDeletedEvent, GroupExpenseData, GroupSettlementData }
+  from "../../../groups/groups.model";
 import { ExpenseTableComponent } from "../../../shared/expense-table/expense-table.component";
 import { FriendsGroupsService } from "../../../shared/friends-groups.service";
 import { GroupsService } from "../../groups.service";
@@ -38,9 +39,13 @@ export class ViewGroupExpensesComponent implements OnInit {
   private readonly groupsService = inject(GroupsService);
   private readonly dialog = inject(MatDialog);
   private readonly toastr = inject(ToastrService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   user = this.data[0]; // Logged in user
   selectedGroup = this.groupsService.selectedGroup;
+  currentMember = this.groupsService.currentMember;
+  expenses = this.groupsService.expenses;
+  combinedView = this.groupsService.combinedView;
 
   totalExpenses = signal<(GroupExpenseData | GroupSettlementData)[] | []>([]);
 
@@ -135,7 +140,72 @@ export class ViewGroupExpensesComponent implements OnInit {
             this.toastr.success(`${this.isGroupExpenseData(expenseToDelete!) ? "Expense" : "Settlement"} Deleted successfully`, "Success");
           },
         });
-      this.expenseDeleted.emit({ id, payerId, debtorAmount });
+      const balanceAmount = parseFloat(this.selectedGroup()!.balance_amount);
+      const debtAmount = parseFloat(debtorAmount);
+      this.selectedGroup()!.balance_amount =
+        this.currentMember()?.group_membership_id === payerId
+          ? JSON.stringify(balanceAmount - debtAmount)
+          : JSON.stringify(balanceAmount + debtAmount);
+
+      this.groupsService.groupInvites().forEach((invite) => {
+        if (invite.group_id === this.selectedGroup()!.group_id) {
+          invite.balance_amount = this.selectedGroup()!.balance_amount;
+        }
+      });
+      this.groupsService.groups().forEach((group) => {
+        if (group.group_id === this.selectedGroup()!.group_id) {
+          group.balance_amount = this.selectedGroup()!.balance_amount;
+        }
+      });
+      const updatedExpenses = this.expenses().filter(
+        (expense: GroupExpenseData | GroupSettlementData) => {
+          if (this.isGroupExpenseData(expense)) {
+            return expense.group_expense_id !== id;
+          }
+          return expense.group_settlement_id !== id;
+        },
+      );
+      this.expenses.set(updatedExpenses);
+      const updatedCombinedView = this.combinedView().filter(
+        (item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement) => {
+          if (this.groupsService.isCombinedExpense(item)) {
+            return item.group_expense_id !== id;
+          } else if (this.groupsService.isCombinedSettlement(item)) {
+            return item.group_settlement_id !== id;
+          }
+          return false;
+        },
+      );
+      this.combinedView.set(updatedCombinedView);
+      this.groupsService.groupMembers().forEach((member) => {
+        if (member.group_membership_id === payerId) {
+          member.balance_with_user = this.commonService.updateBalance(
+            member.balance_with_user,
+            debtAmount,
+            false
+          );
+          member.total_balance = this.commonService.updateBalance(
+            member.total_balance,
+            debtAmount,
+            false
+          );
+        }
+        if (!this.isGroupExpenseData(expenseToDelete!)) {
+          if (member.group_membership_id === expenseToDelete!.debtor_id) {
+            member.balance_with_user = this.commonService.updateBalance(
+              member.balance_with_user,
+              parseFloat(expenseToDelete!.settlement_amount),
+              true
+            );
+            member.total_balance = this.commonService.updateBalance(
+              member.total_balance,
+              parseFloat(expenseToDelete!.settlement_amount),
+              true
+            );
+          }
+        }
+      });
+      this.cdr.detectChanges();
     });
   }
 

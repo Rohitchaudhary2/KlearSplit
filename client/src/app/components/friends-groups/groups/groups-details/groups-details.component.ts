@@ -130,8 +130,10 @@ export class GroupsDetailsComponent {
           next: (response) => {
             if (response.data.payer_id === this.currentMember()!.group_membership_id) {
               response.data.payer = this.commonService.getFullNameAndImage(this.currentMember());
+              response.data.debtor = this.commonService.getFullNameAndImage(memberToSettle);
             } else {
               response.data.payer = this.commonService.getFullNameAndImage(memberToSettle);
+              response.data.debtor = this.commonService.getFullNameAndImage(this.currentMember());
             }
             this.expenses.set([ ...this.expenses(), response.data ]);
             const combinedData = [
@@ -146,6 +148,42 @@ export class GroupsDetailsComponent {
               parseFloat(response.data.settlement_amount),
               isPayer
             );
+            this.groupInvites().forEach((invite) => {
+              if (invite.group_id === this.selectedGroup()!.group_id) {
+                invite.balance_amount = this.selectedGroup()!.balance_amount;
+              }
+            });
+            this.groups().forEach((group) => {
+              if (group.group_id === this.selectedGroup()!.group_id) {
+                group.balance_amount = this.selectedGroup()!.balance_amount;
+              }
+            });
+            this.groupMembers().forEach((member) => {
+              if (member.group_membership_id === response.data.payer_id) {
+                member.balance_with_user = this.commonService.updateBalance(
+                  member.balance_with_user,
+                  parseFloat(response.data.settlement_amount),
+                  true
+                );
+                member.total_balance = this.commonService.updateBalance(
+                  member.total_balance,
+                  parseFloat(response.data.settlement_amount),
+                  true
+                );
+              }
+              if (member.group_membership_id === response.data.debtor_id) {
+                member.balance_with_user = this.commonService.updateBalance(
+                  member.balance_with_user,
+                  parseFloat(response.data.settlement_amount),
+                  false
+                );
+                member.total_balance = this.commonService.updateBalance(
+                  member.total_balance,
+                  parseFloat(response.data.settlement_amount),
+                  false
+                );
+              }
+            });
             this.cdr.detectChanges();
             this.toastr.success("Settled up successfully", "Success");
           }

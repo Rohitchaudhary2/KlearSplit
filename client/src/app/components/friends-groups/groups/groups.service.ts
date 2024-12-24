@@ -50,6 +50,40 @@ export class GroupsService {
   groupInvites = signal<GroupData[]>([]);
 
   /**
+   * Type guard to check if an item is of type CombinedGroupExpense.
+   *
+   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
+   * @returns True if the item is a CombinedGroupExpense, false otherwise.
+   */
+  isCombinedExpense(
+    item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement,
+  ): item is CombinedGroupExpense {
+    return (item as CombinedGroupExpense).group_expense_id !== undefined;
+  }
+
+  /**
+   * Type guard to check if an item is of type CombinedGroupSettlement.
+   *
+   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
+   * @returns True if the item is a CombinedGroupSettlement, false otherwise.
+   */
+  isCombinedSettlement(
+    item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement,
+  ): item is CombinedGroupSettlement {
+    return (item as CombinedGroupSettlement).group_settlement_id !== undefined;
+  }
+
+  /**
+   * Type guard to check if an item is of type CombinedGroupMessage.
+   *
+   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
+   * @returns True if the item is a CombinedGroupMessage, false otherwise.
+   */
+  isCombinedMessage(item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement): item is CombinedGroupMessage {
+    return (item as CombinedGroupMessage).sender_id !== undefined;
+  }
+
+  /**
    * Searching users based on the letters typed.
    *
    * @param query - The search query.

@@ -39,4 +39,6 @@ export const API_URLS = {
   fetchGroupCombined: `${environment.apiBaseUrl}/groups/messagesexpensessettlements`,
   deleteGroupExpense: `${environment.apiBaseUrl}/groups/deleteexpense`,
   deleteGroupSettlement: `${environment.apiBaseUrl}/groups/deletesettlement`,
+  updateGroupExpense: `${environment.apiBaseUrl}/groups/updateexpense`,
+  updateGroupSettlement: `${environment.apiBaseUrl}/groups/updatesettlement`,
 };

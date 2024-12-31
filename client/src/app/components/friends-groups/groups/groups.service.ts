@@ -354,11 +354,11 @@ export class GroupsService {
   }
 
   /**
-     * Fetch all expenses and settlements for a given group.
-     *
-     * @param groupId - The ID of the group.
-     * @returns An observable with the list of all expenses and settlements.
-     */
+   * Fetch all expenses and settlements for a given group.
+   *
+   * @param groupId - The ID of the group.
+   * @returns An observable with the list of all expenses and settlements.
+   */
   fetchAllExpensesAndSettlements(groupId: string) {
     const params = new HttpParams()
       .set("fetchAll", true)
@@ -376,6 +376,14 @@ export class GroupsService {
       );
   }
 
+  /**
+   * Delete an expense or settlement from the group.
+   *
+   * @param groupId - The ID of the group.
+   * @param isExpense - Boolean to check whether the entity being deleted is expense or settlement (expense if true).
+   * @param id - The ID of either expense or settlement.
+   * @returns - An observable indicating the success of the operation.
+   */
   deleteExpenseAndSettlement(groupId: string, isExpense: boolean, id: string) {
     const url = isExpense ? API_URLS.deleteGroupExpense : API_URLS.deleteGroupSettlement;
     const body = isExpense ? { group_expense_id: id } : { group_settlement_id: id };
@@ -383,5 +391,22 @@ export class GroupsService {
       body,
       withCredentials: true,
     });
+  }
+
+  /**
+   * Update an existing expense or settlement in the group.
+   *
+   * @param groupId - The ID of the group.
+   * @param isExpense - Boolean to check whether the entity being updated is expense or settlement (expense if true).
+   * @param data - Expense or Settlement data to be updated.
+   * @returns - An observable with the response after updating the expense or settlement.
+   */
+  updateExpenseAndSettlement(groupId: string, isExpense: boolean, data: GroupExpenseInput | GroupSettlementInput | FormData) {
+    const url = isExpense ? API_URLS.updateGroupExpense : API_URLS.updateGroupSettlement;
+    return this.httpClient.patch(
+      `${url}/${groupId}`,
+      data,
+      { withCredentials: true },
+    );
   }
 }

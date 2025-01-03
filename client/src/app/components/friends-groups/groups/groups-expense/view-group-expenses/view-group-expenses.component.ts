@@ -1,5 +1,12 @@
 import { DatePipe } from "@angular/common";
-import { ChangeDetectorRef, Component, inject, OnInit, output, signal } from "@angular/core";
+import {
+  ChangeDetectorRef,
+  Component,
+  inject,
+  OnInit,
+  output,
+  signal,
+} from "@angular/core";
 import { MatButtonModule } from "@angular/material/button";
 import {
   MAT_DIALOG_DATA,
@@ -12,11 +19,19 @@ import autoTable from "jspdf-autotable";
 import { ToastrService } from "ngx-toastr";
 
 import { ConfirmationDialogComponent } from "../../../../confirmation-dialog/confirmation-dialog.component";
-import { CombinedGroupExpense, CombinedGroupMessage, CombinedGroupSettlement, ExpenseDeletedEvent, GroupExpenseData, GroupSettlementData }
-  from "../../../groups/groups.model";
+import {
+  CombinedGroupExpense,
+  CombinedGroupMessage,
+  CombinedGroupSettlement,
+  ExpenseDeletedEvent,
+  GroupExpenseData,
+  GroupExpenseResponse,
+  GroupSettlementData,
+} from "../../../groups/groups.model";
 import { ExpenseTableComponent } from "../../../shared/expense-table/expense-table.component";
 import { FriendsGroupsService } from "../../../shared/friends-groups.service";
 import { GroupsService } from "../../groups.service";
+import { GroupsExpenseComponent } from "../groups-expense.component";
 
 @Component({
   selector: "app-view-group-expenses",
@@ -82,7 +97,11 @@ export class ViewGroupExpensesComponent implements OnInit {
       .subscribe({
         next: (expenses) => {
           expenses.forEach((expense) => {
-            const payer = this.groupsService.groupMembers().find((member) => member.group_membership_id === expense.payer_id);
+            const payer = this.groupsService
+              .groupMembers()
+              .find(
+                (member) => member.group_membership_id === expense.payer_id,
+              );
             expense.payer = this.commonService.getFullNameAndImage(payer);
           });
           this.totalExpenses.set(expenses);
@@ -109,7 +128,7 @@ export class ViewGroupExpensesComponent implements OnInit {
       }
       return expense.group_settlement_id === id;
     });
-    
+
     // Open a confirmation dialog to ask the user if they are sure they want to delete the expense
     const confirmationDialogRef = this.dialog.open(
       ConfirmationDialogComponent,
@@ -125,7 +144,11 @@ export class ViewGroupExpensesComponent implements OnInit {
 
       // API call to back-end to delete the expense
       this.groupsService
-        .deleteExpenseAndSettlement(this.selectedGroup()!.group_id, this.isGroupExpenseData(expenseToDelete!), id)
+        .deleteExpenseAndSettlement(
+          this.selectedGroup()!.group_id,
+          this.isGroupExpenseData(expenseToDelete!),
+          id,
+        )
         .subscribe({
           next: () => {
             const updatedExpenses = this.totalExpenses().filter(
@@ -137,7 +160,10 @@ export class ViewGroupExpensesComponent implements OnInit {
               },
             );
             this.totalExpenses.set(updatedExpenses);
-            this.toastr.success(`${this.isGroupExpenseData(expenseToDelete!) ? "Expense" : "Settlement"} Deleted successfully`, "Success");
+            this.toastr.success(
+              `${this.isGroupExpenseData(expenseToDelete!) ? "Expense" : "Settlement"} Deleted successfully`,
+              "Success",
+            );
           },
         });
       const balanceAmount = parseFloat(this.selectedGroup()!.balance_amount);
@@ -167,7 +193,12 @@ export class ViewGroupExpensesComponent implements OnInit {
       );
       this.expenses.set(updatedExpenses);
       const updatedCombinedView = this.combinedView().filter(
-        (item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement) => {
+        (
+          item:
+            | CombinedGroupMessage
+            | CombinedGroupExpense
+            | CombinedGroupSettlement,
+        ) => {
           if (this.groupsService.isCombinedExpense(item)) {
             return item.group_expense_id !== id;
           } else if (this.groupsService.isCombinedSettlement(item)) {
@@ -182,12 +213,12 @@ export class ViewGroupExpensesComponent implements OnInit {
           member.balance_with_user = this.commonService.updateBalance(
             member.balance_with_user,
             debtAmount,
-            false
+            false,
           );
           member.total_balance = this.commonService.updateBalance(
             member.total_balance,
             debtAmount,
-            false
+            false,
           );
         }
         if (!this.isGroupExpenseData(expenseToDelete!)) {
@@ -195,12 +226,12 @@ export class ViewGroupExpensesComponent implements OnInit {
             member.balance_with_user = this.commonService.updateBalance(
               member.balance_with_user,
               parseFloat(expenseToDelete!.settlement_amount),
-              true
+              true,
             );
             member.total_balance = this.commonService.updateBalance(
               member.total_balance,
               parseFloat(expenseToDelete!.settlement_amount),
-              true
+              true,
             );
           }
         }
@@ -215,43 +246,54 @@ export class ViewGroupExpensesComponent implements OnInit {
    *
    * @param expense - The expense data to be updated
    */
-  // onUpdateExpense(expense: GroupExpenseData) {
-  //   // Open a dialog to allow the user to update the expense. Pass the current expense data.
-  //   const dialogRef = this.dialog.open(FriendsExpenseComponent, {
-  //     data: [ "Update Expense", expense, this.user, this.selectedGroup ],
-  //     enterAnimationDuration: "200ms",
-  //     exitAnimationDuration: "200ms",
-  //   });
-  //   dialogRef.afterClosed().subscribe((data) => {
-  //     if (!data) {
-  //       return;
-  //     }
-  //     const result = data.formData;
+  onUpdateExpense(expense: GroupExpenseData) {
+    const isExpense = this.isGroupExpenseData(expense);
 
-  //     // Appending the original expense ID to the form data
-  //     result.append("friend_expense_id", expense.friend_expense_id);
-
-  //     // Call the service to update the expense on the server
-  //     this.friendsService
-  //       .updateExpense(this.selectedGroup.conversation_id, result)
-  //       .subscribe({
-  //         next: (response: ExpenseResponse) => {
-  //           const expenses = this.totalExpenses();
-  //           const updatedExpenses = expenses.map((expenseData) => {
-  //             return expenseData.friend_expense_id === expense.friend_expense_id
-  //               ? response.data
-  //               : expenseData;
-  //           });
-  //           this.totalExpenses.set(updatedExpenses);
-  //           this.updatedExpense.emit({
-  //             expenses: this.totalExpenses(),
-  //             updatedExpense: response.data,
-  //           });
-  //           this.toastr.success("Expense Updated successfully", "Success");
-  //         },
-  //       });
-  //   });
-  // }
+    if (isExpense) {
+      // Open a dialog to allow the user to update the expense. Pass the current expense data.
+      const dialogRef = this.dialog.open(GroupsExpenseComponent, {
+        data: [
+          "Update Expense",
+          expense,
+        ],
+        enterAnimationDuration: "200ms",
+        exitAnimationDuration: "200ms",
+      });
+      dialogRef.afterClosed().subscribe((data) => {
+        if (!data) {
+          return;
+        }
+        const result = data.formData;
+  
+        // Appending the original expense ID to the form data
+        result.append("group_expense_id", expense.group_expense_id);
+  
+        // Call the service to update the expense on the server
+        this.groupsService
+          .updateExpense(
+            this.selectedGroup()!.group_id,
+            result,
+          )
+          .subscribe({
+            next: (response: GroupExpenseResponse) => {
+              const expenses = this.totalExpenses();
+              const updatedExpenses = expenses.map((expenseData) => {
+                if (this.isGroupExpenseData(expenseData)) {
+                  return expenseData.group_expense_id === expense.group_expense_id
+                    ? response.data.expense
+                    : expenseData;
+                }
+                return expenseData.group_settlement_id === expense.group_expense_id
+                  ? response.data.expense
+                  : expenseData;
+              });
+              this.totalExpenses.set(updatedExpenses);
+              this.toastr.success("Expense Updated successfully", "Success");
+            },
+          });
+      });
+    }
+  }
 
   /**
    * Generates a PDF report of all expenses and settlements, formatted into a table with relevant details.
@@ -321,7 +363,9 @@ export class ViewGroupExpensesComponent implements OnInit {
   }
 
   // Type guard to differentiate between GroupExpenseData and GroupSettlementData
-  isGroupExpenseData(expense: GroupExpenseData | GroupSettlementData): expense is GroupExpenseData {
+  isGroupExpenseData(
+    expense: GroupExpenseData | GroupSettlementData,
+  ): expense is GroupExpenseData {
     return (expense as GroupExpenseData).group_expense_id !== undefined;
   }
 }

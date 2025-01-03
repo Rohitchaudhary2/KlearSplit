@@ -30,17 +30,39 @@ export class GroupsSplitTypeComponent implements OnInit {
   calculatedShares: Record<string, number> = {};
   remainingTotal: number = this.totalAmount;
 
+  unequalShares: Record<string, number> = {}; // To store unequal split type shares
+  percentageShares: Record<string, number> = {}; // To store percentage split type shares
+
   validationError = "";
 
   ngOnInit(): void {
     this.dialogRef.updateSize("25%");
-    this.initializeShares();
-    this.setActive("EQUAL");
+
+    // Check if splitState is passed, and initialize the dialog state
+    if (this.data.splitState) {
+      this.activeItem = this.data.splitState.split_type; // Set the active split type
+      this.selectedParticipants = this.data.splitState.selectedParticipants; // Set the selected participants
+      this.data.splitState.debtors.forEach((debtor: { debtor_id: string, debtor_share: number }) => {
+        this.calculatedShares[debtor.debtor_id] = debtor.debtor_share;
+      }); // Set the calculated shares
+      this.calculatedShares[this.data.splitState.payerId] = this.data.splitState.payerShare;
+      // Based on the active type, store the calculated shares in the appropriate type for submission
+      this.setStoredShare();
+
+      // Re-calculate the shares and remaining total based on the passed state
+      this.updateRemainingTotal();
+    } else {
+      // Default behavior if no previous state is provided
+      this.initializeShares();
+      this.setActive("EQUAL");
+    }
   }
 
   initializeShares() {
     this.participants.forEach((participant) => {
       this.calculatedShares[participant.group_membership_id] = 0;
+      this.unequalShares[participant.group_membership_id] = 0; // Initialize for UNEQUAL
+      this.percentageShares[participant.group_membership_id] = 0; // Initialize for PERCENTAGE
     });
     this.updateRemainingTotal();
   }
@@ -56,26 +78,51 @@ export class GroupsSplitTypeComponent implements OnInit {
   }
 
   setActive(item: "EQUAL" | "UNEQUAL" | "PERCENTAGE") {
+    const wasActiveItem = this.activeItem;
     this.activeItem = item;
-    if (item === "EQUAL") {
-      const share =
-        this.totalAmount / (this.selectedParticipants.length || 1);
-      this.selectedParticipants.forEach(
-        (participant) =>
-          (this.calculatedShares[participant.group_membership_id] = share)
-      );
-    } else {
-      this.participants.forEach((participant) => {
-        this.calculatedShares[participant.group_membership_id] = 0;
-      });
+
+    switch (item) {
+      case "EQUAL": {
+        const equalShare = this.totalAmount / (this.selectedParticipants.length || 1);
+        this.selectedParticipants.forEach(
+          (participant) => (this.calculatedShares[participant.group_membership_id] = equalShare)
+        );
+        break;
+      }
+      case "UNEQUAL":
+        if (wasActiveItem === "EQUAL" || Object.values(this.unequalShares).some((value) => value !== 0)) {
+          // If switching to UNEQUAL, retain previous values
+          this.selectedParticipants.forEach((participant) => {
+            this.calculatedShares[participant.group_membership_id] = this.unequalShares[participant.group_membership_id] || 0;
+          });
+        } else {
+          // Reset shares for first-time visit to UNEQUAL
+          this.participants.forEach((participant) => {
+            this.calculatedShares[participant.group_membership_id] = 0;
+          });
+        }
+        break;
+
+      case "PERCENTAGE":
+        if (wasActiveItem === "EQUAL" || Object.values(this.percentageShares).some((value) => value !== 0)) {
+          // If switching to PERCENTAGE, retain previous values
+          this.selectedParticipants.forEach((participant) => {
+            this.calculatedShares[participant.group_membership_id] = this.percentageShares[participant.group_membership_id] || 0;
+          });
+        } else {
+          // Reset shares for first-time visit to PERCENTAGE
+          this.participants.forEach((participant) => {
+            this.calculatedShares[participant.group_membership_id] = 0;
+          });
+        }
+        break;
     }
+
     this.updateRemainingTotal();
   }
 
   updateTotal() {
     this.updateRemainingTotal();
-
-    // If any calculated share is negative, set the validation flag
     this.checkForNegativeValues();
   }
 
@@ -89,6 +136,8 @@ export class GroupsSplitTypeComponent implements OnInit {
     }
 
     this.calculatedShares[groupMembershipId] = value;
+    // Based on the active type, store the calculated shares in the appropriate type for submission
+    this.setStoredShare();
     this.updateTotal();
   }
 
@@ -114,13 +163,14 @@ export class GroupsSplitTypeComponent implements OnInit {
 
   sendSplitType() {
     const debtors = this.selectedParticipants.map((participant) => ({
-      debtor_id: participant.group_membership_id, // Assuming this is the unique identifier for a participant
-      debtor_share: this.calculatedShares[participant.group_membership_id] || 0, // Use the calculated share or default to 0
+      debtor_id: participant.group_membership_id,
+      debtor_share: this.calculatedShares[participant.group_membership_id] || 0,
     })).filter((debtor) => debtor.debtor_share !== 0);
+
     this.dialogRef.close({
       split_type: this.activeItem,
       debtors,
-      selectedParticipants: this.selectedParticipants
+      selectedParticipants: this.selectedParticipants,
     });
   }
 
@@ -129,7 +179,7 @@ export class GroupsSplitTypeComponent implements OnInit {
       (acc, val) => acc + (val || 0),
       0
     );
-  
+
     switch (this.activeItem) {
       case "UNEQUAL":
         return total === this.totalAmount;
@@ -140,9 +190,17 @@ export class GroupsSplitTypeComponent implements OnInit {
         return true;
     }
   }
-  
+
+  setStoredShare() {
+    if (this.activeItem === "UNEQUAL") {
+      this.unequalShares = { ...this.calculatedShares };
+    } else if (this.activeItem === "PERCENTAGE") {
+      this.percentageShares = { ...this.calculatedShares };
+    }
+  }
 
   onCancel() {
     this.dialogRef.close(null);
   }
 }
+

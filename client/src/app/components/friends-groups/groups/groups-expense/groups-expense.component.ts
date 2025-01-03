@@ -19,6 +19,7 @@ import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confir
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
 import { ExpenseFormComponent } from "../../shared/expense-form/expense-form.component";
 import { GroupMemberData } from "../groups.model";
+import { GroupsService } from "../groups.service";
 import { GroupsPayerComponent } from "./groups-payer/groups-payer.component";
 import { GroupsSplitTypeComponent } from "./groups-split-type/groups-split-type.component";
 
@@ -40,6 +41,7 @@ export class GroupsExpenseComponent implements OnInit {
   private readonly formErrorMessages = inject(FormErrorMessageService);
   private readonly dialogRef = inject(MatDialogRef<GroupsExpenseComponent>);
   private readonly dialog = inject(MatDialog);
+  private readonly groupsService = inject(GroupsService);
   data = inject(MAT_DIALOG_DATA);
   participants!: GroupMemberData[];
   selectedParticipants!: GroupMemberData[];
@@ -47,6 +49,9 @@ export class GroupsExpenseComponent implements OnInit {
   splitType = "EQUAL";
   payer_share!: number;
   debtors!: { debtor_id: string, debtor_share: number }[];
+  currentMember = this.groupsService.currentMember;
+  selectedGroup = this.groupsService.selectedGroup;
+  groupMembers = this.groupsService.groupMembers;
 
   /**
    * Constructor to update the expense form and set up participants based on the type of data passed.
@@ -54,13 +59,34 @@ export class GroupsExpenseComponent implements OnInit {
    * for each participant based on the split type (UNEQUAL or PERCENT).
    */
   constructor() {
-    // Check if the first element of `data` is 'Add Expense', indicating this is a new expense.
-    // If 'Add Expense', participants are the first and second items from `data` (user and their friend)
-    this.participants = this.data[3];
+    this.participants = this.groupMembers().filter((participant) =>
+      participant.deletedAt === null
+    );
     this.selectedParticipants = [ ...this.participants ];
-    this.form.patchValue({
-      payer_id: this.data[1].group_membership_id,
-    });
+    // Check if the first element of `data` is 'Add Expense', indicating this is a new expense.
+    if (this.data[0] === "Add Expense") {
+      // If 'Add Expense', participants are the fourth item from `data`.
+      this.form.patchValue({
+        payer_id: this.currentMember()!.group_membership_id,
+      });
+    } else {
+      // Otherwise, it's an existing expense that is being edited
+      const expenseToBeUpdated = this.data[1];
+      this.splitType =
+        expenseToBeUpdated.split_type !== "PERCENTAGE"
+          ? expenseToBeUpdated.split_type
+          : "PERCENT";
+
+      // Update the form values with the expense data and the calculated shares
+      this.form.patchValue({
+        expense_name: expenseToBeUpdated.expense_name,
+        total_amount: expenseToBeUpdated.total_amount,
+        description: expenseToBeUpdated.description ?? "",
+        payer_id: expenseToBeUpdated.payer_id,
+        split_type: expenseToBeUpdated.split_type,
+        receipt: expenseToBeUpdated.receipt ?? "",
+      });
+    }
   }
 
   // Create a new instance of FormGroup with the defined controls for the form
@@ -169,7 +195,7 @@ export class GroupsExpenseComponent implements OnInit {
    */
   getPayerName(): string {
     const id = this.form.value.payer_id;
-    if (id === this.data[1].group_membership_id) {
+    if (id === this.currentMember()!.group_membership_id) {
       return "you";
     } else {
       const payer = this.participants.find((participant) => id === participant.group_membership_id);
@@ -205,7 +231,7 @@ export class GroupsExpenseComponent implements OnInit {
   /**
    * Opens the dialog for selecting the split type and updating the participant shares.
    *
-   * This method gathers the necessary data from the form, passes it to the `SplitTypeComponent`,
+   * This method gathers the necessary data from the form, passes it to the `GroupSplitTypeComponent`,
    * and then updates the form values based on the result from the dialog.
    */
   openSplitTypeDialog(): void {
@@ -214,12 +240,19 @@ export class GroupsExpenseComponent implements OnInit {
       total_amount: this.form.value.total_amount,
       split_type: this.form.value.split_type,
     };
+    const splitState = {
+      split_type: this.form.value.split_type,
+      selectedParticipants: this.selectedParticipants, // Already populated from the previous split dialog
+      debtors: this.debtors, // Shares for the participants
+      payerId: this.form.value.payer_id,
+      payerShare: this.payer_share,
+    };
 
     // Open the SplitType dialog and pass the participants and expense data to it
     const dialogRef = this.dialog.open(GroupsSplitTypeComponent, {
       panelClass: "second-dialog",
       width: "30%",
-      data: { participants: this.participants, totalAmount: expenseData },
+      data: { participants: this.participants, totalAmount: expenseData, splitState },
       backdropClass: "dialog-bg-trans",
       position: {
         right: "7%",

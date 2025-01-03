@@ -394,17 +394,30 @@ export class GroupsService {
   }
 
   /**
-   * Update an existing expense or settlement in the group.
+   * Update an existing expense in the group.
    *
    * @param groupId - The ID of the group.
-   * @param isExpense - Boolean to check whether the entity being updated is expense or settlement (expense if true).
-   * @param data - Expense or Settlement data to be updated.
-   * @returns - An observable with the response after updating the expense or settlement.
+   * @param data - Expense data to be updated.
+   * @returns - An observable with the response after updating the expense.
    */
-  updateExpenseAndSettlement(groupId: string, isExpense: boolean, data: GroupExpenseInput | GroupSettlementInput | FormData) {
-    const url = isExpense ? API_URLS.updateGroupExpense : API_URLS.updateGroupSettlement;
-    return this.httpClient.patch(
-      `${url}/${groupId}`,
+  updateExpense(groupId: string, data: GroupExpenseInput | FormData) {
+    return this.httpClient.patch<GroupExpenseResponse>(
+      `${API_URLS.updateGroupExpense}/${groupId}`,
+      data,
+      { withCredentials: true },
+    );
+  }
+
+  /**
+   * Update an existing settlement in the group.
+   *
+   * @param groupId - The ID of the group.
+   * @param data - Settlement data to be updated.
+   * @returns - An observable with the response after updating the settlement.
+   */
+  updateSettlement(groupId: string, data: GroupSettlementInput) {
+    return this.httpClient.patch<GroupSettlementResponse>(
+      `${API_URLS.updateGroupSettlement}/${groupId}`,
       data,
       { withCredentials: true },
     );

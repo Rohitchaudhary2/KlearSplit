@@ -499,7 +499,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
    */
   openAddExpenseDialog() {
     const dialogRef = this.dialog.open(GroupsExpenseComponent, {
-      data: [ "Add Expense", this.currentMember(), this.selectedGroup(), this.groupMembers() ],
+      data: [ "Add Expense" ],
       enterAnimationDuration: "200ms",
       exitAnimationDuration: "200ms",
     });

@@ -7,12 +7,14 @@ import {
   HostListener,
   inject,
   OnDestroy,
+  OnInit,
   signal,
   viewChild,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { DialogPosition, MatDialog } from "@angular/material/dialog";
 import { MatIconModule } from "@angular/material/icon";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
@@ -49,10 +51,13 @@ import { SocketService } from "./socket.service";
   templateUrl: "./friends.component.html",
   styleUrl: "./friends.component.css",
 })
-export class FriendsComponent implements OnDestroy, AfterViewInit {
+export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
   // Reference to the message container element, accessed via ViewChild
   messageContainer = viewChild<ElementRef>("messageContainer");
+  friendListComponent = viewChild(FriendsListComponent);
   private readonly cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
+  private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
   // Injecting services needed by the component
   private readonly toastr = inject(ToastrService);
   private readonly friendsService = inject(FriendsService);
@@ -104,6 +109,39 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
   errorNumber = 0;
 
   addExpenseLoader = false;
+
+  removeQueryParams() {
+    const queryParams = this.activatedRoute.snapshot.queryParams;
+
+    if (Object.keys(queryParams).length === 0) {
+      return;
+    }
+
+    const selectedUser = this.friendListComponent()!.getSelectedFriend(queryParams["id"]);
+
+    if(!selectedUser) {
+      this.toastr.error("Wrong conversation Id", "Error");
+    }
+
+    this.onSelectUser(selectedUser);
+    switch(queryParams["success"]) {
+      case "true":
+        this.toastr.success("Payment Successful", "Success");
+        break;
+      case "false":
+        this.toastr.error("Payment Unsuccessful", "Error");
+    }
+    // If there are query parameters, navigate without them
+    this.router.navigate([], {
+      queryParams: {},
+    });
+  }
+
+  async ngOnInit() {
+    await this.friendsService.getFriendRequests();
+    await this.friendsService.getAcceptedFriends();
+    this.removeQueryParams();
+  }
 
   /**
    * This lifecycle hook is triggered after the view has been initialized.
@@ -490,6 +528,15 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     this.combinedView.set(updatedCombinedView);
   }
 
+  payerName(payerId: string, userId: string) {
+    if (payerId === userId) {
+      return this.user_name;
+    }
+    return this.commonService.getFullNameAndImage(
+      this.selectedUser()?.friend,
+    ).fullName;
+  }
+
   /**
    * Handles the settlement process between the current user and the selected user.
    * If there is a balance amount to be settled, this function opens a dialog for the user to add the settlement.
@@ -507,14 +554,31 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
     // Determine whether the user is the payer
     const isUserPayer = parseFloat(this.selectedUser()!.balance_amount) > 0;
 
-    // Assign payer and debtor details using destructuring
-    const { fullName: payerName, imageUrl: payerImage } = isUserPayer
-      ? this.commonService.getFullNameAndImage(this.user) // User is the payer
-      : this.commonService.getFullNameAndImage(this.selectedUser()?.friend); // Friend is the payer
+    let payerName, payerImage, debtorName, debtorImage, payerId, debtorId;
 
-    const { fullName: debtorName, imageUrl: debtorImage } = isUserPayer
-      ? this.commonService.getFullNameAndImage(this.selectedUser()?.friend) // Friend is the debtor
-      : this.commonService.getFullNameAndImage(this.user); // User is the debtor
+    switch(isUserPayer) {
+      case true: {
+        const { fullName: payer, imageUrl: payerImg } = this.commonService.getFullNameAndImage(this.user);
+        const { fullName: debtor, imageUrl: debtorImg } = this.commonService.getFullNameAndImage(this.selectedUser()?.friend);
+        payerName = payer;
+        debtorName = debtor;
+        payerImage = payerImg;
+        debtorImage = debtorImg;
+        payerId = this.user!.user_id;
+        debtorId = this.selectedUser()?.friend.user_id;
+        break;
+      }
+      case false: {
+        const { fullName: payer, imageUrl: payerImg } = this.commonService.getFullNameAndImage(this.selectedUser()?.friend);
+        const { fullName: debtor, imageUrl: debtorImg } = this.commonService.getFullNameAndImage(this.user);
+        payerName = payer;
+        debtorName = debtor;
+        payerImage = payerImg;
+        debtorImage = debtorImg;
+        payerId = this.user!.user_id;
+        debtorId = this.selectedUser()?.friend.user_id;
+      }
+    }
 
     // Open a dialog for the user for the settlement
     const dialogRef = this.dialog.open(FriendsSettlementComponent, {
@@ -524,6 +588,9 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         totalAmount,
         debtorImage,
         payerImage,
+        id: this.selectedUser()?.conversation_id,
+        payerId,
+        debtorId,
       },
       enterAnimationDuration: "200ms",
       exitAnimationDuration: "200ms",
@@ -536,13 +603,7 @@ export class FriendsComponent implements OnDestroy, AfterViewInit {
         .addExpense(this.selectedUser()!.conversation_id, result)
         .subscribe({
           next: (response: ExpenseResponse) => {
-            if (response.data.payer_id === this.user?.user_id) {
-              response.data.payer = this.user_name;
-            } else {
-              response.data.payer = this.commonService.getFullNameAndImage(
-                this.selectedUser()?.friend,
-              ).fullName;
-            }
+            response.data.payer = this.payerName(response.data.payer_id, this.user!.user_id);
             this.expenses.set([ ...this.expenses(), response.data ]);
             const combinedData = [
               ...this.combinedView(),

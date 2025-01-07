@@ -1,0 +1,136 @@
+import paypal from "paypal-rest-sdk";
+import logger from "../utils/logger.js";
+import FriendService from "../friends/friendService.js";
+import GroupService from "./../groups/groupService.js";
+import PaymentDb from "./paymentDb.js";
+
+// PayPal Configuration
+paypal.configure({
+  "mode": "sandbox", // 'sandbox' or 'live'
+  "client_id": process.env.PAYPAL_CLIENT_ID,
+  "client_secret": process.env.PAYPAL_SECRET
+});
+
+class PaymentService {
+  static createPayment = async(data, userId) => {
+    const { amount, type, id, payerId, debtorId } = data;
+
+    // Create payment JSON
+    const paymentJson = {
+      "intent": "sale",
+      "payer": {
+        "payment_method": "paypal"
+      },
+      "transactions": [ {
+        "amount": {
+          "total": amount,
+          "currency": "USD"
+        },
+        "payee": {
+          "email": "sb-w3pkh35878679@personal.example.com" // Receiver's PayPal email
+        },
+        "description": "Settlement Testing"
+      } ],
+      "redirect_urls": {
+        "return_url": `http://localhost:3000/api/payments/execute-payment?type=${type}&id=${id}&userId=${userId}&success=true`,
+        "cancel_url": `http://localhost:3000/api/payments/execute-payment?type=${type}&id=${id}&success=false`
+      }
+    };
+
+    // Wrap PayPal's payment.create in a Promise
+    const createPayment = async() => {
+      return new Promise((resolve, reject) => {
+        paypal.payment.create(paymentJson, (error, payment) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(payment);
+          }
+        });
+      });
+    };
+
+    // Use await to handle the Promise returned by createPayment
+    const payment = await createPayment();
+
+    await PaymentDb.createPayment({ "payment_id": payment.id, "payment_method": payment.payer.payment_method, "amount": amount, "payer_id": payerId, "payee_id": debtorId });
+    
+    // Find approval URL for the user to approve the payment
+    const approvalUrl = payment.links.find((link) => link.rel === "approval_url").href;
+
+    return approvalUrl;
+  };
+
+  static async executePaypalPayment(paymentId, paypalPayerId) {
+    return new Promise((resolve, reject) => {
+      paypal.payment.execute(paymentId, paypalPayerId, (error, payment) => {
+        if (error) {
+          reject(error); // Reject on error
+        } else {
+          resolve(payment); // Resolve on success
+        }
+      });
+    });
+  }
+
+  static executePayment = async(req) => {
+    const { type, id, success, paymentId, PayerID, userId } = req.query;
+
+    if (success === "false") {
+      return `http://localhost:4200/${type}?id=${id}&success=false`;
+    }
+
+    const payment = await PaymentDb.getPayment(paymentId);
+
+    // const paymentId = req.query.paymentId; // from PayPal URL
+    const paypalPayerId = { "payer_id": PayerID }; // from PayPal URL
+
+    const { amount, "payer_id": payerId, "payee_id": debtorId } = payment;
+
+    try {
+      // Await the PayPal execution
+      const paymentDetails = await this.executePaypalPayment(paymentId, paypalPayerId);
+  
+      // After payment succeeds, handle type-based logic
+      switch (type) {
+        case "friends": {
+          // Await the friend expense addition
+          const settlement = await FriendService.addExpense({ "total_amount": amount, "split_type": "SETTLEMENT" }, id);
+          
+          Object.assign(payment, { "transaction_id": paymentDetails.transactions[ 0 ].related_resources[ 0 ].sale.id, "payment_status": "COMPLETED", "friend_settlement_id": settlement.friend_expense_id, "paypal_payer_id": PayerID });
+
+          await payment.save();
+          break;
+        }
+        case "groups": {
+          // Await the group settlement addition
+          const settlement = await GroupService.addSettlement({ "payer_id": payerId, "debtor_id": debtorId, "settlement_amount": amount }, id, userId);
+
+          Object.assign(payment, { "transaction_id": paymentDetails.transactions[ 0 ].related_resources[ 0 ].sale.id, "payment_status": "COMPLETED", "group_settlement_id": settlement.group_settlement_id, "paypal_payer_id": PayerID });
+
+          await payment.save();
+          break;
+        }
+        default:
+          // Return failure URL if type is unknown
+          return `http://localhost:4200/${type}?id=${id}&success=false`;
+      }
+  
+      // Return success URL once all operations are completed
+      return `http://localhost:4200/${type}?id=${id}&success=true`;
+  
+    } catch (error) {
+      // If there's an error, return a failure URL with success=false
+      logger.log({
+        "level": "error",
+        "statusCode": error.statusCode || 500,
+        "message": error.message || "Error while executing payment",
+        "stack": error.stack || "No stack trace available"
+      });
+      return `http://localhost:4200/${type}?id=${id}&success=false`;
+    }
+  };
+  
+}
+
+export default PaymentService;

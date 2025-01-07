@@ -8,6 +8,7 @@ import { FriendsComponent } from "./components/friends-groups/friends/friends.co
 import { GroupsComponent } from "./components/friends-groups/groups/groups.component";
 import { GroupsDetailsComponent } from "./components/friends-groups/groups/groups-details/groups-details.component";
 import { HomeComponent } from "./components/home/home.component";
+// import { ProfileComponent } from "./components/profile/profile.component";
 import { GuestGuard } from "./components/shared/guest.gaurd";
 
 export const routes: Routes = [
@@ -46,4 +47,9 @@ export const routes: Routes = [
     component: GroupsDetailsComponent,
     canActivate: [ AuthGuard ],
   },
+  // {
+  //   path: "profile",
+  //   component: ProfileComponent,
+  //   canActivate: [ AuthGuard ],
+  // }
 ];

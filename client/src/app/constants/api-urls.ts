@@ -41,4 +41,5 @@ export const API_URLS = {
   deleteGroupSettlement: `${environment.apiBaseUrl}/groups/deletesettlement`,
   updateGroupExpense: `${environment.apiBaseUrl}/groups/updateexpense`,
   updateGroupSettlement: `${environment.apiBaseUrl}/groups/updatesettlement`,
+  createPayment: `${environment.apiBaseUrl}/payments/create-payment`
 };

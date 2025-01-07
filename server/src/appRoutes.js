@@ -3,6 +3,7 @@ import authRouter from "./api/auth/authRoutes.js";
 import friendRouter from "./api/friends/friendRoutes.js";
 import dashboardRouter from "./api/dashboard/dashboardRoutes.js";
 import groupRouter from "./api/groups/groupRoutes.js";
+import paymentRouter from "./api/payment/paymentRoutes.js";
 
 const routes = (app) => {
   // User-related routes
@@ -19,6 +20,9 @@ const routes = (app) => {
 
   // Group-related routes
   app.use("/api/groups", groupRouter);
+
+  // Payment-related routes
+  app.use("/api/payments", paymentRouter);
 };
 
 export default routes;

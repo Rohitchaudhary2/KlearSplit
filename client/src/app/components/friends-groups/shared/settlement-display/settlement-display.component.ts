@@ -46,4 +46,15 @@ export class SettlementDisplayComponent {
   isCurrentUserDebtor(): boolean {
     return this.settlement()?.debtorId === this.currentUserId();
   }
+
+  getUserName(name: string, role: "payer" | "debtor"): string {
+    // Return "You" if the current user is the payer or debtor, based on the role
+    if (
+      (this.isCurrentUserPayer() && role === "payer") ||
+      (this.isCurrentUserDebtor() && role === "debtor")
+    ) {
+      return "You";
+    }
+    return name; // Otherwise, return the actual name
+  }
 }

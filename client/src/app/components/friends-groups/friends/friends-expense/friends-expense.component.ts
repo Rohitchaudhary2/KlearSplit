@@ -281,7 +281,7 @@ export class FriendsExpenseComponent implements OnInit {
     // Close the dialog and pass the formData and other relevant expense data
     this.dialogRef.close({
       formData: formData,
-      expenseData: { ...this.form.value, debtorId, debtorShare },
+      expenseData: { ...this.form.value, "debtor_id": debtorId, "debtor_share": debtorShare },
     });
   }
 

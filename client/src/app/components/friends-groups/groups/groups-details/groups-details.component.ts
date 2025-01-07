@@ -2,11 +2,13 @@ import { CurrencyPipe, NgClass } from "@angular/common";
 import { ChangeDetectorRef, Component, ElementRef, inject, viewChild } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { MatIconModule } from "@angular/material/icon";
+import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../../auth/auth.service";
 import { AbsoluteValuePipe } from "../../../shared/pipes/absolute-value.pipe";
 import { FriendsGroupsService } from "../../shared/friends-groups.service";
+import { CreateGroupComponent } from "../create-group/create-group.component";
 import { GroupsService } from "../groups.service";
 import { GroupsSettlementComponent } from "../groups-expense/groups-settlement/groups-settlement.component";
 import { GroupsListComponent } from "../groups-list/groups-list.component";
@@ -32,7 +34,9 @@ export class GroupsDetailsComponent {
   private readonly groupsService = inject(GroupsService);
   private readonly commonService = inject(FriendsGroupsService);
   private readonly toastr = inject(ToastrService);
+  private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
+  hoveringImage = false;
 
   // Access signals from the GroupsService
   selectedGroup = this.groupsService.selectedGroup;
@@ -40,6 +44,8 @@ export class GroupsDetailsComponent {
   currentMember = this.groupsService.currentMember;
   expenses = this.groupsService.expenses;
   combinedView = this.groupsService.combinedView;
+  groupInvites = this.groupsService.groupInvites;
+  groups = this.groupsService.groups;
 
   currentUserId = this.authService.currentUser()?.user_id;
 
@@ -130,8 +136,10 @@ export class GroupsDetailsComponent {
           next: (response) => {
             if (response.data.payer_id === this.currentMember()!.group_membership_id) {
               response.data.payer = this.commonService.getFullNameAndImage(this.currentMember());
+              response.data.debtor = this.commonService.getFullNameAndImage(memberToSettle);
             } else {
               response.data.payer = this.commonService.getFullNameAndImage(memberToSettle);
+              response.data.debtor = this.commonService.getFullNameAndImage(this.currentMember());
             }
             this.expenses.set([ ...this.expenses(), response.data ]);
             const combinedData = [
@@ -146,9 +154,90 @@ export class GroupsDetailsComponent {
               parseFloat(response.data.settlement_amount),
               isPayer
             );
+            this.groupInvites().forEach((invite) => {
+              if (invite.group_id === this.selectedGroup()!.group_id) {
+                invite.balance_amount = this.selectedGroup()!.balance_amount;
+              }
+            });
+            this.groups().forEach((group) => {
+              if (group.group_id === this.selectedGroup()!.group_id) {
+                group.balance_amount = this.selectedGroup()!.balance_amount;
+              }
+            });
+            this.groupMembers().forEach((member) => {
+              if (member.group_membership_id === response.data.payer_id) {
+                member.balance_with_user = this.commonService.updateBalance(
+                  member.balance_with_user,
+                  parseFloat(response.data.settlement_amount),
+                  true
+                );
+                member.total_balance = this.commonService.updateBalance(
+                  member.total_balance,
+                  parseFloat(response.data.settlement_amount),
+                  true
+                );
+              }
+              if (member.group_membership_id === response.data.debtor_id) {
+                member.balance_with_user = this.commonService.updateBalance(
+                  member.balance_with_user,
+                  parseFloat(response.data.settlement_amount),
+                  false
+                );
+                member.total_balance = this.commonService.updateBalance(
+                  member.total_balance,
+                  parseFloat(response.data.settlement_amount),
+                  false
+                );
+              }
+            });
+            this.cdr.detectChanges();
             this.toastr.success("Settled up successfully", "Success");
           }
         });
+    });
+  }
+
+  onUpdateGroupDetails() {
+    const dialogRef = this.dialog.open(CreateGroupComponent, {
+      width: "500px",
+      data: "Update Group",
+      enterAnimationDuration: "500ms",
+      exitAnimationDuration: "500ms",
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result) {
+        return;
+      }
+
+      const groupData = result.formData;
+      // Call the createGroup method in the GroupService to send a group invite to the selected users
+      this.groupsService.updateGroup(this.selectedGroup()!.group_id, groupData).subscribe({
+        next: (response) => {
+          const updatedGroup = response.data[1][0];
+          this.toastr.success("Group updated successfully", "Success");
+          this.selectedGroup.update((group) =>
+            ({ ...group,
+              ...updatedGroup,
+              // Explicitly fill in the missing fields with undefined to match the expected type
+              balance_amount: group!.balance_amount,
+              status: group!.status,
+              role: group!.role,
+              has_blocked: group!.has_blocked,
+            })
+          );
+          this.groups().forEach((group) => {
+            if (group.group_id === this.selectedGroup()?.group_id) {
+              Object.assign(group, updatedGroup);
+            }
+          });
+          this.groupInvites().forEach((group) => {
+            if (group.group_id === this.selectedGroup()?.group_id) {
+              Object.assign(group, updatedGroup);
+            }
+          });
+        }
+      });
     });
   }
 }

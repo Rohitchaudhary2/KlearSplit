@@ -30,9 +30,7 @@
       <div>
         <p class="mb-0 text-black">
           {{
-            isCurrentUserPayer()
-              ? "You paid " + debtorName()
-              : payerName() + " paid you"
+            getUserName(payerName()!, "payer") + " paid " + getUserName(debtorName()!, "debtor")
           }} {{ settlement()?.settlement_amount | currency: "INR"}}
         </p>
         @if (settlement()?.description) {

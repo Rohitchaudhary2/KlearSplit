@@ -9,6 +9,7 @@ import { MatTooltipModule } from "@angular/material/tooltip";
 
 import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
+import { GroupsService } from "../groups.service";
 import { SelectMembersDialogComponent } from "./select-members-dialog/select-members-dialog.component";
 
 interface Group {
@@ -34,10 +35,21 @@ export class CreateGroupComponent implements OnInit {
   private readonly dialogRef = inject (MatDialogRef<CreateGroupComponent>);
   private readonly dialog = inject(MatDialog);
   private readonly formErrorMessages = inject(FormErrorMessageService);
+  private readonly groupsService = inject(GroupsService);
   loading = false;
   data = inject(MAT_DIALOG_DATA);
 
   imageName = signal<string>("Upload group profile");
+
+  constructor() {
+    if (this.data === "Update Group") {
+      // Update the form values with the expense data and the calculated shares
+      this.form.patchValue({
+        group_name: this.groupsService.selectedGroup()?.group_name,
+        group_description: this.groupsService.selectedGroup()?.group_description,
+      });
+    }
+  }
 
   form = new FormGroup({
     group_name: new FormControl("", {
@@ -146,45 +158,81 @@ export class CreateGroupComponent implements OnInit {
   }
 
   onSubmit() {
+    // Early return if the form is invalid
     if (!this.form.valid) {
       return;
     }
-
+  
     const formData = new FormData();
-
-    // Remove empty fields from the group object
-    const group = Object.keys(this.form.value).reduce((acc, key) => {
+  
+    // Handle form submission based on 'Update Group' or other type
+    if (this.data === "Update Group") {
+      // Loop through each form control and append the changed values
+      this.appendChangedFormControlsToFormData(formData);
+    } else {
+      // Handle new group or other form submission
+      this.handleGroupSubmission(formData);
+    }
+  
+    // Close the dialog and send the form data
+    this.dialogRef.close({ formData });
+  }
+  
+  private appendChangedFormControlsToFormData(formData: FormData) {
+    Object.keys(this.form.controls).forEach((controlName) => {
+      const control = this.form.get(controlName);
+      if (control?.value && control.value !==
+        this.groupsService.selectedGroup()![controlName as "group_name" | "group_description"]) {
+        // Special handling for 'image' field, which is a File object
+        if (controlName === "image" && control.value instanceof File) {
+          formData.append(controlName, control.value);
+        } else {
+          formData.append(controlName, control.value as string);
+        }
+      }
+    });
+  }
+  
+  private handleGroupSubmission(formData: FormData) {
+    // Construct group data while excluding empty fields
+    const group = this.createGroupData(formData);
+  
+    // Append group data as JSON string
+    formData.append("group", JSON.stringify(group));
+  
+    // Clean up and append membersData
+    const cleanedMembersData = this.createMembersData();
+    formData.append("membersData", JSON.stringify(cleanedMembersData));
+  }
+  
+  private createGroupData(formData: FormData): Partial<Group> {
+    return Object.keys(this.form.value).reduce((acc, key) => {
       const typedKey = key as keyof Group;
       const value = this.form.get(typedKey)?.value;
-      // Handle File type specifically for 'image' field
+  
+      // Special handling for 'image' field
       if (typedKey === "image" && value instanceof File) {
         formData.append("image", value); // Add image as a file
       } else if (value && typeof value === "string") {
-        acc[typedKey] = value; // Assign string type for other fields
+        acc[typedKey] = value; // Only include non-empty string fields
       }
       return acc;
     }, {} as Partial<Group>);
-    
-    formData.append("group", JSON.stringify(group));
-
-    // Process and clean up membersData
-    const cleanedMembersData = Object.keys(this.membersData).reduce((acc, key) => {
+  }
+  
+  private createMembersData(): typeof this.membersData {
+    return Object.keys(this.membersData).reduce((acc, key) => {
       const typedKey = key as keyof typeof this.membersData; // Explicitly cast key
       const value = this.membersData[typedKey];
+      
       // Only include non-empty arrays
       if (Array.isArray(value) && value.length > 0) {
         acc[typedKey] = value;
       }
       return acc;
     }, {} as typeof this.membersData);
-
-    // Append the cleaned membersData as JSON
-    formData.append("membersData", JSON.stringify(cleanedMembersData));
-    // Send data
-    this.dialogRef.close({
-      formData,
-    });
   }
+  
 
   onCancel(): void {
     const confirmationDialogRef = this.dialog.open(

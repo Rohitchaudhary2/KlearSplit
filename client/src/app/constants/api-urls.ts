@@ -28,7 +28,7 @@ export const API_URLS = {
   createGroup: `${environment.apiBaseUrl}/groups/create`,
   getGroups: `${environment.apiBaseUrl}/groups/usergroups`,
   updateGroupMember: `${environment.apiBaseUrl}/groups/updatemember`,
-  getGroup: `${environment.apiBaseUrl}/groups`,
+  group: `${environment.apiBaseUrl}/groups`,
   saveGroupMessages: `${environment.apiBaseUrl}/groups/savemessage`,
   getGroupMessages: `${environment.apiBaseUrl}/groups/getmessages`,
   addGroupMembers: `${environment.apiBaseUrl}/groups/addmembers`,
@@ -37,5 +37,9 @@ export const API_URLS = {
   addGroupSettlements: `${environment.apiBaseUrl}/groups/addsettlement`,
   fetchExpensesSettlements: `${environment.apiBaseUrl}/groups/expensessettlements`,
   fetchGroupCombined: `${environment.apiBaseUrl}/groups/messagesexpensessettlements`,
+  deleteGroupExpense: `${environment.apiBaseUrl}/groups/deleteexpense`,
+  deleteGroupSettlement: `${environment.apiBaseUrl}/groups/deletesettlement`,
+  updateGroupExpense: `${environment.apiBaseUrl}/groups/updateexpense`,
+  updateGroupSettlement: `${environment.apiBaseUrl}/groups/updatesettlement`,
   createPayment: `${environment.apiBaseUrl}/payments/create-payment`
 };

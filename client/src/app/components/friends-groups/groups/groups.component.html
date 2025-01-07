@@ -9,7 +9,7 @@
   <!-- chatbox -->
   <div
     class="col-md-8 ps-md-5 d-md-block"
-    [ngClass]="{ 'd-none': !selectedGroup }"
+    [ngClass]="{ 'd-none': !selectedGroup() }"
     style="flex: 1 1 0"
   >
     <div
@@ -107,6 +107,11 @@
                 </button>
               </li>
               <li>
+                <button class="dropdown-item" (click)="viewExpense()">
+                  View Expenses
+                </button>
+              </li>
+              <li>
                 <button class="dropdown-item" (click)="onBlockGroup()">
                   {{ selectedGroup()?.has_blocked ? "Unblock" : "Block" }} Group
                 </button>
@@ -190,7 +195,7 @@
                 }
               } @else {
                 @for (item of combinedView(); track $index) {
-                  @if (isCombinedMessage(item)) {
+                  @if (groupsService.isCombinedMessage(item)) {
                     <app-message
                       [message]="{
                         sender_id: item.sender_id,
@@ -204,7 +209,7 @@
                       [currentUserImageUrl]="user?.image_url"
                     >
                     </app-message>
-                  } @else if (isCombinedExpense(item)) {
+                  } @else if (groupsService.isCombinedExpense(item)) {
                     <app-expense
                       [expense]="{
                         expense_id: item.group_expense_id,
@@ -221,7 +226,7 @@
                       [currentUserImageUrl]="currentMember()?.image_url"
                     >
                     </app-expense>
-                  } @else if (isCombinedSettlement(item)) {
+                  } @else if (groupsService.isCombinedSettlement(item)) {
                     <app-settlement-display
                       [settlement]="{
                         settlement_id: item.group_settlement_id,

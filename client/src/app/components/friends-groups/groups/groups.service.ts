@@ -25,6 +25,7 @@ import {
   GroupSettlementResponse,
   MembersData,
   SearchedUserResponse,
+  UpdateGroupResponse,
 } from "./groups.model";
 
 @Injectable({
@@ -45,6 +46,42 @@ export class GroupsService {
   expenses = signal<(GroupExpenseData | GroupSettlementData)[]>([]);
   // Signal to hold combined view data (messages and expenses)
   combinedView = signal<(CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement)[]>([]);
+  groups = signal<GroupData[]>([]);
+  groupInvites = signal<GroupData[]>([]);
+
+  /**
+   * Type guard to check if an item is of type CombinedGroupExpense.
+   *
+   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
+   * @returns True if the item is a CombinedGroupExpense, false otherwise.
+   */
+  isCombinedExpense(
+    item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement,
+  ): item is CombinedGroupExpense {
+    return (item as CombinedGroupExpense).group_expense_id !== undefined;
+  }
+
+  /**
+   * Type guard to check if an item is of type CombinedGroupSettlement.
+   *
+   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
+   * @returns True if the item is a CombinedGroupSettlement, false otherwise.
+   */
+  isCombinedSettlement(
+    item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement,
+  ): item is CombinedGroupSettlement {
+    return (item as CombinedGroupSettlement).group_settlement_id !== undefined;
+  }
+
+  /**
+   * Type guard to check if an item is of type CombinedGroupMessage.
+   *
+   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
+   * @returns True if the item is a CombinedGroupMessage, false otherwise.
+   */
+  isCombinedMessage(item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement): item is CombinedGroupMessage {
+    return (item as CombinedGroupMessage).sender_id !== undefined;
+  }
 
   /**
    * Searching users based on the letters typed.
@@ -128,7 +165,22 @@ export class GroupsService {
    */
   fetchGroupMembers(groupId: string) {
     return this.httpClient.get<GroupResponse>(
-      `${API_URLS.getGroup}/${groupId}`,
+      `${API_URLS.group}/${groupId}`,
+      { withCredentials: true },
+    );
+  }
+
+  /**
+   * This method calls the patch API to update the group details.
+   *
+   * @param groupId - The ID of the group to be updated.
+   * @param groupData - The groupData object with the fields that need to be updated.
+   * @returns - An observable with the response data of the updated group.
+   */
+  updateGroup(groupId: string, groupData: string) {
+    return this.httpClient.patch<UpdateGroupResponse>(
+      `${API_URLS.group}/${groupId}`,
+      groupData,
       { withCredentials: true },
     );
   }
@@ -191,6 +243,17 @@ export class GroupsService {
     );
   }
 
+  /**
+   * This method calls the back-end API to add settlement in a group with a particular group member.
+   *
+   * @param groupId Id of the group in which settlement is to be done.
+   * @param settlementData The input data required for settlement.
+   * @param settlementData.payer_id The id of the user who is paying the settlement.
+   * @param settlementData.debtor_id The id of the user who is getting paid the settlement.
+   * @param settlementData.settlement_amount The amount of settlement.
+   * @param settlementData.description Optional field to describe the settlement.
+   * @returns An observable with the response data after settlement.
+   */
   addSettlements(groupId: string, settlementData: GroupSettlementInput) {
     return this.httpClient.post<GroupSettlementResponse>(
       `${API_URLS.addGroupSettlements}/${groupId}`,
@@ -200,16 +263,16 @@ export class GroupsService {
   }
 
   /**
-   * Fetches messages, expenses, and combined data for a specific conversation.
-   * It handles loading conditions based on flags: loadMessages, loadExpenses, loadCombined.
+   * Fetches messages, expenses, and combined data for a specific group.
+   * It handles loading conditions based on flags: loadMessages, loadExpenses.
    *
-   * @param conversationId - The ID of the conversation to fetch data for.
+   * @param groupId - The ID of the group to fetch data for.
    * @param loadMessages - Flag to determine if messages are to be loaded.
    * @param loadExpenses - Flag to determine if expenses are to be loaded.
-   * @param pageMessage - Page number for message data.
-   * @param pageExpense - Page number for expense data.
-   * @param pageCombined - Page number for combined data.
    * @param pageSize - Page size for message, expense, and combined data.
+   * @param timestampMessage - Timestamp for messages.
+   * @param timestampExpense - Timestamp for expenses and settlement data.
+   * @param timestampCombined - Timestamp for combined messages and expenses and settlement data.
    * @returns An observable with the data for messages, expenses, and combined.
    */
   fetchMessagesAndExpenses(
@@ -288,5 +351,75 @@ export class GroupsService {
           return { messages: [], expenses: [], combined: combined.data };
         }),
       );
+  }
+
+  /**
+   * Fetch all expenses and settlements for a given group.
+   *
+   * @param groupId - The ID of the group.
+   * @returns An observable with the list of all expenses and settlements.
+   */
+  fetchAllExpensesAndSettlements(groupId: string) {
+    const params = new HttpParams()
+      .set("fetchAll", true)
+      .set("timestamp", new Date().toISOString());
+  
+    return this.httpClient
+      .get<FetchExpenseResponse>(`${API_URLS.fetchExpensesSettlements}/${groupId}`, {
+        params,
+        withCredentials: true,
+      })
+      .pipe(
+        map((expenses) => {
+          return expenses.data;
+        }),
+      );
+  }
+
+  /**
+   * Delete an expense or settlement from the group.
+   *
+   * @param groupId - The ID of the group.
+   * @param isExpense - Boolean to check whether the entity being deleted is expense or settlement (expense if true).
+   * @param id - The ID of either expense or settlement.
+   * @returns - An observable indicating the success of the operation.
+   */
+  deleteExpenseAndSettlement(groupId: string, isExpense: boolean, id: string) {
+    const url = isExpense ? API_URLS.deleteGroupExpense : API_URLS.deleteGroupSettlement;
+    const body = isExpense ? { group_expense_id: id } : { group_settlement_id: id };
+    return this.httpClient.delete(`${url}/${groupId}`, {
+      body,
+      withCredentials: true,
+    });
+  }
+
+  /**
+   * Update an existing expense in the group.
+   *
+   * @param groupId - The ID of the group.
+   * @param data - Expense data to be updated.
+   * @returns - An observable with the response after updating the expense.
+   */
+  updateExpense(groupId: string, data: GroupExpenseInput | FormData) {
+    return this.httpClient.patch<GroupExpenseResponse>(
+      `${API_URLS.updateGroupExpense}/${groupId}`,
+      data,
+      { withCredentials: true },
+    );
+  }
+
+  /**
+   * Update an existing settlement in the group.
+   *
+   * @param groupId - The ID of the group.
+   * @param data - Settlement data to be updated.
+   * @returns - An observable with the response after updating the settlement.
+   */
+  updateSettlement(groupId: string, data: GroupSettlementInput) {
+    return this.httpClient.patch<GroupSettlementResponse>(
+      `${API_URLS.updateGroupSettlement}/${groupId}`,
+      data,
+      { withCredentials: true },
+    );
   }
 }

@@ -541,7 +541,7 @@ class GroupService {
  *
  * @throws {ErrorHandler} - Throws an error if the group is not found or if any database query fails.
  */
-  static getExpensesSettlements = async(groupId, userId, pageSize, timestamp) => {
+  static getExpensesSettlements = async(groupId, userId, pageSize, timestamp, fetchAll = false) => {
     const group = await GroupDb.getGroupData(groupId);
 
     if (!group) {
@@ -550,8 +550,8 @@ class GroupService {
 
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
     const updatedTimestamp = userMembershipInfo.has_blocked ? userMembershipInfo.updatedAt : timestamp;
-    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, pageSize, updatedTimestamp);
-    const settlements = await GroupDb.getSettlements(groupId, pageSize, updatedTimestamp);
+    const expenses = await GroupDb.getExpenses(groupId, userMembershipInfo.group_membership_id, pageSize, updatedTimestamp, fetchAll);
+    const settlements = await GroupDb.getSettlements(groupId, pageSize, updatedTimestamp, fetchAll);
 
     // Combine and sort the results by creation time
     const expensesAndSettlements = [ ...expenses, ...settlements ];

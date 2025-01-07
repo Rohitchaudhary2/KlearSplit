@@ -41,12 +41,12 @@ export class GroupsListComponent implements OnInit {
 
   // Signals to store and manage the current list of group invites
   // Two signals are made for implementing search functionality.
-  private groupInvites = signal<GroupData[]>([]);
+  private groupInvites = this.groupService.groupInvites;
   invites = signal(this.groupInvites());
 
   // Signals to store and manage the current list of group invites
   // Two signals are made for implementing search functionality.
-  private groups = signal<GroupData[]>([]);
+  private groups = this.groupService.groups;
   groupList = signal(this.groups());
 
   balanceAmount = input<string>();
@@ -94,6 +94,7 @@ export class GroupsListComponent implements OnInit {
   onCreateGroupClick(): void {
     const dialogRef = this.dialog.open(CreateGroupComponent, {
       width: "500px",
+      data: "Create Group",
       enterAnimationDuration: "500ms",
       exitAnimationDuration: "500ms",
     });

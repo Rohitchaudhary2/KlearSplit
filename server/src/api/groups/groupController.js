@@ -38,8 +38,13 @@ class GroupController {
 
   // Controller for updating group
   static updateGroup = asyncHandler(async(req, res) => {
+    if (req.file) {
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/groupProfile/${req.file.filename}`;
+
+      Object.assign(req.body, { "image_url": imageUrl });
+    }
     const group = await GroupService.updateGroup(req.params.group_id, req.body, req.user.user_id);
-  
+
     responseHandler(res, 200, "Group updated successfully", group);
   });
 
@@ -93,8 +98,8 @@ class GroupController {
 
   // Controller retreiving expenses
   static getExpensesSettlements = asyncHandler(async(req, res) => {
-    const { pageSize, timestamp } = req.query;
-    const expensesSettlements = await GroupService.getExpensesSettlements(req.params.group_id, req.user.user_id, pageSize, timestamp);
+    const { pageSize, timestamp, fetchAll } = req.query;
+    const expensesSettlements = await GroupService.getExpensesSettlements(req.params.group_id, req.user.user_id, pageSize, timestamp, fetchAll);
   
     responseHandler(res, 200, "Expenses and Settlements fetched successfully", expensesSettlements);
   });

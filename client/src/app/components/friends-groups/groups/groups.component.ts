@@ -2,7 +2,7 @@ import { NgClass } from "@angular/common";
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, OnInit, signal, ViewChild, viewChild }
   from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { MatDialog } from "@angular/material/dialog";
+import { DialogPosition, MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 
@@ -19,6 +19,7 @@ import {
   CombinedGroupExpense,
   CombinedGroupMessage,
   CombinedGroupSettlement,
+  ExpenseDeletedEvent,
   GroupData,
   GroupExpenseData,
   GroupExpenseResponse,
@@ -28,6 +29,7 @@ import {
 } from "./groups.model";
 import { GroupsService } from "./groups.service";
 import { GroupsExpenseComponent } from "./groups-expense/groups-expense.component";
+import { ViewGroupExpensesComponent } from "./groups-expense/view-group-expenses/view-group-expenses.component";
 import { GroupsListComponent } from "./groups-list/groups-list.component";
 
 @Component({
@@ -53,7 +55,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly toastr = inject(ToastrService);
   private readonly authService = inject(AuthService);
   private readonly socketService = inject(SocketService);
-  private readonly groupsService = inject(GroupsService);
+  readonly groupsService = inject(GroupsService);
   private readonly commonService = inject(FriendsGroupsService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
@@ -140,8 +142,8 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
    * user properly leaves the room and disconnected from the socket.
    */
   ngOnDestroy(): void {
-    if (this.selectedGroup()) {
-      this.socketService.leaveRoom(this.selectedGroup()!.group_id);
+    if (this.groupsService.selectedGroup()) {
+      this.socketService.leaveRoom(this.groupsService.selectedGroup()!.group_id);
       this.socketService.disconnect();
     }
   }
@@ -189,6 +191,9 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.allMessagesLoaded = false;
     this.allExpensesLoaded = false;
     this.allCombinedLoaded = false;
+    this.timestampMessages = undefined;
+    this.timestampExpenses = undefined;
+    this.timestampCombined = undefined;
   }
 
   onSelectGroup(group: GroupData | undefined) {
@@ -196,7 +201,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.selectedGroup()) {
       this.clearSelectedGroupData();
     }
-
+    
     // Set the selected group as the new selected group
     this.selectedGroup.set(group);
 
@@ -223,15 +228,16 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
       const sender = this.commonService.getFullNameAndImage(member);
       
   
-      const messageWithName = {
+      const messageWithNameAndTime = {
         ...message,
         senderName: sender.fullName,
-        senderImage: sender.imageUrl
+        senderImage: sender.imageUrl,
+        createdAt: new Date().toISOString(),
       };
-      this.messages.set([ ...this.messages(), messageWithName ]);
+      this.messages.set([ ...this.messages(), messageWithNameAndTime ]);
       this.combinedView.set([
         ...this.combinedView(),
-        { ...messageWithName, type: "message" },
+        { ...messageWithNameAndTime, type: "message" },
       ]);
       this.cdr.detectChanges();
       this.commonService.scrollToBottom(this.messageContainer()!);
@@ -361,40 +367,6 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Type guard to check if an item is of type CombinedGroupExpense.
-   *
-   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
-   * @returns True if the item is a CombinedGroupExpense, false otherwise.
-   */
-  isCombinedExpense(
-    item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement,
-  ): item is CombinedGroupExpense {
-    return (item as CombinedGroupExpense).group_expense_id !== undefined;
-  }
-
-  /**
-   * Type guard to check if an item is of type CombinedGroupSettlement.
-   *
-   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
-   * @returns True if the item is a CombinedGroupSettlement, false otherwise.
-   */
-  isCombinedSettlement(
-    item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement,
-  ): item is CombinedGroupSettlement {
-    return (item as CombinedGroupSettlement).group_settlement_id !== undefined;
-  }
-
-  /**
-   * Type guard to check if an item is of type CombinedGroupMessage.
-   *
-   * @param item - The item to check. Can be a CombinedGroupMessage, a CombinedGroupExpense or a CombinedGroupSettlement.
-   * @returns True if the item is a CombinedGroupMessage, false otherwise.
-   */
-  isCombinedMessage(item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement): item is CombinedGroupMessage {
-    return (item as CombinedGroupMessage).sender_id !== undefined;
-  }
-
-  /**
    * Type guard to check if an item is of type GroupExpenseData.
    *
    * @param item - The item to check. Can be either a GroupExpenseData, or a GroupSettlementData.
@@ -404,7 +376,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
     return (item as GroupExpenseData).group_expense_id !== undefined;
   }
 
-  private typeHandlers = {
+  private readonly typeHandlers = {
     expense: (item: CombinedGroupExpense) => {
       const payer = this.groupMembers().find((member) => item.payer_id === member.group_membership_id);
       item.payer = this.commonService.getFullNameAndImage(payer);
@@ -456,11 +428,11 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe({
         next: ({ messages, expenses, combined }) => {
           combined.forEach((item) => {
-            if (this.isCombinedExpense(item)) {
+            if (this.groupsService.isCombinedExpense(item)) {
               this.typeHandlers.expense(item);
-            } else if (this.isCombinedMessage(item)) {
+            } else if (this.groupsService.isCombinedMessage(item)) {
               this.typeHandlers.message(item);
-            } else if (this.isCombinedSettlement(item)) {
+            } else if (this.groupsService.isCombinedSettlement(item)) {
               this.typeHandlers.settlement(item);
             }
           });
@@ -469,9 +441,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
               expense.payer = this.commonService.getFullNameAndImage(this.currentMember());;
             } else {
               const payer = this.groupMembers().find((member) => expense.payer_id === member.group_membership_id);
-              expense.payer = this.commonService.getFullNameAndImage(
-                payer
-              );
+              expense.payer = this.commonService.getFullNameAndImage(payer);
             }
             if (!this.isGroupExpense(expense)) {
               const debtor = this.groupMembers().find((member) => expense.debtor_id === member.group_membership_id);
@@ -518,9 +488,9 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
             element!.scrollTop = element!.scrollTop + scrollDiff - 100;
           }
 
-          this.timestampMessages = this.messages()[0].createdAt;
-          this.timestampExpenses = this.expenses()[0].createdAt;
-          this.timestampCombined = this.combinedView()[0].createdAt;
+          this.timestampMessages = this.messages()[0] ? this.messages()[0].createdAt : new Date().toISOString();
+          this.timestampExpenses = this.expenses()[0] ? this.expenses()[0].createdAt : new Date().toISOString();
+          this.timestampCombined = this.combinedView()[0] ? this.combinedView()[0].createdAt : new Date().toISOString();
 
           // Reset loading state to allow future requests
           this.loading = false;
@@ -551,7 +521,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   openAddExpenseDialog() {
     const dialogRef = this.dialog.open(GroupsExpenseComponent, {
-      data: [ "Add Expense", this.currentMember(), this.selectedGroup(), this.groupMembers() ],
+      data: [ "Add Expense" ],
       enterAnimationDuration: "200ms",
       exitAnimationDuration: "200ms",
     });
@@ -634,7 +604,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
             this.expenses.set(currExpenses);
             const expense = [ ...this.combinedView() ]
               .reverse()
-              .find((item) => this.isCombinedExpense(item));
+              .find((item) => this.groupsService.isCombinedExpense(item));
             if (expense) {
               expense.group_expense_id = `error${this.errorNumber}`;
             }
@@ -662,7 +632,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
   //   expense.group_expense_id = `retrying${this.errorNumber}`;
   //   // Update the combined view to reflect the retry state
   //   const combinedExpense = this.combinedView().find(
-  //     (item) => this.isCombinedExpense(item)
+  //     (item) => this.groupsService.isCombinedExpense(item)
   //   );
   //   if (combinedExpense) {
   //     combinedExpense.group_expense_id = `retrying${this.errorNumber}`;
@@ -679,6 +649,72 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
   //     new FormData(),
   //   )
   // }
+
+  /**
+     * Opens a dialog to view expenses for the selected group.
+     *
+     * @returns void
+     * Opens the `ViewGroupExpensesComponent` dialog, passing the the current group.
+     * Subscribes to `expenseDeleted` and `updatedExpense` events from the dialog, and handles the respective updates.
+     */
+  viewExpense() {
+    const dialogPosition: DialogPosition = {
+      top: "5%",
+    };
+    const dialogRef = this.dialog.open(ViewGroupExpensesComponent, {
+      data: [ this.user, this.selectedGroup() ],
+      maxWidth: "91vw",
+      maxHeight: "85vh",
+      height: "85%",
+      width: "100%",
+      position: dialogPosition,
+      enterAnimationDuration: "200ms",
+      exitAnimationDuration: "200ms",
+    });
+    dialogRef.afterClosed().subscribe();
+  }
+
+  /**
+   * Handles the deletion of an expense.
+   * Updates the balance of conversation, and removes the expense from both the expenses list and the combined view.
+   *
+   * @param {ExpenseDeletedEvent} expense - The event data containing the expense details.
+   * @param {string} expense.id - The ID of the expense being deleted.
+   * @param {string} expense.payer_id - The ID of the user who paid the expense.
+   * @param {number} expense.debtor_amount - The amount that the debtor owe.
+   *
+   * @returns void
+   * Updates the balance for the conversation and removes the expense from the list and combined view.
+   */
+  onDeleteExpense({ id, payerId, debtorAmount }: ExpenseDeletedEvent) {
+    const balanceAmount = parseFloat(this.selectedGroup()!.balance_amount);
+    const debtAmount = parseFloat(debtorAmount);
+    this.selectedGroup()!.balance_amount =
+      this.currentMember()?.group_membership_id === payerId
+        ? JSON.stringify(balanceAmount - debtAmount)
+        : JSON.stringify(balanceAmount + debtAmount);
+    const updatedExpenses = this.expenses().filter(
+      (expense: GroupExpenseData | GroupSettlementData) => {
+        if (this.isGroupExpense(expense)) {
+          return expense.group_expense_id !== id;
+        }
+        return expense.group_settlement_id !== id;
+      },
+    );
+    this.expenses.set(updatedExpenses);
+    const updatedCombinedView = this.combinedView().filter(
+      (item: CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement) => {
+        if (this.groupsService.isCombinedExpense(item)) {
+          return item.group_expense_id !== id;
+        } else if (this.groupsService.isCombinedSettlement(item)) {
+          return item.group_settlement_id !== id;
+        }
+        return false;
+      },
+    );
+    this.combinedView.set(updatedCombinedView);
+    this.cdr.detectChanges();
+  }
 
   filterMembers(members: GroupMemberData[]) {
     const filteredMembers = members.map((member) => {

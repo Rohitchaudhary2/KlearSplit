@@ -1,9 +1,9 @@
 import { NgClass } from "@angular/common";
-import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, signal, ViewChild, viewChild }
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, OnInit, signal, ViewChild, viewChild }
   from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { Router } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
@@ -45,7 +45,7 @@ import { GroupsListComponent } from "./groups-list/groups-list.component";
   templateUrl: "./groups.component.html",
   styleUrls: [ "./groups.component.css", "../friends/friends.component.css" ]
 })
-export class GroupsComponent implements AfterViewInit, OnDestroy {
+export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
   // Reference to the message container element, accessed via ViewChild
   messageContainer = viewChild<ElementRef>("messageContainer");
   @ViewChild(GroupsListComponent) groupsListComponent!: GroupsListComponent;
@@ -57,6 +57,7 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
   private readonly commonService = inject(FriendsGroupsService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
+  private readonly activatedRoute = inject(ActivatedRoute);
 
   // Current user data from authService
   user = this.authService.currentUser();
@@ -103,6 +104,27 @@ export class GroupsComponent implements AfterViewInit, OnDestroy {
 
   errorNumber = 0;
   addExpenseLoader = false;
+
+  removeQueryParams() {
+    const queryParams = this.activatedRoute.snapshot.queryParams;
+    this.onSelectGroup(queryParams["id"]);
+    if (queryParams["success"]) {
+      this.toastr.success("Payment Successful", "Success");
+    } else {
+      this.toastr.error("Payment Unsuccessful", "Error");
+    }
+
+    if (Object.keys(queryParams).length > 0) {
+      // If there are query parameters, navigate without them
+      this.router.navigate([], {
+        queryParams: {},
+      });
+    }
+  }
+
+  ngOnInit() {
+    this.removeQueryParams();
+  }
 
   /**
    * This lifecycle hook is triggered after the view has been initialized.

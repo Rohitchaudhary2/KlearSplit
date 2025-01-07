@@ -4,6 +4,10 @@
   [payerImage]="payer_image"
   [debtorImage]="debtor_image"
   [totalAmount]="total_amount"
+  type="friends"
+  [id]="id"
+  [payerId]="payer_id"
+  [debtorId]="debtor_id"
   (submitSettlement)="sendSplitType($event)"
   (cancelSettlement)="onCancel()"
 ></app-settlement>

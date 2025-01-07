@@ -91,6 +91,9 @@ export class GroupsDetailsComponent {
     // Determine whether the currentMember is the payer
     const isPayer = parseFloat(memberToSettle!.balance_with_user) > 0;
 
+    const payerId = isPayer ? this.currentMember()!.group_membership_id : memberToSettle?.group_membership_id;
+    const debtorId = isPayer ? memberToSettle?.group_membership_id : this.currentMember()!.group_membership_id;
+
     // Assign payer and debtor details using destructuring
     const { fullName: payerName, imageUrl: payerImage } = isPayer
       ? this.commonService.getFullNameAndImage(this.currentMember()) // Current member is the payer
@@ -108,6 +111,9 @@ export class GroupsDetailsComponent {
         debtorName,
         debtorImage,
         totalAmount,
+        id: this.selectedGroup()!.group_id,
+        payerId,
+        debtorId
       },
       enterAnimationDuration: "200ms",
       exitAnimationDuration: "200ms",
@@ -116,8 +122,8 @@ export class GroupsDetailsComponent {
       if (!result) {
         return;
       }
-      result.payer_id = isPayer ? this.currentMember()!.group_membership_id : memberToSettle?.group_membership_id;
-      result.debtor_id = isPayer ? memberToSettle?.group_membership_id : this.currentMember()!.group_membership_id;
+      result.payer_id = payerId;
+      result.debtor_id = debtorId;
       this.groupsService
         .addSettlements(this.selectedGroup()!.group_id, result)
         .subscribe({

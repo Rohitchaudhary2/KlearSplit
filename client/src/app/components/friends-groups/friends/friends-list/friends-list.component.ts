@@ -1,10 +1,8 @@
 import { CurrencyPipe, NgClass } from "@angular/common";
-import { HttpParams } from "@angular/common/http";
 import {
   Component,
   inject,
   input,
-  OnInit,
   output,
   signal,
 } from "@angular/core";
@@ -36,7 +34,7 @@ import { FriendsService } from "../friends.service";
   templateUrl: "./friends-list.component.html",
   styleUrl: "../friends.component.css",
 })
-export class FriendsListComponent implements OnInit {
+export class FriendsListComponent {
   // Injecting necessary services and tools to handle dialog, toastr notifications, and fetching data from the friends service.
   private readonly dialog = inject(MatDialog);
   private readonly toastr = inject(ToastrService);
@@ -47,11 +45,11 @@ export class FriendsListComponent implements OnInit {
 
   // Signals to store and manage the current list of friend requests
   // Two signals are made for implementing search functionality.
-  private friendRequests = signal<FriendData[]>([]);
+  friendRequests = this.friendsService.requests;
   requests = signal(this.friendRequests());
 
   // Signals for managing the friend list (accepted friends)
-  private friends = signal<FriendData[]>([]);
+  friends = this.friendsService.friendList;
   friendList = signal(this.friends());
 
   selectedUser = output<FriendData | undefined>();
@@ -59,30 +57,12 @@ export class FriendsListComponent implements OnInit {
 
   balanceAmount = input<string>();
 
-  // Fetch the list of pending friend requests
-  fetchFriendRequests() {
-    const params = new HttpParams().set("status", "PENDING");
-    // API call to back-end to get pending friend requests
-    this.friendsService.getFriends(params).subscribe({
-      next: (response) => {
-        this.friendRequests.set(response.data);
-        this.requests.set(this.friendRequests());
-      },
-    });
+  getRequests() {
+    return this.searchTerm() ? this.requests() : this.friendRequests();
   }
 
-  ngOnInit() {
-    // Call to fetchFriendRequests method to get pending requests on component initialization
-    this.fetchFriendRequests();
-
-    // API call to back-end to get friends with status 'ACCEPTED'
-    const params = new HttpParams().set("status", "ACCEPTED");
-    this.friendsService.getFriends(params).subscribe({
-      next: (response) => {
-        this.friends.set(response.data);
-        this.friendList.set(this.friends());
-      },
-    });
+  getFriends() {
+    return this.searchTerm() ? this.friendList() : this.friends();
   }
 
   /**
@@ -137,7 +117,7 @@ export class FriendsListComponent implements OnInit {
           this.toastr.success("Request Sent Successfully", "Success", {
             timeOut: 3000,
           });
-          this.fetchFriendRequests();
+          // this.fetchFriendRequests();
         },
       });
     });
@@ -147,8 +127,8 @@ export class FriendsListComponent implements OnInit {
    * Accepts or rejects a friend request based on the given status.
    * Updates the UI by moving the accepted request to the friend list and removing it from the pending requests.
    *
-   * @param {string} conversationId - The ID of the conversation associated with the friend request.
-   * @param {string} status - The status of the request, either "ACCEPTED" or "REJECTED".
+   * @param {string} data.id - The ID of the conversation associated with the friend request.
+   * @param {string} data.status - The status of the request, either "ACCEPTED" or "REJECTED".
    * @returns {void} This method doesn't return any value but updates the `requests` and `friendList` signals.
    */
   onAcceptReject(data: {status: string, id: string}): void {
@@ -158,20 +138,6 @@ export class FriendsListComponent implements OnInit {
         this.toastr.success(`Request ${status} Successfully`, "Success", {
           timeOut: 3000,
         });
-        if (status === "ACCEPTED") {
-          // Add the accepted request to the friend list
-          this.friends().unshift({
-            ...this.friendRequests().find(
-              (request) => request.conversation_id === conversationId
-            )!, status: "ACCEPTED"
-          });
-        }
-        // Remove the processed request from the pending requests list
-        this.friendRequests.set(
-          this.friendRequests().filter(
-            (request) => request.conversation_id !== conversationId,
-          ),
-        );
         // Changing the requests and friendList for UI display
         this.onSearchChange(this.searchTerm());
       },
@@ -183,7 +149,7 @@ export class FriendsListComponent implements OnInit {
    * Opens a confirmation dialog and, if confirmed, withdraws the friend request
    * and updates the friend requests list and UI.
    *
-   * @param {string} conversationId - The ID of the conversation associated with the friend request to withdraw.
+   * @param {string} data.id - The ID of the conversation associated with the friend request to withdraw.
    * @returns {void} This method doesn't return any value but updates the UI and triggers side effects.
    */
   onWithdrawRequest(data: {id: string, status: string}): void {
@@ -207,12 +173,6 @@ export class FriendsListComponent implements OnInit {
           this.toastr.success("Request deleted Successfully", "Success", {
             timeOut: 3000,
           });
-          // Update the friend requests list by removing the withdrawn request from the array
-          this.friendRequests.set(
-            this.friendRequests().filter(
-              (request) => request.conversation_id !== conversationId,
-            ),
-          );
           this.onSearchChange(this.searchTerm());
         },
       });
@@ -230,5 +190,13 @@ export class FriendsListComponent implements OnInit {
   onSelectUser(friend: FriendData | undefined): void {
     this.selectedFriend.set(friend);
     this.selectedUser.emit(friend);
+  }
+
+  getSelectedFriend(id: string) {
+    const selectedUser = this.friendRequests().find((request) => request.conversation_id === id);
+    if (selectedUser) {
+      return selectedUser;
+    }
+    return this.friends().find((friend) => friend.conversation_id === id);
   }
 }

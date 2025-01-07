@@ -29,7 +29,7 @@ export class AuthGuard implements CanActivate {
    * - Redirects to login if the user is not authenticated.
    */
   async canActivate(route: ActivatedRouteSnapshot) {
-    if (Object.keys(route.queryParams).length > 0) {
+    if (Object.keys(route.queryParams).length === 1) {
       this.tokenService.setUserId(route.queryParams["id"]);
       this.router.navigate([ "/dashboard" ], {
         queryParams: {},

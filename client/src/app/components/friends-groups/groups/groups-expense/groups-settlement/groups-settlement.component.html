@@ -5,6 +5,9 @@
   [debtorImage]="debtor_image"
   [totalAmount]="total_amount"
   type="groups"
+  [id]="id"
+  [payerId]="payerId"
+  [debtorId]="debtorId"
   (submitSettlement)="sendSplitType($event)"
   (cancelSettlement)="onCancel()"
 ></app-settlement>

@@ -21,7 +21,7 @@ import { FriendsExpenseComponent } from "../friends-expense.component";
 @Component({
   selector: "app-view-expenses",
   standalone: true,
-  imports: [ MatIconModule, MatButtonModule, DatePipe, ExpenseTableComponent ],
+  imports: [ MatIconModule, MatButtonModule, ExpenseTableComponent ],
   templateUrl: "./view-expenses.component.html",
   styleUrl: "./view-expenses.component.css",
   providers: [ DatePipe ],

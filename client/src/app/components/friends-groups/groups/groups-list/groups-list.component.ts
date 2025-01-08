@@ -1,5 +1,5 @@
 import { CurrencyPipe, NgClass } from "@angular/common";
-import { Component, inject, input, OnInit, output, signal } from "@angular/core";
+import { Component, inject, input, output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { MatIconModule } from "@angular/material/icon";
@@ -29,7 +29,7 @@ import { GroupsService } from "../groups.service";
   templateUrl: "./groups-list.component.html",
   styleUrls: [ "./groups-list.component.css", "../../friends/friends.component.css" ]
 })
-export class GroupsListComponent implements OnInit {
+export class GroupsListComponent {
   private readonly dialog = inject(MatDialog);
   private readonly groupService = inject(GroupsService);
   private readonly toastr = inject(ToastrService);
@@ -41,31 +41,22 @@ export class GroupsListComponent implements OnInit {
 
   // Signals to store and manage the current list of group invites
   // Two signals are made for implementing search functionality.
-  private groupInvites = this.groupService.groupInvites;
+  groupInvites = this.groupService.groupInvites;
   invites = signal(this.groupInvites());
 
   // Signals to store and manage the current list of group invites
   // Two signals are made for implementing search functionality.
-  private groups = this.groupService.groups;
+  groups = this.groupService.groups;
   groupList = signal(this.groups());
 
   balanceAmount = input<string>();
 
-  // Fetch the list of groups of the currentUser
-  fetchGroups() {
-    this.groupService.fetchGroups().subscribe({
-      next: (groups) => {
-        this.groupInvites.set(groups.data.invitedGroups);
-        this.invites.set(this.groupInvites());
-        this.groups.set(groups.data.acceptedGroups);
-        this.groupList.set(this.groups());
-      }
-    });
+  getInvites() {
+    return this.searchTerm() ? this.invites() : this.groupInvites();
   }
 
-  ngOnInit(): void {
-    // Call to fetchGroups method to get all the groups of the user on component initialization.
-    this.fetchGroups();
+  getGroups() {
+    return this.searchTerm() ? this.groupList() : this.groups();
   }
 
   // Searches from the existing group list
@@ -109,7 +100,7 @@ export class GroupsListComponent implements OnInit {
       this.groupService.createGroup(groupData).subscribe({
         next: () => {
           this.toastr.success("Group created successfully", "Success");
-          this.fetchGroups();
+          this.groupService.fetchGroups();
         }
       });
     });
@@ -163,5 +154,13 @@ export class GroupsListComponent implements OnInit {
     this.groupList.set(this.groups()); // Update filtered list for UI
     this.groupInvites.set(this.groupInvites().filter((group) => group.group_id !== groupId));
     this.invites.set(this.groupInvites()); // Update filtered list for UI
+  }
+
+  getSelectedGroup(id: string) {
+    const selectedGroup = this.groupInvites().find((invite) => invite.group_id === id);
+    if (selectedGroup) {
+      return selectedGroup;
+    }
+    return this.groups().find((group) => group.group_id === id);
   }
 }

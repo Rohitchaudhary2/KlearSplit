@@ -20,6 +20,9 @@ export class GroupsSettlementComponent {
   total_amount: string;
   payer_image: string;
   debtor_image: string;
+  id: string;
+  payerId: string;
+  debtorId: string;
 
   constructor() {
     const data = inject(MAT_DIALOG_DATA);
@@ -29,6 +32,9 @@ export class GroupsSettlementComponent {
       totalAmount: this.total_amount,
       debtorImage: this.debtor_image,
       payerImage: this.payer_image,
+      id: this.id,
+      payerId: this.payerId,
+      debtorId: this.debtorId
     } = data);
   }
 

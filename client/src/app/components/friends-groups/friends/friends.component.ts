@@ -547,12 +547,13 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
     if (parseFloat(this.selectedUser()!.balance_amount) === 0) {
       return;
     }
+
+    // Determine whether the user is the payer
+    const isUserPayer = parseFloat(this.selectedUser()!.balance_amount) < 0;
+
     const totalAmount = Math.abs(
       parseFloat(this.selectedUser()!.balance_amount),
     );
-
-    // Determine whether the user is the payer
-    const isUserPayer = parseFloat(this.selectedUser()!.balance_amount) > 0;
 
     let payerName, payerImage, debtorName, debtorImage, payerId, debtorId;
 
@@ -575,8 +576,8 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
         debtorName = debtor;
         payerImage = payerImg;
         debtorImage = debtorImg;
-        payerId = this.user!.user_id;
-        debtorId = this.selectedUser()?.friend.user_id;
+        debtorId = this.user!.user_id;
+        payerId = this.selectedUser()?.friend.user_id;
       }
     }
 

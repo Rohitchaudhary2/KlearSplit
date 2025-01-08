@@ -4,6 +4,8 @@ import { ErrorHandler } from "../middlewares/errorHandler.js";
 import GroupDb from "./groupDb.js";
 import GroupUtils from "./groupUtils.js";
 import UserDb from "../users/userDb.js";
+import UserService from "../users/userServices.js";
+import { sendWhatsAppTemplateMessage } from "../utils/WhatsAppMessage.js";
 
 class GroupService {
   /**
@@ -433,9 +435,28 @@ class GroupService {
 
       // Updating or Insering members balance based on added expense
       await GroupDb.updateMembersBalance(membersBalance, transaction);
+
+      const groupMembers = await this.getGroup(groupId, userId);
+
+      const participants = [];
+
+      expenseParticipants.forEach(async(participant) => {
+        const groupMember = groupMembers.find((member) => member.group_membership_id === participant.debtor_id);
+        const userDetails = await UserService.getUser(groupMember.member_id);
+
+        participants.push(userDetails.dataValues);
+      });
+
+      const payer = groupMembers.find((member) => member.group_membership_id === expense.payer_id);
+      const payerDetails = await UserService.getUser(payer.member_id);
+
+      participants.push(payerDetails);
+
+      // Send WhatsApp messages
+      const responses = await sendWhatsAppTemplateMessage(participants, expense);
       
       await transaction.commit();
-      return { expense, expenseParticipants };
+      return { expense, expenseParticipants, responses };
     } catch (error) {
       // Rollback the transaction in case of an error
       await transaction.rollback();
@@ -697,7 +718,7 @@ class GroupService {
       await GroupDb.updateMemberBalanceByPk(updatedMembersBalance, transaction);
       
       await transaction.commit();
-      return { expense, updatedExpenseParticipants };
+      return { "expense": expense[ 0 ], "expenseParticipants": updatedExpenseParticipants };
     } catch (error) {
       // Rollback the transaction in case of an error
       await transaction.rollback();

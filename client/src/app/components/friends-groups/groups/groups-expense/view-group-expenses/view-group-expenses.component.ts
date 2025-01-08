@@ -4,7 +4,6 @@ import {
   Component,
   inject,
   OnInit,
-  output,
   signal,
 } from "@angular/core";
 import { MatButtonModule } from "@angular/material/button";
@@ -32,6 +31,7 @@ import { ExpenseTableComponent } from "../../../shared/expense-table/expense-tab
 import { FriendsGroupsService } from "../../../shared/friends-groups.service";
 import { GroupsService } from "../../groups.service";
 import { GroupsExpenseComponent } from "../groups-expense.component";
+import { GroupsSettlementComponent } from "../groups-settlement/groups-settlement.component";
 
 @Component({
   selector: "app-view-group-expenses",
@@ -67,20 +67,8 @@ export class ViewGroupExpensesComponent implements OnInit {
   // A boolean flag to track the loading state while fetching expenses
   loading = signal(false);
 
-  updateLoader = "";
-
-  // Output signal that will emit the expense data when an expense is deleted.
-  expenseDeleted = output<{
-    id: string;
-    payerId: string;
-    debtorAmount: string;
-  }>();
-
-  // Output signal that will emit updated expenses data when an expense is updated
-  updatedExpense = output<{
-    expenses: GroupExpenseData[];
-    updatedExpense: GroupExpenseData;
-  }>();
+  updateLoader = signal(false);
+  deleteLoader = signal(false);
 
   constructor(private readonly datePipe: DatePipe) {}
 
@@ -103,6 +91,10 @@ export class ViewGroupExpensesComponent implements OnInit {
                 (member) => member.group_membership_id === expense.payer_id,
               );
             expense.payer = this.commonService.getFullNameAndImage(payer);
+            if (!this.isGroupExpenseData(expense)) {
+              const debtor = this.groupsService.groupMembers().find((member) => member.group_membership_id === expense.debtor_id);
+              expense.debtor = this.commonService.getFullNameAndImage(debtor);
+            }
           });
           this.totalExpenses.set(expenses);
           this.loading.set(false);
@@ -122,6 +114,7 @@ export class ViewGroupExpensesComponent implements OnInit {
    * @param debtorAmount - The amount that the debtor owes (used to update the balance)
    */
   onDeleteExpense({ id, payerId, debtorAmount }: ExpenseDeletedEvent) {
+    this.deleteLoader.set(true);
     const expenseToDelete = this.totalExpenses().find((expense) => {
       if (this.isGroupExpenseData(expense)) {
         return expense.group_expense_id === id;
@@ -160,11 +153,13 @@ export class ViewGroupExpensesComponent implements OnInit {
               },
             );
             this.totalExpenses.set(updatedExpenses);
+            this.deleteLoader.set(false);
             this.toastr.success(
               `${this.isGroupExpenseData(expenseToDelete!) ? "Expense" : "Settlement"} Deleted successfully`,
               "Success",
             );
           },
+          error: () => this.deleteLoader.set(false),
         });
       const balanceAmount = parseFloat(this.selectedGroup()!.balance_amount);
       const debtAmount = parseFloat(debtorAmount);
@@ -246,8 +241,9 @@ export class ViewGroupExpensesComponent implements OnInit {
    *
    * @param expense - The expense data to be updated
    */
-  onUpdateExpense(expense: GroupExpenseData) {
+  onUpdateExpense(expense: GroupExpenseData | GroupSettlementData) {
     const isExpense = this.isGroupExpenseData(expense);
+    this.updateLoader.set(true);
 
     if (isExpense) {
       // Open a dialog to allow the user to update the expense. Pass the current expense data.
@@ -261,6 +257,7 @@ export class ViewGroupExpensesComponent implements OnInit {
       });
       dialogRef.afterClosed().subscribe((data) => {
         if (!data) {
+          this.updateLoader.set(false);
           return;
         }
         const result = data.formData;
@@ -277,20 +274,117 @@ export class ViewGroupExpensesComponent implements OnInit {
           .subscribe({
             next: (response: GroupExpenseResponse) => {
               const expenses = this.totalExpenses();
-              const updatedExpenses = expenses.map((expenseData) => {
-                if (this.isGroupExpenseData(expenseData)) {
-                  return expenseData.group_expense_id === expense.group_expense_id
-                    ? response.data.expense
-                    : expenseData;
+              const updatedExpense = response.data.expense;
+              const expenseParticipants = response.data.expenseParticipants;
+              // Reduce the above array to add the debtor_amount of each participant into a variable debtor_amount
+              const totalDebtAmount = expenseParticipants.reduce((acc, val) => acc + parseFloat(val.debtor_amount), 0);
+              updatedExpense.total_debt_amount = totalDebtAmount.toString();
+              if (updatedExpense.payer_id === this.currentMember()?.group_membership_id) {
+                updatedExpense.payer = this.commonService.getFullNameAndImage(this.currentMember());
+                updatedExpense.user_debt = (parseFloat(updatedExpense.total_amount) - totalDebtAmount).toString();
+              } else {
+                const payer = this.groupsService.groupMembers().find((member) => updatedExpense.payer_id === member.group_membership_id);
+                updatedExpense.payer = this.commonService.getFullNameAndImage(
+                  payer
+                );
+                updatedExpense.user_debt = (expenseParticipants.find(
+                  (participant) => participant.debtor_id === this.currentMember()?.group_membership_id)!.debtor_amount);
+              }
+              this.expenses.update((currExpenses) =>
+                currExpenses.map((currExpense) => {
+                  if (!this.isGroupExpenseData(currExpense)) {
+                    return currExpense;
+                  }
+                  return currExpense.group_expense_id === updatedExpense.group_expense_id
+                    ? updatedExpense
+                    : currExpense;
+                })
+              );
+              this.combinedView.update((currView) =>
+                currView.map((item) => {
+                  if (this.groupsService.isCombinedExpense(item)) {
+                    return item.group_expense_id === updatedExpense.group_expense_id
+                      ? { ...updatedExpense, type: "expense" }
+                      : item;
+                  } else {
+                    return item;
+                  };
+                })
+              );
+              const oldAmount = parseFloat(
+                updatedExpense.payer_id === this.currentMember()?.group_membership_id
+                  ? expense.total_debt_amount
+                  : expense.user_debt
+              );
+              const newAmount = parseFloat(
+                updatedExpense.payer_id === this.currentMember()?.group_membership_id
+                  ? updatedExpense.total_debt_amount
+                  : updatedExpense.user_debt
+              );
+              this.selectedGroup()!.balance_amount = this.commonService.updateBalance(
+                this.selectedGroup()!.balance_amount,
+                newAmount - oldAmount,
+                updatedExpense.payer_id === this.currentMember()?.group_membership_id
+              );
+              this.groupsService.groupMembers().forEach((member) => {
+                if (member.group_membership_id === expense.payer_id) {
+                  member.balance_with_user = this.commonService.updateBalance(
+                    member.balance_with_user,
+                    newAmount - oldAmount,
+                    true,
+                  );
+                  member.total_balance = this.commonService.updateBalance(
+                    member.total_balance,
+                    newAmount - oldAmount,
+                    true,
+                  );
                 }
-                return expenseData.group_settlement_id === expense.group_expense_id
-                  ? response.data.expense
+              });
+              const updatedExpenses = expenses.map((expenseData) => {
+                if (!this.isGroupExpenseData(expenseData)) {
+                  return expenseData;
+                }
+                return expenseData.group_expense_id === expense.group_expense_id
+                  ? updatedExpense
                   : expenseData;
               });
               this.totalExpenses.set(updatedExpenses);
+              this.updateLoader.set(false);
               this.toastr.success("Expense Updated successfully", "Success");
             },
+            error: () => this.updateLoader.set(false),
           });
+        // const balanceAmount = parseFloat(this.selectedGroup()!.balance_amount);
+        this.groupsService.groupInvites().forEach((invite) => {
+          if (invite.group_id === this.selectedGroup()!.group_id) {
+            invite.balance_amount = this.selectedGroup()!.balance_amount;
+          }
+        });
+        this.groupsService.groups().forEach((group) => {
+          if (group.group_id === this.selectedGroup()!.group_id) {
+            group.balance_amount = this.selectedGroup()!.balance_amount;
+          }
+        });
+        this.cdr.detectChanges();
+      });
+    } else {
+      const dialogRef = this.dialog.open(GroupsSettlementComponent, {
+        data: {
+          payerName: expense.payer.fullName,
+          payerImage: expense.payer.imageUrl,
+          debtorName: expense.debtor.fullName,
+          debtorImage: expense.debtor.imageUrl,
+          totalAmount: expense.settlement_amount
+        },
+        enterAnimationDuration: "200ms",
+        exitAnimationDuration: "200ms",
+      });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        if (!result) {
+          this.updateLoader.set(false);
+          return;
+        }
       });
     }
   }

@@ -59,7 +59,11 @@
                 (keyup.enter)="onUpdateExpense(expense)"
                 matTooltip="Update"
                 matTooltipPosition="above"
-              >edit</mat-icon>
+              >@if (isUpdateLoading(expense)) {
+                <div class="spinner-border spinner-border-sm text-primary m-1" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              } edit</mat-icon>
               <mat-icon
                 matPrefix
                 class="hover"
@@ -71,7 +75,11 @@
                 "
                 matTooltip="Delete"
                 matTooltipPosition="above"
-                >delete</mat-icon>
+                >@if (isDeleteLoading(expense)) {
+                  <div class="spinner-border spinner-border-sm text-primary m-1" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                } delete</mat-icon>
             </td>
           </tr>
         }

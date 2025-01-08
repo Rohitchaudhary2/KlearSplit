@@ -1,7 +1,9 @@
 <app-expense-table
   [expenses]="totalExpenses()"
   [loading]="loading()"
-  (updateExpense)="onUpdateExpense($event)"
+  [updateLoader]="updateLoader()"
+  [deleteLoader]="deleteLoader()"
+  (updateExpenseGroups)="onUpdateExpense($event)"
   (deleteExpense)="onDeleteExpense($event)"
   (downloadExpenses)="downloadExpenses()"
   (cancel)="onCancel()"

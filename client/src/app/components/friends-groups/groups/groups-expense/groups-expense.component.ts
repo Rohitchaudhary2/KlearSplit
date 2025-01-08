@@ -18,11 +18,16 @@ import { MatSelectModule } from "@angular/material/select";
 import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
 import { ExpenseFormComponent } from "../../shared/expense-form/expense-form.component";
-import { GroupMemberData } from "../groups.model";
+import { GroupExpenseData, GroupMemberData } from "../groups.model";
 import { GroupsService } from "../groups.service";
 import { GroupsPayerComponent } from "./groups-payer/groups-payer.component";
 import { GroupsSplitTypeComponent } from "./groups-split-type/groups-split-type.component";
 
+
+interface DebtorData {
+  debtor_id: string;
+  debtor_share: number;
+}
 @Component({
   selector: "app-groups-expense",
   standalone: true,
@@ -48,10 +53,17 @@ export class GroupsExpenseComponent implements OnInit {
   imageName = signal<string>("Upload Bill Receipt");
   splitType = "EQUAL";
   payer_share!: number;
-  debtors!: { debtor_id: string, debtor_share: number }[];
+  debtors!: DebtorData[];
   currentMember = this.groupsService.currentMember;
   selectedGroup = this.groupsService.selectedGroup;
   groupMembers = this.groupsService.groupMembers;
+  splitState!: {
+    split_type: string,
+    selectedParticipants: GroupMemberData[], // Already populated from the previous split dialog
+    debtors: DebtorData[], // Shares for the participants
+    payerId: string,
+    payerShare: number,
+  };
 
   /**
    * Constructor to update the expense form and set up participants based on the type of data passed.
@@ -66,6 +78,13 @@ export class GroupsExpenseComponent implements OnInit {
     // Check if the first element of `data` is 'Add Expense', indicating this is a new expense.
     if (this.data[0] === "Add Expense") {
       // If 'Add Expense', participants are the fourth item from `data`.
+      this.splitState = {
+        split_type: this.form.value.split_type!,
+        selectedParticipants: this.selectedParticipants, // Already populated from the previous split dialog
+        debtors: this.debtors, // Shares for the participants
+        payerId: this.form.value.payer_id!,
+        payerShare: this.payer_share,
+      };
       this.form.patchValue({
         payer_id: this.currentMember()!.group_membership_id,
       });
@@ -76,7 +95,7 @@ export class GroupsExpenseComponent implements OnInit {
         expenseToBeUpdated.split_type !== "PERCENTAGE"
           ? expenseToBeUpdated.split_type
           : "PERCENT";
-
+          
       // Update the form values with the expense data and the calculated shares
       this.form.patchValue({
         expense_name: expenseToBeUpdated.expense_name,
@@ -86,6 +105,16 @@ export class GroupsExpenseComponent implements OnInit {
         split_type: expenseToBeUpdated.split_type,
         receipt: expenseToBeUpdated.receipt ?? "",
       });
+      
+      // Calculate debtors based on the split type
+      const { debtors, payerShare } = this.calculateDebtors(expenseToBeUpdated);
+      this.splitState = {
+        split_type: this.form.value.split_type!,
+        selectedParticipants: this.selectedParticipants, // Already populated from the previous split dialog
+        debtors, // Shares for the participants
+        payerId: this.form.value.payer_id!,
+        payerShare,
+      };
     }
   }
 
@@ -240,19 +269,12 @@ export class GroupsExpenseComponent implements OnInit {
       total_amount: this.form.value.total_amount,
       split_type: this.form.value.split_type,
     };
-    const splitState = {
-      split_type: this.form.value.split_type,
-      selectedParticipants: this.selectedParticipants, // Already populated from the previous split dialog
-      debtors: this.debtors, // Shares for the participants
-      payerId: this.form.value.payer_id,
-      payerShare: this.payer_share,
-    };
 
     // Open the SplitType dialog and pass the participants and expense data to it
     const dialogRef = this.dialog.open(GroupsSplitTypeComponent, {
       panelClass: "second-dialog",
       width: "30%",
-      data: { participants: this.participants, totalAmount: expenseData, splitState },
+      data: { participants: this.participants, totalAmount: expenseData, splitState: this.splitState },
       backdropClass: "dialog-bg-trans",
       position: {
         right: "7%",
@@ -276,6 +298,39 @@ export class GroupsExpenseComponent implements OnInit {
       this.debtors = result.debtors.filter((debtor: {debtor_id: string, debtor_share: number}) =>
         this.form.value.payer_id !== debtor.debtor_id);
     });
+  }
+
+  calculateDebtors(expenseToBeUpdated: GroupExpenseData) {
+    const debtors: DebtorData[] = [];
+    let payerShare = 0;
+  
+    // Calculate debtor shares based on split type
+    if (expenseToBeUpdated.split_type === "PERCENTAGE") {
+      // PERCENTAGE Split
+      const totalDebtAmount = parseFloat(expenseToBeUpdated.total_debt_amount);
+      const totalAmount = parseFloat(expenseToBeUpdated.total_amount);
+  
+      // Calculate each debtor's share as percentage of the total amount
+      expenseToBeUpdated.participants.forEach((participant) => {
+        const share = (parseFloat(participant.debtor_amount) / totalAmount) * 100;
+        debtors.push({
+          debtor_id: participant.debtor_id,
+          debtor_share: share,
+        });
+      });
+      payerShare = ((totalAmount - totalDebtAmount) / totalAmount) * 100;
+    } else {
+      // UNEQUAL or EQUAL Split
+      expenseToBeUpdated.participants.forEach((participant) => {
+        debtors.push({
+          debtor_id: participant.debtor_id,
+          debtor_share: parseFloat(participant.debtor_amount),
+        });
+      });
+      payerShare = (parseFloat(expenseToBeUpdated.total_amount) - parseFloat(expenseToBeUpdated.total_debt_amount));
+    }
+  
+    return { debtors, payerShare };
   }
 
   /**

@@ -728,6 +728,10 @@ class GroupService {
       throw new ErrorHandler(400, "Settlement Not Found.");
     }
 
+    if (settlement.payer_id !== settlementData.payer_id) {
+      throw new ErrorHandler(400, "Payer Id can't be changed");
+    }
+
     Object.assign(settlement, { "settlement_amount": parseFloat(settlement.settlement_amount) });
 
     const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlement.payer_id, settlement.debtor_id);

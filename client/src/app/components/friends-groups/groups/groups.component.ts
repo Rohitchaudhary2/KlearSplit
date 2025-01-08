@@ -50,6 +50,7 @@ import { GroupsListComponent } from "./groups-list/groups-list.component";
 export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
   // Reference to the message container element, accessed via ViewChild
   messageContainer = viewChild<ElementRef>("messageContainer");
+  groupListComponent = viewChild(GroupsListComponent);
   @ViewChild(GroupsListComponent) groupsListComponent!: GroupsListComponent;
   private readonly cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
   private readonly toastr = inject(ToastrService);
@@ -109,22 +110,33 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   removeQueryParams() {
     const queryParams = this.activatedRoute.snapshot.queryParams;
-    this.onSelectGroup(queryParams["id"]);
-    if (queryParams["success"]) {
-      this.toastr.success("Payment Successful", "Success");
-    } else {
-      this.toastr.error("Payment Unsuccessful", "Error");
+
+    if (Object.keys(queryParams).length === 0) {
+      return;
     }
 
-    if (Object.keys(queryParams).length > 0) {
-      // If there are query parameters, navigate without them
-      this.router.navigate([], {
-        queryParams: {},
-      });
+    const selectedGroup = this.groupListComponent()!.getSelectedGroup(queryParams["id"]);
+
+    if(!selectedGroup) {
+      this.toastr.error("Wrong conversation Id", "Error");
     }
+
+    this.onSelectGroup(selectedGroup);
+    switch(queryParams["success"]) {
+      case "true":
+        this.toastr.success("Payment Successful", "Success");
+        break;
+      case "false":
+        this.toastr.error("Payment Unsuccessful", "Error");
+    }
+    // If there are query parameters, navigate without them
+    this.router.navigate([], {
+      queryParams: {},
+    });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
+    await this.groupsService.fetchGroups();
     this.removeQueryParams();
   }
 

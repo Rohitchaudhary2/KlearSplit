@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable, signal } from "@angular/core";
-import { concatMap, map, Observable } from "rxjs";
+import { concatMap, firstValueFrom, map, Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
 import {
@@ -135,10 +135,12 @@ export class GroupsService {
    *
    * @returns An observable with the list of groups.
    */
-  fetchGroups() {
-    return this.httpClient.get<Groups>(API_URLS.getGroups, {
+  async fetchGroups() {
+    const response = await firstValueFrom(this.httpClient.get<Groups>(API_URLS.getGroups, {
       withCredentials: true,
-    });
+    }));
+    this.groupInvites.set(response.data.invitedGroups);
+    this.groups.set(response.data.acceptedGroups);
   }
 
   /**

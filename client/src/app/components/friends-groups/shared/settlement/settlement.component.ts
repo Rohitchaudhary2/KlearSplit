@@ -4,7 +4,9 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 
+import { AuthService } from "../../../auth/auth.service";
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
+import { GroupsService } from "../../groups/groups.service";
 import { SettlementService } from "./settlement.service";
 
 function amountRangeValidator(totalAmount: number): ValidatorFn {
@@ -41,6 +43,10 @@ export class SettlementComponent {
   payerId = input<string>();
   debtorId = input<string>();
 
+  authService = inject(AuthService);
+  groupService = inject(GroupsService);
+  userId = this.groupService.currentMember()?.group_membership_id ?? this.authService.currentUser()!.user_id;
+
   submitSettlement = output<string>();
   cancelSettlement = output<void>();
 
@@ -58,6 +64,10 @@ export class SettlementComponent {
         ],
       }),
     });
+  }
+
+  isUserPayer() {
+    return this.userId !== this.payerId();
   }
 
   /**

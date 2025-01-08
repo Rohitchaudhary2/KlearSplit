@@ -11,7 +11,7 @@
   <!-- pending group invites -->
   <app-list-display
     heading="Group Invites"
-    [items]="invites()"
+    [items]="getInvites()"
     (acceptReject)="onAcceptReject($event)"
     (selectedGroup)="onSelectGroup($event)"
   ></app-list-display>
@@ -33,7 +33,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (group of groupList(); track $index) {
+          @for (group of getGroups(); track $index) {
             <tr
               class="row equal-height-row d-flex justify-content-between m-0"
               [ngClass]="{'selected': currentGroup() === group}"

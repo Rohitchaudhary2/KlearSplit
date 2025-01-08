@@ -135,6 +135,22 @@ class GroupDb {
     return updatedMember;
   };
 
+  static getGroupMembersByIds = async(ids) => {
+    const formattedIds = ids.map((id) => `'${id}'`).join(",");
+    
+    return await GroupMember.findAll({
+      "where": {
+        "group_membership_id": {
+          [ Op.in ]: ids
+        }
+      },
+      "order": [
+        [ sequelize.literal(`FIELD(group_membership_id, ${formattedIds})`) ]
+      ],
+      "raw": true
+    });
+  };
+
   static saveMessage = async(messageData, groupId, groupMembershipId) => await GroupMessage.create({ ...messageData, "group_id": groupId, "sender_id": groupMembershipId });
 
   static getMessages = async(groupId, pageSize, timestamp) => {

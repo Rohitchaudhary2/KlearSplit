@@ -3,6 +3,7 @@ import logger from "../utils/logger.js";
 import FriendService from "../friends/friendService.js";
 import GroupService from "./../groups/groupService.js";
 import PaymentDb from "./paymentDb.js";
+import GroupDb from "../groups/groupDb.js";
 
 // PayPal Configuration
 paypal.configure({
@@ -14,6 +15,16 @@ paypal.configure({
 class PaymentService {
   static createPayment = async(data, userId) => {
     const { amount, type, id, payerId, debtorId } = data;
+
+    let payerUserId = payerId;
+    let debtorUserId = debtorId;
+
+    if (type === "groups") {
+      const response = await GroupDb.getGroupMembersByIds([ payerId, debtorId ]);
+
+      payerUserId = response.member_id;
+      debtorUserId = response.member_id;
+    }
 
     // Create payment JSON
     const paymentJson = {
@@ -53,7 +64,7 @@ class PaymentService {
     // Use await to handle the Promise returned by createPayment
     const payment = await createPayment();
 
-    await PaymentDb.createPayment({ "payment_id": payment.id, "payment_method": payment.payer.payment_method, "amount": amount, "payer_id": payerId, "payee_id": debtorId });
+    await PaymentDb.createPayment({ "payment_id": payment.id, "payment_method": payment.payer.payment_method, "amount": amount, "payer_id": payerUserId, "payee_id": debtorUserId });
     
     // Find approval URL for the user to approve the payment
     const approvalUrl = payment.links.find((link) => link.rel === "approval_url").href;

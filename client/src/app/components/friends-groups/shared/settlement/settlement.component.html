@@ -39,20 +39,20 @@
   </mat-form-field>
 </div>
 
-<div class="d-flex justify-content-center">
+<div class="d-flex justify-content-center text-success">
   <button
     mat-button
-    class="custom-mat-button text-success"
+    class="custom-mat-button"
     (click)="onSubmit()"
   >
   Record as Cash Payment
   </button>
 </div>
 
-<div class="d-flex justify-content-center">
-  <button
+<div class="d-flex justify-content-center text-success">
+  <button [disabled]="isUserPayer()"
     mat-button
-    class="custom-mat-button text-success"
+    class="custom-mat-button"
     (click)="payWithPayPal()"
   >
   Pay using PayPal

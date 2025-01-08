@@ -485,7 +485,7 @@ class GroupService {
       throw new ErrorHandler(400, "Both payer and debtor must be in the group.");
     }
 
-    Object.assign(settlementData, { "group_id": groupId });
+    Object.assign(settlementData, { "settlement_amount": parseFloat(settlementData.settlement_amount), "group_id": groupId });
 
     const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
 

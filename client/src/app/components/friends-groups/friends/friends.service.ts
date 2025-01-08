@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { inject, Injectable } from "@angular/core";
-import { concatMap, map } from "rxjs";
+import { inject, Injectable, signal } from "@angular/core";
+import { concatMap, firstValueFrom, map, Observable, tap } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
 import {
@@ -11,6 +11,7 @@ import {
   ExpenseInput,
   ExpenseResponse,
   Friend,
+  FriendData,
   Message,
   SearchedUserResponse,
   SettlementData,
@@ -22,6 +23,11 @@ import {
 export class FriendsService {
   // Injecting the HttpClient to make HTTP requests
   private readonly httpClient = inject(HttpClient);
+  private friendRequests = signal<FriendData[]>([]);
+  private friends = signal<FriendData[]>([]);
+
+  requests = this.friendRequests.asReadonly();
+  friendList = this.friends.asReadonly();
 
   sortBycreatedAt(data: (CombinedMessage | CombinedExpense)[]) {
     return data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
@@ -190,17 +196,30 @@ export class FriendsService {
     );
   }
 
+  async getFriendRequests() {
+    const params = new HttpParams().set("status", "PENDING");
+    // API call to back-end to get pending friend requests
+    const response = await firstValueFrom(this.getFriends(params));
+    this.friendRequests.set(response.data);
+  }
+
+  async getAcceptedFriends() {
+    const params = new HttpParams().set("status", "ACCEPTED");
+    const response = await firstValueFrom(this.getFriends(params));
+    this.friends.set(response.data);
+  }
+
   /**
    * Fetch the list of friends with query parameters.
    *
    * @param params - HttpParams to filter the friend list.
    * @returns An observable with the list of friends.
    */
-  getFriends(params: HttpParams) {
-    return this.httpClient.get<Friend>(API_URLS.getFriends, {
+  getFriends(params: HttpParams): Observable<Friend> {
+    return (this.httpClient.get<Friend>(API_URLS.getFriends, {
       params,
       withCredentials: true,
-    });
+    }));
   }
 
   /**
@@ -212,7 +231,9 @@ export class FriendsService {
   addFriend(friendData: { email: string }) {
     return this.httpClient.post(API_URLS.addFriend, friendData, {
       withCredentials: true,
-    });
+    }).pipe(tap({
+      next: () => this.getFriendRequests()
+    }));
   }
 
   /**
@@ -227,7 +248,24 @@ export class FriendsService {
       `${API_URLS.acceptRejectRequest}/${conversationId}`,
       { status },
       { withCredentials: true },
-    );
+    ).pipe(tap({
+      next: () => {
+        if (status === "ACCEPTED") {
+          // Add the accepted request to the friend list
+          this.friends().unshift({
+            ...this.friendRequests().find(
+              (request) => request.conversation_id === conversationId
+            )!, status: "ACCEPTED"
+          });
+        }
+        // Remove the processed request from the pending requests list
+        this.friendRequests.set(
+          this.friendRequests().filter(
+            (request) => request.conversation_id !== conversationId,
+          ),
+        );
+      }
+    }));
   }
 
   /**
@@ -242,7 +280,16 @@ export class FriendsService {
       {
         withCredentials: true,
       },
-    );
+    ).pipe(tap({
+      next: () => {
+        // Update the friend requests list by removing the withdrawn request from the array
+        this.friendRequests.set(
+          this.friendRequests().filter(
+            (request) => request.conversation_id !== conversationId,
+          ),
+        );
+      }
+    }));
   }
 
   /**

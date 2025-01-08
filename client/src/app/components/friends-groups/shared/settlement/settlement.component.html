@@ -39,16 +39,28 @@
   </mat-form-field>
 </div>
 
-<div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3 pb-3">
-  <button mat-button class="custom-mat-button" (click)="onCancel()">
-    Cancel
-  </button>
+<div class="d-flex justify-content-center">
   <button
     mat-button
-    class="custom-mat-button"
-    color="warn"
+    class="custom-mat-button text-success"
     (click)="onSubmit()"
   >
-    Submit
+  Record as Cash Payment
+  </button>
+</div>
+
+<div class="d-flex justify-content-center">
+  <button
+    mat-button
+    class="custom-mat-button text-success"
+    (click)="payWithPayPal()"
+  >
+  Pay using PayPal
+  </button>
+</div>
+
+<div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3 pb-3">
+  <button mat-button class="custom-mat-button" color="warn" (click)="onCancel()">
+    Close
   </button>
 </div>

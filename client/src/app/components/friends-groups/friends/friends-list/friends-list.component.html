@@ -11,7 +11,7 @@
   <!-- pending friend requests -->
   <app-list-display
     [heading]="'Pending Requests'"
-    [items]="requests()"
+    [items]="getRequests()"
     (acceptReject)="onAcceptReject($event)"
     (selectedFriend)="onSelectUser($event)"
   ></app-list-display>
@@ -33,7 +33,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (friend of friendList(); track $index) {
+          @for (friend of getFriends(); track $index) {
             <tr
               class="row equal-height-row d-flex justify-content-between m-0"
               [ngClass]="selectedFriend() === friend ? 'active' : ''"

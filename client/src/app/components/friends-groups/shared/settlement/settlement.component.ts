@@ -5,6 +5,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
+import { SettlementService } from "./settlement.service";
 
 function amountRangeValidator(totalAmount: number): ValidatorFn {
   return (control: AbstractControl): { outOfRange: { max: number } } | null => {
@@ -35,11 +36,16 @@ export class SettlementComponent {
   debtorName = input<string>();
   debtorImage = input<string>();
   totalAmount = input<string>();
+  type = input<string>();
+  id = input<string>();
+  payerId = input<string>();
+  debtorId = input<string>();
 
   submitSettlement = output<string>();
   cancelSettlement = output<void>();
 
   private readonly formErrorMessages = inject(FormErrorMessageService);
+  private readonly settlementService = inject(SettlementService);
 
   form: FormGroup = new FormGroup({});
   
@@ -71,6 +77,17 @@ export class SettlementComponent {
       return;
     }
     this.submitSettlement.emit(this.form.value.settlement_amount,);
+  }
+
+  payWithPayPal() {
+    this.settlementService.createPayment(this.form.value.settlement_amount,
+      this.id()!, this.payerId()!, this.debtorId()!, this.type()!).subscribe({
+      next: (response) => {
+        if(response.data) {
+          window.location.href = response.data;
+        }
+      }
+    });
   }
 
   /**

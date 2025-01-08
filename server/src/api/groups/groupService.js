@@ -276,6 +276,14 @@ class GroupService {
       throw new ErrorHandler(400, "Status can't be changed once accepted or rejected the group invitation.");
     }
 
+    if (groupMemberData.has_blocked) {
+      const balance = await GroupDb.userBalanceInGroup(groupId, userMembershipInfo.group_membership_id).amount;
+
+      if (balance !== 0) {
+        throw new ErrorHandler(400, "Settle up before this action. ");
+      }
+    }
+
     const updatedMember = GroupDb.updateGroupMember(userMembershipInfo.group_membership_id, groupMemberData);
 
     return updatedMember;

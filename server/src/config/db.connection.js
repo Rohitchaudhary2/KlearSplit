@@ -13,6 +13,7 @@ import initializeGroupMemberBalance from "../api/groups/models/groupMemberBalanc
 import initializeGroupSettlement from "../api/groups/models/groupSettlementModel.js";
 import initializeGroupExpense from "../api/groups/models/groupExpenseModel.js";
 import initializeGroupExpenseParticipant from "../api/groups/models/groupExpensePariticpantModel.js";
+import initializePayment from "../api/payment/paymentModel.js";
 
 // Creating a new Sequelize instance for connecting to the PostgreSQL database
 const sequelize = new Sequelize(database, username, password, {
@@ -39,6 +40,7 @@ const GroupMemberBalance = initializeGroupMemberBalance(sequelize);
 const GroupSettlement = initializeGroupSettlement(sequelize);
 const GroupExpense = initializeGroupExpense(sequelize);
 const GroupExpenseParticipant = initializeGroupExpenseParticipant(sequelize);
+const Payment = initializePayment(sequelize);
 
 // User model association with Friends model
 User.hasMany(Friend, { "foreignKey": "friend1_id" });
@@ -112,6 +114,16 @@ GroupExpense.hasMany(GroupExpenseParticipant, { "foreignKey": "group_expense_id"
 GroupExpenseParticipant.belongsTo(GroupMember, { "foreignKey": "debtor_id" });
 GroupExpenseParticipant.belongsTo(GroupExpense, { "foreignKey": "group_expense_id" });
 
+// Payment
+User.hasMany(Payment, { "foreignKey": "payer_id" });
+User.hasMany(Payment, { "foreignKey": "payee_id" });
+FriendExpense.hasOne(Payment, { "foreignKey": "friend_settlement_id" });
+GroupSettlement.hasOne(Payment, { "foreignKey": "group_settlement_id" });
+Payment.belongsTo(User, { "foreignKey": "payer_id" });
+Payment.belongsTo(User, { "foreignKey": "payee_id" });
+Payment.belongsTo(FriendExpense, { "foreignKey": "friend_settlement_id" });
+Payment.belongsTo(GroupSettlement, { "foreignKey": "group_settlement_id" });
+
 try {
   await sequelize.authenticate(); // Attempting to authenticate the connection to the database
   logger.log({
@@ -131,4 +143,4 @@ try {
   });
 }
 
-export { sequelize, User, Friend, FriendMessage, FriendExpense, Group, GroupMember, GroupMemberBalance, GroupMessage, GroupExpense, GroupExpenseParticipant, GroupSettlement };
+export { sequelize, User, Friend, FriendMessage, FriendExpense, Group, GroupMember, GroupMemberBalance, GroupMessage, GroupExpense, GroupExpenseParticipant, GroupSettlement, Payment };

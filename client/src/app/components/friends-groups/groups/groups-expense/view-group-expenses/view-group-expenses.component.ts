@@ -385,6 +385,66 @@ export class ViewGroupExpensesComponent implements OnInit {
           this.updateLoader.set(false);
           return;
         }
+        result.group_settlement_id = expense.group_settlement_id;
+        this.groupsService
+          .updateSettlement(this.selectedGroup()!.group_id, result)
+          .subscribe({
+            next: (response) => {
+              const isPayer = response.data.payer_id === this.currentMember()!.group_membership_id;
+              response.data.payer = expense.payer;
+              response.data.debtor = expense.debtor;
+              this.expenses.set([ ...this.expenses(), response.data ]);
+              const combinedData = [
+                ...this.combinedView(),
+                { ...response.data, type: "settlement" }
+              ];
+              this.combinedView.set(combinedData);
+              this.cdr.detectChanges();
+              this.selectedGroup()!.balance_amount = this.commonService.updateBalance(
+                this.selectedGroup()!.balance_amount,
+                parseFloat(expense.settlement_amount) - parseFloat(response.data.settlement_amount),
+                !isPayer
+              );
+              this.groupsService.groupInvites().forEach((invite) => {
+                if (invite.group_id === this.selectedGroup()!.group_id) {
+                  invite.balance_amount = this.selectedGroup()!.balance_amount;
+                }
+              });
+              this.groupsService.groups().forEach((group) => {
+                if (group.group_id === this.selectedGroup()!.group_id) {
+                  group.balance_amount = this.selectedGroup()!.balance_amount;
+                }
+              });
+              this.groupsService.groupMembers().forEach((member) => {
+                if (member.group_membership_id === response.data.payer_id) {
+                  member.balance_with_user = this.commonService.updateBalance(
+                    member.balance_with_user,
+                    parseFloat(response.data.settlement_amount),
+                    true
+                  );
+                  member.total_balance = this.commonService.updateBalance(
+                    member.total_balance,
+                    parseFloat(response.data.settlement_amount),
+                    true
+                  );
+                }
+                if (member.group_membership_id === response.data.debtor_id) {
+                  member.balance_with_user = this.commonService.updateBalance(
+                    member.balance_with_user,
+                    parseFloat(response.data.settlement_amount),
+                    false
+                  );
+                  member.total_balance = this.commonService.updateBalance(
+                    member.total_balance,
+                    parseFloat(response.data.settlement_amount),
+                    false
+                  );
+                }
+              });
+              this.cdr.detectChanges();
+              this.toastr.success("Updated settlement successfully", "Success");
+            }
+          });
       });
     }
   }

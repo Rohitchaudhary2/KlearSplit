@@ -21,7 +21,8 @@ export class ExpenseTableComponent {
   loading = input<boolean>(false); // Input for loading state
   updateLoader = input<boolean>(false); // Input for loading state while updating
   deleteLoader = input<boolean>(false); // Input for loading state while deleting
-  updateExpense = output<ExpenseType>(); // Event for updating expense
+  updateExpenseFriends = output<ExpenseType>(); // Event for updating expense
+  updateExpenseGroups = output<ExpenseType>();
   deleteExpense = output<{
     id: string;
     payerId: string;
@@ -55,13 +56,16 @@ export class ExpenseTableComponent {
   }
 
   onUpdateExpense(expense: ExpenseType) {
-    if (this.isGroupExpenseData(expense)) {
-      this.expenseLoadingState[expense.group_expense_id] = { ...this.expenseLoadingState[expense.group_expense_id], update: true };
-    }
     if (this.isExpenseData(expense)) {
+      this.updateExpenseFriends.emit(expense);
       this.expenseLoadingState[expense.friend_expense_id] = { ...this.expenseLoadingState[expense.friend_expense_id], update: true };
+    } else if (this.isGroupExpenseData(expense)) {
+      this.updateExpenseGroups.emit(expense);
+      this.expenseLoadingState[expense.group_expense_id] = { ...this.expenseLoadingState[expense.group_expense_id], update: true };
+    } else {
+      this.updateExpenseGroups.emit(expense);
+      this.expenseLoadingState[expense.group_settlement_id] = { ...this.expenseLoadingState[expense.group_settlement_id], update: true };
     }
-    this.updateExpense.emit(expense);
   }
 
   onDeleteExpense(expense: ExpenseType) {

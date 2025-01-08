@@ -121,6 +121,16 @@ export interface GroupMessageResponse {
   data: GroupMessageData[];
 }
 
+export interface ExpenseParticipant {
+  expense_participant_id: string;
+  debtor_id: string;
+  debtor_amount: string;
+  group_expense_id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
 export interface GroupExpenseData {
   group_expense_id: string;
   group_id: string;
@@ -139,16 +149,7 @@ export interface GroupExpenseData {
   };
   total_debt_amount: string;
   user_debt: string;
-}
-
-export interface ExpenseParticipant {
-  expense_participant_id: string;
-  debtor_id: string;
-  debtor_amount: string;
-  group_expense_id: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
+  participants: ExpenseParticipant[];
 }
 
 export interface GroupExpenseResponse {

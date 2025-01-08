@@ -36,7 +36,7 @@ import { GroupsExpenseComponent } from "../groups-expense.component";
 @Component({
   selector: "app-view-group-expenses",
   standalone: true,
-  imports: [ MatIconModule, MatButtonModule, DatePipe, ExpenseTableComponent ],
+  imports: [ MatIconModule, MatButtonModule, ExpenseTableComponent ],
   templateUrl: "./view-group-expenses.component.html",
   styleUrl: "./view-group-expenses.component.css",
   providers: [ DatePipe ],

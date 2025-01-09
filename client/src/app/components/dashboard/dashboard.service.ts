@@ -3,13 +3,51 @@ import { inject, Injectable } from "@angular/core";
 import { map } from "rxjs";
 
 import { API_URLS } from "../../constants/api-urls";
-import { AllExpenses } from "./dashboard.model";
+import { AllExpenses, ExpenseCount, TopFriends } from "./dashboard.model";
 
 @Injectable({
   providedIn: "root",
 })
 export class DashboardService {
   private readonly httpClient = inject(HttpClient);
+  getExpense() {
+    return this.httpClient.get<ExpenseCount>(`${API_URLS.expensesCount}`, { withCredentials: true });
+  }
+
+  getBalanceAmounts() {
+    return this.httpClient.get<ExpenseCount>(`${API_URLS.balanceAmounts}`, { withCredentials: true });
+  }
+
+  getCashFlowFriends() {
+    return this.httpClient.get<TopFriends>(`${API_URLS.cashFlowFriends}`, { withCredentials: true }).pipe(
+      map((response) => {
+        /**
+         * Transforming the server response:
+         * - Extracts top friends and their associated amounts from the response.
+         * - Maps the raw data into an object with separate fields for:
+         *   - `expensesRange`
+         *   - `balanceAmounts`
+         *   - `topFriends` (amounts only)
+         *   - `topFriendsName` (names only)
+         *   - `monthlyExpense`
+         */
+        const topAmounts: number[] = [];
+        const friendsName: string[] = [];
+        for (const item in response.data) {
+          topAmounts.push(Number(response.data[item]["amount"]));
+          friendsName.push(String(response.data[item]["friend"]));
+        }
+        return {
+          topFriends: topAmounts,
+          topFriendsName: friendsName,
+        };
+      }),
+    );
+  }
+
+  getMonthlyExpenses(year: number) {
+    return this.httpClient.post<ExpenseCount>(`${API_URLS.monthlyExpenses}`, { year }, { withCredentials: true });
+  }
   /**
    * Fetches all expense-related data from the server.
    *

@@ -63,6 +63,17 @@
       ></canvas>
     </div>
     <div class="col" style="max-width: 64.4%">
+      <div class="text-end px-2 ">
+      <!-- Dropdown to select the year -->
+        <label for="yearSelect" class="form-label pe-2">Monthly Expenses for</label>
+        <span class="dropdown-wrapper">
+          <select id="yearSelect" class="px-2 py-1" [(ngModel)]="year" (ngModelChange)="onYearChange($event)">
+            @for (year of years; track $index) {
+              <option [value]="year">{{ year }}</option>
+            }
+          </select>
+        </span>
+      </div>
       <canvas
         baseChart
         [data]="barChartData"

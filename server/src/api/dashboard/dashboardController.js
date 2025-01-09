@@ -15,6 +15,36 @@ class DashboardController {
 
     responseHandler(res, 200, "Successfully fetched Expenses", expenses);
   });
+
+  static getExpensesCount = asyncHandler(async(req, res) => {
+    const expensesCount = await DashboardService.getExpensesCount(req.user.user_id);
+
+    responseHandler(res, 200, "Successfully fetched expenses count", expensesCount);
+  });
+
+  static getBalance = asyncHandler(async(req, res) => {
+    const balance = await DashboardService.getBalance(req.user.user_id);
+
+    responseHandler(res, 200, "Successfully fetched expenses count", balance);
+  });
+
+  static topCashFlowFriends = asyncHandler(async(req, res) => {
+    const topFriends = await DashboardService.topCashFlowFriends(req.user.user_id);
+
+    responseHandler(res, 200, "Successfully fetched expenses count", topFriends);
+  });
+
+  static topcashflowGroups = asyncHandler(async(req, res) => {
+    const topGroups = await DashboardService.topCashFlowGroups(req.user.user_id);
+
+    responseHandler(res, 200, "Successfully fetched expenses count", topGroups);
+  });
+
+  static getMonthlyExpenses = asyncHandler(async(req, res) => {
+    const monthlyExpense = await DashboardService.getMonthlyExpenses(req.user.user_id, req.body.year);
+
+    responseHandler(res, 200, "Successfully fetched expenses count", monthlyExpense);
+  });
 }
 
 export default DashboardController;

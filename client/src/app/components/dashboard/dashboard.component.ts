@@ -6,8 +6,10 @@ import {
   signal,
   ViewChildren,
 } from "@angular/core";
+import { FormsModule } from "@angular/forms";
 import { ChartDataset, ChartOptions } from "chart.js";
 import { BaseChartDirective } from "ng2-charts";
+import { lastValueFrom } from "rxjs";
 
 import { AuthService } from "../auth/auth.service";
 import { DashboardService } from "./dashboard.service";
@@ -15,7 +17,7 @@ import { DashboardService } from "./dashboard.service";
 @Component({
   selector: "app-dashboard",
   standalone: true,
-  imports: [ BaseChartDirective ],
+  imports: [ BaseChartDirective, FormsModule ],
   templateUrl: "./dashboard.component.html",
   styleUrl: "./dashboard.component.css",
 })
@@ -23,6 +25,8 @@ export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
   private readonly dashboardService = inject(DashboardService);
   balanceAmount = signal<number>(0);
+  year = new Date().getFullYear();
+  years = [ 2020,  2021, 2022, 2023, 2024, 2025 ];
 
   // Refrences to chart components in the template for programmatic updates
   @ViewChildren(BaseChartDirective) charts?: QueryList<BaseChartDirective>;
@@ -263,6 +267,9 @@ export class DashboardComponent implements OnInit {
       tooltip: {
         enabled: true,
       },
+      legend: {
+        display: false // Hide legend labels
+      }
     },
     animations: {
       tension: {
@@ -279,7 +286,65 @@ export class DashboardComponent implements OnInit {
     },
   };
 
-  ngOnInit(): void {
+  private getExpenseCount() {
+    this.dashboardService.getExpense().subscribe({
+      next: (response) => {
+        this.pieChartData1.datasets[0].data = response.data;
+      }
+    });
+  }
+
+  private getBalanceAmounts() {
+    this.dashboardService.getBalanceAmounts().subscribe({
+      next: (response) => {
+        this.pieChartData2.datasets[0].data = response.data;
+        this.balanceAmount.set(
+          response.data[0] - response.data[1],
+        );
+        this.pieChartOptions2 = {
+          ...this.pieChartOptions2,
+          plugins: {
+            ...this.pieChartOptions2.plugins,
+            title: {
+              ...this.pieChartOptions2.plugins?.title,
+              text: `Balance Amount: ${Math.abs(this.balanceAmount())}`,
+              color: this.balanceAmount() < 0 ? "#F44336" : "#2E7D32",
+            },
+          },
+        };
+      }
+    });
+  }
+
+  private getCashFlowFriends() {
+    this.dashboardService.getCashFlowFriends().subscribe({
+      next: (response) => {
+        this.pieChartData3.datasets[0].data = response.topFriends;
+        this.pieChartData3.labels = response.topFriendsName;
+      }
+    });
+  }
+
+  onYearChange(year: number): void {
+    this.getMonthlyExpenses(year);  // Trigger API call with the selected year
+  }
+
+  private async getMonthlyExpenses(year: number) {
+    const response = await lastValueFrom(this.dashboardService.getMonthlyExpenses(year));
+    // this.dashboardService.getMonthlyExpenses(year).subscribe({
+    //   next: (response) => {
+    //     this.barChartData.datasets[0].data = response.data;
+    //   }
+    // });
+    this.barChartData.datasets[0].data = response.data;
+    this.charts?.forEach((chart) => chart?.chart?.update());
+  }
+
+  async ngOnInit() {
+    this.getExpenseCount();
+    this.getBalanceAmounts();
+    this.getCashFlowFriends();
+    await this.getMonthlyExpenses(this.year);
     this.loadAllExpenses();
   }
 
@@ -293,26 +358,26 @@ export class DashboardComponent implements OnInit {
    */
   private loadAllExpenses() {
     this.dashboardService.getAllExpenses().subscribe({
-      next: (response) => {
-        this.pieChartData1.datasets[0].data = response.expensesRange;
-        this.pieChartData2.datasets[0].data = response.balanceAmounts;
-        this.balanceAmount.set(
-          response.balanceAmounts[0] - response.balanceAmounts[1],
-        );
-        this.pieChartOptions2 = {
-          ...this.pieChartOptions2,
-          plugins: {
-            ...this.pieChartOptions2.plugins,
-            title: {
-              ...this.pieChartOptions2.plugins?.title,
-              text: `Balance Amount: ${Math.abs(this.balanceAmount())}`,
-              color: this.balanceAmount() < 0 ? "#F44336" : "#2E7D32",
-            },
-          },
-        };
-        this.pieChartData3.datasets[0].data = response.topFriends;
-        this.pieChartData3.labels = response.topFriendsName;
-        this.barChartData.datasets[0].data = response.monthlyExpense;
+      next: () => {
+        // this.pieChartData1.datasets[0].data = response.expensesRange;
+        // this.pieChartData2.datasets[0].data = response.balanceAmounts;
+        // this.balanceAmount.set(
+        //   response.balanceAmounts[0] - response.balanceAmounts[1],
+        // );
+        // this.pieChartOptions2 = {
+        //   ...this.pieChartOptions2,
+        //   plugins: {
+        //     ...this.pieChartOptions2.plugins,
+        //     title: {
+        //       ...this.pieChartOptions2.plugins?.title,
+        //       text: `Balance Amount: ${Math.abs(this.balanceAmount())}`,
+        //       color: this.balanceAmount() < 0 ? "#F44336" : "#2E7D32",
+        //     },
+        //   },
+        // };
+        // this.pieChartData3.datasets[0].data = response.topFriends;
+        // this.pieChartData3.labels = response.topFriendsName;
+        // this.barChartData.datasets[0].data = response.monthlyExpense;
         this.charts?.forEach((chart) => chart?.chart?.update());
       },
     });

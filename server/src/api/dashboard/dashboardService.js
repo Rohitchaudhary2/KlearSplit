@@ -46,7 +46,7 @@ class DashboardService {
    * @returns {Promise<Object>} - A structured object containing processed expenses data.
    */
   static async getAllExpensesData(userId) {
-    const expenses = await DashboardDb.getAllExpenses(userId);
+    const expenses = await DashboardDb.getFriendExpenses(userId);
 
     // Reduce the expenses into a summary object with categorized information
     const result = expenses.reduce(
@@ -106,7 +106,7 @@ class DashboardService {
     let topFourFriendsName = await UserDb.getUsersById(topFourFriendsId);
 
     topFourFriendsName = topFourFriendsName.map((user) => {
-      const name = `${user.first_name}${ user.last_name || ""}`;
+      const name = `${user.first_name}${ user.last_name ?? ""}`;
 
       return name;
     });
@@ -120,6 +120,175 @@ class DashboardService {
 
     return result;
   }
+
+  static getExpensesCount = async(userId) => {
+    const expensesCount = [ 0, 0, 0, 0, 0 ];
+    const ranges = [ 1000, 5000, 10000, 15000 ]; // Expense thresholds
+    const friendsExpenses = await DashboardDb.getFriendExpenses(userId);
+    
+    friendsExpenses.forEach((expense) => {
+      if (expense.split_type !== "SETTLEMENT") {
+        const amount = parseFloat(expense.total_amount);
+        const debtAmount = parseFloat(expense.debtor_amount);
+        const paidAmount = amount - debtAmount;
+        const expenseAmount = expense.payer_id === userId ? paidAmount : debtAmount;
+        const rangeIndex = expenseAmount > ranges[ ranges.length - 1 ] ? ranges.length : ranges.findIndex((range) => expenseAmount <= range);
+
+        expensesCount[ rangeIndex ]++;
+      }
+    });
+
+    const data = await DashboardDb.getMembershipIds(userId);
+
+    const userMembershipIds = data.map((member) => member.group_membership_id);
+
+    const expenseAmountAsPayer = await DashboardDb.groupExpensesAsPayer(userMembershipIds);
+
+    expenseAmountAsPayer.forEach((expense) => {
+      const debtAmount = expense.group_expense_participants.reduce((amount, debtor) => amount + parseFloat(debtor.debtor_amount), 0);
+      const expenseAmount = parseFloat(expense.total_amount) - debtAmount;
+      const rangeIndex = expenseAmount > ranges[ ranges.length - 1 ] ? ranges.length : ranges.findIndex((range) => expenseAmount <= range);
+
+      expensesCount[ rangeIndex ]++;
+    });
+
+    const expenseAmountAsDebtor = await DashboardDb.groupExpensesAsDebtor(userMembershipIds);
+
+    expenseAmountAsDebtor.forEach((debtor) => {
+      const expenseAmount = parseFloat(debtor.debtor_amount);
+      const rangeIndex = expenseAmount > ranges[ ranges.length - 1 ] ? ranges.length : ranges.findIndex((range) => expenseAmount <= range);
+
+      expensesCount[ rangeIndex ]++;
+    });
+
+    return expensesCount;
+  };
+
+  static getBalance = async(userId) => {
+    const balanceAmounts = [ 0, 0 ];
+    const friendsExpenses = await DashboardDb.getFriendExpenses(userId);
+    
+    friendsExpenses.forEach((expense) => {
+      const index = expense.payer_id === userId ? 0 : 1;
+
+      balanceAmounts[ index ] += parseFloat(expense.debtor_amount);
+    });
+
+    const data = await DashboardDb.getMembershipIds(userId);
+
+    const userMembershipIds = data.map((member) => member.group_membership_id);
+
+    const expenseAmountAsPayer = await DashboardDb.groupExpensesAsPayer(userMembershipIds);
+
+    expenseAmountAsPayer.forEach((expense) => {
+      const debtAmount = expense.group_expense_participants.reduce((amount, debtor) => amount + parseFloat(debtor.debtor_amount), 0);
+
+      balanceAmounts[ 0 ] += debtAmount;
+    });
+    
+    const expenseAmountAsDebtor = await DashboardDb.groupExpensesAsDebtor(userMembershipIds);
+
+    expenseAmountAsDebtor.forEach((debtor) => {
+      balanceAmounts[ 1 ] += parseFloat(debtor.debtor_amount);
+    });
+
+    const groupSettlements = await DashboardDb.getGroupSettlements(userMembershipIds);
+
+    groupSettlements.forEach((settlement) => {
+      const index = userMembershipIds.includes(settlement.payer_id) ? 0 : 1;
+
+      balanceAmounts[ index ] += parseFloat(settlement.settlement_amount);
+    });
+
+    return balanceAmounts;
+  };
+
+  static topCashFlowFriends = async(userId) => {
+    let topFriends = {};
+    const friendsExpenses = await DashboardDb.getFriendExpenses(userId);
+    
+    friendsExpenses.forEach((expense) => {
+      const debtAmount = parseFloat(expense.debtor_amount);
+
+      // Top friends with highest cash flow
+      if (topFriends[ expense.conversation_id ]) {
+        topFriends[ expense.conversation_id ].amount += debtAmount;
+      } else {
+        topFriends[ expense.conversation_id ] = {
+          "amount": debtAmount,
+          "friend": expense.payer_id === userId ? expense.debtor_id : expense.payer_id
+        };
+      }
+    });
+
+    topFriends = sortFriendsByAmount(topFriends, "amount");
+
+    // user IDs of top Partners in cash flow
+    const topFourFriendsId = [];
+
+    Object.entries(topFriends)
+      .slice(0, 4)
+      .map((value) => {
+        topFourFriendsId.push(value[ 1 ].friend);
+      });
+
+    // Names of top partners in cash flow
+    let topFourFriendsName = await UserDb.getUsersById(topFourFriendsId);
+
+    topFourFriendsName = topFourFriendsName.map((user) => {
+      const name = `${user.first_name}${ user.last_name ?? ""}`;
+
+      return name;
+    });
+
+    // Replacing IDs of top partners in cash flow with their names in response
+    Object.keys(topFriends)
+      .slice(0, 4)
+      .forEach((key, index) => {
+        topFriends[ key ].friend = topFourFriendsName[ index ];
+      });
+    
+    return topFriends;
+  };
+
+  static topCashFlowGroups = async(userId) => {
+    return userId;
+  };
+
+  static getMonthlyExpenses = async(userId, year) => {
+    const monthlyExpenses = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+    const friendsExpenses = await DashboardDb.getFriendExpenses(userId, year);
+    
+    friendsExpenses.forEach((expense) => {
+      const amount = parseFloat(expense.total_amount);
+      const debtAmount = parseFloat(expense.debtor_amount);
+      const paidAmount = amount - debtAmount;
+      const expenseAmount = expense.payer_id === userId ? paidAmount : debtAmount;
+
+      monthlyExpenses[ expense.createdAt.getMonth() ] += expenseAmount;
+    });
+
+    const data = await DashboardDb.getMembershipIds(userId);
+
+    const userMembershipIds = data.map((member) => member.group_membership_id);
+
+    const expenseAmountAsPayer = await DashboardDb.groupExpensesAsPayer(userMembershipIds, year);
+
+    expenseAmountAsPayer.forEach((expense) => {
+      const debtAmount = expense.group_expense_participants.reduce((amount, debtor) => amount + parseFloat(debtor.debtor_amount), 0);
+      const expenseAmount = parseFloat(expense.total_amount) - debtAmount;
+
+      monthlyExpenses[ expense.createdAt.getMonth() ] += expenseAmount;
+    });
+    
+    const expenseAmountAsDebtor = await DashboardDb.groupExpensesAsDebtor(userMembershipIds, year);
+
+    expenseAmountAsDebtor.forEach((debtor) => {
+      monthlyExpenses[ debtor.createdAt.getMonth() ] += parseFloat(debtor.debtor_amount);
+    });
+
+    return monthlyExpenses;
+  };
 }
 
 export default DashboardService;

@@ -9,3 +9,15 @@ export interface AllExpenses {
     monthlyExpense: number[];
   };
 }
+
+export interface ExpenseCount {
+  success: boolean;
+  message: string;
+  data: number[];
+}
+
+export interface TopFriends {
+  success: boolean;
+  message: string;
+  data: TopFriend[];
+}

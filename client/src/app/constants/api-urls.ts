@@ -41,5 +41,9 @@ export const API_URLS = {
   deleteGroupSettlement: `${environment.apiBaseUrl}/groups/deletesettlement`,
   updateGroupExpense: `${environment.apiBaseUrl}/groups/updateexpense`,
   updateGroupSettlement: `${environment.apiBaseUrl}/groups/updatesettlement`,
-  createPayment: `${environment.apiBaseUrl}/payments/create-payment`
+  createPayment: `${environment.apiBaseUrl}/payments/create-payment`,
+  expensesCount: `${environment.apiBaseUrl}/dashboard/expensescount`,
+  balanceAmounts: `${environment.apiBaseUrl}/dashboard/balance`,
+  cashFlowFriends: `${environment.apiBaseUrl}/dashboard/cashflowfriends`,
+  monthlyExpenses: `${environment.apiBaseUrl}/dashboard/monthlyexpenses`
 };

@@ -29,13 +29,13 @@
 
 canvas {
   width: 100%;
-  height: 300px;
+  max-height: 300px;
   padding-bottom: 10px;
 }
 
 .canvas {
   width: 100%;
-  height: 300px;
+  max-height: 300px;
   padding-bottom: 10px;
 }
 
@@ -48,4 +48,37 @@ p {
   position: relative;
   top: 40%;
   /* transform: translateY(-50%); */
+}
+
+.dropdown-wrapper {
+  background-color: rgb(242, 242, 242);
+  border-radius: 5px;
+}
+
+#yearSelect {
+  all: unset;
+  cursor: pointer;
+  background-color: rgb(242, 242, 242);
+  border-radius: 5px;
+}
+
+/* Option styling */
+#yearSelect option {
+  width: 100%;
+  text-align: center;
+  background-color: white;
+  border-radius: 20%;
+  cursor: pointer;
+}
+
+/* Style for the selected option (when selected in the dropdown) */
+#yearSelect option:checked {
+  background-color: #007bff; /* Selected option background color */
+  color: white; /* Selected option text color */
+}
+
+/* Style for the option on hover */
+#yearSelect option:hover {
+  background-color: rgb(242, 242, 242); /* Hover effect color */
+  color: black; /* Optional: change text color on hover */
 }

@@ -1,5 +1,5 @@
 import { Op, Sequelize } from "sequelize";
-import { FriendExpense, GroupExpense, GroupExpenseParticipant, GroupMember, GroupSettlement } from "../../config/db.connection.js";
+import { FriendExpense, Group, GroupExpense, GroupExpenseParticipant, GroupMember, GroupSettlement } from "../../config/db.connection.js";
 
 class DashboardDb {
   /**
@@ -117,7 +117,20 @@ class DashboardDb {
       },
       "raw": true
     });
-  
+  };
+
+  static getGroupsById = async(ids) => {
+    const groups = await Group.findAll({
+      "attributes": [ "group_name" ],
+      "where": {
+        "group_id": ids
+      },
+      "raw": true
+    });
+
+    return groups.sort(
+      (a, b) => ids.indexOf(a.group_id) - ids.indexOf(b.group_id)
+    );
   };
   
   static getGroupExpenses = async(userId) => {

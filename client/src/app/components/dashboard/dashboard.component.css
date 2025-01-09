@@ -30,12 +30,14 @@
 canvas {
   width: 100%;
   max-height: 300px;
+  min-height: 300px;
   padding-bottom: 10px;
 }
 
 .canvas {
   width: 100%;
   max-height: 300px;
+  min-height: 300px;
   padding-bottom: 10px;
 }
 

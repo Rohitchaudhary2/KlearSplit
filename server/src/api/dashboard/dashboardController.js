@@ -25,25 +25,25 @@ class DashboardController {
   static getBalance = asyncHandler(async(req, res) => {
     const balance = await DashboardService.getBalance(req.user.user_id);
 
-    responseHandler(res, 200, "Successfully fetched expenses count", balance);
+    responseHandler(res, 200, "Successfully fetched balance", balance);
   });
 
   static topCashFlowFriends = asyncHandler(async(req, res) => {
     const topFriends = await DashboardService.topCashFlowFriends(req.user.user_id);
 
-    responseHandler(res, 200, "Successfully fetched expenses count", topFriends);
+    responseHandler(res, 200, "Successfully fetched top cash flow friends", topFriends);
   });
 
   static topcashflowGroups = asyncHandler(async(req, res) => {
     const topGroups = await DashboardService.topCashFlowGroups(req.user.user_id);
 
-    responseHandler(res, 200, "Successfully fetched expenses count", topGroups);
+    responseHandler(res, 200, "Successfully fetched top cash flow groups", topGroups);
   });
 
   static getMonthlyExpenses = asyncHandler(async(req, res) => {
     const monthlyExpense = await DashboardService.getMonthlyExpenses(req.user.user_id, req.body.year);
 
-    responseHandler(res, 200, "Successfully fetched expenses count", monthlyExpense);
+    responseHandler(res, 200, "Successfully fetched monthly expenses", monthlyExpense);
   });
 }
 

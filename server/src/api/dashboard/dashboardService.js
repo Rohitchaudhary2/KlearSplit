@@ -252,7 +252,70 @@ class DashboardService {
   };
 
   static topCashFlowGroups = async(userId) => {
-    return userId;
+    const topCashFlowGroups = {};
+    const data = await DashboardDb.getMembershipIds(userId);
+
+    const userMembershipIds = data.map((member) => member.group_membership_id);
+
+    const expenseAmountAsPayer = await DashboardDb.groupExpensesAsPayer(userMembershipIds);
+
+    expenseAmountAsPayer.forEach((expense) => {
+      const debtAmount = expense.group_expense_participants.reduce((amount, debtor) => amount + parseFloat(debtor.debtor_amount), 0);
+
+      if (topCashFlowGroups[ expense.payer_id ]) {
+        topCashFlowGroups[ expense.payer_id ].amount += debtAmount;
+      } else {
+        topCashFlowGroups[ expense.payer_id ] = {
+          "amount": debtAmount,
+          "group": expense.group_id
+        };
+      }
+    });
+    
+    const expenseAmountAsDebtor = await DashboardDb.groupExpensesAsDebtor(userMembershipIds);
+
+    expenseAmountAsDebtor.forEach((debtor) => {
+      const debtAmount = parseFloat(debtor.debtor_amount);
+
+      if (topCashFlowGroups[ debtor.debtor_id ]) {
+        topCashFlowGroups[ debtor.debtor_id ].amount += debtAmount;
+      } else {
+        topCashFlowGroups[ debtor.debtor_id ] = {
+          "amount": debtAmount
+        };
+      }
+    });
+
+    const groupSettlements = await DashboardDb.getGroupSettlements(userMembershipIds);
+
+    groupSettlements.forEach((settlement) => {
+      const userMemberShipId = userMembershipIds.includes(settlement.payer_id) ? settlement.payer_id : settlement.debtor_id ;
+
+      const settlementAmount = parseFloat(settlement.settlement_amount);
+
+      if (topCashFlowGroups[ userMemberShipId ]) {
+        topCashFlowGroups[ userMemberShipId ].amount += settlementAmount;
+      } else {
+        topCashFlowGroups[ userMemberShipId ] = {
+          "amount": settlementAmount,
+          "group": settlement.group_id
+        };
+      }
+    });
+
+    const topGroups = sortFriendsByAmount(topCashFlowGroups, "amount");
+
+    const topFourGroupsIds = Object.entries(topGroups).slice(0, 4).map((value) => value[ 1 ].group);
+
+    const topFourGroupsName = await DashboardDb.getGroupsById(topFourGroupsIds);
+
+    Object.keys(topGroups)
+      .slice(0, 4)
+      .forEach((key, index) => {
+        topGroups[ key ].group = topFourGroupsName[ index ].group_name;
+      });
+    
+    return topGroups;
   };
 
   static getMonthlyExpenses = async(userId, year) => {

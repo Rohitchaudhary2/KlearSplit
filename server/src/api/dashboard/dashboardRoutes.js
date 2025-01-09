@@ -19,7 +19,7 @@ dashboardRouter.get("/balance", authenticateToken, DashboardController.getBalanc
 
 dashboardRouter.get("/cashflowfriends", authenticateToken, DashboardController.topCashFlowFriends);
 
-dashboardRouter.get("/topcashflowgroups", authenticateToken, DashboardController.topcashflowGroups);
+dashboardRouter.get("/cashflowgroups", authenticateToken, DashboardController.topcashflowGroups);
 
 dashboardRouter.post("/monthlyexpenses", authenticateToken, validateBody(year), DashboardController.getMonthlyExpenses);
 

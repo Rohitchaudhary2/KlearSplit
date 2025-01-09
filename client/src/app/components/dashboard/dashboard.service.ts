@@ -21,16 +21,6 @@ export class DashboardService {
   getCashFlowFriends() {
     return this.httpClient.get<TopFriends>(`${API_URLS.cashFlowFriends}`, { withCredentials: true }).pipe(
       map((response) => {
-        /**
-         * Transforming the server response:
-         * - Extracts top friends and their associated amounts from the response.
-         * - Maps the raw data into an object with separate fields for:
-         *   - `expensesRange`
-         *   - `balanceAmounts`
-         *   - `topFriends` (amounts only)
-         *   - `topFriendsName` (names only)
-         *   - `monthlyExpense`
-         */
         const topAmounts: number[] = [];
         const friendsName: string[] = [];
         for (const item in response.data) {
@@ -39,7 +29,7 @@ export class DashboardService {
         }
         return {
           topFriends: topAmounts,
-          topFriendsName: friendsName,
+          topFriendsName: friendsName
         };
       }),
     );
@@ -47,6 +37,23 @@ export class DashboardService {
 
   getMonthlyExpenses(year: number) {
     return this.httpClient.post<ExpenseCount>(`${API_URLS.monthlyExpenses}`, { year }, { withCredentials: true });
+  }
+
+  getCashFlowGroups() {
+    return this.httpClient.get<TopFriends>(`${API_URLS.cashFlowGroups}`, { withCredentials: true }).pipe(
+      map((response) => {
+        const topAmounts: number[] = [];
+        const groupsName: string[] = [];
+        for (const item in response.data) {
+          topAmounts.push(Number(response.data[item]["amount"]));
+          groupsName.push(String(response.data[item]["group"]));
+        }
+        return {
+          topFriends: topAmounts,
+          topGroupsName: groupsName
+        };
+      }),
+    );
   }
   /**
    * Fetches all expense-related data from the server.

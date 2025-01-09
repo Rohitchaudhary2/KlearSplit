@@ -9,7 +9,6 @@ import {
 import { FormsModule } from "@angular/forms";
 import { ChartDataset, ChartOptions } from "chart.js";
 import { BaseChartDirective } from "ng2-charts";
-import { lastValueFrom } from "rxjs";
 
 import { AuthService } from "../auth/auth.service";
 import { DashboardService } from "./dashboard.service";
@@ -290,6 +289,7 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.getExpense().subscribe({
       next: (response) => {
         this.pieChartData1.datasets[0].data = response.data;
+        this.charts?.forEach((chart) => chart?.chart?.update());
       }
     });
   }
@@ -312,6 +312,7 @@ export class DashboardComponent implements OnInit {
             },
           },
         };
+        this.charts?.forEach((chart) => chart?.chart?.update());
       }
     });
   }
@@ -321,6 +322,7 @@ export class DashboardComponent implements OnInit {
       next: (response) => {
         this.pieChartData3.datasets[0].data = response.topFriends;
         this.pieChartData3.labels = response.topFriendsName;
+        this.charts?.forEach((chart) => chart?.chart?.update());
       }
     });
   }
@@ -329,22 +331,31 @@ export class DashboardComponent implements OnInit {
     this.getMonthlyExpenses(year);  // Trigger API call with the selected year
   }
 
-  private async getMonthlyExpenses(year: number) {
-    const response = await lastValueFrom(this.dashboardService.getMonthlyExpenses(year));
-    // this.dashboardService.getMonthlyExpenses(year).subscribe({
-    //   next: (response) => {
-    //     this.barChartData.datasets[0].data = response.data;
-    //   }
-    // });
-    this.barChartData.datasets[0].data = response.data;
-    this.charts?.forEach((chart) => chart?.chart?.update());
+  private getMonthlyExpenses(year: number) {
+    this.dashboardService.getMonthlyExpenses(year).subscribe({
+      next: (response) => {
+        this.barChartData.datasets[0].data = response.data;
+        this.charts?.forEach((chart) => chart?.chart?.update());
+      }
+    });
+  }
+
+  private getCashFlowGroups() {
+    this.dashboardService.getCashFlowGroups().subscribe({
+      next: (response) => {
+        this.pieChartData4.datasets[0].data = response.topFriends;
+        this.pieChartData4.labels = response.topGroupsName;
+        this.charts?.forEach((chart) => chart?.chart?.update());
+      }
+    });
   }
 
   async ngOnInit() {
     this.getExpenseCount();
     this.getBalanceAmounts();
     this.getCashFlowFriends();
-    await this.getMonthlyExpenses(this.year);
+    this.getCashFlowGroups();
+    this.getMonthlyExpenses(this.year);
     this.loadAllExpenses();
   }
 

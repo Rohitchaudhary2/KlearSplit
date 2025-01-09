@@ -45,5 +45,6 @@ export const API_URLS = {
   expensesCount: `${environment.apiBaseUrl}/dashboard/expensescount`,
   balanceAmounts: `${environment.apiBaseUrl}/dashboard/balance`,
   cashFlowFriends: `${environment.apiBaseUrl}/dashboard/cashflowfriends`,
-  monthlyExpenses: `${environment.apiBaseUrl}/dashboard/monthlyexpenses`
+  monthlyExpenses: `${environment.apiBaseUrl}/dashboard/monthlyexpenses`,
+  cashFlowGroups: `${environment.apiBaseUrl}/dashboard/cashflowgroups`
 };

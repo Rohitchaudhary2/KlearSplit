@@ -21,3 +21,11 @@ export interface TopFriends {
   message: string;
   data: TopFriend[];
 }
+
+export type TopGroup = Record<string, { amount: number; group: string }>;
+
+export interface TopGroups {
+  success: boolean;
+  message: string;
+  data: TopGroup[];
+}

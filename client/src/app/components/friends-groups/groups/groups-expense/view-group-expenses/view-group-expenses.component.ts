@@ -244,6 +244,7 @@ export class ViewGroupExpensesComponent implements OnInit {
   onUpdateExpense(expense: GroupExpenseData | GroupSettlementData) {
     const isExpense = this.isGroupExpenseData(expense);
     this.updateLoader.set(true);
+    const expenses = this.totalExpenses();
 
     if (isExpense) {
       // Open a dialog to allow the user to update the expense. Pass the current expense data.
@@ -273,7 +274,6 @@ export class ViewGroupExpensesComponent implements OnInit {
           )
           .subscribe({
             next: (response: GroupExpenseResponse) => {
-              const expenses = this.totalExpenses();
               const updatedExpense = response.data.expense;
               const expenseParticipants = response.data.expenseParticipants;
               // Reduce the above array to add the debtor_amount of each participant into a variable debtor_amount
@@ -390,19 +390,20 @@ export class ViewGroupExpensesComponent implements OnInit {
           .updateSettlement(this.selectedGroup()!.group_id, result)
           .subscribe({
             next: (response) => {
-              const isPayer = response.data.payer_id === this.currentMember()!.group_membership_id;
-              response.data.payer = expense.payer;
-              response.data.debtor = expense.debtor;
-              this.expenses.set([ ...this.expenses(), response.data ]);
+              const updatedSettlement = response.data;
+              const isPayer = updatedSettlement.payer_id === this.currentMember()!.group_membership_id;
+              updatedSettlement.payer = expense.payer;
+              updatedSettlement.debtor = expense.debtor;
+              this.expenses.set([ ...this.expenses(), updatedSettlement ]);
               const combinedData = [
                 ...this.combinedView(),
-                { ...response.data, type: "settlement" }
+                { ...updatedSettlement, type: "settlement" }
               ];
               this.combinedView.set(combinedData);
               this.cdr.detectChanges();
               this.selectedGroup()!.balance_amount = this.commonService.updateBalance(
                 this.selectedGroup()!.balance_amount,
-                parseFloat(expense.settlement_amount) - parseFloat(response.data.settlement_amount),
+                parseFloat(expense.settlement_amount) - parseFloat(updatedSettlement.settlement_amount),
                 !isPayer
               );
               this.groupsService.groupInvites().forEach((invite) => {
@@ -416,31 +417,41 @@ export class ViewGroupExpensesComponent implements OnInit {
                 }
               });
               this.groupsService.groupMembers().forEach((member) => {
-                if (member.group_membership_id === response.data.payer_id) {
+                if (member.group_membership_id === updatedSettlement.payer_id) {
                   member.balance_with_user = this.commonService.updateBalance(
                     member.balance_with_user,
-                    parseFloat(response.data.settlement_amount),
+                    parseFloat(updatedSettlement.settlement_amount),
                     true
                   );
                   member.total_balance = this.commonService.updateBalance(
                     member.total_balance,
-                    parseFloat(response.data.settlement_amount),
+                    parseFloat(updatedSettlement.settlement_amount),
                     true
                   );
                 }
-                if (member.group_membership_id === response.data.debtor_id) {
+                if (member.group_membership_id === updatedSettlement.debtor_id) {
                   member.balance_with_user = this.commonService.updateBalance(
                     member.balance_with_user,
-                    parseFloat(response.data.settlement_amount),
+                    parseFloat(updatedSettlement.settlement_amount),
                     false
                   );
                   member.total_balance = this.commonService.updateBalance(
                     member.total_balance,
-                    parseFloat(response.data.settlement_amount),
+                    parseFloat(updatedSettlement.settlement_amount),
                     false
                   );
                 }
               });
+              const updatedExpenses = expenses.map((expenseData) => {
+                if (this.isGroupExpenseData(expenseData)) {
+                  return expenseData;
+                }
+                return expenseData.group_settlement_id === expense.group_settlement_id
+                  ? updatedSettlement
+                  : expenseData;
+              });
+              this.totalExpenses.set(updatedExpenses);
+              this.updateLoader.set(false);
               this.cdr.detectChanges();
               this.toastr.success("Updated settlement successfully", "Success");
             }

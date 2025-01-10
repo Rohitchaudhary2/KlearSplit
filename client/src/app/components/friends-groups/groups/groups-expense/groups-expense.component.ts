@@ -176,7 +176,7 @@ export class GroupsExpenseComponent implements OnInit {
     if (this.form.value.split_type === "EQUAL") {
       this.debtors = this.selectedParticipants.map((participant) => ({
         debtor_id: participant.group_membership_id,
-        debtor_share: this.form.value.total_amount!/(this.selectedParticipants.length ?? 1)
+        debtor_share: parseFloat((this.form.value.total_amount!/(this.selectedParticipants.length ?? 1)).toFixed(2))
       }));
       const payer = this.debtors.find((debtor) =>
         this.form.value.payer_id === debtor.debtor_id);
@@ -204,7 +204,7 @@ export class GroupsExpenseComponent implements OnInit {
       }
     });
 
-    formData.append("payer_share", JSON.stringify(this.payer_share));
+    formData.append("payer_share", this.payer_share.toString());
     formData.append("debtors", JSON.stringify(this.debtors));
 
     // Close the dialog and pass the formData and other relevant expense data

@@ -177,6 +177,19 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * HostListener that listens to the keydown event.
+   * Clear the selected user and close the conversation when the escape key is pressed.
+   *
+   * @param event - An keyboard event of escape key being pressed.
+   */
+  @HostListener("window:keydown", [ "$event" ])
+  handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === "Escape") {
+      this.clearSelectedGroupData();
+    }
+  }
+
+  /**
    * Method to handle image loading.
    * This sets the `isImageLoaded` flag to true when the image has been loaded.
    */
@@ -206,6 +219,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.timestampMessages = undefined;
     this.timestampExpenses = undefined;
     this.timestampCombined = undefined;
+    this.selectedGroup.set(undefined);
   }
 
   onSelectGroup(group: GroupData | undefined) {
@@ -634,33 +648,121 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
    *
    * @param id - The unique identifier of the expense to retry.
    */
-  // onRetryExpenseAddition(id: string) {
-  //   this.addExpenseLoader = true;
-  //   // Find the expense by its group_expense_id
-  //   const expense = this.expenses().find(
-  //     (expenseData) => expenseData.group_expense_id === id,
-  //   )!;
-  //   // Update the expense's group_expense_id to indicate retry state
-  //   expense.group_expense_id = `retrying${this.errorNumber}`;
-  //   // Update the combined view to reflect the retry state
-  //   const combinedExpense = this.combinedView().find(
-  //     (item) => this.groupsService.isCombinedExpense(item)
-  //   );
-  //   if (combinedExpense) {
-  //     combinedExpense.group_expense_id = `retrying${this.errorNumber}`;
-  //   }
-  //   this.cdr.detectChanges();
-  //   const { "group_expense_id": groupId, ...expenseData } = expense;
-  //   const formData = Object.entries(expenseData).reduce(
-  //     (newFormData, [ key, value ]) => {
-  //       if (value) {
-  //         newFormData.append(key, value);
-  //       }
-  //       return newFormData;
-  //     },
-  //     new FormData(),
-  //   )
-  // }
+  onRetryExpenseAddition(id: string) {
+    this.addExpenseLoader = true;
+    // Find the expense by its group_expense_id
+    const expenseToBeRetried = this.expenses().find(
+      (expenseData) => this.isGroupExpense(expenseData) ? expenseData.group_expense_id === id : false,
+    )!;
+    if (!this.isGroupExpense(expenseToBeRetried)) {
+      return;
+    }
+    // Update the expense's group_expense_id to indicate retry state
+    expenseToBeRetried.group_expense_id = `retrying${this.errorNumber}`;
+    // Update the combined view to reflect the retry state
+    const combinedExpense = this.combinedView().find(
+      (item) => this.groupsService.isCombinedExpense(item) ? item.group_expense_id === id : false,
+    );
+    if (combinedExpense && this.groupsService.isCombinedExpense(combinedExpense)) {
+      combinedExpense.group_expense_id = `retrying${this.errorNumber}`;
+    }
+    this.cdr.detectChanges();
+    const { "group_expense_id": groupExpenseId, ...expenseData } = expenseToBeRetried;
+    const formData = Object.entries(expenseData).reduce(
+      (newFormData, [ key, value ]) => {
+        // Exclude the `payer` key
+        if (key === "payer") {
+          return newFormData;
+        }
+
+        // Handle `debtors` field specifically
+        if (key === "debtors") {
+          newFormData.append(key, JSON.stringify(value));
+          return newFormData;
+        }
+
+        if (key === "payer_share" && !value) {
+          newFormData.append(key, "0");
+          return newFormData;
+        }
+
+        if (value) {
+          newFormData.append(key, typeof value === "object" ? JSON.stringify(value) : value.toString());
+        }
+        return newFormData;
+      },
+      new FormData(),
+    );
+
+    // Make the API call to retry adding the expense on hte server.
+    this.groupsService
+      .addExpense(this.selectedGroup()!.group_id, formData)
+      .subscribe({
+        next: (response: GroupExpenseResponse) => {
+          const expense = response.data.expense;
+          const expenseParticipants = response.data.expenseParticipants;
+          // Reduce the above array to add the debtor_amount of each participant into a variable debtor_amount
+          const totalDebtAmount = expenseParticipants.reduce((acc, val) => acc + parseFloat(val.debtor_amount), 0);
+          expense.total_debt_amount = totalDebtAmount.toString();
+          if (expense.payer_id === this.currentMember()?.group_membership_id) {
+            expense.payer = this.commonService.getFullNameAndImage(this.currentMember());
+            expense.user_debt = (parseFloat(expense.total_amount) - totalDebtAmount).toString();
+          } else {
+            const payer = this.groupMembers().find((member) => expense.payer_id === member.group_membership_id);
+            expense.payer = this.commonService.getFullNameAndImage(
+              payer
+            );
+            expense.user_debt = (expenseParticipants.find(
+              (participant) => participant.debtor_id === this.currentMember()?.group_membership_id)!.debtor_amount);
+          }
+
+          // Update the expenses list by replacing the temporary 'adding' entry with the actual response data.
+          const updatedExpenses = this.expenses().map((expenseDetails) => {
+            return this.isGroupExpense(expenseDetails) && expenseDetails.group_expense_id === groupExpenseId
+              ? expense
+              : expenseDetails;
+          }
+          );
+          this.expenses.set(updatedExpenses);
+
+          // Update the combined view by replacing the temporary 'adding' entry.
+          const updatedCombinedView = this.combinedView().map((item) => {
+            return this.groupsService.isCombinedExpense(item) && item.group_expense_id === groupExpenseId
+              ? { ...expense, type: "expense" }
+              : item;
+          });
+          this.combinedView.set(updatedCombinedView);
+          this.addExpenseLoader = false;
+          this.cdr.detectChanges();
+          this.commonService.scrollToBottom(this.messageContainer()!);
+          // Updating balance amount of group accordingly
+          this.selectedGroup()!.balance_amount = this.commonService.updateBalance(
+            this.selectedGroup()!.balance_amount,
+            parseFloat(expense.payer_id === this.currentMember()?.group_membership_id ? expense.total_debt_amount : expense.user_debt),
+            expense.payer_id === this.currentMember()?.group_membership_id
+          );
+          this.toastr.success("Expense Created successfully", "Success");
+        },
+        error: () => {
+          // If the API call fails, mark the expense as 'error' in the local view,
+          // and provide Retry functionality.
+          const updatedExpense = this.expenses().map((expenseDetails) => {
+            return this.isGroupExpense(expenseDetails) && expenseDetails.group_expense_id === groupExpenseId
+              ? { ...expenseDetails, group_expense_id: `error${this.errorNumber}` }
+              : expenseDetails;
+          });
+          this.expenses.set(updatedExpense);
+          const updatedCombinedView = this.combinedView().map((item) => {
+            return this.groupsService.isCombinedExpense(item) && item.group_expense_id === groupExpenseId
+              ? { ...item, group_expense_id: `error${this.errorNumber}`, type: "expense" }
+              : item;
+          });
+          this.combinedView.set(updatedCombinedView);
+          this.errorNumber++;
+          this.addExpenseLoader = false;
+        },
+      });
+  }
 
   /**
      * Opens a dialog to view expenses for the selected group.

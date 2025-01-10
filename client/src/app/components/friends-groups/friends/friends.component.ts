@@ -56,8 +56,8 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
   messageContainer = viewChild<ElementRef>("messageContainer");
   friendListComponent = viewChild(FriendsListComponent);
   private readonly cdr = inject(ChangeDetectorRef); // Change detector for manual view updates
-  private router = inject(Router);
-  private activatedRoute = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly activatedRoute = inject(ActivatedRoute);
   // Injecting services needed by the component
   private readonly toastr = inject(ToastrService);
   private readonly friendsService = inject(FriendsService);
@@ -176,6 +176,18 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
     if (element.scrollTop === 0 && !this.loading) {
       this.scrollPosition = element.scrollHeight;
       this.loadItems(element);
+    }
+  }
+
+  /**
+   * Clear the selected user and close the conversation when the escape key is pressed.
+   *
+   * @param event - An keyboard event of escape key being pressed.
+   */
+  @HostListener("window:keydown", [ "$event" ])
+  handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === "Escape") {
+      this.clearSelectedUserData();
     }
   }
 

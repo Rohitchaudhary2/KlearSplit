@@ -158,6 +158,7 @@
                 @for (expense of expenses(); track $index) {
                   @if (isGroupExpense(expense)) {
                     <app-expense
+                      (onRetry)="onRetryExpenseAddition($event)"
                       [expense]="{
                         expense_id: expense.group_expense_id,
                         expense_name: expense.expense_name,
@@ -211,6 +212,7 @@
                     </app-message>
                   } @else if (groupsService.isCombinedExpense(item)) {
                     <app-expense
+                      (onRetry)="onRetryExpenseAddition($event)"
                       [expense]="{
                         expense_id: item.group_expense_id,
                         expense_name: item.expense_name,

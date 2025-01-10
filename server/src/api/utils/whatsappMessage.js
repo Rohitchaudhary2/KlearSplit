@@ -22,9 +22,9 @@ export const sendWhatsAppTemplateMessage = async(
     // Create personalized variables for the recipient
     const recipientName = `${participant.first_name} ${participant.last_name ?? ""}`.trim();
     const participantList = participants.map((p) => `${p.first_name} ${p.last_name ?? ""}`.trim());
-    const participantListVariable = participantList.length > 2 ? [
-      ...participantList.slice(0, 2).map((name, index, arr) =>
-        (index === arr.length - 1 ? `${name}\nand ${participantList.length - 2} others` : name)
+    const participantListVariable = participantList.length > 3 ? [
+      ...participantList.slice(0, 3).map((name, index, arr) =>
+        (index === arr.length - 1 ? `${name} and ${participantList.length - 3} others` : name)
       )
     ] : participantList;
 
@@ -67,6 +67,7 @@ export const sendWhatsAppTemplateMessage = async(
       responses.push(response.data);
     } catch (error) {
       responses.push(error.response ? error.response.data : error.message);
+      throw error.response ? error.response.data : error.message;
     }
   });
 

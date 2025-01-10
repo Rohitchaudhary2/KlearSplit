@@ -762,14 +762,14 @@ class GroupService {
 
       GroupUtils.validateSettlementAmount(balanceAmount, settlementData.settlement_amount);
 
-      balanceAmount = membersBalanceInfo.balance_amount + settlementData.settlement_amount;
+      balanceAmount += settlementData.settlement_amount;
 
     } else {
       balanceAmount = membersBalanceInfo.balance_amount + settlement.settlement_amount;
 
       GroupUtils.validateSettlementAmount(balanceAmount, settlementData.settlement_amount);
 
-      balanceAmount = membersBalanceInfo.balance_amount - settlementData.settlement_amount;
+      balanceAmount -= settlementData.settlement_amount;
     }
 
     Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });

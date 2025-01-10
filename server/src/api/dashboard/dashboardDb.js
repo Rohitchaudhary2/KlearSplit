@@ -1,4 +1,4 @@
-import { Op, Sequelize } from "sequelize";
+import { Op } from "sequelize";
 import { FriendExpense, Group, GroupExpense, GroupExpenseParticipant, GroupMember, GroupSettlement } from "../../config/db.connection.js";
 
 class DashboardDb {
@@ -131,41 +131,6 @@ class DashboardDb {
     return groups.sort(
       (a, b) => ids.indexOf(a.group_id) - ids.indexOf(b.group_id)
     );
-  };
-  
-  static getGroupExpenses = async(userId) => {
-    return await GroupExpense.findAll({
-      "include": [
-        {
-          "model": GroupExpenseParticipant,
-          "required": true, // Ensures that at least one participant is included
-          "where": {
-            "group_expense_id": Sequelize.col("group_expenses.group_expense_id") // Ensure we filter by group_expense_id
-          }
-        },
-        {
-          "model": GroupMember,
-          "required": true, // Ensures a matching member record is required
-          "where": {
-            "member_id": userId,
-            [ Op.or ]: [
-              // Check if group_membership_id matches payer_id from GroupExpense
-              {
-                "group_membership_id": {
-                  [ Op.eq ]: Sequelize.col("group_expenses.payer_id")
-                }
-              },
-              // Check if any debtor_id in GroupExpenseParticipants matches group_membership_id
-              {
-                "$group_expense_participants.debtor_id$": {
-                  [ Op.eq ]: Sequelize.col("group_members.group_membership_id")
-                }
-              }
-            ]
-          }
-        }
-      ]
-    });
   };
 }
 

@@ -23,10 +23,10 @@ export class DashboardService {
       map((response) => {
         const topAmounts: number[] = [];
         const friendsName: string[] = [];
-        for (const item in response.data) {
-          topAmounts.push(Number(response.data[item]["amount"]));
-          friendsName.push(String(response.data[item]["friend"]));
-        }
+        Object.values(response.data).forEach((item) => {
+          topAmounts.push(Number(item["amount"]));
+          friendsName.push(String(item["friend"]));
+        } );
         return {
           topFriends: topAmounts,
           topFriendsName: friendsName
@@ -44,10 +44,10 @@ export class DashboardService {
       map((response) => {
         const topAmounts: number[] = [];
         const groupsName: string[] = [];
-        for (const item in response.data) {
-          topAmounts.push(Number(response.data[item]["amount"]));
-          groupsName.push(String(response.data[item]["group"]));
-        }
+        Object.values(response.data).forEach((item) => {
+          topAmounts.push(Number(item["amount"]));
+          groupsName.push(String(item["group"]));
+        } );
         return {
           topFriends: topAmounts,
           topGroupsName: groupsName

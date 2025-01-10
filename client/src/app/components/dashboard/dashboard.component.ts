@@ -26,6 +26,13 @@ export class DashboardComponent implements OnInit {
   balanceAmount = signal<number>(0);
   year = new Date().getFullYear();
   years = [ 2020,  2021, 2022, 2023, 2024, 2025 ];
+  loaders = {
+    pieChart1: false,
+    pieChart2: false,
+    pieChart3: false,
+    pieChart4: false,
+    barChart: false
+  };
 
   // Refrences to chart components in the template for programmatic updates
   @ViewChildren(BaseChartDirective) charts?: QueryList<BaseChartDirective>;
@@ -286,15 +293,20 @@ export class DashboardComponent implements OnInit {
   };
 
   private getExpenseCount() {
+    this.loaders.pieChart1 = true;
     this.dashboardService.getExpense().subscribe({
       next: (response) => {
         this.pieChartData1.datasets[0].data = response.data;
         this.charts?.forEach((chart) => chart?.chart?.update());
+      },
+      complete: () => {
+        this.loaders.pieChart1 = false;
       }
     });
   }
 
   private getBalanceAmounts() {
+    this.loaders.pieChart2 = true;
     this.dashboardService.getBalanceAmounts().subscribe({
       next: (response) => {
         this.pieChartData2.datasets[0].data = response.data;
@@ -313,16 +325,23 @@ export class DashboardComponent implements OnInit {
           },
         };
         this.charts?.forEach((chart) => chart?.chart?.update());
+      },
+      complete: () => {
+        this.loaders.pieChart2 = false;
       }
     });
   }
 
   private getCashFlowFriends() {
+    this.loaders.pieChart3 = true;
     this.dashboardService.getCashFlowFriends().subscribe({
       next: (response) => {
         this.pieChartData3.datasets[0].data = response.topFriends;
         this.pieChartData3.labels = response.topFriendsName;
         this.charts?.forEach((chart) => chart?.chart?.update());
+      },
+      complete: () => {
+        this.loaders.pieChart3 = false;
       }
     });
   }
@@ -332,20 +351,28 @@ export class DashboardComponent implements OnInit {
   }
 
   private getMonthlyExpenses(year: number) {
+    this.loaders.barChart = true;
     this.dashboardService.getMonthlyExpenses(year).subscribe({
       next: (response) => {
         this.barChartData.datasets[0].data = response.data;
         this.charts?.forEach((chart) => chart?.chart?.update());
+      },
+      complete: () => {
+        this.loaders.barChart = false;
       }
     });
   }
 
   private getCashFlowGroups() {
+    this.loaders.pieChart4 = true;
     this.dashboardService.getCashFlowGroups().subscribe({
       next: (response) => {
         this.pieChartData4.datasets[0].data = response.topFriends;
         this.pieChartData4.labels = response.topGroupsName;
         this.charts?.forEach((chart) => chart?.chart?.update());
+      },
+      complete: () => {
+        this.loaders.pieChart4 = false;
       }
     });
   }

@@ -129,14 +129,12 @@ class DashboardService {
       const debtAmount = parseFloat(expense.debtor_amount);
 
       // Top friends with highest cash flow
-      if (topFriends[ expense.conversation_id ]) {
-        topFriends[ expense.conversation_id ].amount += debtAmount;
-      } else {
-        topFriends[ expense.conversation_id ] = {
-          "amount": debtAmount,
-          "friend": expense.payer_id === userId ? expense.debtor_id : expense.payer_id
-        };
-      }
+      topFriends[ expense.conversation_id ] = topFriends[ expense.conversation_id ] ?? {
+        "amount": 0,
+        "friend": expense.payer_id === userId ? expense.debtor_id : expense.payer_id
+      };
+      
+      topFriends[ expense.conversation_id ].amount += debtAmount;
     });
 
     topFriends = sortFriendsByAmount(topFriends, "amount");
@@ -154,7 +152,7 @@ class DashboardService {
     let topFourFriendsName = await UserDb.getUsersById(topFourFriendsId);
 
     topFourFriendsName = topFourFriendsName.map((user) => {
-      const name = `${user.first_name}${ user.last_name ?? ""}`;
+      const name = `${user.first_name} ${ user.last_name ?? ""}`.trim();
 
       return name;
     });
@@ -180,14 +178,12 @@ class DashboardService {
     expenseAmountAsPayer.forEach((expense) => {
       const debtAmount = expense.group_expense_participants.reduce((amount, debtor) => amount + parseFloat(debtor.debtor_amount), 0);
 
-      if (topCashFlowGroups[ expense.payer_id ]) {
-        topCashFlowGroups[ expense.payer_id ].amount += debtAmount;
-      } else {
-        topCashFlowGroups[ expense.payer_id ] = {
-          "amount": debtAmount,
-          "group": expense.group_id
-        };
-      }
+      topCashFlowGroups[ expense.payer_id ] = topCashFlowGroups[ expense.payer_id ] ?? {
+        "amount": 0,
+        "group": expense.group_id
+      };
+      
+      topCashFlowGroups[ expense.payer_id ].amount += debtAmount;
     });
     
     const expenseAmountAsDebtor = await DashboardDb.groupExpensesAsDebtor(userMembershipIds);
@@ -196,14 +192,12 @@ class DashboardService {
       const debtAmount = parseFloat(debtor.debtor_amount);
       const groupId = userMemberships.find((member) => member.group_membership_id === debtor.debtor_id).group_id;
 
-      if (topCashFlowGroups[ debtor.debtor_id ]) {
-        topCashFlowGroups[ debtor.debtor_id ].amount += debtAmount;
-      } else {
-        topCashFlowGroups[ debtor.debtor_id ] = {
-          "amount": debtAmount,
-          "group": groupId
-        };
-      }
+      topCashFlowGroups[ debtor.debtor_id ] = topCashFlowGroups[ debtor.debtor_id ] ?? {
+        "amount": 0,
+        "group": groupId
+      };
+
+      topCashFlowGroups[ debtor.debtor_id ].amount += debtAmount;
     });
 
     const groupSettlements = await DashboardDb.getGroupSettlements(userMembershipIds);
@@ -213,14 +207,12 @@ class DashboardService {
 
       const settlementAmount = parseFloat(settlement.settlement_amount);
 
-      if (topCashFlowGroups[ userMemberShipId ]) {
-        topCashFlowGroups[ userMemberShipId ].amount += settlementAmount;
-      } else {
-        topCashFlowGroups[ userMemberShipId ] = {
-          "amount": settlementAmount,
-          "group": settlement.group_id
-        };
-      }
+      topCashFlowGroups[ userMemberShipId ] = topCashFlowGroups[ userMemberShipId ] ?? {
+        "amount": 0,
+        "group": settlement.group_id
+      };
+
+      topCashFlowGroups[ userMemberShipId ].amount += settlementAmount;
     });
 
     const topGroups = sortFriendsByAmount(topCashFlowGroups, "amount");

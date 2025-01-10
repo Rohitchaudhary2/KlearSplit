@@ -356,41 +356,5 @@ export class DashboardComponent implements OnInit {
     this.getCashFlowFriends();
     this.getCashFlowGroups();
     this.getMonthlyExpenses(this.year);
-    this.loadAllExpenses();
-  }
-
-  /**
-   * Fetches all expense-related data and updates the charts with the retrieved values.
-   * The data includes:
-   * - Expense ranges for the first pie chart
-   * - Balance amounts for the second pie chart
-   * - Top friends and groups for the third and fourth pie charts
-   * - Monthly expenses for the bar chart
-   */
-  private loadAllExpenses() {
-    this.dashboardService.getAllExpenses().subscribe({
-      next: () => {
-        // this.pieChartData1.datasets[0].data = response.expensesRange;
-        // this.pieChartData2.datasets[0].data = response.balanceAmounts;
-        // this.balanceAmount.set(
-        //   response.balanceAmounts[0] - response.balanceAmounts[1],
-        // );
-        // this.pieChartOptions2 = {
-        //   ...this.pieChartOptions2,
-        //   plugins: {
-        //     ...this.pieChartOptions2.plugins,
-        //     title: {
-        //       ...this.pieChartOptions2.plugins?.title,
-        //       text: `Balance Amount: ${Math.abs(this.balanceAmount())}`,
-        //       color: this.balanceAmount() < 0 ? "#F44336" : "#2E7D32",
-        //     },
-        //   },
-        // };
-        // this.pieChartData3.datasets[0].data = response.topFriends;
-        // this.pieChartData3.labels = response.topFriendsName;
-        // this.barChartData.datasets[0].data = response.monthlyExpense;
-        this.charts?.forEach((chart) => chart?.chart?.update());
-      },
-    });
   }
 }

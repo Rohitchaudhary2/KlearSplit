@@ -6,13 +6,6 @@ import { year } from "./dashboardValidations.js";
 
 const dashboardRouter = Router();
 
-// Retrieves stats for expenses required to be displayed on dashboard
-dashboardRouter.get(
-  "/getallexpensesdata",
-  authenticateToken,
-  DashboardController.getAllExpensesData
-);
-
 dashboardRouter.get("/expensescount", authenticateToken, DashboardController.getExpensesCount);
 
 dashboardRouter.get("/balance", authenticateToken, DashboardController.getBalance);

@@ -23,7 +23,6 @@ export const API_URLS = {
   deleteExpense: `${environment.apiBaseUrl}/friends/deleteexpense`,
   getCombined: `${environment.apiBaseUrl}/friends/getboth`,
   refreshAccessToken: `${environment.apiBaseUrl}/auth/refreshtoken`,
-  getAllExpensesData: `${environment.apiBaseUrl}/dashboard/getallexpensesdata`,
   updateExpense: `${environment.apiBaseUrl}/friends/updateexpense`,
   createGroup: `${environment.apiBaseUrl}/groups/create`,
   getGroups: `${environment.apiBaseUrl}/groups/usergroups`,

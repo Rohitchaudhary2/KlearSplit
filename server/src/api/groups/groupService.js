@@ -506,7 +506,7 @@ class GroupService {
       throw new ErrorHandler(400, "Both payer and debtor must be in the group.");
     }
 
-    Object.assign(settlementData, { "group_id": groupId });
+    Object.assign(settlementData, { "settlement_amount": parseFloat(settlementData.settlement_amount), "group_id": groupId });
 
     const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlementData.payer_id, settlementData.debtor_id);
 
@@ -523,13 +523,9 @@ class GroupService {
 
     GroupUtils.validateSettlementAmount(membersBalanceInfo.balance_amount, settlementData.settlement_amount);
 
-    let balanceAmount;
+    const settlementAmount = membersBalanceInfo.balance_amount < 0 ? settlementData.settlement_amount : -settlementData.settlement_amount;
 
-    if (membersBalanceInfo.balance_amount < 0) {
-      balanceAmount = membersBalanceInfo.balance_amount + settlementData.settlement_amount;
-    } else {
-      balanceAmount = membersBalanceInfo.balance_amount - settlementData.settlement_amount;
-    }
+    const balanceAmount = membersBalanceInfo.balance_amount + settlementAmount;
 
     Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
 
@@ -755,22 +751,13 @@ class GroupService {
 
     Object.assign(membersBalanceInfo, { "balance_amount": parseFloat(membersBalanceInfo.balance_amount) });
 
-    let balanceAmount;
-    
-    if (settlement.payer_id === membersBalanceInfo.participant1_id) {
-      balanceAmount = membersBalanceInfo.balance_amount - settlement.settlement_amount;
+    const isPayerParticipant1 = settlement.payer_id === membersBalanceInfo.participant1_id;
 
-      GroupUtils.validateSettlementAmount(balanceAmount, settlementData.settlement_amount);
+    let balanceAmount = membersBalanceInfo.balance_amount + (isPayerParticipant1 ? -settlement.settlement_amount : settlement.settlement_amount);
 
-      balanceAmount += settlementData.settlement_amount;
+    GroupUtils.validateSettlementAmount(balanceAmount, settlementData.settlement_amount);
 
-    } else {
-      balanceAmount = membersBalanceInfo.balance_amount + settlement.settlement_amount;
-
-      GroupUtils.validateSettlementAmount(balanceAmount, settlementData.settlement_amount);
-
-      balanceAmount -= settlementData.settlement_amount;
-    }
+    balanceAmount += isPayerParticipant1 ? settlementData.settlement_amount : -settlementData.settlement_amount;
 
     Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
     Object.assign(settlement, settlementData);
@@ -864,15 +851,11 @@ class GroupService {
 
     const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlement.payer_id, settlement.debtor_id);
 
-    if (membersBalanceInfo.participant1_id === settlement.payer_id) {
-      const balanceAmount = parseFloat(membersBalanceInfo.balance_amount) - parseFloat(settlement.settlement_amount);
+    const isPayerParticipant1 = settlement.payer_id === membersBalanceInfo.participant1_id;
 
-      Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
-    } else {
-      const balanceAmount = parseFloat(membersBalanceInfo.balance_amount) + parseFloat(settlement.settlement_amount);
+    const balanceAmount = parseFloat(membersBalanceInfo.balance_amount) + (isPayerParticipant1 ? -parseFloat(settlement.settlement_amount) : parseFloat(settlement.settlement_amount));
 
-      Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
-    }
+    Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
 
     const transaction = await sequelize.transaction();
 

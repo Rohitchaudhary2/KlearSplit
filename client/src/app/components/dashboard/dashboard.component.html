@@ -1,74 +1,156 @@
-@if (authService.currentUser() === null) {
-  <p>Please Login or Register to move further!</p>
-} @else {
-  <p class="fs-2 justify-content-center align-items-center d-flex">
-    Welcome, {{ authService.currentUser()?.first_name }}
-  </p>
-}
 <div class="chart-container">
   <div class="row">
     <div class="col">
-      @if(hasNoneZeroData(pieChartData1)) {
-        <canvas
-        baseChart
-        [data]="pieChartData1"
-        [type]="'pie'"
-        [options]="pieChartOptions1"
-        ></canvas>
-      } @else {
+      @if(loaders.pieChart1) {
         <div class="d-flex flex-column align-items-center canvas">
-          <h5>Number of Expenses by Amount Range</h5>
-          <p>No Data Found</p>
+          <h5>Number of Expenses by Amount Range</h5> 
+          <section class="dots-container">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </section>
         </div>
+      } @else {
+        @if(hasNoneZeroData(pieChartData1)) {
+          <canvas
+          baseChart
+          [data]="pieChartData1"
+          [type]="'pie'"
+          [options]="pieChartOptions1"
+          ></canvas>
+        } @else {
+          <div class="d-flex flex-column align-items-center canvas">
+            <h5>Number of Expenses by Amount Range</h5>
+            <p>No Data Found</p>
+          </div>
+        }
       }
     </div>
     <div class="col">
-      @if(hasNoneZeroData(pieChartData2)) {
-        <canvas
-        baseChart
-        [data]="pieChartData2"
-        [type]="'pie'"
-        [options]="pieChartOptions2"
-        ></canvas>
-      } @else {
+      @if(loaders.pieChart2) {
         <div class="d-flex flex-column align-items-center canvas">
           <h5>Balance Amount</h5>
-          <p>No Data Found</p>
+          <section class="dots-container">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </section>
         </div>
+      } @else {
+        @if(hasNoneZeroData(pieChartData2)) {
+          <canvas
+          baseChart
+          [data]="pieChartData2"
+          [type]="'pie'"
+          [options]="pieChartOptions2"
+          ></canvas>
+        } @else {
+          <div class="d-flex flex-column align-items-center canvas">
+            <h5>Balance Amount</h5>
+            <p>No Data Found</p>
+          </div>
+        }
       }
     </div>
     <div class="col">
-      @if(pieChartData3.datasets[0].data.length) {
-        <canvas
-        baseChart
-        [data]="pieChartData3"
-        [type]="'pie'"
-        [options]="pieChartOptions3"
-        ></canvas>
-      } @else {
+      @if(loaders.pieChart3) {
         <div class="d-flex flex-column align-items-center canvas">
           <h5>Top Cash Flow Partners</h5>
-          <p>No Data Found</p>
+          <section class="dots-container">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </section>
         </div>
+      } @else {
+        @if(pieChartData3.datasets[0].data.length) {
+          <canvas
+          baseChart
+          [data]="pieChartData3"
+          [type]="'pie'"
+          [options]="pieChartOptions3"
+          ></canvas>
+        } @else {
+          <div class="d-flex flex-column align-items-center canvas">
+            <h5>Top Cash Flow Partners</h5>
+            <p>No Data Found</p>
+          </div>
+        }
       }
     </div>
   </div>
   <div class="row">
     <div class="col">
-      <canvas
-        baseChart
-        [data]="pieChartData4"
-        [type]="'pie'"
-        [options]="pieChartOptions4"
-      ></canvas>
+      @if(loaders.pieChart3) {
+        <div class="d-flex flex-column align-items-center canvas">
+          <h5>Top Cash Flow Groups</h5>
+          <section class="dots-container">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </section>
+        </div>
+      } @else {
+        @if(pieChartData4.datasets[0].data.length) {
+          <canvas
+            baseChart
+            [data]="pieChartData4"
+            [type]="'pie'"
+            [options]="pieChartOptions4"
+          ></canvas>
+        } @else {
+          <div class="d-flex flex-column align-items-center canvas">
+            <h5>Top Cash Flow Groups</h5>
+            <p>No Data Found</p>
+          </div>
+        }
+      }
     </div>
+
     <div class="col" style="max-width: 64.4%">
-      <canvas
-        baseChart
-        [data]="barChartData"
-        [type]="'bar'"
-        [options]="barChartOptions"
-      ></canvas>
+      <div class="text-end px-2 ">
+      <!-- Dropdown to select the year -->
+        <label for="yearSelect" class="form-label pe-2">Monthly Expenses for</label>
+        <span class="dropdown-wrapper">
+          <select id="yearSelect" class="px-2 py-1" [(ngModel)]="year" (ngModelChange)="onYearChange($event)">
+            @for (year of years; track $index) {
+              <option [value]="year">{{ year }}</option>
+            }
+          </select>
+        </span>
+      </div>
+      @if(loaders.barChart) {
+        <div class="d-flex flex-column align-items-center canvas">
+          <section class="dots-container">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </section>
+        </div>
+      } @else {
+        @if(barChartData.datasets[0].data.length) {
+          <canvas
+            baseChart
+            [data]="barChartData"
+            [type]="'bar'"
+            [options]="barChartOptions"
+          ></canvas>
+        } @else {
+          <div class="d-flex flex-column align-items-center canvas">
+            <p>No Data Found</p>
+          </div>
+        }
+      }
     </div>
   </div>
 </div>

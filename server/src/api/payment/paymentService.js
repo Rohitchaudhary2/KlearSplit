@@ -20,10 +20,10 @@ class PaymentService {
     let debtorUserId = debtorId;
 
     if (type === "groups") {
-      const response = await GroupDb.getGroupMembersByIds([ payerId, debtorId ]);
+      const [ payer, debtor ] = await GroupDb.getGroupMembersByIds([ payerId, debtorId ], "group_membership_id");
 
-      payerUserId = response.member_id;
-      debtorUserId = response.member_id;
+      payerUserId = payer.member_id;
+      debtorUserId = debtor.member_id;
     }
 
     // Create payment JSON
@@ -87,11 +87,14 @@ class PaymentService {
   static executePayment = async(req) => {
     const { type, id, success, paymentId, PayerID, userId } = req.query;
 
+    const payment = await PaymentDb.getPayment(paymentId);
+
     if (success === "false") {
+      Object.assign(payment, { "payment_status": "CANCELLED" });
+      await payment.save();
+
       return `http://localhost:4200/${type}?id=${id}&success=false`;
     }
-
-    const payment = await PaymentDb.getPayment(paymentId);
 
     // const paymentId = req.query.paymentId; // from PayPal URL
     const paypalPayerId = { "payer_id": PayerID }; // from PayPal URL
@@ -114,8 +117,13 @@ class PaymentService {
           break;
         }
         case "groups": {
+          const [ payer, debtor ] = await GroupDb.getGroupMembersByIds([ payerId, debtorId ], "member_id");
+
+          const payerMembershipId = payer.group_membership_id;
+          const debtorMembershipId = debtor.group_membership_id;
+
           // Await the group settlement addition
-          const settlement = await GroupService.addSettlement({ "payer_id": payerId, "debtor_id": debtorId, "settlement_amount": amount }, id, userId);
+          const settlement = await GroupService.addSettlement({ "payer_id": payerMembershipId, "debtor_id": debtorMembershipId, "settlement_amount": amount }, id, userId);
 
           Object.assign(payment, { "transaction_id": paymentDetails.transactions[ 0 ].related_resources[ 0 ].sale.id, "payment_status": "COMPLETED", "group_settlement_id": settlement.group_settlement_id, "paypal_payer_id": PayerID });
 
@@ -138,6 +146,8 @@ class PaymentService {
         "message": error.message || "Error while executing payment",
         "stack": error.stack || "No stack trace available"
       });
+      Object.assign(payment, { "payment_status": "FAILED" });
+      await payment.save();
       return `http://localhost:4200/${type}?id=${id}&success=false`;
     }
   };

@@ -6,6 +6,7 @@ import {
   signal,
   ViewChildren,
 } from "@angular/core";
+import { FormsModule } from "@angular/forms";
 import { ChartDataset, ChartOptions } from "chart.js";
 import { BaseChartDirective } from "ng2-charts";
 
@@ -15,7 +16,7 @@ import { DashboardService } from "./dashboard.service";
 @Component({
   selector: "app-dashboard",
   standalone: true,
-  imports: [ BaseChartDirective ],
+  imports: [ BaseChartDirective, FormsModule ],
   templateUrl: "./dashboard.component.html",
   styleUrl: "./dashboard.component.css",
 })
@@ -23,6 +24,15 @@ export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
   private readonly dashboardService = inject(DashboardService);
   balanceAmount = signal<number>(0);
+  year = new Date().getFullYear();
+  years = [ 2020,  2021, 2022, 2023, 2024, 2025 ];
+  loaders = {
+    pieChart1: false,
+    pieChart2: false,
+    pieChart3: false,
+    pieChart4: false,
+    barChart: false
+  };
 
   // Refrences to chart components in the template for programmatic updates
   @ViewChildren(BaseChartDirective) charts?: QueryList<BaseChartDirective>;
@@ -263,6 +273,9 @@ export class DashboardComponent implements OnInit {
       tooltip: {
         enabled: true,
       },
+      legend: {
+        display: false // Hide legend labels
+      }
     },
     animations: {
       tension: {
@@ -279,25 +292,26 @@ export class DashboardComponent implements OnInit {
     },
   };
 
-  ngOnInit(): void {
-    this.loadAllExpenses();
+  private getExpenseCount() {
+    this.loaders.pieChart1 = true;
+    this.dashboardService.getExpense().subscribe({
+      next: (response) => {
+        this.pieChartData1.datasets[0].data = response.data;
+        this.charts?.forEach((chart) => chart?.chart?.update());
+      },
+      complete: () => {
+        this.loaders.pieChart1 = false;
+      }
+    });
   }
 
-  /**
-   * Fetches all expense-related data and updates the charts with the retrieved values.
-   * The data includes:
-   * - Expense ranges for the first pie chart
-   * - Balance amounts for the second pie chart
-   * - Top friends and groups for the third and fourth pie charts
-   * - Monthly expenses for the bar chart
-   */
-  private loadAllExpenses() {
-    this.dashboardService.getAllExpenses().subscribe({
+  private getBalanceAmounts() {
+    this.loaders.pieChart2 = true;
+    this.dashboardService.getBalanceAmounts().subscribe({
       next: (response) => {
-        this.pieChartData1.datasets[0].data = response.expensesRange;
-        this.pieChartData2.datasets[0].data = response.balanceAmounts;
+        this.pieChartData2.datasets[0].data = response.data;
         this.balanceAmount.set(
-          response.balanceAmounts[0] - response.balanceAmounts[1],
+          response.data[0] - response.data[1],
         );
         this.pieChartOptions2 = {
           ...this.pieChartOptions2,
@@ -310,11 +324,64 @@ export class DashboardComponent implements OnInit {
             },
           },
         };
-        this.pieChartData3.datasets[0].data = response.topFriends;
-        this.pieChartData3.labels = response.topFriendsName;
-        this.barChartData.datasets[0].data = response.monthlyExpense;
         this.charts?.forEach((chart) => chart?.chart?.update());
       },
+      complete: () => {
+        this.loaders.pieChart2 = false;
+      }
     });
+  }
+
+  private getCashFlowFriends() {
+    this.loaders.pieChart3 = true;
+    this.dashboardService.getCashFlowFriends().subscribe({
+      next: (response) => {
+        this.pieChartData3.datasets[0].data = response.topFriends;
+        this.pieChartData3.labels = response.topFriendsName;
+        this.charts?.forEach((chart) => chart?.chart?.update());
+      },
+      complete: () => {
+        this.loaders.pieChart3 = false;
+      }
+    });
+  }
+
+  onYearChange(year: number): void {
+    this.getMonthlyExpenses(year);  // Trigger API call with the selected year
+  }
+
+  private getMonthlyExpenses(year: number) {
+    this.loaders.barChart = true;
+    this.dashboardService.getMonthlyExpenses(year).subscribe({
+      next: (response) => {
+        this.barChartData.datasets[0].data = response.data;
+        this.charts?.forEach((chart) => chart?.chart?.update());
+      },
+      complete: () => {
+        this.loaders.barChart = false;
+      }
+    });
+  }
+
+  private getCashFlowGroups() {
+    this.loaders.pieChart4 = true;
+    this.dashboardService.getCashFlowGroups().subscribe({
+      next: (response) => {
+        this.pieChartData4.datasets[0].data = response.topFriends;
+        this.pieChartData4.labels = response.topGroupsName;
+        this.charts?.forEach((chart) => chart?.chart?.update());
+      },
+      complete: () => {
+        this.loaders.pieChart4 = false;
+      }
+    });
+  }
+
+  async ngOnInit() {
+    this.getExpenseCount();
+    this.getBalanceAmounts();
+    this.getCashFlowFriends();
+    this.getCashFlowGroups();
+    this.getMonthlyExpenses(this.year);
   }
 }

@@ -253,9 +253,9 @@ class DashboardService {
 
   static topCashFlowGroups = async(userId) => {
     const topCashFlowGroups = {};
-    const data = await DashboardDb.getMembershipIds(userId);
+    const userMemberships = await DashboardDb.getMembershipIds(userId);
 
-    const userMembershipIds = data.map((member) => member.group_membership_id);
+    const userMembershipIds = userMemberships.map((member) => member.group_membership_id);
 
     const expenseAmountAsPayer = await DashboardDb.groupExpensesAsPayer(userMembershipIds);
 
@@ -276,12 +276,14 @@ class DashboardService {
 
     expenseAmountAsDebtor.forEach((debtor) => {
       const debtAmount = parseFloat(debtor.debtor_amount);
+      const groupId = userMemberships.find((member) => member.group_membership_id === debtor.debtor_id).group_id;
 
       if (topCashFlowGroups[ debtor.debtor_id ]) {
         topCashFlowGroups[ debtor.debtor_id ].amount += debtAmount;
       } else {
         topCashFlowGroups[ debtor.debtor_id ] = {
-          "amount": debtAmount
+          "amount": debtAmount,
+          "group": groupId
         };
       }
     });

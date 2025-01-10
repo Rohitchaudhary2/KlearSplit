@@ -30,7 +30,7 @@ class DashboardDb {
   }
 
   static getMembershipIds = async(userId) => await GroupMember.findAll({
-    "attributes": [ "group_membership_id" ],
+    "attributes": [ "group_membership_id", "group_id" ],
     "where": {
       "member_id": userId
     },

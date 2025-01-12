@@ -135,20 +135,19 @@ class GroupDb {
     return updatedMember;
   };
 
-  static getGroupMembersByIds = async(ids) => {
-    const formattedIds = ids.map((id) => `'${id}'`).join(",");
-    
-    return await GroupMember.findAll({
+  static getGroupMembersByIds = async(ids, field) => {
+    const members = await GroupMember.findAll({
       "where": {
-        "group_membership_id": {
+        [ field ]: {
           [ Op.in ]: ids
         }
       },
-      "order": [
-        [ sequelize.literal(`FIELD(group_membership_id, ${formattedIds})`) ]
-      ],
       "raw": true
     });
+
+    return members.sort(
+      (a, b) => ids.indexOf(a.group_membership_id) - ids.indexOf(b.group_membership_id)
+    );
   };
 
   static saveMessage = async(messageData, groupId, groupMembershipId) => await GroupMessage.create({ ...messageData, "group_id": groupId, "sender_id": groupMembershipId });

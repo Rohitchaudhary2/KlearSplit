@@ -23,7 +23,6 @@ export const API_URLS = {
   deleteExpense: `${environment.apiBaseUrl}/friends/deleteexpense`,
   getCombined: `${environment.apiBaseUrl}/friends/getboth`,
   refreshAccessToken: `${environment.apiBaseUrl}/auth/refreshtoken`,
-  getAllExpensesData: `${environment.apiBaseUrl}/dashboard/getallexpensesdata`,
   updateExpense: `${environment.apiBaseUrl}/friends/updateexpense`,
   createGroup: `${environment.apiBaseUrl}/groups/create`,
   getGroups: `${environment.apiBaseUrl}/groups/usergroups`,
@@ -41,5 +40,10 @@ export const API_URLS = {
   deleteGroupSettlement: `${environment.apiBaseUrl}/groups/deletesettlement`,
   updateGroupExpense: `${environment.apiBaseUrl}/groups/updateexpense`,
   updateGroupSettlement: `${environment.apiBaseUrl}/groups/updatesettlement`,
-  createPayment: `${environment.apiBaseUrl}/payments/create-payment`
+  createPayment: `${environment.apiBaseUrl}/payments/create-payment`,
+  expensesCount: `${environment.apiBaseUrl}/dashboard/expensescount`,
+  balanceAmounts: `${environment.apiBaseUrl}/dashboard/balance`,
+  cashFlowFriends: `${environment.apiBaseUrl}/dashboard/cashflowfriends`,
+  monthlyExpenses: `${environment.apiBaseUrl}/dashboard/monthlyexpenses`,
+  cashFlowGroups: `${environment.apiBaseUrl}/dashboard/cashflowgroups`
 };

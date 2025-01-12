@@ -174,10 +174,22 @@ export class GroupsExpenseComponent implements OnInit {
   onAdd(): void {
     // If the split type is 'EQUAL', divide the total amount equally between both participants
     if (this.form.value.split_type === "EQUAL") {
-      this.debtors = this.selectedParticipants.map((participant) => ({
-        debtor_id: participant.group_membership_id,
-        debtor_share: parseFloat((this.form.value.total_amount!/(this.selectedParticipants.length ?? 1)).toFixed(2))
-      }));
+      this.debtors = this.selectedParticipants.map((participant, index) => {
+        // debtor_id: participant.group_membership_id,
+        // debtor_share: parseFloat((this.form.value.total_amount!/(this.selectedParticipants.length ?? 1)).toFixed(2))
+        let debtorShare = parseFloat((this.form.value.total_amount! / (this.selectedParticipants.length ?? 1)).toFixed(2));
+  
+        // For all participants except the last one, round the amount
+        if (index === this.selectedParticipants.length - 1) {
+          // Last participant gets the remainder to make sure the total sum matches
+          debtorShare = parseFloat((this.form.value.total_amount! - (debtorShare * (this.selectedParticipants.length - 1))).toFixed(2));
+        }
+        
+        return {
+          debtor_id: participant.group_membership_id,
+          debtor_share: debtorShare
+        };
+      });
       const payer = this.debtors.find((debtor) =>
         this.form.value.payer_id === debtor.debtor_id);
       this.payer_share = payer ? payer.debtor_share : 0;

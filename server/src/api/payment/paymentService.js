@@ -87,15 +87,11 @@ class PaymentService {
   static executePayment = async(req) => {
     const { type, id, success, paymentId, PayerID, userId } = req.query;
 
-    const payment = await PaymentDb.getPayment(paymentId);
-
     if (success === "false") {
-      Object.assign(payment, { "payment_status": "CANCELLED" });
-      await payment.save();
-
       return `http://localhost:4200/${type}?id=${id}&success=false`;
     }
 
+    const payment = await PaymentDb.getPayment(paymentId);
     // const paymentId = req.query.paymentId; // from PayPal URL
     const paypalPayerId = { "payer_id": PayerID }; // from PayPal URL
 

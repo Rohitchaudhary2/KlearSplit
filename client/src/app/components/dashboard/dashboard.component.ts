@@ -311,7 +311,7 @@ export class DashboardComponent implements OnInit {
       next: (response) => {
         this.pieChartData2.datasets[0].data = response.data;
         this.balanceAmount.set(
-          response.data[0] - response.data[1],
+          parseFloat((response.data[0] - response.data[1]).toFixed(2)),
         );
         this.pieChartOptions2 = {
           ...this.pieChartOptions2,

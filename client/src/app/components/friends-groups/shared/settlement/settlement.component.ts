@@ -3,6 +3,7 @@ import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, Validator
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 import { AuthService } from "../../../auth/auth.service";
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
@@ -28,6 +29,7 @@ function amountRangeValidator(totalAmount: number): ValidatorFn {
     MatInputModule,
     MatIconModule,
     ReactiveFormsModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: "./settlement.component.html",
   styleUrl: "./settlement.component.css"
@@ -49,6 +51,8 @@ export class SettlementComponent {
 
   submitSettlement = output<string>();
   cancelSettlement = output<void>();
+
+  paymentLoader = false;
 
   private readonly formErrorMessages = inject(FormErrorMessageService);
   private readonly settlementService = inject(SettlementService);
@@ -90,9 +94,11 @@ export class SettlementComponent {
   }
 
   payWithPayPal() {
+    this.paymentLoader = true;
     this.settlementService.createPayment(this.form.value.settlement_amount,
       this.id()!, this.payerId()!, this.debtorId()!, this.type()!).subscribe({
       next: (response) => {
+        this.paymentLoader = false;
         if(response.data) {
           window.location.href = response.data;
         }

@@ -174,11 +174,11 @@ class FriendController {
   // controller to fetch both messages and expenses
   static getBoth = asyncHandler(async(req, res) => {
     const { "conversation_id": conversationId } = req.params;
-    const { page, pageSize } = req.query;
+    const { timestamp, pageSize } = req.query;
   
     const messagesAndExpenses = await FriendService.getBoth(
       conversationId,
-      page,
+      timestamp,
       pageSize
     );
   

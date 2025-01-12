@@ -13,7 +13,6 @@ import { AuthService } from "../auth/auth.service";
 export class NavbarComponent {
   authService = inject(AuthService);
   user = this.authService.currentUser;
-  userName = `${this.user()?.first_name} ${this.user()?.last_name}`.trim();
 
   onLogout() {
     this.authService.logout();

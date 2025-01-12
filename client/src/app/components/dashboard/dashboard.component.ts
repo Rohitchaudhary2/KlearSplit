@@ -103,7 +103,7 @@ export class DashboardComponent implements OnInit {
       labels: [ "Group 1", "Group 2", "Group 3", "Group 4", "Others" ],
       datasets: [
         {
-          data: [ 1000, 950, 900, 850, 800 ],
+          data: [],
           backgroundColor: [ "#FF9F40", "#9966FF", "#4BC0C0", "#2E7D32", "grey" ],
           hoverOffset: 20,
         },

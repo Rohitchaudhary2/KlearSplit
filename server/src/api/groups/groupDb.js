@@ -1,5 +1,5 @@
 import { Op, QueryTypes } from "sequelize";
-import { Group, GroupExpense, GroupExpenseParticipant, GroupMember, GroupMemberBalance, GroupMessage, GroupSettlement, sequelize } from "../../config/db.connection.js";
+import { Group, GroupExpense, GroupExpenseParticipant, GroupMember, GroupMemberBalance, GroupMessage, GroupSettlement, sequelize, User } from "../../config/db.connection.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 class GroupDb {
@@ -365,6 +365,24 @@ class GroupDb {
   };
 
   static getSettlement = async(groupSettlementId) => await GroupSettlement.findByPk(groupSettlementId);
+
+  static getExpenseParticipantsDetails = async(debtors) => {
+    const debtorDetails = await GroupMember.findAll({
+      "where": {
+        "group_membership_id": {
+          [ Op.in ]: debtors
+        }
+      },
+      "include": [
+        {
+          "model": User,
+          "required": true
+        }
+      ]
+    });
+
+    return debtorDetails;
+  };
 }
 
 export default GroupDb;

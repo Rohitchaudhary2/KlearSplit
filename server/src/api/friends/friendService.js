@@ -249,7 +249,7 @@ class FriendService {
    *
    * @returns {Promise<Array<Object>>} - An array of messages for the conversation.
    */
-  static getMessages = async(conversationId, page, pageSize) => {
+  static getMessages = async(conversationId, timestamp, pageSize) => {
     // Check if the conversation exists
     const friend = await FriendDb.getFriend(conversationId);
 
@@ -265,7 +265,7 @@ class FriendService {
       
     const messages = await FriendDb.getMessages(
       conversationId,
-      page,
+      timestamp,
       pageSize
     );
 
@@ -370,12 +370,12 @@ class FriendService {
    * Retrieves all expenses associated with a conversation.
    *
    * @param {UUID} conversationId - The ID of the conversation.
-   * @param {number} page - The current page of expenses to retrieve.
+   * @param {number} timestamp - The current timestamp.
    * @param {number} pageSize - The number of expenses per page.
    * @param {boolean} fetchAll - Flag indicating whether to fetch all expenses.
    * @returns {Promise<Array<Object>>} - Returns an array of expense objects.
    */
-  static getExpenses = async(conversationId, page, pageSize, fetchAll) => {
+  static getExpenses = async(conversationId, timestamp, pageSize, fetchAll) => {
     const friend = await FriendDb.getFriend(conversationId);
 
     isFriendExist(friend);
@@ -390,7 +390,7 @@ class FriendService {
 
     const expenses = await FriendDb.getExpenses(
       conversationId,
-      page,
+      timestamp,
       pageSize,
       fetchAll
     );

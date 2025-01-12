@@ -90,11 +90,11 @@ class FriendController {
   // Controller to fetch messages of a conversation
   static getMessages = asyncHandler(async(req, res) => {
     const { "conversation_id": conversationId } = req.params;
-    const { page, pageSize } = req.query;
+    const { timestamp, pageSize } = req.query;
   
     const messages = await FriendService.getMessages(
       conversationId,
-      page,
+      timestamp,
       pageSize
     );
   
@@ -128,11 +128,11 @@ class FriendController {
   // Controller to fetch expenses
   static getExpenses = asyncHandler(async(req, res) => {
     const { "conversation_id": conversationId } = req.params;
-    const { page, pageSize, fetchAll } = req.query;
+    const { timestamp, pageSize, fetchAll } = req.query;
   
     const expenses = await FriendService.getExpenses(
       conversationId,
-      page,
+      timestamp,
       pageSize,
       fetchAll
     );

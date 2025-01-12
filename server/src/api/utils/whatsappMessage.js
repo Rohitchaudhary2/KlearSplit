@@ -16,9 +16,7 @@ export const sendWhatsAppTemplateMessage = async(
 
   const url = `${API_URL}/${WHATSAPP_PHONE_ID}/messages`;
 
-  const responses = [];
-
-  participants.forEach(async(participant) => {
+  const promises = participants.map(async(participant) => {
     // Create personalized variables for the recipient
     const recipientName = `${participant.first_name} ${participant.last_name ?? ""}`.trim();
     const participantList = participants.map((p) => `${p.first_name} ${p.last_name ?? ""}`.trim());
@@ -64,12 +62,13 @@ export const sendWhatsAppTemplateMessage = async(
         }
       });
 
-      responses.push(response.data);
+      return response.data;
     } catch (error) {
-      responses.push(error.response ? error.response.data : error.message);
-      throw error.response ? error.response.data : error.message;
+      return error.response ? error.response.data : error.message;
     }
   });
+
+  const responses = await Promise.all(promises);
 
   return responses;
 };

@@ -103,7 +103,7 @@ export class DashboardComponent implements OnInit {
       labels: [ "Group 1", "Group 2", "Group 3", "Group 4", "Others" ],
       datasets: [
         {
-          data: [ 1000, 950, 900, 850, 800 ],
+          data: [],
           backgroundColor: [ "#FF9F40", "#9966FF", "#4BC0C0", "#2E7D32", "grey" ],
           hoverOffset: 20,
         },
@@ -311,7 +311,7 @@ export class DashboardComponent implements OnInit {
       next: (response) => {
         this.pieChartData2.datasets[0].data = response.data;
         this.balanceAmount.set(
-          response.data[0] - response.data[1],
+          parseFloat((response.data[0] - response.data[1]).toFixed(2)),
         );
         this.pieChartOptions2 = {
           ...this.pieChartOptions2,

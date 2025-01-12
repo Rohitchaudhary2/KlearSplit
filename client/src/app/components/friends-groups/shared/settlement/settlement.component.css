@@ -24,3 +24,7 @@
       flex-grow: 1;
     }
   }
+
+.spinner {
+  height: 20px !important;
+}

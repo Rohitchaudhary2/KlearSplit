@@ -89,11 +89,7 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
   // Flag to track if welcome image is loaded
   isImageLoaded = false;
 
-  // Pagination related variables for message and expense loading
-  pageMessage = 1;
-  pageExpense = 1;
   pageSize = 10;
-  pageCombined = 1;
 
   // Flag to indicate if data is still being loaded
   loading = false;
@@ -102,6 +98,10 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
   allMessagesLoaded = false;
   allExpensesLoaded = false;
   allCombinedLoaded = false;
+
+  timestampMessages?: string;
+  timestampExpenses?: string;
+  timestampCombined?: string;
 
   // Scroll position state
   scrollPosition = 0;
@@ -207,15 +207,14 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.messages.set([]);
     this.expenses.set([]);
     this.combinedView.set([]);
-    // Reset pagination values
-    this.pageMessage = 1;
-    this.pageExpense = 1;
-    this.pageCombined = 1;
     this.messageInput = "";
     // Reset flags to indicate whether all messages, expenses, and combined data are loaded
     this.allMessagesLoaded = false;
     this.allExpensesLoaded = false;
     this.allCombinedLoaded = false;
+    this.timestampMessages = undefined;
+    this.timestampExpenses = undefined;
+    this.timestampCombined = undefined;
     this.selectedUser.set(undefined);
   }
 
@@ -308,10 +307,10 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
         this.selectedUser()!.conversation_id,
         loadMessages,
         loadExpenses,
-        this.pageMessage,
-        this.pageExpense,
-        this.pageCombined,
         this.pageSize,
+        this.timestampMessages,
+        this.timestampExpenses,
+        this.timestampCombined
       )
       .subscribe({
         next: ({ messages, expenses, combined }) => {
@@ -324,11 +323,10 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
           this.expenses.set([ ...expenses, ...this.expenses() ]);
           this.combinedView.set([ ...combined, ...this.combinedView() ]);
           
-          // If it's the first page load (page 1), scroll to the bottom, and for subsequent pages, adjust the scroll position
           if (
-            this.pageMessage === 1 ||
-            this.pageExpense === 1 ||
-            this.pageCombined === 1
+            !this.timestampMessages ||
+            !this.timestampExpenses ||
+            !this.timestampCombined
           ) {
             this.cdr.detectChanges();
             this.commonService.scrollToBottom(this.messageContainer()!);
@@ -342,10 +340,9 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
             element!.scrollTop = element!.scrollTop + scrollDiff - 100;
           }
 
-          // Increment the page number for the next data fetch
-          this.pageMessage += Number(loadMessages);
-          this.pageExpense += Number(loadExpenses);
-          this.pageCombined += Number(loadCombined);
+          this.timestampMessages = this.messages()[0] ? this.messages()[0].createdAt : new Date().toISOString();
+          this.timestampExpenses = this.expenses()[0] ? this.expenses()[0].createdAt : new Date().toISOString();
+          this.timestampCombined = this.combinedView()[0] ? this.combinedView()[0].createdAt : new Date().toISOString();
 
           // Reset loading state to allow future requests
           this.loading = false;

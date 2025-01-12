@@ -40,9 +40,9 @@ export class FriendsService {
    * @param conversationId - The ID of the conversation to fetch data for.
    * @param loadMessages - Flag to determine if messages are to be loaded.
    * @param loadExpenses - Flag to determine if expenses are to be loaded.
-   * @param pageMessage - Page number for message data.
-   * @param pageExpense - Page number for expense data.
-   * @param pageCombined - Page number for combined data.
+   * @param timestampMessage - Timestamp for last fetched message.
+   * @param timestampExpense - Timestamp for last fetched expense.
+   * @param timestampCombined - Timestamp for last fetched combined data.
    * @param pageSize - Page size for message, expense, and combined data.
    * @returns An observable with the data for messages, expenses, and combined.
    */
@@ -50,14 +50,14 @@ export class FriendsService {
     conversationId: string,
     loadMessages: boolean,
     loadExpenses: boolean,
-    pageMessage: number,
-    pageExpense: number,
-    pageCombined: number,
     pageSize: number,
+    timestampMessage: string = new Date().toISOString(),
+    timestampExpense: string = new Date().toISOString(),
+    timestampCombined: string = new Date().toISOString(),
   ) {
-    const messagesUrl = `${API_URLS.getMessages}/${conversationId}?page=${pageMessage}&pageSize=${pageSize}`;
-    const expensesUrl = `${API_URLS.getExpenses}/${conversationId}?page=${pageExpense}&pageSize=${pageSize}`;
-    const combinedUrl = `${API_URLS.getCombined}/${conversationId}?page=${pageCombined}&pageSize=${pageSize * 2}`;
+    const messagesUrl = `${API_URLS.getMessages}/${conversationId}?pageSize=${pageSize}&timestamp=${timestampMessage}`;
+    const expensesUrl = `${API_URLS.getExpenses}/${conversationId}?pageSize=${pageSize}&timestamp=${timestampExpense}`;
+    const combinedUrl = `${API_URLS.getCombined}/${conversationId}?pageSize=${pageSize * 2}&timestamp=${timestampCombined}`;
     // If all messages, expenses, and combined need to be loaded
     if (loadMessages && loadExpenses) {
       return this.httpClient

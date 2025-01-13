@@ -4,8 +4,8 @@ import { ErrorHandler } from "../middlewares/errorHandler.js";
 import GroupDb from "./groupDb.js";
 import GroupUtils from "./groupUtils.js";
 import UserDb from "../users/userDb.js";
-import UserService from "../users/userServices.js";
-import { sendWhatsAppTemplateMessage } from "../utils/WhatsAppMessage.js";
+import { sendWhatsAppTemplateMessage } from "../utils/whatsappMessage.js";
+import logger from "../utils/logger.js";
 
 class GroupService {
   /**
@@ -419,6 +419,7 @@ class GroupService {
 
     // Verifying that payer and all debtors are valid group members.
     const debtorIds = debtors.map((debtor) => debtor.debtor_id);
+    const expenseParticipantsIds = [ ...debtorIds, expenseData.payer_id ];
     
     const count = await GroupDb.countGroupMembers(groupId, [ expenseData.payer_id, ...debtorIds ]);
     
@@ -444,27 +445,26 @@ class GroupService {
       // Updating or Insering members balance based on added expense
       await GroupDb.updateMembersBalance(membersBalance, transaction);
 
-      const groupMembers = await this.getGroup(groupId, userId);
-
-      const participants = [];
-
-      expenseParticipants.forEach(async(participant) => {
-        const groupMember = groupMembers.find((member) => member.group_membership_id === participant.debtor_id);
-        const userDetails = await UserService.getUser(groupMember.member_id);
-
-        participants.push(userDetails.dataValues);
-      });
-
-      const payer = groupMembers.find((member) => member.group_membership_id === expense.payer_id);
-      const payerDetails = await UserService.getUser(payer.member_id);
-
-      participants.push(payerDetails);
+      const participants = await GroupDb.getExpenseParticipantsDetails(expenseParticipantsIds);
+      const participantDetails = participants.map((participant) => participant.user.dataValues);
 
       // Send WhatsApp messages
-      const responses = await sendWhatsAppTemplateMessage(participants, expense);
+      const responses = await sendWhatsAppTemplateMessage(participantDetails, expense);
+
+      if (responses.error) {
+        responses.forEach((response) => {
+          logger.log({
+            "level": "error",
+            "message": JSON.stringify({
+              "statusCode": response.statusCode,
+              "message": response.error.message
+            })
+          });
+        });
+      }
       
       await transaction.commit();
-      return { expense, expenseParticipants, responses };
+      return { expense, expenseParticipants };
     } catch (error) {
       // Rollback the transaction in case of an error
       await transaction.rollback();

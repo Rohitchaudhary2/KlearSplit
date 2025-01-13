@@ -160,20 +160,20 @@ class FriendDb {
   /**
    * Retrieves all messages for a given conversation, with support for pagination.
    * @param {UUID} conversationId - The ID of the conversation.
-   * @param {number} [page=1] - The page number for pagination.
+   * @param {number} [timestamp] - The timestamp of the last message.
    * @param {number} [pageSize=10] - The number of messages per page.
    * @returns {Promise<Array>} - A promise that resolves to an array of messages.
    */
-  static getMessages = async(conversationId, page = 1, pageSize = 10) => {
-    const offset = (page - 1) * pageSize;
-
+  static getMessages = async(conversationId, timestamp, pageSize = 10) => {
     return await FriendMessage.findAll({
       "where": {
-        "conversation_id": conversationId
+        "conversation_id": conversationId,
+        "createdAt": {
+          [ Op.lt ]: timestamp
+        }
       },
       "order": [ [ "createdAt", "DESC" ] ],
-      "limit": pageSize,
-      offset
+      "limit": pageSize
     });
   };
 
@@ -201,21 +201,23 @@ class FriendDb {
   /**
    * Retrieves all or paginated expenses for a given conversation, including payer details.
    * @param {UUID} conversationId - The ID of the conversation.
-   * @param {number} [page=1] - The page number for pagination.
+   * @param {number} [timestamp] - The timestamp of the last expense.
    * @param {number} [pageSize=10] - The number of expenses per page.
    * @param {boolean} [fetchAll=false] - Whether to fetch all expenses or use pagination.
    * @returns {Promise<Array>} - A promise that resolves to an array of expenses.
    */
   static getExpenses = async(
     conversationId,
-    page = 1,
+    timestamp,
     pageSize = 10,
     fetchAll = false
   ) => {
-    const offset = (page - 1) * pageSize;
     const options = {
       "where": {
-        "conversation_id": conversationId
+        "conversation_id": conversationId,
+        "createdAt": {
+          [ Op.lt ]: timestamp
+        }
       },
       "include": [
         {
@@ -229,7 +231,6 @@ class FriendDb {
 
     if (!fetchAll) {
       options.limit = pageSize;
-      options.offset = offset;
     }
 
     return await FriendExpense.findAll(options);

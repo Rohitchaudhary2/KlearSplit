@@ -8,7 +8,6 @@ import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../../auth/auth.service";
 import { ConfirmationDialogComponent } from "../../confirmation-dialog/confirmation-dialog.component";
-import { FriendsListComponent } from "../friends/friends-list/friends-list.component";
 import { SocketService } from "../friends/socket.service";
 import { ExpenseComponent } from "../shared/expense/expense.component";
 import { FriendsGroupsService } from "../shared/friends-groups.service";
@@ -38,7 +37,6 @@ import { GroupsListComponent } from "./groups-list/groups-list.component";
   imports: [
     FormsModule,
     NgClass,
-    FriendsListComponent,
     GroupsListComponent,
     MessageComponent,
     ExpenseComponent,
@@ -508,7 +506,6 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
             this.cdr.detectChanges();
             // After loading new items, calculate the new scroll position
             const newScrollHeight = element!.scrollHeight;
-
             // Adjust the scroll position to keep the view consistent
             const scrollDiff = newScrollHeight - this.scrollPosition;
             element!.scrollTop = element!.scrollTop + scrollDiff - 100;

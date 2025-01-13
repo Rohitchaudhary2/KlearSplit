@@ -248,7 +248,7 @@ class FriendService {
    *
    * @returns {Promise<Array<Object>>} - An array of messages for the conversation.
    */
-  static getMessages = async(conversationId, page, pageSize) => {
+  static getMessages = async(conversationId, timestamp, pageSize) => {
     // Check if the conversation exists
     const friend = await FriendDb.getFriend(conversationId);
 
@@ -264,7 +264,7 @@ class FriendService {
       
     const messages = await FriendDb.getMessages(
       conversationId,
-      page,
+      timestamp,
       pageSize
     );
 
@@ -369,12 +369,12 @@ class FriendService {
    * Retrieves all expenses associated with a conversation.
    *
    * @param {UUID} conversationId - The ID of the conversation.
-   * @param {number} page - The current page of expenses to retrieve.
+   * @param {number} timestamp - The current timestamp.
    * @param {number} pageSize - The number of expenses per page.
    * @param {boolean} fetchAll - Flag indicating whether to fetch all expenses.
    * @returns {Promise<Array<Object>>} - Returns an array of expense objects.
    */
-  static getExpenses = async(conversationId, page, pageSize, fetchAll) => {
+  static getExpenses = async(conversationId, timestamp, pageSize, fetchAll) => {
     const friend = await FriendDb.getFriend(conversationId);
 
     isFriendExist(friend);
@@ -389,7 +389,7 @@ class FriendService {
 
     const expenses = await FriendDb.getExpenses(
       conversationId,
-      page,
+      timestamp,
       pageSize,
       fetchAll
     );
@@ -582,46 +582,46 @@ class FriendService {
    * once the current batch is exhausted.
    *
    * @param {UUID} conversationId - The ID of the conversation.
-   * @param {number} [page=1] - The page number to retrieve (default: 1).
+   * @param {number} [timestamp] - The timestamp.
    * @param {number} [pageSize=20] - The number of items per page (default: 20).
    *
    * @returns {Promise<Array<Object>>} - Returns an array of expenses and messages.
    */
-  static getBoth = async(conversationId, page = 1, pageSize = 20) => {
-    let messagesPage = page;
-    let expensesPage = page;
-    let fetchedMessages = [];
-    let fetchedExpenses = [];
+  static getBoth = async(conversationId, timestamp, pageSize = 20) => {
+    let timeStamp = timestamp;
     const results = [];
-
+    
     while (results.length < pageSize) {
-    // Fetch messages if current batch is exhausted
-      if (!fetchedMessages.length) {
-        fetchedMessages = await this.getMessages(conversationId, messagesPage, pageSize);
-        messagesPage++;
-      }
-
-      // Fetch expenses if current batch is exhausted
-      if (!fetchedExpenses.length) {
-        fetchedExpenses = await this.getExpenses(conversationId, expensesPage, pageSize);
-        expensesPage++;
-      }
-
+      const [ messages, expenses ] = await Promise.all([
+        this.getMessages(conversationId, timeStamp, pageSize),
+        this.getExpenses(conversationId, timeStamp, pageSize)
+      ]);
+      
       // Break if no more data to fetch
-      if (!fetchedMessages.length && !fetchedExpenses.length) {
+      if (!messages.length && !expenses.length) {
         break;
       }
+  
+      // Merge messages and expenses, and update the timestamp
+      const nextItem = this.getNextItem(messages, expenses);
 
-      // Merge the next item from each batch in order of creation time
-      if (fetchedMessages.length && (!fetchedExpenses.length || fetchedMessages[ 0 ].createdAt >= fetchedExpenses[ 0 ].createdAt)) {
-        results.push(fetchedMessages.shift());
-      } else if (fetchedExpenses.length) {
-        results.push(fetchedExpenses.shift());
-      }
+      results.push(nextItem);
+      
+      // Update timestamp to the createdAt of the next item added
+      timeStamp = nextItem.createdAt;
     }
-
+  
     return results;
   };
+  
+  // Helper function to merge and pick the next item
+  static getNextItem = (messages, expenses) => {
+    if (messages.length && (!expenses.length || messages[ 0 ].createdAt >= expenses[ 0 ].createdAt)) {
+      return messages.shift();
+    }
+    return expenses.shift();
+  };
+  
 
 }
 

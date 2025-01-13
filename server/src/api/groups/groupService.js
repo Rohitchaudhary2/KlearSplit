@@ -4,7 +4,7 @@ import { ErrorHandler } from "../middlewares/errorHandler.js";
 import GroupDb from "./groupDb.js";
 import GroupUtils from "./groupUtils.js";
 import UserDb from "../users/userDb.js";
-import { sendWhatsAppTemplateMessage } from "../utils/WhatsAppMessage.js";
+import { sendWhatsAppTemplateMessage } from "../utils/whatsappMessage.js";
 import logger from "../utils/logger.js";
 
 class GroupService {
@@ -451,7 +451,7 @@ class GroupService {
       // Send WhatsApp messages
       const responses = await sendWhatsAppTemplateMessage(participantDetails, expense);
 
-      if (responses.length > 0) {
+      if (responses.error) {
         responses.forEach((response) => {
           logger.log({
             "level": "error",

@@ -6,6 +6,8 @@ import GroupUtils from "./groupUtils.js";
 import UserDb from "../users/userDb.js";
 import { sendWhatsAppTemplateMessage } from "../utils/whatsappMessage.js";
 import logger from "../utils/logger.js";
+import { auditLogFormat } from "../utils/auditFormat.js";
+import AuditLogService from "../audit/auditService.js";
 
 class GroupService {
   /**
@@ -21,11 +23,20 @@ class GroupService {
     *
     * @returns {Promise<Object>} - Returns a promise that resolves with the result of adding members.
     */
-  static assignRolesAndAddMembers = async(membersData, inviterId, groupId, transaction = null) => {
+  static assignRolesAndAddMembers = async(membersData, inviterId, groupId, inviterUserId, transaction = null) => {
     // Assign roles to members using a utility function
     const members = GroupUtils.assignRoles(membersData.members, membersData.admins, membersData.coadmins, inviterId, groupId);
 
-    return await GroupDb.addMembers(members, transaction);
+    const addedMembers = await GroupDb.addMembers(members, transaction);
+
+    const logs = [];
+
+    addedMembers.forEach((member) => {
+      logs.push(auditLogFormat("INSERT", inviterUserId, "group_members", member.dataValues.group_membership_id, { "newData": member.dataValues }));
+    });
+    AuditLogService.createLog(logs, true);
+
+    return addedMembers;
   };
 
   /**
@@ -48,6 +59,8 @@ class GroupService {
     if (isCreatorInMembors) {
       throw new ErrorHandler(400, "Creator can't be in members list.");
     }
+
+    const logs = [];
     
     // Start a new transaction to ensure atomicity
     const transaction = await sequelize.transaction();
@@ -59,6 +72,8 @@ class GroupService {
       if (!group) {
         throw new ErrorHandler(400, "Error while creating group");
       }
+
+      logs.push(auditLogFormat("INSERT", userId, "groups", group.group_id, { "newData": group }));
 
       const groupCreatorData = [ {
         "group_id": group.group_id,
@@ -75,7 +90,11 @@ class GroupService {
       }
       
       // Assign roles to other members and add them to the group
-      await this.assignRolesAndAddMembers(groupData.membersData, groupCreator[ 0 ].dataValues.group_membership_id, group.group_id, transaction);
+      await this.assignRolesAndAddMembers(groupData.membersData, groupCreator[ 0 ].dataValues.group_membership_id, group.group_id, userId, transaction);
+
+      logs.push(auditLogFormat("INSERT", userId, "group_members", groupCreator[ 0 ].dataValues.group_membership_id, { "newData": groupCreator[ 0 ].dataValues }));
+      
+      AuditLogService.createLog(logs, true);
 
       await transaction.commit();
       return group;
@@ -240,7 +259,13 @@ class GroupService {
       throw new ErrorHandler(400, "You are not allowed to update the group.");
     }
 
-    const updatedGroup = await GroupDb.updateGroup(groupId, groupData);
+    const [ rows, [ updatedGroup ] ] = await GroupDb.updateGroup(groupId, groupData);
+
+    if (!rows) {
+      throw new ErrorHandler(400, "Group not updated.");
+    }
+
+    AuditLogService.createLog(auditLogFormat("UPDATE", userId, "groups", groupId, { "oldData": group, "newData": updatedGroup }));
 
     return updatedGroup;
   };
@@ -277,14 +302,16 @@ class GroupService {
     }
 
     if (groupMemberData.has_blocked) {
-      const balance = await GroupDb.userBalanceInGroup(groupId, userMembershipInfo.group_membership_id).amount;
+      const balance = await GroupDb.userBalanceInGroup(groupId, userMembershipInfo.group_membership_id)[ 0 ];
 
-      if (balance !== 0) {
+      if (balance && balance.amount) {
         throw new ErrorHandler(400, "Settle up before this action. ");
       }
     }
 
-    const updatedMember = GroupDb.updateGroupMember(userMembershipInfo.group_membership_id, groupMemberData);
+    const updatedMember = await GroupDb.updateGroupMember(userMembershipInfo.group_membership_id, groupMemberData);
+
+    AuditLogService.createLog(auditLogFormat("UPDATE", userId, "group_members", userMembershipInfo.group_membership_id, { "oldData": userMembershipInfo, "newData": updatedMember }));
 
     return updatedMember;
   };
@@ -315,7 +342,9 @@ class GroupService {
       throw new ErrorHandler(400, "You have blocked the group.");
     }
 
-    const message = GroupDb.saveMessage(messageData, groupId, userMembershipInfo.group_membership_id);
+    const message = await GroupDb.saveMessage(messageData, groupId, userMembershipInfo.group_membership_id);
+
+    AuditLogService.createLog(auditLogFormat("INSERT", userId, "group_messages", message.group_message_id, { "newData": message }));
 
     return message;
   };
@@ -371,13 +400,15 @@ class GroupService {
 
     const userMembershipInfo = await this.isUserMemberOfGroup(groupId, userId);
 
-    const balance = await GroupDb.userBalanceInGroup(groupId, userMembershipInfo.group_membership_id).amount;
-
-    if (balance !== 0) {
+    const balance = await GroupDb.userBalanceInGroup(groupId, userMembershipInfo.group_membership_id)[ 0 ];
+    
+    if (balance && balance.amount) {
       throw new ErrorHandler(400, "Settle up before this action. ");
     }
 
     await GroupDb.leaveGroup(userMembershipInfo.group_membership_id);
+
+    AuditLogService.createLog(auditLogFormat("DELETE", userId, "group_members", userMembershipInfo.group_membership_id, { "oldData": userMembershipInfo }));
   };
 
   /**
@@ -427,23 +458,56 @@ class GroupService {
       throw new ErrorHandler(400, "Payer and all debtors must be in group.");
     }
 
+    const logs = [];
+
     // Start a new transaction to ensure atomicity
     const transaction = await sequelize.transaction();
 
     try {
       // Adding expense data in the database
       const expense = await GroupDb.addExpense(expenseData, transaction);
-
-      // Processing data to update balance or insert in members' balance table
-      const membersBalance = debtors.map((debtor) => `('${crypto.randomUUID()}', '${groupId}', '${ expenseData.payer_id }', '${debtor.debtor_id}', ${debtor.debtor_amount}, '${new Date().toISOString()}', '${new Date().toISOString()}')`).join(",");
+      
+      logs.push(auditLogFormat("INSERT", userId, "group_expenses", expense.group_expense_id, { "newData": expense.dataValues }));
 
       debtors.forEach((debtor) => Object.assign(debtor, { "group_expense_id": expense.group_expense_id }));
 
       // Adding expense participnts in database
       const expenseParticipants = await GroupDb.addExpenseParticipants(debtors, transaction);
 
+      expenseParticipants.forEach((expenseParticipant) => {
+        logs.push(auditLogFormat("INSERT", userId, "group_expense_participants", expenseParticipant.expense_participant_id, { "newData": expenseParticipant.dataValues }));
+      });
+
+      // Processing data to update balance or insert in members' balance table
+      const membersBalance = debtors.map((debtor) => `('${crypto.randomUUID()}', '${groupId}', '${ expenseData.payer_id }', '${debtor.debtor_id}', ${debtor.debtor_amount}, '${new Date().toISOString()}', '${new Date().toISOString()}')`).join(",");
+
       // Updating or Insering members balance based on added expense
-      await GroupDb.updateMembersBalance(membersBalance, transaction);
+      const [ updatedBalance, affectedRows ] = await GroupDb.updateMembersBalance(membersBalance, transaction);
+      
+      if (affectedRows) {
+        updatedBalance.forEach((balance) => {
+          const oldData = {};
+
+          if (balance.createdAt !== balance.updatedAt) {
+            let debtorRole = "";
+
+            const balanceAmount = debtors.find((debtor) => {
+              if (debtor.debtor_id === balance.participant1_id) {
+                debtorRole = "participant1";
+              } else if (debtor.debtor_id === balance.participant2_id) {
+                debtorRole = "participant2";
+              }
+              return debtorRole;
+            }).debtor_amount ?? 0;
+
+            oldData.oldData = {
+              "balance_id": balance.balance_id,
+              "balance_amount": (parseFloat(balance.balance_amount) + (debtorRole === "participant1" ? balanceAmount : -balanceAmount)).toFixed(2)
+            };
+          }
+          logs.push(auditLogFormat(balance.createdAt === balance.updatedAt ? "INSERT" : "UPDATE", userId, "group_member_balance", balance.balance_id, { ...oldData, "newData": balance }));
+        });
+      }
 
       const participants = await GroupDb.getExpenseParticipantsDetails(expenseParticipantsIds);
       const participantDetails = participants.map((participant) => participant.user.dataValues);
@@ -464,6 +528,7 @@ class GroupService {
       }
       
       await transaction.commit();
+      AuditLogService.createLog(logs, true);
       return { expense, expenseParticipants };
     } catch (error) {
       // Rollback the transaction in case of an error
@@ -523,6 +588,9 @@ class GroupService {
 
     GroupUtils.validateSettlementAmount(membersBalanceInfo.balance_amount, settlementData.settlement_amount);
 
+    const logs = [];
+    const oldMemberBalanceInfo = { ...membersBalanceInfo.dataValues };
+
     const settlementAmount = membersBalanceInfo.balance_amount < 0 ? settlementData.settlement_amount : -settlementData.settlement_amount;
 
     const balanceAmount = membersBalanceInfo.balance_amount + settlementAmount;
@@ -536,9 +604,15 @@ class GroupService {
       // Adding settlement in the database
       const settlement = await GroupDb.addSettlement(settlementData, transaction);
 
-      await membersBalanceInfo.save({ transaction });
+      logs.push(auditLogFormat("INSERT", userId, "group_settlements", settlement.dataValues.settlement_id, { "newData": settlement.dataValues }));
+
+      const updatedMemberBalanceInfo = await membersBalanceInfo.save({ transaction });
+      
+      logs.push(auditLogFormat("UPDATE", userId, "group_member_balance", membersBalanceInfo.group_membership_id, { "oldData": oldMemberBalanceInfo, "newData": updatedMemberBalanceInfo.dataValues }));
 
       await transaction.commit();
+
+      AuditLogService.createLog(logs, true);
 
       return settlement;
     } catch (error) {
@@ -655,8 +729,11 @@ class GroupService {
     // Get the list of participants for the previous expense
     const expenseParticipants = previousExpense.group_expense_participants;
     
+    delete previousExpense.dataValues.group_expense_participants;
+
     const deletedParticipants = [];
     const prevParticipants = [];
+    const logs = [];
   
     expenseParticipants.forEach((participant) => {
       let flag = false;
@@ -669,6 +746,7 @@ class GroupService {
       });
         
       if (!flag) {
+        logs.push(auditLogFormat("DELETE", userId, "group_expense_participants", participant.expense_participant_id, { "oldData": participant }));
         deletedParticipants.push(participant);
       }
     });
@@ -712,6 +790,8 @@ class GroupService {
       // Adding expense data in the database
       const expense = await GroupDb.updateExpense(expenseData, transaction);
 
+      logs.push(auditLogFormat("UPDATE", userId, "group_expenses", expenseData.group_expense_id, { "oldData": previousExpense.dataValues, "newData": expense[ 0 ].dataValues }));
+
       debtors.forEach((debtor) => Object.assign(debtor, { "group_expense_id": expenseData.group_expense_id }));
 
       await GroupDb.deleteExpenseParticipants(expenseData.group_expense_id, transaction, deletedParticipants);
@@ -719,9 +799,45 @@ class GroupService {
       // Adding expense participnts in database
       const updatedExpenseParticipants = await GroupDb.addExpenseParticipants(debtors, transaction);
 
-      await GroupDb.updateMemberBalanceByPk(updatedMembersBalance, transaction);
+      updatedExpenseParticipants.forEach((participant) => {
+        const oldData = {};
+
+        if (participant.createdAt !== participant.updatedAt) {
+          oldData.oldData = prevParticipants.find((previous) => previous.expense_participant_id === participant.dataValues.expense_participant_id).dataValues;
+        }
+          
+        logs.push(auditLogFormat(participant.createdAt === participant.updatedAt ? "INSERT" : "UPDATE", userId, "group_expense_participants", participant.expense_participant_id, { ...oldData, "newData": participant.dataValues }));
+      });
+
+      const [ updatedBalance, affectedRows ] = await GroupDb.updateMemberBalanceByPk(updatedMembersBalance, transaction);
+
+      if (affectedRows) {
+        updatedBalance.forEach((balance) => {
+          const oldData = {};
+
+          if (balance.createdAt !== balance.updatedAt) {
+            let debtorRole = "";
+
+            const balanceAmount = debtors.find((debtor) => {
+              if (debtor.debtor_id === balance.participant1_id) {
+                debtorRole = "participant1";
+              } else if (debtor.debtor_id === balance.participant2_id) {
+                debtorRole = "participant2";
+              }
+              return debtorRole;
+            }).debtor_amount ?? 0;
+
+            oldData.oldData = {
+              "balance_id": balance.balance_id,
+              "balance_amount": (parseFloat(balance.balance_amount) + (debtorRole === "participant1" ? balanceAmount : -balanceAmount)).toFixed(2)
+            };
+          }
+          logs.push(auditLogFormat(balance.createdAt === balance.updatedAt ? "INSERT" : "UPDATE", userId, "group_member_balance", balance.balance_id, { ...oldData, "newData": balance }));
+        });
+      }
       
       await transaction.commit();
+      AuditLogService.createLog(logs, true);
       return { "expense": expense[ 0 ], "expenseParticipants": updatedExpenseParticipants };
     } catch (error) {
       // Rollback the transaction in case of an error
@@ -741,6 +857,8 @@ class GroupService {
 
     const settlement = await GroupDb.getSettlement(settlementData.group_settlement_id);
 
+    const oldSettlement = { ...settlement.dataValues };
+
     if (!settlement) {
       throw new ErrorHandler(400, "Settlement Not Found.");
     }
@@ -750,6 +868,8 @@ class GroupService {
     const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlement.payer_id, settlement.debtor_id);
 
     Object.assign(membersBalanceInfo, { "balance_amount": parseFloat(membersBalanceInfo.balance_amount) });
+
+    const oldMemberBalanceInfo = { ...membersBalanceInfo.dataValues };
 
     const isPayerParticipant1 = settlement.payer_id === membersBalanceInfo.participant1_id;
 
@@ -762,6 +882,8 @@ class GroupService {
     Object.assign(membersBalanceInfo, { "balance_amount": balanceAmount });
     Object.assign(settlement, settlementData);
 
+    const logs = [];
+
     // Start a new transaction to ensure atomicity
     const transaction = await sequelize.transaction();
 
@@ -769,10 +891,14 @@ class GroupService {
       // Adding settlement in the database
       await settlement.save({ transaction });
 
+      logs.push(auditLogFormat("UPDATE", userId, "group_settlements", settlementData.group_settlement_id, { "oldData": oldSettlement, "newData": settlement.dataValues }));
+
       await membersBalanceInfo.save({ transaction });
 
-      await transaction.commit();
+      logs.push(auditLogFormat("UPDATE", userId, "group_member_balance", membersBalanceInfo.balance_id, { "oldData": oldMemberBalanceInfo, "newData": membersBalanceInfo.dataValues }));
 
+      await transaction.commit();
+      AuditLogService.createLog(logs, true);
       return settlement;
     } catch (error) {
       // Rollback the transaction in case of an error
@@ -798,6 +924,8 @@ class GroupService {
 
     const expenseParticipants = expense.group_expense_participants;
 
+    delete expense.dataValues.group_expense_participants;
+
     const members = expenseParticipants.map((participant) => ({ "payer_id": expense.payer_id, "debtor_id": participant.debtor_id }));
 
     const membersBalanceDeleted = await GroupDb.getMembersBalance(groupId, members);
@@ -818,15 +946,43 @@ class GroupService {
 
     const membersBalance = membersBalanceDeleted.map((member) => `('${member.balance_id}', '${groupId}', '${ member.participant1_id }', '${member.participant2_id}', ${member.balance_amount}, '${member.createdAt.toISOString()}', '${new Date().toISOString()}')`).join(",");
 
+    const logs = [];
+
     // Start a new transaction to ensure atomicity
     const transaction = await sequelize.transaction();
 
     try {
       await GroupDb.deleteExpense(groupExpenseId, transaction);
+      logs.push(auditLogFormat("DELETE", userId, "group_expenses", groupExpenseId, { "oldData": expense.dataValues }));
       await GroupDb.deleteExpenseParticipants(groupExpenseId, transaction);
-      await GroupDb.updateMemberBalanceByPk(membersBalance, transaction);
+      expenseParticipants.forEach((participant) => logs.push(auditLogFormat("DELETE", userId, "group_expense_participants", participant.expense_participant_id, { "oldData": participant.dataValues })));
+      const [ updatedBalance ] = await GroupDb.updateMemberBalanceByPk(membersBalance, transaction);
+      
+      updatedBalance.forEach((balance) => {
+        const oldData = {};
+
+        if (balance.createdAt !== balance.updatedAt) {
+          let debtorRole = "";
+
+          const balanceAmount = expenseParticipants.find((participant) => {
+            if (participant.debtor_id === balance.participant1_id) {
+              debtorRole = "participant1";
+            } else if (participant.debtor_id === balance.participant2_id) {
+              debtorRole = "participant2";
+            }
+            return debtorRole;
+          }).debtor_amount ?? 0;
+
+          oldData.oldData = {
+            "balance_id": balance.balance_id,
+            "balance_amount": (parseFloat(balance.balance_amount) + (debtorRole === "participant1" ? balanceAmount : -balanceAmount)).toFixed(2)
+          };
+        }
+        logs.push(auditLogFormat(balance.createdAt === balance.updatedAt ? "INSERT" : "UPDATE", userId, "group_member_balance", balance.balance_id, { ...oldData, "newData": balance }));
+      });
       
       await transaction.commit();
+      AuditLogService.createLog(logs, true);
     } catch (error) {
       // Rollback the transaction in case of an error
       await transaction.rollback();
@@ -844,12 +1000,14 @@ class GroupService {
     await this.isUserMemberOfGroup(groupId, userId);
 
     const settlement = await GroupDb.getSettlement(groupSettlementId);
+    const oldSettlement = { ...settlement.dataValues };
 
     if (!settlement) {
       throw new ErrorHandler(400, "Settlement not found.");
     }
 
     const membersBalanceInfo = await GroupDb.getMemberBalance(groupId, settlement.payer_id, settlement.debtor_id);
+    const oldMemberBalanceInfo = { ...membersBalanceInfo.dataValues };
 
     const isPayerParticipant1 = settlement.payer_id === membersBalanceInfo.participant1_id;
 
@@ -859,10 +1017,15 @@ class GroupService {
 
     const transaction = await sequelize.transaction();
 
+    const logs = [];
+
     try {
       await membersBalanceInfo.save({ transaction });
+      logs.push(auditLogFormat("UPDATE", userId, "group_member_balance", membersBalanceInfo.balance_id, { "oldData": oldMemberBalanceInfo, "newData": membersBalanceInfo.dataValues }));
       await settlement.destroy({ transaction });
+      logs.push(auditLogFormat("DELETE", userId, "group_settlements", groupSettlementId, { "oldData": oldSettlement }));
       await transaction.commit();
+      AuditLogService.createLog(logs, true);
     } catch (error) {
       await transaction.rollback();
       throw error;

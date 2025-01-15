@@ -14,6 +14,7 @@ import initializeGroupSettlement from "../api/groups/models/groupSettlementModel
 import initializeGroupExpense from "../api/groups/models/groupExpenseModel.js";
 import initializeGroupExpenseParticipant from "../api/groups/models/groupExpensePariticpantModel.js";
 import initializePayment from "../api/payment/paymentModel.js";
+import initializeAuditLog from "../api/audit/auditLogModel.js";
 
 // Creating a new Sequelize instance for connecting to the PostgreSQL database
 const sequelize = new Sequelize(database, username, password, {
@@ -41,6 +42,11 @@ const GroupSettlement = initializeGroupSettlement(sequelize);
 const GroupExpense = initializeGroupExpense(sequelize);
 const GroupExpenseParticipant = initializeGroupExpenseParticipant(sequelize);
 const Payment = initializePayment(sequelize);
+const AuditLog = initializeAuditLog(sequelize);
+
+// User model association with Audit Log model
+User.hasMany(AuditLog, { "foreignKey": "actor_id" });
+AuditLog.belongsTo(User, { "foreignKey": "actor_id" });
 
 // User model association with Friends model
 User.hasMany(Friend, { "foreignKey": "friend1_id" });
@@ -143,4 +149,4 @@ try {
   });
 }
 
-export { sequelize, User, Friend, FriendMessage, FriendExpense, Group, GroupMember, GroupMemberBalance, GroupMessage, GroupExpense, GroupExpenseParticipant, GroupSettlement, Payment };
+export { sequelize, User, Friend, FriendMessage, FriendExpense, Group, GroupMember, GroupMemberBalance, GroupMessage, GroupExpense, GroupExpenseParticipant, GroupSettlement, Payment, AuditLog };

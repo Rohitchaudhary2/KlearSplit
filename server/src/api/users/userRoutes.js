@@ -3,6 +3,7 @@ import UserController from "./userControllers.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import { validateBody } from "../middlewares/validationMiddleware.js";
 import * as userSchema from "./userValidations.js";
+import uploadMiddleware from "../middlewares/uploadMiddleware.js";
 
 const userRouter = Router();
 
@@ -53,6 +54,7 @@ userRouter.get(
 userRouter.patch(
   "/:id",
   authenticateToken,
+  uploadMiddleware("profileImages", "profile"),
   validateBody(userSchema.updateUserSchema),
   UserController.updateUser
 );

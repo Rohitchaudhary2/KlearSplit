@@ -152,8 +152,7 @@ export class FriendsListComponent {
    * @param {string} data.id - The ID of the conversation associated with the friend request to withdraw.
    * @returns {void} This method doesn't return any value but updates the UI and triggers side effects.
    */
-  onWithdrawRequest(data: {id: string, status: string}): void {
-    const { id: conversationId } = data;
+  onWithdrawRequest(conversationId: string): void {
     // Opens a confirmation dialog asking the user if they are sure they want to withdraw the request
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data: "Are you sure you want to withdraw this request?",

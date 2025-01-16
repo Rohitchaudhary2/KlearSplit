@@ -356,16 +356,11 @@ class UserService {
 
   /**
    * Updates the user information in the database.
-   * @param {Object} req - The request object containing the user data and parameters.
-   * @param {Object} req.validatedUser - The validated user object with the updated user data.
+   * @param {string} id - The id of the logged in user.
+   * @param {Object} updatedUserData - The validated user object with the updated user data.
    * @returns {Promise<Object>} - The result of the update operation (updated user data).
    */
-  static updateUser = async(req) => {
-    const user = req.body;
-    const id = req.user.user_id;
-
-    await this.getUser(id);
-
+  static updateUser = async(user, id) => {
     return await UserDb.updateUser(user, id);
   };
 

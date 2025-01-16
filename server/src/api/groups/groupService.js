@@ -451,7 +451,7 @@ class GroupService {
       // Send WhatsApp messages
       const responses = await sendWhatsAppTemplateMessage(participantDetails, expense);
 
-      if (responses.length > 0) {
+      if (responses.error) {
         responses.forEach((response) => {
           logger.log({
             "level": "error",

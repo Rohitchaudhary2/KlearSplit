@@ -112,6 +112,11 @@ class GroupController {
   });
 
   static updateExpense = asyncHandler(async(req, res) => {
+    if (req.file) {
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/groupExpense/${req.file.filename}`;
+
+      Object.assign(req.body, { "receipt_url": imageUrl });
+    }
     const updatedExpense = await GroupService.updateExpense(req.body, req.params.group_id, req.user.user_id);
   
     responseHandler(res, 200, "Expense updated successfully", updatedExpense);

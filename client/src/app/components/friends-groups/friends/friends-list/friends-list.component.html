@@ -13,6 +13,7 @@
     [heading]="'Pending Requests'"
     [items]="getRequests()"
     (acceptReject)="onAcceptReject($event)"
+    (withdrawRequest)="onWithdrawRequest($event)"
     (selectedFriend)="onSelectUser($event)"
   ></app-list-display>
 

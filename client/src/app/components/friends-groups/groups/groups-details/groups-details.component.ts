@@ -49,6 +49,12 @@ export class GroupsDetailsComponent {
 
   currentUserId = this.authService.currentUser()?.user_id;
 
+  constructor() {
+    const currMember = this.groupMembers().find((member) => member.group_membership_id === this.currentMember()?.group_membership_id);
+    this.groupMembers.set(this.groupMembers().filter((member) => member.group_membership_id !== currMember?.group_membership_id));
+    this.groupMembers().unshift(currMember!);
+  }
+
   /**
    * Converts a string representation of a balance amount to a number.
    *
@@ -216,28 +222,32 @@ export class GroupsDetailsComponent {
         next: (response) => {
           const updatedGroup = response.data[1][0];
           this.toastr.success("Group updated successfully", "Success");
-          this.selectedGroup.update((group) =>
-            ({ ...group,
-              ...updatedGroup,
-              // Explicitly fill in the missing fields with undefined to match the expected type
-              balance_amount: group!.balance_amount,
-              status: group!.status,
-              role: group!.role,
-              has_blocked: group!.has_blocked,
-            })
-          );
-          this.groups().forEach((group) => {
-            if (group.group_id === this.selectedGroup()?.group_id) {
-              Object.assign(group, updatedGroup);
+          const group = this.selectedGroup();
+          const updatedSelectedGroup = { ...group,
+            ...updatedGroup,
+            // Explicitly fill in the missing fields with undefined to match the expected type
+            balance_amount: group!.balance_amount,
+            status: group!.status,
+            role: group!.role,
+            has_blocked: group!.has_blocked,
+          };
+          this.groupsService.setSelectedGroup(updatedSelectedGroup);
+          this.groups().forEach((g) => {
+            if (g.group_id === this.selectedGroup()?.group_id) {
+              Object.assign(g, updatedGroup);
             }
           });
-          this.groupInvites().forEach((group) => {
-            if (group.group_id === this.selectedGroup()?.group_id) {
-              Object.assign(group, updatedGroup);
+          this.groupInvites().forEach((g) => {
+            if (g.group_id === this.selectedGroup()?.group_id) {
+              Object.assign(g, updatedGroup);
             }
           });
         }
       });
     });
+  }
+
+  returnToGroup() {
+    this.router.navigate([ "/groups" ]);
   }
 }

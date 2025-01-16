@@ -39,7 +39,8 @@ export class GroupsService {
     return data.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
   }
 
-  selectedGroup = signal<GroupData | undefined>(undefined);
+  private currentGroup = signal<GroupData | undefined>(undefined);
+  selectedGroup = this.currentGroup.asReadonly();
   groupMembers = signal<GroupMemberData[]>([]);
   currentMember = signal<GroupMemberData | undefined>(undefined);
   messages = signal<GroupMessageData[]>([]);
@@ -48,6 +49,10 @@ export class GroupsService {
   combinedView = signal<(CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement)[]>([]);
   groups = signal<GroupData[]>([]);
   groupInvites = signal<GroupData[]>([]);
+
+  setSelectedGroup(selectedGroup: GroupData | undefined) {
+    this.currentGroup.set(selectedGroup);
+  }
 
   /**
    * Type guard to check if an item is of type CombinedGroupExpense.

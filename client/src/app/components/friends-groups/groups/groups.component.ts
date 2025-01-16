@@ -506,7 +506,6 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
             this.cdr.detectChanges();
             // After loading new items, calculate the new scroll position
             const newScrollHeight = element!.scrollHeight;
-
             // Adjust the scroll position to keep the view consistent
             const scrollDiff = newScrollHeight - this.scrollPosition;
             element!.scrollTop = element!.scrollTop + scrollDiff - 100;

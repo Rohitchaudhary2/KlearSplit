@@ -51,9 +51,9 @@ export class FriendsService {
     loadMessages: boolean,
     loadExpenses: boolean,
     pageSize: number,
-    timestampMessage: string = new Date().toISOString(),
-    timestampExpense: string = new Date().toISOString(),
-    timestampCombined: string = new Date().toISOString(),
+    timestampMessage = new Date().toISOString(),
+    timestampExpense = new Date().toISOString(),
+    timestampCombined = new Date().toISOString(),
   ) {
     const messagesUrl = `${API_URLS.getMessages}/${conversationId}?pageSize=${pageSize}&timestamp=${timestampMessage}`;
     const expensesUrl = `${API_URLS.getExpenses}/${conversationId}?pageSize=${pageSize}&timestamp=${timestampExpense}`;
@@ -134,7 +134,7 @@ export class FriendsService {
     const params = new HttpParams().set("fetchAll", true);
 
     return this.httpClient
-      .get<Expense>(`${API_URLS.getExpenses}/${conversationId}`, {
+      .get<Expense>(`${API_URLS.getExpenses}/${conversationId}?timestamp=${new Date().toISOString()}`, {
         params,
         withCredentials: true,
       })

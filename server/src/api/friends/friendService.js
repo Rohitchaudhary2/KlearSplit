@@ -164,7 +164,7 @@ class FriendService {
    * @returns {Promise<Object>} - The deleted friend request object.
    */
   static withdrawFriendRequest = async(friendRequest) => {
-    const { "conversation_id": conversationId } = friendRequest;
+    const { userId, conversationId } = friendRequest;
     const friendRequestExist = await FriendDb.getFriend(conversationId);
 
     // If the friend request doesn't exist, throw an error
@@ -174,14 +174,13 @@ class FriendService {
 
     // Check if the user is the one who sent the request and it is still pending
     if (
-      friendRequest.user_id !== friendRequestExist.dataValues.friend1_id || friendRequestExist.dataValues.status !== "PENDING"
+      userId !== friendRequestExist.dataValues.friend1_id || friendRequestExist.dataValues.status !== "PENDING"
     ) {
       throw new ErrorHandler(400, "Invalid request");
     }
 
     // Withdraw the friend request
     const friendRequestDelete = await FriendDb.withdrawFriendRequest(
-      friendRequest,
       friendRequestExist
     );
 

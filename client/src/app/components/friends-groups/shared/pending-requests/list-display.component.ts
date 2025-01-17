@@ -31,6 +31,7 @@ export class ListDisplayComponent {
   heading = input.required();
   items = input.required<(FriendData | GroupData)[]>();
   acceptReject = output<AcceptedRejected>();
+  withdrawRequest = output<string>();
   selectedFriend = output<FriendData>();
   selectedGroup = output<GroupData>();
 
@@ -50,6 +51,13 @@ export class ListDisplayComponent {
       return this.acceptReject.emit({ id: item.conversation_id, status });
     }
     return this.acceptReject.emit({ id: item.group_id, status });
+  }
+  
+  withdraw(item: FriendData | GroupData): void {
+    if(this.isFriendData(item)) {
+      return this.withdrawRequest.emit(item.conversation_id);
+    }
+    return this.withdrawRequest.emit(item.group_id);
   }
 
   isFriendData(

@@ -61,7 +61,15 @@ class UserController {
 
   // Controller for updating the user
   static updateUser = asyncHandler(async(req, res) => {
-    const user = await UserService.updateUser(req);
+    let updatedUserData = req.body;
+
+    // If a file is uploaded, include the file path in the updated expense data
+    if (req.file) {
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/profileImages/${req.file.filename}`;
+
+      updatedUserData = Object.assign(updatedUserData, { "image_url": imageUrl });
+    }
+    const user = await UserService.updateUser(updatedUserData, req.user.user_id);
 
     responseHandler(res, 200, "Successfully updated user", user);
   });

@@ -101,11 +101,11 @@
                       matTooltipPosition="above"
                       ><mat-icon
                         (click)="
-                          onAcceptReject(item, 'WITHDRAW');
+                          withdraw(item);
                           $event.stopPropagation()
                         "
                         (keyup.enter)="
-                          onAcceptReject(item, 'WITHDRAW');
+                          withdraw(item);
                           $event.stopPropagation()
                         "
                         >close</mat-icon

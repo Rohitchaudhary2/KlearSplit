@@ -52,11 +52,11 @@ export default (sequelize) => {
     {
       "timestamps": true,
       "paranoid": true, // Enables soft deletes by adding 'deletedAt' field
-      "defaultScope": {
-        "attributes": {
-          "exclude": [ "createdAt", "updatedAt", "deletedAt" ] // Exclude these fields in default queries
-        }
-      },
+      // "defaultScope": {
+      //   "attributes": {
+      //     "exclude": [ "createdAt", "updatedAt", "deletedAt" ] // Exclude these fields in default queries
+      //   }
+      // },
       "scopes": {
         "withDeletedAt": {
           "attributes": {} // Include 'deletedAt' field in this scope

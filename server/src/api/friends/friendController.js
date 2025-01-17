@@ -72,7 +72,7 @@ class FriendController {
     const { "conversation_id": conversationId } = req.params;
     const { "user_id": userId } = req.user;
     const { type } = req.body;
-  
+    
     const updatedFriendStatus = await FriendService.archiveBlockFriend({
       userId,
       conversationId,
@@ -104,17 +104,19 @@ class FriendController {
   // Controller to add an expense
   static addExpense = asyncHandler(async(req, res) => {
     const { "conversation_id": conversationId } = req.params;
-    let expenseData = req.body;
+    const expenseData = req.body;
+    const userId = req.user.user_id;
   
     // Access file data if a file is uploaded
     if (req.file) {
       const imageUrl = `${req.protocol}://${req.get("host")}/uploads/receipts/${req.file.filename}`;
 
-      expenseData = Object.assign(expenseData, { "receipt_url": imageUrl });
+      Object.assign(expenseData, { "receipt_url": imageUrl });
     }
   
     const addedExpense = await FriendService.addExpense(
       expenseData,
+      userId,
       conversationId
     );
   
@@ -143,16 +145,18 @@ class FriendController {
   // Controller to update an expense
   static updateExpense = asyncHandler(async(req, res) => {
     const { "conversation_id": conversationId } = req.params;
-    let updatedExpenseData = req.body;
+    const updatedExpenseData = req.body;
+    const userId = req.user.user_id;
   
     // If a file is uploaded, include the file path in the updated expense data
     if (req.file) {
-      updatedExpenseData = Object.assign(updatedExpenseData, { "receipt_url": req.file.path });
+      Object.assign(updatedExpenseData, { "receipt_url": req.file.path });
     }
   
     const updatedExpense = await FriendService.updateExpense(
       updatedExpenseData,
-      conversationId
+      conversationId,
+      userId
     );
   
     responseHandler(res, 200, "Expense updated successfully", updatedExpense);
@@ -162,10 +166,12 @@ class FriendController {
   static deleteExpense = asyncHandler(async(req, res) => {
     const { "conversation_id": conversationId } = req.params;
     const { "friend_expense_id": friendExpenseId } = req.body;
+    const userId = req.user.user_id;
   
     const deletedExpense = await FriendService.deleteExpense(
       conversationId,
-      friendExpenseId
+      friendExpenseId,
+      userId
     );
   
     responseHandler(res, 200, "Expense deleted successfully", deletedExpense);

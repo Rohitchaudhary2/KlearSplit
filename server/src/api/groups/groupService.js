@@ -563,7 +563,7 @@ class GroupService {
     if (userMembershipInfo.has_blocked) {
       throw new ErrorHandler(400, "You have blocked the group.");
     }
-
+    
     // Verifying that both payer and debtor are members of group.
     const count = await GroupDb.countGroupMembers(groupId, [ settlementData.payer_id, settlementData.debtor_id ]);
 
@@ -604,11 +604,11 @@ class GroupService {
       // Adding settlement in the database
       const settlement = await GroupDb.addSettlement(settlementData, transaction);
 
-      logs.push(auditLogFormat("INSERT", userId, "group_settlements", settlement.dataValues.settlement_id, { "newData": settlement.dataValues }));
+      logs.push(auditLogFormat("INSERT", userId, "group_settlements", settlement.group_settlement_id, { "newData": settlement.dataValues }));
 
       const updatedMemberBalanceInfo = await membersBalanceInfo.save({ transaction });
       
-      logs.push(auditLogFormat("UPDATE", userId, "group_member_balance", membersBalanceInfo.group_membership_id, { "oldData": oldMemberBalanceInfo, "newData": updatedMemberBalanceInfo.dataValues }));
+      logs.push(auditLogFormat("UPDATE", userId, "group_member_balance", membersBalanceInfo.balance_id, { "oldData": oldMemberBalanceInfo, "newData": updatedMemberBalanceInfo.dataValues }));
 
       await transaction.commit();
 

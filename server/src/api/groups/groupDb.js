@@ -135,12 +135,13 @@ class GroupDb {
     return updatedMember;
   };
 
-  static getGroupMembersByIds = async(ids, field) => {
+  static getGroupMembersByIds = async(ids, field, whereCondition = {}) => {
     const members = await GroupMember.findAll({
       "where": {
         [ field ]: {
           [ Op.in ]: ids
-        }
+        },
+        ...whereCondition
       },
       "raw": true
     });

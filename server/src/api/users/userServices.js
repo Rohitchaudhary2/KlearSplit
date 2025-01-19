@@ -361,7 +361,7 @@ class UserService {
   /**
    * Updates the user information in the database.
    * @param {Object} req - The request object containing the user data and parameters.
-   * @param {Object} req.validatedUser - The validated user object with the updated user data.
+   * @param {Object} req.validatedUser - The validated user object with the updated user data
    * @returns {Promise<Object>} - The result of the update operation (updated user data).
    */
   static updateUser = async(req) => {

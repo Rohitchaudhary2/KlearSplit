@@ -384,7 +384,6 @@ class FriendService {
 
       logs.push(auditLogFormat("UPDATE", userId, "friends", updatedFriends[ 1 ][ 0 ].conversation_id, { "oldData": updatedFriends[ 1 ]._previousDataValues, "newData": updatedFriends[ 1 ][ 0 ].dataValues }));
       await transaction.commit();
-      
       AuditLogService.createLog(logs, true);
 
       return expense;

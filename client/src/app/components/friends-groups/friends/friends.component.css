@@ -1,7 +1,7 @@
 .subcontainer {
   flex-wrap: wrap;
-  min-height: 77vh;
-  border-radius: 20px;
+  min-height: 85.5vh;
+  border-radius: 10px;
   box-sizing: border-box;
 }
 
@@ -92,25 +92,24 @@ input:focus {
 }
 
 .pending-request {
-  max-height: 22vh;
   background-color: white;
   border-radius: 10px 10px 10px 10px;
 }
 
 .requests {
-  max-height: 16vh;
+  height: 16vh;
+  /* max-height: 16vh; */
   overflow-y: auto;
   border-radius: 0px 0px 10px 10px;
 }
 
 .friend-list {
-  max-height: 46.2vh;
   background-color: white;
-  border-radius: 10px 10px 10px 10px;
+  border-radius: 10px;
 }
 
 .friends {
-  max-height: 42.1vh;
+  max-height: 51vh;
   overflow-y: auto;
   border-radius: 0px 0px 10px 10px;
 }

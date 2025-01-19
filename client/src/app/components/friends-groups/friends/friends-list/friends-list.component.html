@@ -1,20 +1,24 @@
 <div class="transparent subcontainer d-flex flex-column">
   <!-- search container -->
-  <app-search-bar
+  <div>
+    <app-search-bar
     placeholder="Search using email"
     actionButtonIcon="person_add"
     actionButtonTitle="Add Friend"
     (searchChange)="onSearchChange($event)"
     (actionButtonClick)="onAddFriendClick()"
   />
+  </div>
 
   <!-- pending friend requests -->
-  <app-list-display
+  <div>
+    <app-list-display
     [heading]="'Pending Requests'"
     [items]="getRequests()"
     (acceptReject)="onAcceptReject($event)"
     (selectedFriend)="onSelectUser($event)"
   ></app-list-display>
+  </div>
 
   <!-- Friends List -->
   <div class="friend-list d-flex flex-column shadow-lg mt-3 mx-3 flex-grow-1">

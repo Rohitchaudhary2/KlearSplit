@@ -5,7 +5,7 @@ import { map } from "rxjs";
 import { API_URLS } from "../constants/api-urls";
 import { AuthService } from "./auth/auth.service";
 import { TokenService } from "./auth/token.service";
-import { FetchResponse } from "./shared/types.model";
+import { CurrentUser, FetchResponse } from "./shared/types.model";
 
 @Injectable({
   providedIn: "root",
@@ -32,5 +32,12 @@ export class UserService {
           };
         }),
       );
+  }
+
+  updateUser(id: string, updatedUser: CurrentUser | FormData) {
+    return this.httpClient
+      .patch(`${API_URLS.updateProfile}/${id}`, updatedUser, {
+        withCredentials: true,
+      });
   }
 }

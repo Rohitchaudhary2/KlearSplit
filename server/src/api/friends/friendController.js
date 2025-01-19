@@ -150,7 +150,9 @@ class FriendController {
   
     // If a file is uploaded, include the file path in the updated expense data
     if (req.file) {
-      Object.assign(updatedExpenseData, { "receipt_url": req.file.path });
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/receipts/${req.file.filename}`;
+
+      Object.assign(updatedExpenseData, { "receipt_url": imageUrl });
     }
   
     const updatedExpense = await FriendService.updateExpense(

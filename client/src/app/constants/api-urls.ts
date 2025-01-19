@@ -11,6 +11,7 @@ export const API_URLS = {
   restoreAccountVerify: `${environment.apiBaseUrl}/users/verifyrestore`,
   restoreAccount: `${environment.apiBaseUrl}/users/restore`,
   fetchUser: `${environment.apiBaseUrl}/users/user`,
+  updateProfile: `${environment.apiBaseUrl}/users`,
   getUsers: `${environment.apiBaseUrl}/users/getUsers`,
   addFriend: `${environment.apiBaseUrl}/friends/addfriend`,
   getFriends: `${environment.apiBaseUrl}/friends/getallfriends`,

@@ -17,7 +17,7 @@
         <!-- Group Info Section -->
         <div class="group-header">
           <!-- Image with Hover Overlay -->
-          <div class="group-image-container position-relative">
+          <div class="position-relative">
             <img
               [src]="selectedGroup()?.image_url ?? '/group-profile.png'"
               alt="{{ selectedGroup()?.group_name }}"
@@ -91,7 +91,7 @@
             </div>
 
             <!-- Table Body -->
-            <div style="max-height: 40vh; overflow-y: auto">
+            <div class="member-data" style="max-height: 40vh; overflow-y: auto">
               @for (member of groupMembers(); track $index) {
                 <div
                   class="table-row"
@@ -189,8 +189,13 @@
           </div>
         </div>
       </div>
-      <div class="d-flex w-100 justify-content-end align-items-center mt-2 p-3">
-        <button class="btn btn-outline-success">Save Changes</button>
+      <div class="d-flex w-100 align-items-center mt-2 p-3">
+        <div class="d-flex w-100 justify-content-start align-items-center mt-2 p-3">
+          <button class="btn btn-outline-danger" (click)="returnToGroup()">Back</button>
+        </div>
+        <div class="d-flex w-100 justify-content-end align-items-center mt-2 p-3">
+          <button class="btn btn-outline-success">Save Changes</button>
+        </div>
       </div>
     </div>
   </div>

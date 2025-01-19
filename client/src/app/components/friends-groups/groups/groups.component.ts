@@ -217,7 +217,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.timestampMessages = undefined;
     this.timestampExpenses = undefined;
     this.timestampCombined = undefined;
-    this.selectedGroup.set(undefined);
+    this.groupsService.setSelectedGroup(undefined);
   }
 
   onSelectGroup(group: GroupData | undefined) {
@@ -227,7 +227,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     
     // Set the selected group as the new selected group
-    this.selectedGroup.set(group);
+    this.groupsService.setSelectedGroup(group);
 
     // If no group is selected, then return
     if (!this.selectedGroup) {
@@ -904,7 +904,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
             this.toastr.success("Group Left Successfully", "Success");
             const groupId = this.selectedGroup()!.group_id;
             this.groupsListComponent.removeGroup(groupId);
-            this.selectedGroup.set(undefined);
+            this.groupsService.setSelectedGroup(undefined);
           }
         });
       }

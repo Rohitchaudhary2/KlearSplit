@@ -65,6 +65,15 @@ export class FriendsListComponent {
     return this.searchTerm() ? this.friendList() : this.friends();
   }
 
+  getNotifications() {
+    return this.getRequests().length > 0 ? true : false;
+  }
+
+  notificationsOpen = false;
+
+  changeNotificationTabState() {
+    this.notificationsOpen = !this.notificationsOpen;
+  }
   /**
    * Converts a string representation of a balance amount to a number.
    *

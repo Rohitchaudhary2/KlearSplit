@@ -98,7 +98,6 @@ input:focus {
 
 .requests {
   height: 16vh;
-  /* max-height: 16vh; */
   overflow-y: auto;
   border-radius: 0px 0px 10px 10px;
 }
@@ -112,6 +111,10 @@ input:focus {
   max-height: 51vh;
   overflow-y: auto;
   border-radius: 0px 0px 10px 10px;
+}
+
+.notificationsClosed {
+  max-height: 73vh;
 }
 
 hr {

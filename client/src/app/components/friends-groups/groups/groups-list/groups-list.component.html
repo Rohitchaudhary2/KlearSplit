@@ -4,17 +4,21 @@
     placeholder="Search using group name"
     actionButtonIcon="group_add"
     actionButtonTitle="Create Group"
+    [notifications]="getNotifications()"
     (searchChange)="onSearchChange($event)"
     (actionButtonClick)="onCreateGroupClick()"
+    (notificationTab)="changeNotificationTabState()"
   />
 
   <!-- pending group invites -->
-  <app-list-display
+  @if(notificationsOpen) {
+    <app-list-display
     heading="Group Invites"
     [items]="getInvites()"
     (acceptReject)="onAcceptReject($event)"
     (selectedGroup)="onSelectGroup($event)"
   ></app-list-display>
+  }
 
   <!-- Groups List -->
   <div class="friend-list d-flex flex-column shadow-lg mt-3 mx-3 flex-grow-1">
@@ -24,7 +28,7 @@
       </h6>
       <hr class="m-0 mt-1" />
     </div>
-    <div class="friends flex-grow-1 overflow-auto">
+    <div class="friends" [ngClass]="!notificationsOpen ? 'notificationsClosed': ''">
       <table class="table table-hover">
         <thead>
           <tr style="display: none;">

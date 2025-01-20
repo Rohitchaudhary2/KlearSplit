@@ -131,7 +131,9 @@ export class FriendsService {
    * @returns An observable with the list of all expenses.
    */
   fetchAllExpenses(conversationId: string) {
-    const params = new HttpParams().set("fetchAll", true);
+    const params = new HttpParams()
+      .set("fetchAll", true)
+      .set("timestamp", new Date().toISOString());
 
     return this.httpClient
       .get<Expense>(`${API_URLS.getExpenses}/${conversationId}`, {

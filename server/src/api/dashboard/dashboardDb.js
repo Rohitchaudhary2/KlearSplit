@@ -121,13 +121,13 @@ class DashboardDb {
 
   static getGroupsById = async(ids) => {
     const groups = await Group.findAll({
-      "attributes": [ "group_name" ],
+      "attributes": [ "group_name", "group_id" ],
       "where": {
         "group_id": ids
       },
       "raw": true
     });
-
+    
     return groups.sort(
       (a, b) => ids.indexOf(a.group_id) - ids.indexOf(b.group_id)
     );

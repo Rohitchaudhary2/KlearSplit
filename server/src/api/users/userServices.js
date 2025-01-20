@@ -9,6 +9,8 @@ import { ErrorHandler } from "../middlewares/errorHandler.js";
 import { otpGenrator } from "../utils/otpGenerator.js";
 import FriendService from "../friends/friendService.js";
 import Redis from "ioredis";
+import AuditLogService from "../audit/auditService.js";
+import { auditLogFormat } from "../utils/auditFormat.js";
 
 const redis = new Redis();
 
@@ -86,6 +88,7 @@ class UserService {
       if (!isUserExists) {
         // Creating new user in the database
         createdUser = await UserDb.createUser(user, transaction);
+        AuditLogService.createLog(auditLogFormat("INSERT", createdUser.user_id, "users", createdUser.user_id, { "newData": createdUser }));
       } else if (isUserExists && isUserExists.dataValues.is_invited) {
         createdUser = await UserDb.updateUser(
           { ...user, "is_invited": false },
@@ -96,6 +99,7 @@ class UserService {
         if (!createdUser) {
           throw new ErrorHandler(400, "Error while Registering");
         }
+        AuditLogService.createLog(auditLogFormat("UPDATE", createdUser.user_id, "users", createdUser.user_id, { "oldData": createdUser, "newData": createdUser }));
       }
 
       // Generate access and refresh tokens

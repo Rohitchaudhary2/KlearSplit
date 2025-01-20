@@ -4,6 +4,8 @@ import FriendService from "../friends/friendService.js";
 import GroupService from "./../groups/groupService.js";
 import PaymentDb from "./paymentDb.js";
 import GroupDb from "../groups/groupDb.js";
+import AuditLogService from "../audit/auditService.js";
+import { auditLogFormat } from "../utils/auditFormat.js";
 
 // PayPal Configuration
 paypal.configure({
@@ -64,7 +66,9 @@ class PaymentService {
     // Use await to handle the Promise returned by createPayment
     const payment = await createPayment();
 
-    await PaymentDb.createPayment({ "payment_id": payment.id, "payment_method": payment.payer.payment_method, "amount": amount, "payer_id": payerUserId, "payee_id": debtorUserId });
+    const createdPayment = await PaymentDb.createPayment({ "payment_id": payment.id, "payment_method": payment.payer.payment_method, "amount": amount, "payer_id": payerUserId, "payee_id": debtorUserId });
+    
+    AuditLogService.createLog(auditLogFormat("INSERT", userId, "payments", createdPayment.id, { "newData": createdPayment.dataValues }));
     
     // Find approval URL for the user to approve the payment
     const approvalUrl = payment.links.find((link) => link.rel === "approval_url").href;
@@ -92,10 +96,13 @@ class PaymentService {
     }
 
     const payment = await PaymentDb.getPayment(paymentId);
+    const oldPayment = { ...payment.dataValues };
     // const paymentId = req.query.paymentId; // from PayPal URL
     const paypalPayerId = { "payer_id": PayerID }; // from PayPal URL
 
     const { amount, "payer_id": payerId, "payee_id": debtorId } = payment;
+
+    const logs = [];
 
     try {
       // Await the PayPal execution
@@ -106,14 +113,17 @@ class PaymentService {
         case "friends": {
           // Await the friend expense addition
           const settlement = await FriendService.addExpense({ "total_amount": amount, "split_type": "SETTLEMENT" }, id);
+
+          logs.push(auditLogFormat("INSERT", userId, "friends_expenses", settlement.friend_expense_id, { "newData": settlement.dataValues }));
           
           Object.assign(payment, { "transaction_id": paymentDetails.transactions[ 0 ].related_resources[ 0 ].sale.id, "payment_status": "COMPLETED", "friend_settlement_id": settlement.friend_expense_id, "paypal_payer_id": PayerID });
 
           await payment.save();
+          logs.push(auditLogFormat("UPDATE", userId, "payments", payment.id, { "oldData": oldPayment, "newData": payment.dataValues }));
           break;
         }
         case "groups": {
-          const [ payer, debtor ] = await GroupDb.getGroupMembersByIds([ payerId, debtorId ], "member_id");
+          const [ payer, debtor ] = await GroupDb.getGroupMembersByIds([ payerId, debtorId ], "member_id", { "group_id": id });
 
           const payerMembershipId = payer.group_membership_id;
           const debtorMembershipId = debtor.group_membership_id;
@@ -121,15 +131,20 @@ class PaymentService {
           // Await the group settlement addition
           const settlement = await GroupService.addSettlement({ "payer_id": payerMembershipId, "debtor_id": debtorMembershipId, "settlement_amount": amount }, id, userId);
 
+          logs.push(auditLogFormat("INSERT", userId, "group_settlements", settlement.group_settlement_id, { "newData": settlement.dataValues }));
+
           Object.assign(payment, { "transaction_id": paymentDetails.transactions[ 0 ].related_resources[ 0 ].sale.id, "payment_status": "COMPLETED", "group_settlement_id": settlement.group_settlement_id, "paypal_payer_id": PayerID });
 
           await payment.save();
+          logs.push(auditLogFormat("UPDATE", userId, "payments", payment.id, { "oldData": oldPayment, "newData": payment.dataValues }));
           break;
         }
         default:
           // Return failure URL if type is unknown
           return `http://localhost:4200/${type}?id=${id}&success=false`;
       }
+
+      AuditLogService.createLog(logs, true);
   
       // Return success URL once all operations are completed
       return `http://localhost:4200/${type}?id=${id}&success=true`;
@@ -144,10 +159,10 @@ class PaymentService {
       });
       Object.assign(payment, { "payment_status": "FAILED" });
       await payment.save();
+      AuditLogService.createLog(auditLogFormat("UPDATE", userId, "payments", payment.id, { "oldData": oldPayment, "newData": payment.dataValues }));
       return `http://localhost:4200/${type}?id=${id}&success=false`;
     }
   };
-  
 }
 
 export default PaymentService;

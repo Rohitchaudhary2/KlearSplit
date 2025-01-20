@@ -10,7 +10,7 @@ import DashboardDb from "./dashboardDb.js";
  * @returns {Object} - A sorted object with the top friends based on the specified field, and "others" category.
  */
 // eslint-disable-next-line func-style
-function sortFriendsByAmount(topFriends, field) {
+function sortFriendsByAmount(topFriends, field, isGroup = false) {
   // Converting the object into an array of key-value pairs
   let entries = Object.entries(topFriends);
 
@@ -25,7 +25,9 @@ function sortFriendsByAmount(topFriends, field) {
       return acc + val[ 1 ].amount;
     }, 0);
 
-    entries.push([ "others", { "amount": othersAmount, "friend": "others" } ]);
+    const fieldName = isGroup ? "group" : "friend";
+
+    entries.push([ "others", { "amount": othersAmount, [ fieldName ]: "others" } ]);
   }
     
   // Rebuilding the object with sorted entries
@@ -215,8 +217,8 @@ class DashboardService {
       topCashFlowGroups[ userMemberShipId ].amount += settlementAmount;
     });
 
-    const topGroups = sortFriendsByAmount(topCashFlowGroups, "amount");
-
+    const topGroups = sortFriendsByAmount(topCashFlowGroups, "amount", true);
+    
     const topFourGroupsIds = Object.entries(topGroups).slice(0, 4).map((value) => value[ 1 ].group);
 
     const topFourGroupsName = await DashboardDb.getGroupsById(topFourGroupsIds);

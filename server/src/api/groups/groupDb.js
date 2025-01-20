@@ -135,12 +135,13 @@ class GroupDb {
     return updatedMember;
   };
 
-  static getGroupMembersByIds = async(ids, field) => {
+  static getGroupMembersByIds = async(ids, field, whereCondition = {}) => {
     const members = await GroupMember.findAll({
       "where": {
         [ field ]: {
           [ Op.in ]: ids
-        }
+        },
+        ...whereCondition
       },
       "raw": true
     });
@@ -172,7 +173,7 @@ class GroupDb {
   });
 
   static addExpense = async(expenseData, transaction) => {
-    return await GroupExpense.create(expenseData, { transaction });
+    return await GroupExpense.create(expenseData, { transaction, "raw": true });
   };
 
   static updateExpense = async(expenseData, transaction) => {
@@ -187,7 +188,7 @@ class GroupDb {
     if (affectedCount === 0) {
       throw new ErrorHandler(400, "No records updated. Expense not found.");
     }
-  
+
     return updatedRows;
   };
 
@@ -199,7 +200,7 @@ class GroupDb {
   });
 
   static addExpenseParticipants = async(debtors, transaction) => await GroupExpenseParticipant.bulkCreate(debtors, {
-    "updateOnDuplicate": [ "debtor_amount" ],
+    "updateOnDuplicate": [ "debtor_amount", "updatedAt" ],
     "conflictFields": [ "group_expense_id", "debtor_id" ],
     transaction
   });
@@ -235,7 +236,8 @@ class GroupDb {
         CASE 
             WHEN group_member_balance.participant1_id = EXCLUDED.participant1_id THEN EXCLUDED.balance_amount
             ELSE -EXCLUDED.balance_amount
-        END;`, {
+        END, "updatedAt" = CURRENT_TIMESTAMP
+      returning *;`, {
       "type": QueryTypes.INSERT,
       transaction
     });
@@ -249,7 +251,8 @@ class GroupDb {
       ON CONFLICT (balance_id)
       DO UPDATE 
         SET balance_amount = EXCLUDED.balance_amount,
-          "updatedAt" = EXCLUDED."updatedAt";
+          "updatedAt" = EXCLUDED."updatedAt"
+      returning *;
       `, {
       "type": QueryTypes.INSERT,
       transaction
@@ -292,7 +295,8 @@ class GroupDb {
 
   static userBalanceInGroup = async(groupId, groupMembershipId) => {
     return await sequelize.query(
-      "select sum(balance_amount) as amount from group_member_balance where group_id = :groupId and (participant1_id = :groupMembershipId or participant2_id = :groupMembershipId) group by group_id;", {
+      `select sum(balance_amount) as amount from group_member_balance where 
+      group_id = :groupId and (participant1_id = :groupMembershipId or participant2_id = :groupMembershipId) group by group_id;`, {
         "replacements": { groupId, groupMembershipId },
         "type": QueryTypes.SELECT
       }

@@ -854,7 +854,9 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
       this.toastr.warning("You have outstanding balance in this group. Please settle it before leaving.", "Warning");
       return;
     }
-    const newBlockStatus = !this.currentMember()!.has_blocked;
+    
+    const member = this.currentMember();
+    const newBlockStatus = member && "has_blocked" in member ? !member.has_blocked : false;
     const confirmationDialogRef = this.dialog.open(
       ConfirmationDialogComponent,
       {
@@ -865,18 +867,16 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
     confirmationDialogRef.afterClosed().subscribe((result) => {
       // If user confirms closing of Add Expense dialog box.
       if (result) {
-        const updatedMember = {
-          ...this.currentMember()!,
-          has_blocked: newBlockStatus,
-        };
-  
-        // Update the signal with the new current member data
-        this.currentMember.set(updatedMember);
-
         this.groupsService.blockGroup(
           this.selectedGroup()!.group_id, newBlockStatus
         ).subscribe({
-          next: () => {
+          next: (response) => {
+            const updatedMember = {
+              ...response.data
+            };
+      
+            // Update the signal with the new current member data
+            this.currentMember.set(updatedMember);
             this.toastr.success(`Group ${newBlockStatus ? "Blocked" : "Unblocked"} Successfully`, "Success");
           }
         });

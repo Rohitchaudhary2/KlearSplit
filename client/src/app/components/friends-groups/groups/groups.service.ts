@@ -26,6 +26,7 @@ import {
   MembersData,
   SearchedUserResponse,
   UpdateGroupResponse,
+  UpdateMemberResponse,
 } from "./groups.model";
 
 @Injectable({
@@ -216,7 +217,7 @@ export class GroupsService {
    * @returns - An observable with the updated block status.
    */
   blockGroup(groupId: string, blockStatus: boolean) {
-    return this.httpClient.patch(
+    return this.httpClient.patch<UpdateMemberResponse>(
       `${API_URLS.updateGroupMember}/${groupId}`,
       { "has_blocked": blockStatus },
       { withCredentials: true }

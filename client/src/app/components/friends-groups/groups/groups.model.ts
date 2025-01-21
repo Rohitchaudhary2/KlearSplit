@@ -103,6 +103,12 @@ export interface UpdateGroupResponse {
   data: [number, [Group]];
 }
 
+export interface UpdateMemberResponse {
+  success: string;
+  message: string;
+  data: GroupMemberData;
+}
+
 export interface GroupMessageData {
   group_message_id: string;
   group_id: string;

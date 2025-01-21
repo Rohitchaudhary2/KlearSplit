@@ -152,7 +152,7 @@ class FriendController {
     if (req.file) {
       const imageUrl = `${req.protocol}://${req.get("host")}/uploads/receipts/${req.file.filename}`;
 
-      Object.assign(updatedExpenseData, { "receipt_url": req.file.path });
+      Object.assign(updatedExpenseData, { "receipt_url": imageUrl });
     }
   
     const updatedExpense = await FriendService.updateExpense(

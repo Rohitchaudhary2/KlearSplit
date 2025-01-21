@@ -59,6 +59,16 @@ export class GroupsListComponent {
     return this.searchTerm() ? this.groupList() : this.groups();
   }
 
+  getNotifications() {
+    return this.getInvites().length > 0 ? true : false;
+  }
+
+  notificationsOpen = false;
+
+  changeNotificationTabState() {
+    this.notificationsOpen = !this.notificationsOpen;
+  }
+
   // Searches from the existing group list
   onSearchChange(term: string): void {
     this.searchTerm.set(term);

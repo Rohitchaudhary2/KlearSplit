@@ -18,8 +18,11 @@ export class SearchBarComponent {
   placeholder = input("Search...");
   actionButtonIcon = input("add");
   actionButtonTitle = input("Action");
+  notifications = input<boolean>();
   searchChange = output<string>();
   actionButtonClick = output<void>();
+  hasNotificationsOpened = false;
+  notificationTab = output();
 
   searchTerm = "";
 
@@ -32,4 +35,9 @@ export class SearchBarComponent {
   onActionButtonClick(): void {
     this.actionButtonClick.emit();
   };
+
+  changeNotificationsState() {
+    this.hasNotificationsOpened = true;
+    this.notificationTab.emit();
+  }
 }

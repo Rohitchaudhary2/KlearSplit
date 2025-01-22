@@ -6,6 +6,8 @@ import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
 
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
+import { ExpenseData } from "../../friends/friend.model";
+import { BulkInsertionComponent } from "../bulk-insertion/bulk-insertion.component";
 
 @Component({
   selector: "app-expense-form",
@@ -16,24 +18,28 @@ import { FormErrorMessageService } from "../../../shared/form-error-message.serv
     MatSelectModule,
     MatInputModule,
     MatButtonModule,
+    BulkInsertionComponent
   ],
   templateUrl: "./expense-form.component.html",
   styleUrl: "./expense-form.component.css"
 })
 export class ExpenseFormComponent {
   private readonly formErrorMessages = inject(FormErrorMessageService);
+  bulkInsertionTab = false;
   form = input<FormGroup>();
   title = input<string>();
   participants = input();
   splitType = input<string>();
   imageName = input<string>();
   payerName = input<string>("you");
+  type = input.required<string>();
 
   submit = output<void>();
   cancel = output<void>();
   payerDialog = output<void>();
   splitTypeDialog = output<void>();
   fileSelect = output<Event>();
+  addedFriendsExpenses = output<ExpenseData[]>();
 
   /**
    * Retrieves the error message for a given form field.
@@ -44,6 +50,18 @@ export class ExpenseFormComponent {
    */
   getFormErrors(field: string): string | null {
     return this.formErrorMessages.getErrorMessage(this.form()!, field);
+  }
+
+  openBulkInsertionTab() {
+    this.bulkInsertionTab = true;
+  }
+
+  closeBulkInsertionTab() {
+    this.bulkInsertionTab = false;
+  }
+
+  addedExpenses(expenses: ExpenseData[]) {
+    this.addedFriendsExpenses.emit(expenses);
   }
 
   /**

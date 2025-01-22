@@ -46,5 +46,6 @@ export const API_URLS = {
   balanceAmounts: `${environment.apiBaseUrl}/dashboard/balance`,
   cashFlowFriends: `${environment.apiBaseUrl}/dashboard/cashflowfriends`,
   monthlyExpenses: `${environment.apiBaseUrl}/dashboard/monthlyexpenses`,
-  cashFlowGroups: `${environment.apiBaseUrl}/dashboard/cashflowgroups`
+  cashFlowGroups: `${environment.apiBaseUrl}/dashboard/cashflowgroups`,
+  bulkAddExpenses: `${environment.apiBaseUrl}/friends/expenses-bulkcreate`
 };

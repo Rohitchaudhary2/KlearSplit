@@ -18,6 +18,7 @@ import { MatSelectModule } from "@angular/material/select";
 import { ConfirmationDialogComponent } from "../../../confirmation-dialog/confirmation-dialog.component";
 import { FormErrorMessageService } from "../../../shared/form-error-message.service";
 import { ExpenseFormComponent } from "../../shared/expense-form/expense-form.component";
+import { ExpenseData } from "../friend.model";
 import { FriendsPayerComponent } from "./payer/friends-payer.component";
 import { SplitTypeComponent } from "./split-type/split-type.component";
 
@@ -283,6 +284,10 @@ export class FriendsExpenseComponent implements OnInit {
       formData: formData,
       expenseData: { ...this.form.value, "debtor_id": debtorId, "debtor_share": debtorShare },
     });
+  }
+
+  addedBulkExpenses(expenses: ExpenseData[]) {
+    this.dialogRef.close(expenses);
   }
 
   /**

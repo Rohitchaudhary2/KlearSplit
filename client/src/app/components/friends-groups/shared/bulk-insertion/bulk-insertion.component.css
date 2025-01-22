@@ -1,0 +1,49 @@
+.bulk-insertion-container {
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .file-format-dropdown {
+    width: 100%;
+    margin-bottom: 15px;
+  }
+  
+  .file-upload-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .error-row {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #f5c6cb;
+    background-color: #f8d7da;
+  }
+  
+  .dataError {
+    margin-top: 15px;
+  }
+  
+  .error-table-container {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .error-table-container table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .error-table-container th,
+  .error-table-container td {
+    border: 1px solid #e0e0e0;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .error-table-container thead {
+    position: sticky;
+    top: 0;
+    background-color: #f5f5f5;
+  }

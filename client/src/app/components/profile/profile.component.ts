@@ -46,9 +46,11 @@ export class ProfileComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly toastr = inject(ToastrService);
 
+  hidePassword = true;
   previewImage: string | null = null;
   selectedFile: File | null = null;
   hoveringImage = false;
+  imageSelected = false;
   currentUser = this.authService.currentUser;
   
   profileForm = new FormGroup({
@@ -90,6 +92,7 @@ export class ProfileComponent implements OnInit {
     confirm_password: new FormControl("", {
       validators: [
         Validators.required,
+        Validators.pattern(/^(?=.*[a-z])(?=.*\d)[a-z\d]{8,20}$/),
       ]
     })
   }, {
@@ -98,6 +101,16 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
+    // Trigger revalidation when either new_password or confirm_password changes
+    this.changePasswordForm.get("new_password")?.valueChanges
+      .subscribe(() => {
+        this.changePasswordForm.get("confirm_password")?.updateValueAndValidity();
+      });
+
+    this.changePasswordForm.get("confirm_password")?.valueChanges
+      .subscribe(() => {
+        this.changePasswordForm.get("new_password")?.updateValueAndValidity();
+      });
   }
 
   /**
@@ -135,11 +148,13 @@ export class ProfileComponent implements OnInit {
   /**
    * Validator to check if `new_password` matches `confirm_password`.
    */
-  passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
-    const newPassword = group.get("new_password")?.value;
-    const confirmPassword = group.get("confirm_password")?.value;
+  passwordMatchValidator(form: AbstractControl): ValidationErrors | null {
+    const newPassword = form.get("new_password")?.value;
+    const confirmPassword = form.get("confirm_password")?.value;
 
-    return newPassword === confirmPassword ? null : { mismatch: true };
+    return newPassword && confirmPassword && newPassword !== confirmPassword
+      ? { mismatch: true }
+      : null;
   }
 
   triggerFileInput(): void {
@@ -150,6 +165,7 @@ export class ProfileComponent implements OnInit {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files.length > 0) {
       this.selectedFile = target.files[0];
+      this.imageSelected = true;
 
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -163,7 +179,7 @@ export class ProfileComponent implements OnInit {
    * Update and saves the user profile.
    */
   saveChanges(): void {
-    if (!this.profileForm.valid || !this.profileForm.dirty) {
+    if (!this.profileForm.valid || !this.profileForm.dirty && !this.imageSelected) {
       this.toastr.warning("Invalid Details", "Warning");
       return;
     }
@@ -177,7 +193,7 @@ export class ProfileComponent implements OnInit {
     });
 
     if (this.selectedFile) {
-      formData.append("profileImage", this.selectedFile);
+      formData.append("profile", this.selectedFile);
     }
 
     this.userService.updateUser(this.authService.currentUser()!.user_id, formData).subscribe({

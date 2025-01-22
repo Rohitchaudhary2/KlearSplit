@@ -57,13 +57,19 @@ export class FormErrorMessageService {
    * @returns The error message, or `null` if no error exists.
    */
   private getFieldSpecificErrorMessage(field: string, control: AbstractControl): string | null {
-    const fieldErrorHandlers: Record<string, (control: AbstractControl) => string | null> = {
-      password: this.getPasswordErrorMessage,
-      phone: this.getPhoneErrorMessage,
-    };
-
-    return fieldErrorHandlers[field]?.(control) ?? null;
+    switch (field) {
+      case "password":
+      case "current_password":
+      case "new_password":
+      case "confirm_password":
+        return this.getPasswordErrorMessage(control);
+      case "phone":
+        return this.getPhoneErrorMessage(control);
+      default:
+        return null;
+    }
   }
+  
 
   /**
    * Retrieves the error message for password-specific validation.
@@ -78,8 +84,8 @@ export class FormErrorMessageService {
 
     const value = control.value;
     const errors = [
-      !/[a-z]/.test(value) && "at least one lowercase letter",
-      !/\d/.test(value) && "at least one digit",
+      !/[a-z]/.test(value) && "have at least one lowercase letter",
+      !/\d/.test(value) && "have at least one digit",
       (value.length < 8 || value.length > 20) && "be between 8 and 20 characters long",
     ].filter(Boolean);
 

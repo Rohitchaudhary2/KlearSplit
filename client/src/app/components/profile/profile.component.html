@@ -2,7 +2,7 @@
   <div class="row justify-content-center">
     <div class="col-lg-8 col-md-10">
       <div class="card shadow">
-        <div class="card-header text-center bg-primary text-white">
+        <div class="card-header text-center bg-success text-white">
           <h2>Manage Account</h2>
         </div>
         <div class="card-body">
@@ -76,7 +76,7 @@
                       <div
                         class="image-overlay d-flex justify-content-center align-items-center"
                       >
-                        <mat-icon>edit</mat-icon>
+                        <mat-icon class="edit-icon">edit</mat-icon>
                       </div>
                     </div>
                   </div>
@@ -85,51 +85,43 @@
                 <!-- Form Fields -->
                 <div class="row">
                   <div class="col-md-6 mb-3">
-                    <label for="firstName" class="form-label">First Name</label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      class="form-control"
-                      formControlName="first_name"
-                    />
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>First Name</mat-label>
+                        <mat-icon matPrefix>person</mat-icon>
+                        <input matInput formControlName="first_name" />
+                    </mat-form-field>
                   </div>
                   <div class="col-md-6 mb-3">
-                    <label for="lastName" class="form-label">Last Name</label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      class="form-control"
-                      formControlName="last_name"
-                    />
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Last Name</mat-label>
+                        <mat-icon matPrefix>person</mat-icon>
+                        <input matInput formControlName="last_name" />
+                    </mat-form-field>
                   </div>
                 </div>
 
                 <div class="mb-3">
-                  <label for="email" class="form-label">Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    class="form-control"
-                    formControlName="email"
-                    readonly
-                  />
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Email</mat-label>
+                        <mat-icon matPrefix>email</mat-icon>
+                        <input matInput formControlName="email" readonly />
+                    </mat-form-field>
                 </div>
 
                 <div class="mb-3">
-                  <label for="phone" class="form-label">Phone</label>
-                  <input
-                    type="text"
-                    id="phone"
-                    class="form-control"
-                    formControlName="phone"
-                  />
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Phone</mat-label>
+                        <mat-icon matPrefix>phone</mat-icon>
+                        <input matInput formControlName="phone" />
+                    </mat-form-field>
                 </div>
 
                 <div class="text-end">
                   <button
-                    [disabled]="!profileForm.valid || !profileForm.dirty"
+                    [disabled]="!profileForm.valid || !profileForm.dirty && !imageSelected"
                     type="submit"
-                    class="btn btn-primary"
+                    class="btn btn-success"
+
                   >
                     Save Changes
                   </button>
@@ -149,51 +141,86 @@
                 (ngSubmit)="changePassword()"
               >
                 <div class="mb-3">
-                  <label for="currentPassword" class="form-label"
-                    >Current Password</label
-                  >
-                  <input
-                    type="password"
-                    id="currentPassword"
-                    class="form-control"
-                    formControlName="current_password"
-                  />
-                  <div class="text-danger mt-1">
-                    {{ changePasswordFormErrors("current_password") }}
-                  </div>
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Current Password</mat-label>
+                        <input
+                          matInput
+                          [type]="hidePassword ? 'password' : 'text'"
+                          formControlName="current_password"
+                        />
+                        <button
+                            mat-icon-button
+                            matSuffix
+                            (click)="hidePassword = !hidePassword"
+                            [attr.aria-label]="'Hide password'"
+                            [attr.aria-pressed]="hidePassword"
+                            type="button"
+                        >
+                            <mat-icon>{{
+                            hidePassword ? "visibility_off" : "visibility"
+                            }}</mat-icon>
+                        </button>
+                        @if (changePasswordFormErrors("current_password")) {
+                          <mat-error>{{
+                            changePasswordFormErrors("current_password")
+                          }}</mat-error>
+                        }
+                    </mat-form-field>
                 </div>
 
                 <div class="mb-3">
-                  <label for="newPassword" class="form-label"
-                    >New Password</label
-                  >
-                  <input
-                    type="password"
-                    id="newPassword"
-                    class="form-control"
-                    formControlName="new_password"
-                  />
-                  <div class="text-danger mt-1">
-                    {{ changePasswordFormErrors("new_password") }}
-                  </div>
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>New Password</mat-label>
+                        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="new_password" />
+                        <button
+                            mat-icon-button
+                            matSuffix
+                            (click)="hidePassword = !hidePassword"
+                            [attr.aria-label]="'Hide password'"
+                            [attr.aria-pressed]="hidePassword"
+                            type="button"
+                        >
+                            <mat-icon>{{
+                            hidePassword ? "visibility_off" : "visibility"
+                            }}</mat-icon>
+                        </button>
+                        @if (changePasswordFormErrors("new_password")) {
+                          <mat-error>{{
+                            changePasswordFormErrors("new_password")
+                          }}</mat-error>
+                        }
+                    </mat-form-field>
                 </div>
 
                 <div class="mb-3">
-                  <label for="confirmPassword" class="form-label"
-                    >Confirm Password</label
-                  >
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    class="form-control"
-                    formControlName="confirm_password"
-                  />
-                  <div
-                    *ngIf="changePasswordForm.hasError('mismatch')"
-                    class="text-danger mt-1"
-                  >
-                    Passwords do not match.
-                  </div>
+                    <mat-form-field appearance="outline" class="w-100 mb-3">
+                        <mat-label>Confirm Password</mat-label>
+                        <input
+                          matInput
+                          [type]="hidePassword ? 'password' : 'text'"
+                          formControlName="confirm_password"
+                        />
+                        <button
+                            mat-icon-button
+                            matSuffix
+                            (click)="hidePassword = !hidePassword"
+                            [attr.aria-label]="'Hide password'"
+                            [attr.aria-pressed]="hidePassword"
+                            type="button"
+                        >
+                            <mat-icon>{{
+                            hidePassword ? "visibility_off" : "visibility"
+                            }}</mat-icon>
+                        </button>
+                        @if (changePasswordFormErrors("confirm_password")) {
+                          <mat-error>{{
+                            changePasswordFormErrors("confirm_password")
+                          }}</mat-error>
+                        }
+                    </mat-form-field>
+                    @if (!changePasswordForm.valid) {
+                        <p class="text-danger">Passwords do not match</p>
+                    }
                 </div>
 
                 <div class="text-end">
@@ -202,7 +229,7 @@
                       !changePasswordForm.valid || !changePasswordForm.dirty
                     "
                     type="submit"
-                    class="btn btn-primary"
+                    class="btn btn-success"
                   >
                     Change Password
                   </button>

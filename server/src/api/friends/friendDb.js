@@ -118,6 +118,23 @@ class FriendDb {
   static getFriend = async(conversationId) =>
     await Friend.findByPk(conversationId);
 
+  static friendWithUsers = async(conversationId) =>
+    await Friend.findOne({
+      "where": { "conversation_id": conversationId },
+      "include": [
+        {
+          "model": User,
+          "as": "friend1", // Alias for friend1 relationship in Friend model
+          "required": true
+        },
+        {
+          "model": User,
+          "as": "friend2", // Alias for friend2 relationship in Friend model
+          "required": true
+        }
+      ]
+    });
+
   /**
    * Updates a friend entry with new data.
    * @param {Object} updatedData - The data to update in the friend entry.

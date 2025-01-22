@@ -4,9 +4,11 @@ import { ErrorHandler } from "../middlewares/errorHandler.js";
 import UserDb from "../users/userDb.js";
 import { auditLogFormat } from "../utils/auditFormat.js";
 import { hashedPassword } from "../utils/hashPassword.js";
+import logger from "../utils/logger.js";
 import { generatePassword } from "../utils/passwordGenerator.js";
 import fileData from "../utils/readCsvFile.js";
 import sendMail from "../utils/sendMail.js";
+import { sendWhatsAppTemplateMessage } from "../utils/whatsappMessage.js";
 import validateBulkData from "../utils/validateBulkData.js";
 import FriendDb from "./friendDb.js";
 import { formatFriendData, getNewStatus, calculateDebtorAmount, calculateNewBalance, validateSettlementAmount, formatPersonName, validateSettlement, isFriendExist, validateExistingExpense, validateConversationPermissions, validateUpdateParticipants, isBalanceUpdateRequired } from "./friendUtils.js";
@@ -314,6 +316,7 @@ class FriendService {
    */
   static addExpense = async(expenseData, userId, conversationId) => {
     const friend = await FriendDb.getFriend(conversationId);
+    const friendWithUser = await FriendDb.friendWithUsers(conversationId);
 
     isFriendExist(friend);
     Object.assign(expenseData, { "conversation_id": conversationId });
@@ -384,6 +387,27 @@ class FriendService {
       );
 
       logs.push(auditLogFormat("UPDATE", userId, "friends", updatedFriends[ 1 ][ 0 ].conversation_id, { "oldData": updatedFriends[ 1 ]._previousDataValues, "newData": updatedFriends[ 1 ][ 0 ].dataValues }));
+
+      const participantDetails = [
+        friendWithUser.dataValues.friend1.dataValues,
+        friendWithUser.dataValues.friend2.dataValues
+      ];
+      
+      // Send WhatsApp messages
+      const responses = await sendWhatsAppTemplateMessage(participantDetails, expense);
+
+      if (responses.error) {
+        responses.forEach((response) => {
+          logger.log({
+            "level": "error",
+            "message": JSON.stringify({
+              "statusCode": response.statusCode,
+              "message": response.error.message
+            })
+          });
+        });
+      }
+
       await transaction.commit();
       AuditLogService.createLog(logs, true);
 

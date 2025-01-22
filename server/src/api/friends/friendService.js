@@ -611,6 +611,7 @@ class FriendService {
       );
 
       logs.push(auditLogFormat("UPDATE", userId, "friends", updatedFriends[ 1 ][ 0 ].conversation_id, { "oldData": friend.dataValues, "newData": updatedFriends[ 1 ][ 0 ].dataValues }));
+      AuditLogService.createLog(logs, true);
       // Commit the transaction
       await transaction.commit();
       return { "message": "Expense deleted successfully" };

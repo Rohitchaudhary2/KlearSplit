@@ -11,6 +11,8 @@ import FriendService from "../friends/friendService.js";
 import Redis from "ioredis";
 import AuditLogService from "../audit/auditService.js";
 import { auditLogFormat } from "../utils/auditFormat.js";
+import { sendWelcomeMessage } from "../utils/whatsappMessage.js";
+import logger from "../utils/logger.js";
 
 const redis = new Redis();
 
@@ -125,6 +127,21 @@ class UserService {
         password,
         "message": "Thank you for registering with us."
       });
+
+      // Send WhatsApp message
+      const responses = await sendWelcomeMessage(user);
+
+      if (responses.error) {
+        responses.forEach((response) => {
+          logger.log({
+            "level": "error",
+            "message": JSON.stringify({
+              "statusCode": response.statusCode,
+              "message": response.error.message
+            })
+          });
+        });
+      }
 
       return { "user": createdUser, accessToken, refreshToken };
     } catch (error) {

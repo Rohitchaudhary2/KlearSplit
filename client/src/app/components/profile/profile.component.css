@@ -12,7 +12,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease-in-out;
 }
 
 .profile-pic:hover {
@@ -26,12 +26,12 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.3);
   display: flex;
   justify-content: center;
   align-items: center;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease-in-out;
   cursor: pointer;
 }
 
@@ -40,27 +40,29 @@
 }
 
 .nav-tabs .nav-link {
-  color: #007bff;
+  color: #198754;
   font-weight: bold;
 }
 
 .nav-tabs .nav-link.active {
   color: white;
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
+  background-color: #198754;
+  border-color: #198754;
 }
 
 .text-danger {
   font-size: 0.875rem;
+}
+
+.edit-icon {
+  color: #fff;
+}
+
+.btn[disabled] {
+  cursor: not-allowed; /* Disable pointer events */
+  pointer-events: auto;
+  color: white; /* Force text color to stay white even when disabled */
+  opacity: 0.65; /* Slightly faded look for disabled state */
 }
 
 @media (max-width: 576px) {
@@ -69,7 +71,7 @@
     height: 4.5rem;
   }
 
-  .btn-primary {
+  .btn-success {
     width: 100%;
   }
 }

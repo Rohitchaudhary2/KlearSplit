@@ -1,146 +1,215 @@
 <div class="container py-5">
   <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-lg-8 col-md-10">
       <div class="card shadow">
-        <div class="card-header text-center">
-          <h2>Edit Profile</h2>
+        <div class="card-header text-center bg-primary text-white">
+          <h2>Manage Account</h2>
         </div>
         <div class="card-body">
-          <form [formGroup]="profileForm" (ngSubmit)="saveChanges()">
-            <!-- Profile Picture with Hover Overlay -->
-            <div class="profile-pic-container">
-              <img
-                [src]="
-                  previewImage || currentUser()?.image_url || '/profile.png'
-                "
-                alt="{{ currentUser()?.first_name }}"
-                class="profile-pic"
-              />
-              <div
-                class="image-overlay d-flex justify-content-center align-items-center"
-                (mouseover)="hoveringImage = true"
-                (mouseleave)="hoveringImage = false"
-                [class.show-overlay]="hoveringImage"
-                (click)="triggerFileInput()"
-                (keydown)="triggerFileInput()"
-              >
-                <input
-                  type="file"
-                  #fileInput
-                  accept="image/*"
-                  (change)="selectImage($event)"
-                  style="display: none"
-                />
-                <div
-                  class="image-overlay d-flex justify-content-center align-items-center"
-                >
-                  <mat-icon class="edit-icon">edit</mat-icon>
-                </div>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="firstName" class="form-label">First Name</label>
-                  <input
-                    type="text"
-                    id="firstName"
-                    class="form-control"
-                    formControlName="first_name"
-                  />
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="lastName" class="form-label">Last Name</label>
-                  <input
-                    type="text"
-                    id="lastName"
-                    class="form-control"
-                    formControlName="last_name"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input
-                type="email"
-                id="email"
-                class="form-control"
-                formControlName="email"
-                readonly
-              />
-            </div>
-
-            <div class="mb-3">
-              <label for="phone" class="form-label">Phone</label>
-              <input
-                type="text"
-                id="phone"
-                class="form-control"
-                formControlName="phone"
-              />
-            </div>
-
-            <!-- Change Password Fields -->
-            <div class="mb-3">
-              <label for="currentPassword" class="form-label"
-                >Current Password</label
-              >
-              <input
-                type="password"
-                id="currentPassword"
-                class="form-control"
-                formControlName="current_password"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="newPassword" class="form-label">New Password</label>
-              <input
-                type="password"
-                id="newPassword"
-                class="form-control"
-                formControlName="new_password"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="confirmPassword" class="form-label"
-                >Confirm Password</label
-              >
-              <input
-                type="password"
-                id="confirmPassword"
-                class="form-control"
-                formControlName="confirm_password"
-              />
-              <div
-                *ngIf="
-                  profileForm.get('confirm_password')?.touched &&
-                  profileForm.errors?.['mismatch']
-                "
-                class="text-danger mt-1"
-              >
-                Passwords do not match.
-              </div>
-            </div>
-
-            <div class="text-center">
+          <!-- Bootstrap Tabs -->
+          <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
               <button
-                type="submit"
-                class="btn btn-success"
-                [ngStyle]="{
-                    'cursor': (!profileForm.valid || !profileForm.dirty) ? 'not-allowed' : 'pointer',
-                    'opacity': (!profileForm.valid || !profileForm.dirty) ? '0.65' : '1'
-                  }"
-                [disabled]="!profileForm.valid || !profileForm.dirty"
+                class="nav-link active"
+                id="edit-profile-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#edit-profile"
+                type="button"
+                role="tab"
+                aria-controls="edit-profile"
+                aria-selected="true"
               >
-                Save Changes
+                Edit Profile
               </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="change-password-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#change-password"
+                type="button"
+                role="tab"
+                aria-controls="change-password"
+                aria-selected="false"
+              >
+                Change Password
+              </button>
+            </li>
+          </ul>
+          <div class="tab-content mt-4" id="profileTabsContent">
+            <!-- Edit Profile Tab -->
+            <div
+              class="tab-pane fade show active"
+              id="edit-profile"
+              role="tabpanel"
+              aria-labelledby="edit-profile-tab"
+            >
+              <form [formGroup]="profileForm" (ngSubmit)="saveChanges()">
+                <div class="text-center mb-4">
+                  <!-- Profile Picture -->
+                  <div class="profile-pic-container">
+                    <img
+                      [src]="
+                        previewImage ||
+                        currentUser()?.image_url ||
+                        '/profile.png'
+                      "
+                      alt="{{ currentUser()?.first_name }}"
+                      class="profile-pic"
+                    />
+                    <div
+                      class="image-overlay d-flex justify-content-center align-items-center"
+                      (mouseover)="hoveringImage = true"
+                      (mouseleave)="hoveringImage = false"
+                      [class.show-overlay]="hoveringImage"
+                      (click)="triggerFileInput()"
+                      (keydown)="triggerFileInput()"
+                    >
+                      <input
+                        type="file"
+                        #fileInput
+                        accept="image/*"
+                        (change)="selectImage($event)"
+                        style="display: none"
+                      />
+                      <div
+                        class="image-overlay d-flex justify-content-center align-items-center"
+                      >
+                        <mat-icon>edit</mat-icon>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      class="form-control"
+                      formControlName="first_name"
+                    />
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      class="form-control"
+                      formControlName="last_name"
+                    />
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    class="form-control"
+                    formControlName="email"
+                    readonly
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="phone" class="form-label">Phone</label>
+                  <input
+                    type="text"
+                    id="phone"
+                    class="form-control"
+                    formControlName="phone"
+                  />
+                </div>
+
+                <div class="text-end">
+                  <button
+                    [disabled]="!profileForm.valid || !profileForm.dirty"
+                    type="submit"
+                    class="btn btn-primary"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
             </div>
-          </form>
+
+            <!-- Change Password Tab -->
+            <div
+              class="tab-pane fade"
+              id="change-password"
+              role="tabpanel"
+              aria-labelledby="change-password-tab"
+            >
+              <form
+                [formGroup]="changePasswordForm"
+                (ngSubmit)="changePassword()"
+              >
+                <div class="mb-3">
+                  <label for="currentPassword" class="form-label"
+                    >Current Password</label
+                  >
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    class="form-control"
+                    formControlName="current_password"
+                  />
+                  <div class="text-danger mt-1">
+                    {{ changePasswordFormErrors("current_password") }}
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="newPassword" class="form-label"
+                    >New Password</label
+                  >
+                  <input
+                    type="password"
+                    id="newPassword"
+                    class="form-control"
+                    formControlName="new_password"
+                  />
+                  <div class="text-danger mt-1">
+                    {{ changePasswordFormErrors("new_password") }}
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="confirmPassword" class="form-label"
+                    >Confirm Password</label
+                  >
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    class="form-control"
+                    formControlName="confirm_password"
+                  />
+                  <div
+                    *ngIf="changePasswordForm.hasError('mismatch')"
+                    class="text-danger mt-1"
+                  >
+                    Passwords do not match.
+                  </div>
+                </div>
+
+                <div class="text-end">
+                  <button
+                    [disabled]="
+                      !changePasswordForm.valid || !changePasswordForm.dirty
+                    "
+                    type="submit"
+                    class="btn btn-primary"
+                  >
+                    Change Password
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>

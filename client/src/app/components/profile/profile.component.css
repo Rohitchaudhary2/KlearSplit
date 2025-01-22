@@ -1,22 +1,22 @@
 .profile-pic-container {
   position: relative;
   display: inline-block;
-  width: 80px; /* Adjust size as needed */
-  height: 80px;
+  width: 6rem;
+  height: 6rem;
   border-radius: 50%;
-  overflow: hidden; /* Ensures overlay stays within the circular image */
-  margin: 0 auto; /* Center align */
+  overflow: hidden;
+  margin: 0 auto;
 }
 
 .profile-pic {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease; /* Smooth zoom on hover */
+  transition: transform 0.3s ease;
 }
 
 .profile-pic:hover {
-  transform: scale(1.05); /* Slight zoom-in effect */
+  transform: scale(1.05);
 }
 
 .image-overlay {
@@ -26,80 +26,50 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.4); /* Dark overlay with transparency */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  opacity: 0; /* Initially hidden */
-  transition: opacity 0.3s ease; /* Smooth fade-in */
+  opacity: 0;
+  transition: opacity 0.3s ease;
   cursor: pointer;
 }
 
 .profile-pic-container:hover .image-overlay {
-  opacity: 1; /* Show overlay on hover */
+  opacity: 1;
 }
 
-.edit-icon {
-  font-size: 24px;
-  color: white; /* White edit icon */
-}
-
-.btn:disabled {
-  cursor: not-allowed; /* Changes the cursor */
-  opacity: 0.65; /* Optional: Reduces opacity to visually indicate it's disabled */
-  pointer-events: none; /* Prevents interactions */
-}
-
-.card {
-  border-radius: 16px;
-  overflow: hidden; /* Ensures elements stay within rounded corners */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
-  background-color: #ffffff;
-}
-
-.card-header {
-  background-color: #007bff;
-  color: white;
-  padding: 1rem;
-  font-size: 1.5rem;
+.nav-tabs .nav-link {
+  color: #007bff;
   font-weight: bold;
 }
 
-.card-body {
-  padding: 2rem;
+.nav-tabs .nav-link.active {
+  color: white;
+  background-color: #007bff;
+  border-color: #007bff;
 }
 
-.btn-success {
-  background-color: #28a745;
-  border-color: #28a745;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
 }
 
-.btn-success:hover {
-  background-color: #218838;
-  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+.btn-primary:hover {
+  background-color: #0056b3;
 }
 
-.form-label {
-  font-weight: 600;
-  color: #495057;
-}
-
-.form-control {
-  border-radius: 8px;
+.text-danger {
+  font-size: 0.875rem;
 }
 
 @media (max-width: 576px) {
   .profile-pic-container {
-    width: 80px;
-    height: 80px;
+    width: 4.5rem;
+    height: 4.5rem;
   }
 
-  .card {
-    padding: 1rem;
-  }
-
-  .btn-success {
-    width: 100%; /* Make the button full-width on small screens */
+  .btn-primary {
+    width: 100%;
   }
 }

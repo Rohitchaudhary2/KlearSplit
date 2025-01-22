@@ -8,37 +8,93 @@ import {
 } from "@angular/core";
 import {
   AbstractControl,
-  FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
   Validators,
 } from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
+import { MatInputModule } from "@angular/material/input";
+import { ToastrService } from "ngx-toastr";
 
 import { AuthService } from "../auth/auth.service";
+import { FormErrorMessageService } from "../shared/form-error-message.service";
 import { UserService } from "../user.service";
 
 @Component({
   selector: "app-profile",
   standalone: true,
-  imports: [ CommonModule, ReactiveFormsModule, MatIconModule ],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule
+  ],
   templateUrl: "./profile.component.html",
   styleUrls: [ "./profile.component.css" ],
 })
 export class ProfileComponent implements OnInit {
   @ViewChild("fileInput") fileInput!: ElementRef<HTMLInputElement>;
 
+  private readonly formErrorMessages = inject(FormErrorMessageService);
   private readonly authService = inject(AuthService);
   private readonly userService = inject(UserService);
+  private readonly toastr = inject(ToastrService);
 
-  profileForm!: FormGroup;
   previewImage: string | null = null;
   selectedFile: File | null = null;
   hoveringImage = false;
   currentUser = this.authService.currentUser;
+  
+  profileForm = new FormGroup({
+    first_name: new FormControl("", {
+      validators: [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50),
+      ],
+    }),
+    last_name: new FormControl("", {
+      validators: [ Validators.maxLength(50) ],
+    }),
+    email: new FormControl("", {
+      validators: [ Validators.required, Validators.email ],
+    }),
+    phone: new FormControl("", {
+      validators: [
+        Validators.minLength(10),
+        Validators.maxLength(10),
+        Validators.pattern(/^\d{10}$/),
+      ],
+    }),
+  });
 
-  constructor(private fb: FormBuilder) {}
+  changePasswordForm = new FormGroup({
+    current_password: new FormControl("", {
+      validators: [
+        Validators.required,
+        Validators.pattern(/^(?=.*[a-z])(?=.*\d)[a-z\d]{8,20}$/),
+      ]
+    }),
+    new_password: new FormControl("", {
+      validators: [
+        Validators.required,
+        Validators.pattern(/^(?=.*[a-z])(?=.*\d)[a-z\d]{8,20}$/),
+      ]
+    }),
+    confirm_password: new FormControl("", {
+      validators: [
+        Validators.required,
+      ]
+    })
+  }, {
+    validators: this.passwordMatchValidator
+  });
 
   ngOnInit(): void {
     this.initializeForm();
@@ -48,22 +104,32 @@ export class ProfileComponent implements OnInit {
    * Initializes the reactive form with default values and validators.
    */
   initializeForm(): void {
-    const currentUser = this.authService.currentUser();
-    this.profileForm = this.fb.group(
-      {
-        first_name: [ currentUser?.first_name, [ Validators.required ] ],
-        last_name: [ currentUser?.last_name ],
-        email: [ currentUser?.email, [ Validators.required, Validators.email ] ],
-        phone: [ currentUser?.phone, [ Validators.pattern(/^\d{10}$/) ] ],
-        current_password: [ "" ],
-        new_password: [
-          "",
-          [ Validators.minLength(8), Validators.required ],
-        ],
-        confirm_password: [ "" ],
-      },
-      { validators: this.passwordMatchValidator }
-    );
+    this.profileForm.patchValue({
+      first_name: this.currentUser()!.first_name,
+      last_name: this.currentUser()!.last_name,
+      email: this.currentUser()!.email,
+      phone: this.currentUser()!.phone,
+    });
+  }
+
+  /**
+   * Returns the validation error message for a specific change password form field.
+   *
+   * @param field The name of the form field
+   * @returns The error message string or 'null' if no error exists
+   */
+  changePasswordFormErrors(field: string): string | null {
+    return this.formErrorMessages.getErrorMessage(this.changePasswordForm, field);
+  }
+
+  /**
+   * Returns the validation error message for a specific profile form field.
+   *
+   * @param field The name of the form field
+   * @returns The error message string or 'null' if no error exists
+   */
+  profileFormErrors(field: string): string | null {
+    return this.formErrorMessages.getErrorMessage(this.profileForm, field);
   }
 
   /**
@@ -93,8 +159,12 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  /**
+   * Update and saves the user profile.
+   */
   saveChanges(): void {
     if (!this.profileForm.valid || !this.profileForm.dirty) {
+      this.toastr.warning("Invalid Details", "Warning");
       return;
     }
 
@@ -110,6 +180,23 @@ export class ProfileComponent implements OnInit {
       formData.append("profileImage", this.selectedFile);
     }
 
-    this.userService.updateUser(this.authService.currentUser()!.user_id, formData).subscribe();
+    this.userService.updateUser(this.authService.currentUser()!.user_id, formData).subscribe({
+      next: () => this.toastr.success("Updated Profile Successfully", "Success"),
+      error: () => this.toastr.error("Error Updating Profile", "Error")
+    });
+  }
+
+  changePassword() {
+    if (!this.changePasswordForm.valid) {
+      return;
+    }
+
+    const formData = new FormData;
+    formData.append("password", this.changePasswordForm.get("confirm_password")!.value!);
+
+    this.userService.updateUser(this.authService.currentUser()!.user_id, formData).subscribe({
+      next: () => this.toastr.success("Updated Profile Successfully", "Success"),
+      error: () => this.toastr.error("Error Updating Profile", "Error")
+    });
   }
 }

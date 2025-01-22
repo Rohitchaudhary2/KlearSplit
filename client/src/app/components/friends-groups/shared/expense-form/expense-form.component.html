@@ -1,3 +1,6 @@
+@if(bulkInsertionTab) {
+  <app-bulk-insertion [type]="type()" (closeBulkInsertion)="closeBulkInsertionTab()" (cancel)="cancel.emit()" (addedExpenses)="addedExpenses($event)"/>
+} @else {
 <h2 mat-dialog-title class="text-center bg-success text-white py-2">
   {{ title() }}
 </h2>
@@ -100,8 +103,21 @@
     </div>
   </form>
 </div>
-<div mat-dialog-actions class="d-flex justify-content-end gap-2 px-3">
-  <button
+<div mat-dialog-actions class="d-flex justify-content-between ps-3 pb-2">
+  <span>
+    @if(type() === "friends") {
+      <button
+        mat-button
+        disableRipple
+        class="custom-mat-button text-success"
+        (click)="openBulkInsertionTab()"
+      >
+        Bulk Insertion of Expenses
+      </button>
+    }
+  </span>
+  <span class="d-flex justify-content-end gap-2 px-3">
+    <button
     mat-button
     disableRipple
     class="custom-mat-button"
@@ -119,4 +135,6 @@
   >
     Submit
   </button>
+  </span>
 </div>
+}

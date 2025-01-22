@@ -5,9 +5,11 @@
   [splitType]="splitType"
   [imageName]="imageName()"
   [payerName]="getPayerName()"
+  type="friends"
   (submit)="onAdd()"
   (cancel)="onCancel()"
   (payerDialog)="openPayerDialog()"
   (splitTypeDialog)="openSplitTypeDialog()"
+  (addedFriendsExpenses)="addedBulkExpenses($event)"
   (fileSelect)="selectImage($event)"
 ></app-expense-form>

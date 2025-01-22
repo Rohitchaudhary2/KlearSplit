@@ -158,7 +158,7 @@ class GroupService {
       throw new ErrorHandler(422, "Only 100 members are allowed.");
     }
 
-    const addedMembers = await this.assignRolesAndAddMembers(membersData, inviter.group_membership_id, groupId);
+    const addedMembers = await this.assignRolesAndAddMembers(membersData, inviter.group_membership_id, groupId, userId);
 
     return { addedMembers, notAddedMembers };
   };

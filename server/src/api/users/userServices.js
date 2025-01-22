@@ -295,10 +295,12 @@ class UserService {
     const password = generatePassword();
     const hashPassword = await hashedPassword(password);
 
-    await UserDb.updateUser(
+    const updatedUser = await UserDb.updateUser(
       { "password": hashPassword, "failedAttempts": 0, "lockoutUntil": null },
       user.user_id
     );
+
+    AuditLogService.createLog(auditLogFormat("UPDATE", user.user_id, "users", user.user_id, { "oldData": user.dataValues, "newData": updatedUser[ 0 ].dataValues }));
 
     const options = {
       "email": user.email,

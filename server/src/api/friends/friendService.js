@@ -5,7 +5,9 @@ import UserDb from "../users/userDb.js";
 import { auditLogFormat } from "../utils/auditFormat.js";
 import { hashedPassword } from "../utils/hashPassword.js";
 import { generatePassword } from "../utils/passwordGenerator.js";
+import fileData from "../utils/readCsvFile.js";
 import sendMail from "../utils/sendMail.js";
+import validateBulkData from "../utils/validateBulkData.js";
 import FriendDb from "./friendDb.js";
 import { formatFriendData, getNewStatus, calculateDebtorAmount, calculateNewBalance, validateSettlementAmount, formatPersonName, validateSettlement, isFriendExist, validateExistingExpense, validateConversationPermissions, validateUpdateParticipants, isBalanceUpdateRequired } from "./friendUtils.js";
 
@@ -666,7 +668,68 @@ class FriendService {
     return expenses.shift();
   };
   
+  static addBulkExpenses = async(conversationId, userId, req) => {
+    const friend = await FriendDb.getFriend(conversationId);
 
+    isFriendExist(friend);
+    validateConversationPermissions(friend);
+
+    let validRows = [];
+    const rows = await fileData(req);
+
+    const tableName = req.body.tableName;
+
+    let processedRows;
+
+    if (rows) {
+      // Use Promise.all to wait for all the promises to resolve
+      processedRows = await Promise.all(
+        rows.map(async(row) => {
+          const payer = await UserDb.getUserByEmail(row[ "Payer Email ID" ]);
+          const debtor = await UserDb.getUserByEmail(row[ "Debtor Email ID" ]);
+
+          const processedRow = {
+            "expense_name": row.Name,
+            "conversation_id": conversationId,
+            "total_amount": row.Amount,
+            "split_type": row[ "Split Type" ],
+            "payer_id": payer.user_id,
+            "debtor_id": debtor.user_id,
+            "participant1_share": row[ "Payer Share" ],
+            "participant2_share": row[ "Debtor Share" ],
+            "debtor_share": row[ "Debtor Share" ]
+          };
+          
+          const debtorAmount = calculateDebtorAmount(processedRow);
+
+          Object.assign(processedRow, { "debtor_amount": debtorAmount });
+
+          // Prevent self-expenses
+          if (processedRow.payer_id === processedRow.debtor_id) {
+            throw new ErrorHandler(400, "You cannot add an expense with yourself");
+          }
+
+          // Verify that the payer is part of the conversation
+          if (
+            processedRow.payer_id !== friend.friend1_id && processedRow.payer_id !== friend.friend2_id
+          ) {
+            throw new ErrorHandler(403, "You are not allowed to add expense in this chat.");
+          }
+
+          return processedRow;
+        })
+      );
+      
+      validRows = await validateBulkData(processedRows, tableName);
+    }
+    
+    let expenses;
+
+    if (validRows.length === rows.length) {
+      expenses = await FriendDb.bulkAddExpenses(validRows);
+    }
+    return expenses;
+  };
 }
 
 export default FriendService;

@@ -10,6 +10,44 @@ import {
 import * as friendsSchema from "./friendValidations.js";
 import uploadMiddleware from "../middlewares/uploadMiddleware.js";
 import { emailSchema } from "../users/userValidations.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { ErrorHandler } from "../middlewares/errorHandler.js";
+
+const __dirname = path.resolve();
+
+const ensureDirectoryExists = (dirPath) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { "recursive": true });
+  }
+};
+
+const storage = multer.diskStorage({
+  "destination": function(req, file, cb) {
+    const uploadPath = path.resolve(__dirname, "/uploads/csv");
+
+    // Ensure the directory exists before storing the file
+    ensureDirectoryExists(uploadPath);
+    cb(null, uploadPath);
+  },
+  "filename": function(req, file, cb) {
+    const uniqueSuffix = `${Date.now() }-${ Math.round(Math.random() * 1e9)}`;
+
+    cb(null, `${file.fieldname }-${ uniqueSuffix}`);
+  }
+});
+
+// file filter function to only allow CSV files.
+const filterFile = (req, file, cb) => {
+  const extName = path.extname(file.originalname).toLocaleLowerCase();
+
+  if (extName !== ".csv") {
+    return cb(new ErrorHandler("Only csv files are allowed", 400), false);
+  }
+  return cb(null, true);
+};
+const upload = multer({ "storage": storage, "fileFilter": filterFile });
 
 const friendRouter = Router();
 
@@ -126,5 +164,7 @@ friendRouter.get(
   validateQuery(friendsSchema.paginationValidation),
   FriendController.getBoth
 );
+
+friendRouter.post("/expenses-bulkcreate/:conversation_id", authenticateToken, upload.single("file"), validateParams(friendsSchema.uuidParamValidation), FriendController.addBulkExpenses);
 
 export default friendRouter;

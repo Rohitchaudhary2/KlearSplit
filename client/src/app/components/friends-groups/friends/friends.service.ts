@@ -8,6 +8,7 @@ import {
   CombinedMessage,
   CombinedView,
   Expense,
+  ExpenseData,
   ExpenseInput,
   ExpenseResponse,
   Friend,
@@ -25,6 +26,7 @@ export class FriendsService {
   private readonly httpClient = inject(HttpClient);
   private friendRequests = signal<FriendData[]>([]);
   private friends = signal<FriendData[]>([]);
+  selectedFriend = signal<FriendData | undefined>(undefined);
 
   requests = this.friendRequests.asReadonly();
   friendList = this.friends.asReadonly();
@@ -322,5 +324,16 @@ export class FriendsService {
         withCredentials: true,
       },
     );
+  }
+
+  bulkAddExpenses(file: File) {
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+    formData.append("tableName", "friends_expenses");
+    return this.httpClient.post<{
+      status: string;
+      message: string;
+      data: ExpenseData[];
+    }>(`${API_URLS.bulkAddExpenses}/${this.selectedFriend()?.conversation_id}`, formData, { withCredentials: true });
   }
 }

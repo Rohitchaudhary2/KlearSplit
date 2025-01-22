@@ -308,6 +308,8 @@ class FriendDb {
       "where": { "friend_expense_id": friendExpenseId },
       transaction
     });
+
+  static bulkAddExpenses = async(expenses) => await FriendExpense.bulkCreate(expenses);
 }
 
 export default FriendDb;

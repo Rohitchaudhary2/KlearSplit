@@ -197,6 +197,15 @@ class FriendController {
       messagesAndExpenses
     );
   });
+
+  static addBulkExpenses = asyncHandler(async(req, res) => {
+    const { "conversation_id": conversationId } = req.params;
+    const userId = req.user.user_id;
+  
+    const addedExpenses = await FriendService.addBulkExpenses(conversationId, userId, req);
+
+    responseHandler(res, 200, "Expenses added successfully", addedExpenses);
+  });
 }
 
 export default FriendController;

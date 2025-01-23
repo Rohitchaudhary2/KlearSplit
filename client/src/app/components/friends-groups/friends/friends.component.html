@@ -1,5 +1,11 @@
-<div class="d-flex row justify-content-center align-items-center m-0 p-0 mt-md-4">
-  <div class="col-md-4 subcontainer d-md-block" [ngClass]="{'d-none': selectedUser()}" style="flex: 0 0 auto"> 
+<div
+  class="d-flex row justify-content-center align-items-center m-0 p-0 mt-md-4"
+>
+  <div
+    class="col-md-4 subcontainer d-md-block"
+    [ngClass]="{ 'd-none': selectedUser() }"
+    style="flex: 0 0 auto"
+  >
     <app-friends-list
       (selectedUser)="onSelectUser($event)"
       [balanceAmount]="selectedUser()?.balance_amount"
@@ -7,14 +13,22 @@
   </div>
 
   <!-- chatbox -->
-  <div class="col-md-8 d-md-block" [ngClass]="{'d-none': !selectedUser()}" style="flex: 1 1 0">
+  <div
+    class="col-md-8 d-md-block"
+    [ngClass]="{ 'd-none': !selectedUser() }"
+    style="flex: 1 1 0"
+  >
     <div
       class="chat-box d-flex flex-column justify-content-between subcontainer shadow-lg me-3"
     >
       @if (selectedUser()) {
         <div class="d-flex justify-content-between align-items-center p-2">
           <div>
-            <span class="material-icons pe-2" style="vertical-align: middle; cursor: pointer;" (click)="clearSelectedUserData()">
+            <span
+              class="material-icons pe-2"
+              style="vertical-align: middle; cursor: pointer"
+              (click)="clearSelectedUserData()"
+            >
               arrow_back
             </span>
             <span

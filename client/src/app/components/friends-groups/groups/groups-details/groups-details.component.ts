@@ -9,6 +9,7 @@ import { AuthService } from "../../../auth/auth.service";
 import { AbsoluteValuePipe } from "../../../shared/pipes/absolute-value.pipe";
 import { FriendsGroupsService } from "../../shared/friends-groups.service";
 import { CreateGroupComponent } from "../create-group/create-group.component";
+import { GroupMemberData } from "../groups.model";
 import { GroupsService } from "../groups.service";
 import { GroupsSettlementComponent } from "../groups-expense/groups-settlement/groups-settlement.component";
 import { GroupsListComponent } from "../groups-list/groups-list.component";
@@ -37,6 +38,9 @@ export class GroupsDetailsComponent {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   hoveringImage = false;
+  updateGroupLoader = false;
+
+  settlementLoadingState: Record<string, boolean> = {};
 
   // Access signals from the GroupsService
   selectedGroup = this.groupsService.selectedGroup;
@@ -87,6 +91,7 @@ export class GroupsDetailsComponent {
    * After confirmation, the settlement is processed by adding an settlement entry and updating the balances.
    */
   onSettleBalance(memberId: string) {
+    this.settlementLoadingState[memberId] = true;
     // Member to settle
     const memberToSettle = this.groupMembers().find(
       (member) => memberId === member.group_membership_id);
@@ -132,6 +137,7 @@ export class GroupsDetailsComponent {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (!result) {
+        this.settlementLoadingState[memberId] = false;
         return;
       }
       result.payer_id = payerId;
@@ -196,6 +202,7 @@ export class GroupsDetailsComponent {
                 );
               }
             });
+            this.settlementLoadingState[memberId] = false;
             this.cdr.detectChanges();
             this.toastr.success("Settled up successfully", "Success");
           }
@@ -204,6 +211,7 @@ export class GroupsDetailsComponent {
   }
 
   onUpdateGroupDetails() {
+    this.updateGroupLoader = true;
     const dialogRef = this.dialog.open(CreateGroupComponent, {
       width: "500px",
       data: "Update Group",
@@ -213,6 +221,7 @@ export class GroupsDetailsComponent {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (!result) {
+        this.updateGroupLoader = false;
         return;
       }
 
@@ -221,7 +230,6 @@ export class GroupsDetailsComponent {
       this.groupsService.updateGroup(this.selectedGroup()!.group_id, groupData).subscribe({
         next: (response) => {
           const updatedGroup = response.data[1][0];
-          this.toastr.success("Group updated successfully", "Success");
           const group = this.selectedGroup();
           const updatedSelectedGroup = { ...group,
             ...updatedGroup,
@@ -242,9 +250,15 @@ export class GroupsDetailsComponent {
               Object.assign(g, updatedGroup);
             }
           });
+          this.updateGroupLoader = false;
+          this.toastr.success("Group updated successfully", "Success");
         }
       });
     });
+  }
+
+  isSettlementLoading(member: GroupMemberData) {
+    return this.settlementLoadingState[member.group_membership_id] ?? false;
   }
 
   returnToGroup() {

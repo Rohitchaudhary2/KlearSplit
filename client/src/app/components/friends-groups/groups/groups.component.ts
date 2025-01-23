@@ -877,6 +877,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
       
             // Update the signal with the new current member data
             this.currentMember.set(updatedMember);
+            this.selectedGroup()!.has_blocked = newBlockStatus;
             this.toastr.success(`Group ${newBlockStatus ? "Blocked" : "Unblocked"} Successfully`, "Success");
           }
         });

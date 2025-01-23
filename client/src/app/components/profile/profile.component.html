@@ -170,13 +170,13 @@
                 <div class="mb-3">
                     <mat-form-field appearance="outline" class="w-100">
                         <mat-label>New Password</mat-label>
-                        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="new_password" />
+                        <input matInput [type]="hideNewPassword ? 'password' : 'text'" formControlName="new_password" />
                         <button
                             mat-icon-button
                             matSuffix
-                            (click)="hidePassword = !hidePassword"
+                            (click)="hideNewPassword = !hideNewPassword"
                             [attr.aria-label]="'Hide password'"
-                            [attr.aria-pressed]="hidePassword"
+                            [attr.aria-pressed]="hideNewPassword"
                             type="button"
                         >
                             <mat-icon>{{
@@ -196,15 +196,15 @@
                         <mat-label>Confirm Password</mat-label>
                         <input
                           matInput
-                          [type]="hidePassword ? 'password' : 'text'"
+                          [type]="hideConfirmPassword ? 'password' : 'text'"
                           formControlName="confirm_password"
                         />
                         <button
                             mat-icon-button
                             matSuffix
-                            (click)="hidePassword = !hidePassword"
+                            (click)="hideConfirmPassword = !hideConfirmPassword"
                             [attr.aria-label]="'Hide password'"
-                            [attr.aria-pressed]="hidePassword"
+                            [attr.aria-pressed]="hideConfirmPassword"
                             type="button"
                         >
                             <mat-icon>{{

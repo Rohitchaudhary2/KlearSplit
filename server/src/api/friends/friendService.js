@@ -314,7 +314,7 @@ class FriendService {
    */
   static addExpense = async(expenseData, userId, conversationId) => {
     const friend = await FriendDb.getFriend(conversationId);
-    const friendWithUser = await FriendDb.friendWithUsers(conversationId);
+    const friendWithUser = await FriendDb.getFriendWithUsers(conversationId);
 
     isFriendExist(friend);
     Object.assign(expenseData, { "conversation_id": conversationId });

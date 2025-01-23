@@ -118,7 +118,7 @@ class FriendDb {
   static getFriend = async(conversationId) =>
     await Friend.findByPk(conversationId);
 
-  static friendWithUsers = async(conversationId) =>
+  static getFriendWithUsers = async(conversationId) =>
     await Friend.findOne({
       "where": { "conversation_id": conversationId },
       "include": [
@@ -134,6 +134,17 @@ class FriendDb {
         }
       ]
     });
+
+  static getFriendByUserIds = async(userId1, userId2) => {
+    return await Friend.findOne({
+      "where": {
+        [ Op.or ]: [
+          { "friend1_id": userId1, "friend2_id": userId2 },
+          { "friend1_id": userId2, "friend2_id": userId1 }
+        ]
+      }
+    });
+  };
 
   /**
    * Updates a friend entry with new data.

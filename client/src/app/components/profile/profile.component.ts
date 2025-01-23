@@ -47,6 +47,8 @@ export class ProfileComponent implements OnInit {
   private readonly toastr = inject(ToastrService);
 
   hidePassword = true;
+  hideNewPassword = true;
+  hideConfirmPassword = true;
   previewImage: string | null = null;
   selectedFile: File | null = null;
   hoveringImage = false;

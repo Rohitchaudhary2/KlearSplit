@@ -47,3 +47,17 @@
     top: 0;
     background-color: #f5f5f5;
   }
+
+  /* Styling for the download link */
+.download-link {
+  display: inline-block; /* Makes it behave like a block-level element */
+  padding: 10px 20px; /* Adds padding around the link */
+  font-size: 16px; /* Font size */
+  font-weight: bold; /* Makes the text bold */
+  text-align: center; /* Centers the text */
+  text-decoration: none; /* Removes the underline */
+  background-color: #4CAF50; /* Green background color */
+  color: white; /* White text color */
+  border-radius: 5px; /* Rounded corners */
+  transition: background-color 0.3s ease; /* Smooth transition on hover */
+}

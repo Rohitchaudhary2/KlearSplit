@@ -975,7 +975,7 @@ class GroupService {
 
           oldData.oldData = {
             "balance_id": balance.balance_id,
-            "balance_amount": (parseFloat(balance.balance_amount) + (debtorRole === "participant1" ? balanceAmount : -balanceAmount)).toFixed(2)
+            "balance_amount": (parseFloat(balance.balance_amount) + (debtorRole === "participant1" ? parseFloat(balanceAmount) : -parseFloat(balanceAmount))).toFixed(2)
           };
         }
         logs.push(auditLogFormat(balance.createdAt === balance.updatedAt ? "INSERT" : "UPDATE", userId, "group_member_balance", balance.balance_id, { ...oldData, "newData": balance }));

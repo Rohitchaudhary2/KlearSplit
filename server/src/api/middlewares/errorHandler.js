@@ -3,6 +3,7 @@ export class ErrorHandler extends Error {
   // Constructor to initialize the error with a status code and message
   constructor(statusCode, message) {
     super(message);
+    this.message = typeof message === "object" ? JSON.stringify(message) : message;
     this.statusCode = statusCode;
     // Capturing the stack trace when the error is created
     if (Error.captureStackTrace) {

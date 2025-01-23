@@ -33,7 +33,7 @@ const validateBulkData = async(rows, tableName) => {
             "errors": validationError.errors.map((e) => e.message)
           });
         } else {
-          throw new ErrorHandler(validationError.message, 400);
+          throw new ErrorHandler(400, validationError.message);
         }
       }
     });
@@ -45,7 +45,7 @@ const validateBulkData = async(rows, tableName) => {
   // Call the function to process the rows
   await processRows();
   if (errorsOccured.length > 0) {
-    throw new ErrorHandler(errorsOccured, 400);
+    throw new ErrorHandler(400, errorsOccured);
   }
   return validRows;
 };

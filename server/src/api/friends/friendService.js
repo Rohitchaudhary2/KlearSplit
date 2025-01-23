@@ -700,6 +700,7 @@ class FriendService {
     validateConversationPermissions(friend);
 
     let validRows = [];
+    
     const rows = await fileData(req);
 
     const tableName = req.body.tableName;
@@ -744,7 +745,6 @@ class FriendService {
           return processedRow;
         })
       );
-      
       validRows = await validateBulkData(processedRows, tableName);
     }
     
@@ -752,6 +752,14 @@ class FriendService {
 
     if (validRows.length === rows.length) {
       expenses = await FriendDb.bulkAddExpenses(validRows);
+      expenses.forEach((expense) => {
+        let balanceAmount = parseFloat(friend.balance_amount);
+
+        balanceAmount += expenses.payer_id === friend.participant1_id ? parseFloat(expense.debtor_amount) : -parseFloat(expense.debtor_amount);
+
+        Object.assign(friend, { "balance_amount": balanceAmount });
+      });
+      await friend.save();
     }
     return expenses;
   };

@@ -6,19 +6,19 @@ const compareHeaders = (expected, actual) => {
   const errorOccured = [];
 
   if (expected.length !== actual.length) {
-    throw new ErrorHandler("Actual headers differ from Expected", 400);
+    throw new ErrorHandler(400, "Actual headers differ from Expected");
   }
 
   expected.forEach((item, index) => {
-    if (item[ index ] !== actual[ index ]) {
+    if (item !== actual[ index ]) {
       errorOccured.push({
         "row": 1,
-        "errors": [ `Expected ${item[ index ]}, but got ${actual[ index ]}` ]
+        "errors": [ `Expected ${item}, but got ${actual[ index ]}` ]
       });
     }
   });
   if (errorOccured.length > 0) {
-    throw new ErrorHandler(errorOccured, 400);
+    throw new ErrorHandler(400, errorOccured);
   }
 };
 

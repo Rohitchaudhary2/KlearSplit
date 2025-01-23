@@ -1,0 +1,77 @@
+<h2 mat-dialog-title class="text-center bg-success text-white py-2">
+    Bulk Insertion of Expenses
+</h2>
+<div class="bulk-insertion-container">
+  
+    <div class="file-upload-section">
+      <input
+        type="file"
+        (change)="onFileSelected($event)"
+        [accept]="'.csv'"
+      />
+  
+      @if (errorMessage()) {
+      <p class="text-danger">Please select a .csv file only.</p>
+      }
+
+      <div mat-dialog-actions class="d-flex justify-content-between">
+        <span>
+          <button
+          mat-button
+          disableRipple
+          class="custom-mat-button text-success"
+          (click)="closeBulkInsertionTab()"
+        >
+          Single Insertion
+        </button>
+        </span>
+        <span class="d-flex justify-content-end gap-2 ps-3">
+          <button
+            mat-button
+            disableRipple
+            class="custom-mat-button"
+            color="warn"
+            (click)="cancel.emit()"
+          >
+            Cancel
+          </button>
+            <button
+            mat-button
+            disableRipple
+            class="custom-mat-button"
+            [disabled]="!isFileSelected()"
+            (click)="onUpload()"
+          >
+            Insert
+          </button>
+        </span>
+      </div>
+
+      @if (errorArray().length > 0) {
+      <div class="error-table-container mt-4">
+        <table class="w-full border-collapse border border-gray-300">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border border-gray-300 p-2">Row Number</th>
+              <th class="border border-gray-300 p-2">Errors</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (err of errorArray(); track $index) {
+            <tr class="hover:bg-gray-50">
+              <td class="border border-gray-300 p-2 text-center">
+                {{ err.row }}
+              </td>
+              <td class="border border-gray-300 p-2">
+                @for (errorMsg of err.errors; track errorMsg) {
+                <p class="text-red-500 mb-1">{{ errorMsg }}</p>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+  </div>

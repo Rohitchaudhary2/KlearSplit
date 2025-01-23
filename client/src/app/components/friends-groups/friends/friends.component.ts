@@ -227,6 +227,7 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Set the selected user (friend) as the new selected user (friend)
     this.selectedUser.set(friend);
+    this.friendsService.selectedFriend.set(friend);
 
     // If no user is selected, then return
     if (!this.selectedUser()) {
@@ -766,6 +767,16 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
     // Subscribe to the dialog close event and process the data returned when the dialog is closed.
     dialogRef.afterClosed().subscribe((data) => {
       if (!data) {
+        return;
+      }
+      if(Array.isArray(data)) {
+        this.expenses.set([ ...this.expenses(), ...data ]);
+        this.combinedView.set([
+          ...this.combinedView(),
+          ...data,
+        ]);
+        this.cdr.detectChanges();
+        this.commonService.scrollToBottom(this.messageContainer()!);
         return;
       }
       const result = data.formData;

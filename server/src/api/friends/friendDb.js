@@ -326,7 +326,7 @@ class FriendDb {
       transaction
     });
 
-  static bulkAddExpenses = async(expenses) => await FriendExpense.bulkCreate(expenses);
+  static bulkAddExpenses = async(expenses, transaction) => await FriendExpense.bulkCreate(expenses, { transaction });
 }
 
 export default FriendDb;

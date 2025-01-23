@@ -69,6 +69,8 @@ class FriendService {
 
     // Check if the friend already exists and is not deleted
     const friend = await this.checkFriendExist(newFriendData, false);
+    
+    const oldData = friend ? { ...friend.dataValues } : undefined;
 
     if (friend && !friend.dataValues.deletedAt) {
       throw new ErrorHandler(409, "Friend already exist");
@@ -78,8 +80,9 @@ class FriendService {
     if (friend && friend.dataValues.deletedAt) {
       const restoredFriend = await FriendDb.restoreFriend(friend);
 
-      logs.push(auditLogFormat("UPDATE", friendData.userId, "friends", restoredFriend.conversation_id, { "oldData": friend.dataValues, "newData": restoredFriend.dataValues }));
+      logs.push(auditLogFormat("UPDATE", friendData.userId, "friends", restoredFriend.conversation_id, { oldData, "newData": restoredFriend.dataValues }));
 
+      AuditLogService.createLog(logs, true);
       return restoredFriend;
     }
 
@@ -152,7 +155,7 @@ class FriendService {
     );
 
     const log = auditLogFormat("UPDATE", friendRequest.userId, "friends", conversationId, { "oldData": friendRequestExist.dataValues, "newData": friendRequestUpdate[ 1 ][ 0 ].dataValues });
-    
+
     AuditLogService.createLog(log);
 
     return friendRequestUpdate;
@@ -170,6 +173,7 @@ class FriendService {
   static withdrawFriendRequest = async(friendRequest) => {
     const { userId, conversationId } = friendRequest;
     const friendRequestExist = await FriendDb.getFriend(conversationId);
+    const oldData = { ...friendRequestExist };
 
     // If the friend request doesn't exist, throw an error
     if (!friendRequestExist) {
@@ -187,6 +191,8 @@ class FriendService {
     const friendRequestDelete = await FriendDb.withdrawFriendRequest(
       friendRequestExist
     );
+
+    AuditLogService.createLog(auditLogFormat("DELETE", userId, "friends", friendRequestExist.conversation_id, { oldData }));
 
     return friendRequestDelete;
   };
@@ -256,7 +262,7 @@ class FriendService {
 
     const message = await FriendDb.addMessage(messageData);
 
-    const log = auditLogFormat("INSERT", messageData.senderId, "friends_messages", message.message_id, { "newData": message.dataValues });
+    const log = auditLogFormat("INSERT", messageData.sender_id, "friends_messages", message.message_id, { "newData": message.dataValues });
 
     AuditLogService.createLog(log);
 
@@ -386,7 +392,7 @@ class FriendService {
         transaction
       );
 
-      logs.push(auditLogFormat("UPDATE", userId, "friends", updatedFriends[ 1 ][ 0 ].conversation_id, { "oldData": updatedFriends[ 1 ]._previousDataValues, "newData": updatedFriends[ 1 ][ 0 ].dataValues }));
+      logs.push(auditLogFormat("UPDATE", userId, "friends", updatedFriends[ 1 ][ 0 ].conversation_id, { "oldData": updatedFriends[ 1 ][ 0 ]._previousDataValues, "newData": updatedFriends[ 1 ][ 0 ].dataValues }));
 
       const participantDetails = [
         friendWithUser.dataValues.friend1.dataValues,
@@ -564,7 +570,6 @@ class FriendService {
 
       logs.push(auditLogFormat("UPDATE", userId, "friends", updatedFriends[ 1 ][ 0 ].conversation_id, { "oldData": friend.dataValues, "newData": updatedFriends[ 1 ][ 0 ].dataValues }));
       await transaction.commit();
-      
       AuditLogService.createLog(logs, true);
 
       updatedExpense.dataValues.payer = formatPersonName(updatedExpense.payer);
@@ -595,7 +600,7 @@ class FriendService {
     validateExistingExpense(existingExpense);
 
     // Verify that the expense belongs to the current conversation
-    if (friend.conversationId !== existingExpense.conversation_id) {
+    if (friend.conversation_id !== existingExpense.conversation_id) {
       throw new ErrorHandler(403, "You are not allowed to delete this expense");
     }
 
@@ -604,13 +609,13 @@ class FriendService {
 
     try {
       // Update the is_deleted field
-      const updatedExpense = await FriendDb.updateExpense(
+      const { updatedExpense } = await FriendDb.updateExpense(
         { "is_deleted": 2 },
         friendExpenseId,
         transaction
       );
 
-      logs.push(auditLogFormat("UPDATE", userId, "friends_expenses", updatedExpense[ 1 ][ 0 ].friend_expense_id, { "oldData": existingExpense.dataValues, "newData": updatedExpense[ 1 ][ 0 ].dataValues }));
+      logs.push(auditLogFormat("UPDATE", userId, "friends_expenses", updatedExpense.friend_expense_id, { "oldData": existingExpense.dataValues, "newData": updatedExpense.dataValues }));
 
       // Delete the expense
       const { affectedRows } = await FriendDb.deleteExpense(
@@ -622,7 +627,7 @@ class FriendService {
         throw new ErrorHandler(400, "Failed to delete expense");
       }
 
-      logs.push(auditLogFormat("DELETE", userId, "friends_expenses", updatedExpense[ 1 ][ 0 ].dataValues, { "oldData": updatedExpense[ 1 ][ 0 ].dataValues }));
+      logs.push(auditLogFormat("DELETE", userId, "friends_expenses", updatedExpense.friend_expense_id, { "oldData": updatedExpense.dataValues }));
 
       // Update the balance in the friends table
       const updatedFriends = await FriendDb.updateFriends(
@@ -635,6 +640,7 @@ class FriendService {
       );
 
       logs.push(auditLogFormat("UPDATE", userId, "friends", updatedFriends[ 1 ][ 0 ].conversation_id, { "oldData": friend.dataValues, "newData": updatedFriends[ 1 ][ 0 ].dataValues }));
+      AuditLogService.createLog(logs, true);
       // Commit the transaction
       await transaction.commit();
       return { "message": "Expense deleted successfully" };
@@ -699,6 +705,7 @@ class FriendService {
     validateConversationPermissions(friend);
 
     let validRows = [];
+    
     const rows = await fileData(req);
 
     const tableName = req.body.tableName;
@@ -743,14 +750,29 @@ class FriendService {
           return processedRow;
         })
       );
-      
       validRows = await validateBulkData(processedRows, tableName);
     }
     
     let expenses;
 
     if (validRows.length === rows.length) {
-      expenses = await FriendDb.bulkAddExpenses(validRows);
+      const transaction = await sequelize.transaction();
+
+      try {
+        expenses = await FriendDb.bulkAddExpenses(validRows, transaction);
+        expenses.forEach((expense) => {
+          let balanceAmount = parseFloat(friend.balance_amount);
+
+          balanceAmount += expenses.payer_id === friend.participant1_id ? parseFloat(expense.debtor_amount) : -parseFloat(expense.debtor_amount);
+
+          Object.assign(friend, { "balance_amount": balanceAmount });
+        });
+        await friend.save({ transaction });
+        await transaction.commit();
+      } catch (error) {
+        await transaction.rollback();
+        throw error;
+      }
     }
     return expenses;
   };

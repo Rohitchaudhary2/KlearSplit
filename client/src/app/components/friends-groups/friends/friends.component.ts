@@ -775,6 +775,11 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
           ...this.combinedView(),
           ...data,
         ]);
+        data.forEach((expense) => {
+          
+          this.selectedUser()!.balance_amount = JSON.stringify(parseFloat(this.selectedUser()!.balance_amount) +
+           (this.user!.user_id === expense.payer_id ? parseFloat(expense.debtor_amount) : -parseFloat(expense.debtor_amount)));
+        });
         this.cdr.detectChanges();
         this.commonService.scrollToBottom(this.messageContainer()!);
         return;

@@ -138,7 +138,7 @@ export class FriendsService {
       .set("timestamp", new Date().toISOString());
 
     return this.httpClient
-      .get<Expense>(`${API_URLS.getExpenses}/${conversationId}?timestamp=${new Date().toISOString()}`, {
+      .get<Expense>(`${API_URLS.getExpenses}/${conversationId}`, {
         params,
         withCredentials: true,
       })

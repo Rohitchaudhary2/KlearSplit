@@ -13,6 +13,7 @@ import AuditLogService from "../audit/auditService.js";
 import { auditLogFormat } from "../utils/auditFormat.js";
 import { sendWelcomeMessage } from "../utils/whatsappMessage.js";
 import logger from "../utils/logger.js";
+import bcrypt from "bcryptjs";
 
 const redis = new Redis();
 
@@ -383,7 +384,18 @@ class UserService {
    * @param {Object} updatedUserData - The validated user object with the updated user data.
    * @returns {Promise<Object>} - The result of the update operation (updated user data).
    */
-  static updateUser = async(user, id) => {
+  static updateUser = async(user, id, email) => {
+    const existingUser = await UserDb.getUserByEmail(email);
+    
+    if (user.password) {
+      const validPassword = await bcrypt.compare(user.password, existingUser.dataValues.password);
+
+      if (!validPassword) {
+        throw new ErrorHandler(400, "Wrong Password. If you've forgotten your password, please use the 'Forgot Password' option on Login Page to reset it.");
+      }
+
+      user.password = await hashedPassword(user.new_password);
+    }
     return await UserDb.updateUser(user, id);
   };
 

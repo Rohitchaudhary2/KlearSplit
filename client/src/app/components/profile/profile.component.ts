@@ -219,7 +219,8 @@ export class ProfileComponent implements OnInit {
     }
 
     const formData = new FormData;
-    formData.append("password", this.changePasswordForm.get("confirm_password")!.value!);
+    formData.append("password", this.changePasswordForm.get("current_password")!.value!);
+    formData.append("new_password", this.changePasswordForm.get("confirm_password")!.value!);
 
     this.userService.updateUser(this.authService.currentUser()!.user_id, formData).subscribe({
       next: () => {

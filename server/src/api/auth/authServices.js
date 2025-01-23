@@ -38,7 +38,6 @@ class AuthService {
       );
     }
 
-    // checking whether password is valid
     const validPassword = await bcrypt.compare(
       password,
       user.dataValues.password

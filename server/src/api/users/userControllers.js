@@ -69,7 +69,7 @@ class UserController {
 
       updatedUserData = Object.assign(updatedUserData, { "image_url": imageUrl });
     }
-    const user = await UserService.updateUser(updatedUserData, req.user.user_id);
+    const user = await UserService.updateUser(updatedUserData, req.user.user_id, req.user.email);
 
     responseHandler(res, 200, "Successfully updated user", user);
   });

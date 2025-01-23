@@ -47,7 +47,8 @@ export class ViewExpensesComponent implements OnInit {
   // A boolean flag to track the loading state while fetching expenses
   loading = signal(false);
 
-  updateLoader = "";
+  updateLoader = signal(false);
+  deleteLoader = signal(false);
 
   // Output signal that will emit the expense data when an expense is deleted.
   expenseDeleted = output<{
@@ -94,6 +95,7 @@ export class ViewExpensesComponent implements OnInit {
    * @param debtorAmount - The amount that the debtor owes (used to update the balance)
    */
   onDeleteExpense({ id, payerId, debtorAmount }: ExpenseDeletedEvent) {
+    this.deleteLoader.set(true);
     // Open a confirmation dialog to ask the user if they are sure they want to delete the expense
     const confirmationDialogRef = this.dialog.open(
       ConfirmationDialogComponent,
@@ -116,8 +118,12 @@ export class ViewExpensesComponent implements OnInit {
               (expense: ExpenseData) => expense.friend_expense_id !== id,
             );
             this.totalExpenses.set(updatedExpenses);
+            this.deleteLoader.set(false);
             this.toastr.success("Expense Deleted successfully", "Success");
           },
+          error: () => {
+            this.deleteLoader.set(false);
+          }
         });
       this.expenseDeleted.emit({ id, payerId, debtorAmount });
     });
@@ -130,6 +136,7 @@ export class ViewExpensesComponent implements OnInit {
    * @param expense - The expense data to be updated
    */
   onUpdateExpense(expense: ExpenseData) {
+    this.updateLoader.set(true);
     // Open a dialog to allow the user to update the expense. Pass the current expense data.
     const dialogRef = this.dialog.open(FriendsExpenseComponent, {
       data: [ "Update Expense", expense, this.user, this.selectedUser ],
@@ -138,6 +145,7 @@ export class ViewExpensesComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe((data) => {
       if (!data) {
+        this.updateLoader.set(false);
         return;
       }
       const result = data.formData;
@@ -161,8 +169,12 @@ export class ViewExpensesComponent implements OnInit {
               expenses: this.totalExpenses(),
               updatedExpense: response.data,
             });
+            this.updateLoader.set(false);
             this.toastr.success("Expense Updated successfully", "Success");
           },
+          error: () => {
+            this.updateLoader.set(false);
+          }
         });
     });
   }

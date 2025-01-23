@@ -55,9 +55,17 @@ export const updateUserSchema = Joi.object({
 
   ...optionalCommonFields,
 
-  "password": Joi.string()
+  "password": Joi.string().min(8).max(20)
+    .messages({
+      "string.pattern.base":
+      "Password must be at least 8 characters long and less than 20 characters, include at least one uppercase letter, one lowercase letter, one number, and one special character.",
+      "any.required": "Password is required."
+    }),
+
+  "new_password": Joi.string()
     .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/
+      // /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/
+      /^(?=.*[a-z])(?=.*\d)[A-Za-z\d!@#$%^&*]{8,20}$/
     )
     .messages({
       "string.pattern.base":

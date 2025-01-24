@@ -3,15 +3,15 @@ import * as dataModels from "../../config/db.connection.js";
 import { ErrorHandler } from "../middlewares/errorHandler.js";
 
 // --- mapping of models with table names
-const modelWithTable = new Map([
-  [ "friends_expenses", "FriendExpense" ],
-  [ "group_expenses", "GroupExpense" ]
-]);
+const modelWithTable = {
+  "friends_expenses": "FriendExpense",
+  "group_expenses": "GroupExpense"
+};
 const validateBulkData = async(rows, tableName) => {
   const validRows = [];
   const errorsOccured = [];
 
-  const modelName = modelWithTable.get(tableName);
+  const modelName = modelWithTable[ tableName ];
   const Model = dataModels[ modelName ];
   
   if (!Model) {

@@ -765,7 +765,7 @@ class FriendService {
           return processedRow;
         })
       );
-      if (errorsOccured) {
+      if (errorsOccured.length) {
         throw new ErrorHandler(400, errorsOccured);
       }
       validRows = await validateBulkData(processedRows, tableName);

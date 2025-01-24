@@ -24,16 +24,16 @@ class GroupUtils {
   };
 
   static updatedDebtors = (debtors, splitType, totalAmount, payerShare) => {
-    const debtorShareTotal = debtors.reduce((acc, debtor) => {
-      return acc + debtor.debtor_share;
-    }, 0);
+    const debtorShareTotal = parseFloat(debtors.reduce((acc, debtor) => {
+      return acc + parseFloat(debtor.debtor_share);
+    }, 0).toFixed(2));
     
-    const calculatedTotalExpenseAmount = payerShare + debtorShareTotal;
+    const calculatedTotalExpenseAmount = parseFloat(payerShare) + debtorShareTotal;
 
     switch (splitType) {
       case "EQUAL":
       case "UNEQUAL": {
-        if (calculatedTotalExpenseAmount !== totalAmount) {
+        if (calculatedTotalExpenseAmount !== parseFloat(totalAmount)) {
           throw new ErrorHandler(400, "Expense shares of partcipants does not add up to total amount.");
         }
         const updatedDebtors = debtors.map((debtor) => ({ "debtor_id": debtor.debtor_id, "debtor_amount": debtor.debtor_share }));

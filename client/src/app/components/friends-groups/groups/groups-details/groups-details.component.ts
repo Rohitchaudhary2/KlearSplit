@@ -9,7 +9,7 @@ import { AuthService } from "../../../auth/auth.service";
 import { AbsoluteValuePipe } from "../../../shared/pipes/absolute-value.pipe";
 import { FriendsGroupsService } from "../../shared/friends-groups.service";
 import { CreateGroupComponent } from "../create-group/create-group.component";
-import { GroupMemberData } from "../groups.model";
+import { GroupData, GroupMemberData } from "../groups.model";
 import { GroupsService } from "../groups.service";
 import { GroupsSettlementComponent } from "../groups-expense/groups-settlement/groups-settlement.component";
 import { GroupsListComponent } from "../groups-list/groups-list.component";
@@ -255,6 +255,11 @@ export class GroupsDetailsComponent {
         }
       });
     });
+  }
+
+  onSelectGroup(group: GroupData | undefined) {
+    this.groupsService.setSelectedGroupSubject(group!);
+    this.router.navigate([ "/groups" ]);
   }
 
   isSettlementLoading(member: GroupMemberData) {

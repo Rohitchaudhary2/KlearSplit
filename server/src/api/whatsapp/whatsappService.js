@@ -1,11 +1,13 @@
 import FriendDb from "../friends/friendDb.js";
 import FriendService from "../friends/friendService.js";
 import UserDb from "../users/userDb.js";
-import { sendCollectExpenseDetailsMessage } from "../utils/whatsappMessage.js";
+import { sendAddExpenseButton, sendCollectExpenseDetailsMessage } from "../utils/whatsappMessage.js";
 
 class WhatsappService {
   static handleWebhook = async(entry) => {
+    let addExpenseProcessedData = {};
     // Process each change entry from the webhook
+
     for (const changeEntry of entry) {
       const messages = changeEntry.changes.flatMap((change) => change.value.messages);
           
@@ -14,10 +16,17 @@ class WhatsappService {
         if (message.type === "button") {
           await this.handleButtonMessage(message);
         } else if (message.type === "text") {
-          await this.handleTextMessage(message);
+          addExpenseProcessedData = await this.handleTextMessage(message);
+          await sendAddExpenseButton(message.from.slice(2));
         }
       }
     }
+    // Add expense to the conversation
+    await FriendService.addExpense(
+      addExpenseProcessedData.expenseData,
+      addExpenseProcessedData.userId,
+      addExpenseProcessedData.conversationId
+    );
   };
       
   // Handle button messages (ADD_EXPENSE action)
@@ -45,15 +54,8 @@ class WhatsappService {
       
     // Get conversation details
     const friendConversation = await FriendDb.getFriendByUserIds(payer.user_id, debtor.user_id);
-      
-    // Add expense to the conversation
-    const expense = await FriendService.addExpense(
-      expenseData,
-      currentUser.dataValues.user_id,
-      friendConversation.dataValues.conversation_id
-    );
-      
-    return expense;
+
+    return { expenseData, "userId": currentUser.dataValues.user_id, "conversationId": friendConversation.dataValues.conversation_id };
   };
       
   // Utility function to create expense data

@@ -5,6 +5,7 @@
     style="flex: 0 0 auto"
   >
     <app-groups-list
+      (selectedGroup)="onSelectGroup($event)"
       [balanceAmount]="selectedGroup()?.balance_amount ?? '0'"
     ></app-groups-list>
   </div>

@@ -23,15 +23,22 @@
     }
   </mat-form-field>
 
-  @if (users().length > 0) {
-    <ul style="max-height: 15vh; overflow-y: auto;">
-      @for (user of users(); track $index) {
-        <!-- Change the 'Add' button to make the list item clickable to select the user -->
-        <li (click)="selectUser(user)" style="cursor: pointer">
-          {{ user.first_name }} {{ user.last_name || "" }} ({{ user.email }})
-        </li>
-      }
-    </ul>
+  @if (loading()) {
+    <div class="mx-2 px-2">
+      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      Loading...
+    </div>
+  } @else { 
+    @if (users().length > 0) {
+      <ul style="max-height: 15vh; overflow-y: auto;">
+        @for (user of users(); track $index) {
+          <!-- Change the 'Add' button to make the list item clickable to select the user -->
+          <li (click)="selectUser(user)" style="cursor: pointer">
+            {{ user.first_name }} {{ user.last_name || "" }} ({{ user.email }})
+          </li>
+        }
+      </ul>
+    }
   }
 </form>
 

@@ -711,14 +711,14 @@ class FriendService {
     const tableName = req.body.tableName;
 
     let processedRows;
+    const errorsOccured = [];
 
     if (rows) {
       // Use Promise.all to wait for all the promises to resolve
       processedRows = await Promise.all(
-        rows.map(async(row) => {
+        rows.map(async(row, index) => {
           const payer = await UserDb.getUserByEmail(row[ "Payer Email ID" ].trim());
           const debtor = await UserDb.getUserByEmail(row[ "Debtor Email ID" ].trim());
-
           const processedRow = {
             "expense_name": row.Name.trim(),
             "conversation_id": conversationId.trim(),
@@ -731,25 +731,43 @@ class FriendService {
             "debtor_share": row[ "Debtor Share" ].trim()
           };
           
-          const debtorAmount = calculateDebtorAmount(processedRow);
+          let debtorAmount;
+
+          try {
+            debtorAmount = calculateDebtorAmount(processedRow);
+          } catch (error) {
+            errorsOccured.push({
+              "row": index + 1,
+              "errors": error.message
+            });
+          }
 
           Object.assign(processedRow, { "debtor_amount": debtorAmount });
 
           // Prevent self-expenses
           if (processedRow.payer_id === processedRow.debtor_id) {
-            throw new ErrorHandler(400, "You cannot add an expense with yourself");
+            errorsOccured.push({
+              "row": index + 1,
+              "errors": "You cannot add an expense with yourself"
+            });
           }
 
           // Verify that the payer is part of the conversation
           if (
             processedRow.payer_id !== friend.friend1_id && processedRow.payer_id !== friend.friend2_id
           ) {
-            throw new ErrorHandler(403, "You are not allowed to add expense in this chat.");
+            errorsOccured.push({
+              "row": index + 1,
+              "errors": "You are not allowed to add expense in this chat."
+            });
           }
 
           return processedRow;
         })
       );
+      if (errorsOccured) {
+        throw new ErrorHandler(400, errorsOccured);
+      }
       validRows = await validateBulkData(processedRows, tableName);
     }
     

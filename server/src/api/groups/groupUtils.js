@@ -24,9 +24,9 @@ class GroupUtils {
   };
 
   static updatedDebtors = (debtors, splitType, totalAmount, payerShare) => {
-    const debtorShareTotal = debtors.reduce((acc, debtor) => {
-      return acc + debtor.debtor_share;
-    }, 0);
+    const debtorShareTotal = parseFloat(debtors.reduce((acc, debtor) => {
+      return acc + parseFloat(debtor.debtor_share);
+    }, 0).toFixed(2));
     
     const calculatedTotalExpenseAmount = payerShare + debtorShareTotal;
 

@@ -441,7 +441,7 @@ class GroupService {
     // Verify that payer is not in the list of debtors
     GroupUtils.isPayerInDebtors(expenseData.debtors, expenseData.payer_id);
 
-    const debtors = GroupUtils.updatedDebtors(expenseData.debtors, expenseData.split_type, expenseData.total_amount, expenseData.payer_share);
+    const debtors = GroupUtils.updatedDebtors(expenseData.debtors, expenseData.split_type, parseFloat(expenseData.total_amount), parseFloat(expenseData.payer_share));
 
     // Removing debtors list and payer_share from expense data and adding group_id expense data
     delete expenseData.debtors;

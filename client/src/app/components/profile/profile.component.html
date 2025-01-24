@@ -86,44 +86,55 @@
                 <div class="row">
                   <div class="col-md-6 mb-3">
                     <mat-form-field appearance="outline" class="w-100">
-                        <mat-label>First Name</mat-label>
-                        <mat-icon matPrefix>person</mat-icon>
-                        <input matInput formControlName="first_name" />
+                      <mat-label>First Name</mat-label>
+                      <mat-icon matPrefix>person</mat-icon>
+                      <input matInput formControlName="first_name" />
                     </mat-form-field>
                   </div>
                   <div class="col-md-6 mb-3">
                     <mat-form-field appearance="outline" class="w-100">
-                        <mat-label>Last Name</mat-label>
-                        <mat-icon matPrefix>person</mat-icon>
-                        <input matInput formControlName="last_name" />
+                      <mat-label>Last Name</mat-label>
+                      <mat-icon matPrefix>person</mat-icon>
+                      <input matInput formControlName="last_name" />
                     </mat-form-field>
                   </div>
                 </div>
 
                 <div class="mb-3">
-                    <mat-form-field appearance="outline" class="w-100">
-                        <mat-label>Email</mat-label>
-                        <mat-icon matPrefix>email</mat-icon>
-                        <input matInput formControlName="email" readonly />
-                    </mat-form-field>
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Email</mat-label>
+                    <mat-icon matPrefix>email</mat-icon>
+                    <input matInput formControlName="email" readonly />
+                  </mat-form-field>
                 </div>
 
                 <div class="mb-3">
-                    <mat-form-field appearance="outline" class="w-100">
-                        <mat-label>Phone</mat-label>
-                        <mat-icon matPrefix>phone</mat-icon>
-                        <input matInput formControlName="phone" />
-                    </mat-form-field>
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Phone</mat-label>
+                    <mat-icon matPrefix>phone</mat-icon>
+                    <input matInput formControlName="phone" />
+                  </mat-form-field>
                 </div>
 
                 <div class="text-end">
                   <button
-                    [disabled]="!profileForm.valid || !profileForm.dirty && !imageSelected"
+                    [disabled]="
+                      !profileForm.valid ||
+                      (!profileForm.dirty && !imageSelected)
+                    "
                     type="submit"
                     class="btn btn-success"
-
                   >
-                    Save Changes
+                    @if (profileUpdateLoader) {
+                      <span
+                        class="spinner-border spinner-border-sm"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Loading...
+                    } @else {
+                      Save Changes
+                    }
                   </button>
                 </div>
               </form>
@@ -141,86 +152,90 @@
                 (ngSubmit)="changePassword()"
               >
                 <div class="mb-3">
-                    <mat-form-field appearance="outline" class="w-100">
-                        <mat-label>Current Password</mat-label>
-                        <input
-                          matInput
-                          [type]="hidePassword ? 'password' : 'text'"
-                          formControlName="current_password"
-                        />
-                        <button
-                            mat-icon-button
-                            matSuffix
-                            (click)="hidePassword = !hidePassword"
-                            [attr.aria-label]="'Hide password'"
-                            [attr.aria-pressed]="hidePassword"
-                            type="button"
-                        >
-                            <mat-icon>{{
-                            hidePassword ? "visibility_off" : "visibility"
-                            }}</mat-icon>
-                        </button>
-                        @if (changePasswordFormErrors("current_password")) {
-                          <mat-error>{{
-                            changePasswordFormErrors("current_password")
-                          }}</mat-error>
-                        }
-                    </mat-form-field>
-                </div>
-
-                <div class="mb-3">
-                    <mat-form-field appearance="outline" class="w-100">
-                        <mat-label>New Password</mat-label>
-                        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="new_password" />
-                        <button
-                            mat-icon-button
-                            matSuffix
-                            (click)="hidePassword = !hidePassword"
-                            [attr.aria-label]="'Hide password'"
-                            [attr.aria-pressed]="hidePassword"
-                            type="button"
-                        >
-                            <mat-icon>{{
-                            hidePassword ? "visibility_off" : "visibility"
-                            }}</mat-icon>
-                        </button>
-                        @if (changePasswordFormErrors("new_password")) {
-                          <mat-error>{{
-                            changePasswordFormErrors("new_password")
-                          }}</mat-error>
-                        }
-                    </mat-form-field>
-                </div>
-
-                <div class="mb-3">
-                    <mat-form-field appearance="outline" class="w-100 mb-3">
-                        <mat-label>Confirm Password</mat-label>
-                        <input
-                          matInput
-                          [type]="hidePassword ? 'password' : 'text'"
-                          formControlName="confirm_password"
-                        />
-                        <button
-                            mat-icon-button
-                            matSuffix
-                            (click)="hidePassword = !hidePassword"
-                            [attr.aria-label]="'Hide password'"
-                            [attr.aria-pressed]="hidePassword"
-                            type="button"
-                        >
-                            <mat-icon>{{
-                            hidePassword ? "visibility_off" : "visibility"
-                            }}</mat-icon>
-                        </button>
-                        @if (changePasswordFormErrors("confirm_password")) {
-                          <mat-error>{{
-                            changePasswordFormErrors("confirm_password")
-                          }}</mat-error>
-                        }
-                    </mat-form-field>
-                    @if (!changePasswordForm.valid) {
-                        <p class="text-danger">Passwords do not match</p>
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Current Password</mat-label>
+                    <input
+                      matInput
+                      [type]="hidePassword ? 'password' : 'text'"
+                      formControlName="current_password"
+                    />
+                    <button
+                      mat-icon-button
+                      matSuffix
+                      (click)="hidePassword = !hidePassword"
+                      [attr.aria-label]="'Hide password'"
+                      [attr.aria-pressed]="hidePassword"
+                      type="button"
+                    >
+                      <mat-icon>{{
+                        hidePassword ? "visibility_off" : "visibility"
+                      }}</mat-icon>
+                    </button>
+                    @if (changePasswordFormErrors("current_password")) {
+                      <mat-error>{{
+                        changePasswordFormErrors("current_password")
+                      }}</mat-error>
                     }
+                  </mat-form-field>
+                </div>
+
+                <div class="mb-3">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>New Password</mat-label>
+                    <input
+                      matInput
+                      [type]="hideNewPassword ? 'password' : 'text'"
+                      formControlName="new_password"
+                    />
+                    <button
+                      mat-icon-button
+                      matSuffix
+                      (click)="hideNewPassword = !hideNewPassword"
+                      [attr.aria-label]="'Hide password'"
+                      [attr.aria-pressed]="hideNewPassword"
+                      type="button"
+                    >
+                      <mat-icon>{{
+                        hidePassword ? "visibility_off" : "visibility"
+                      }}</mat-icon>
+                    </button>
+                    @if (changePasswordFormErrors("new_password")) {
+                      <mat-error>{{
+                        changePasswordFormErrors("new_password")
+                      }}</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+
+                <div class="mb-3">
+                  <mat-form-field appearance="outline" class="w-100 mb-3">
+                    <mat-label>Confirm Password</mat-label>
+                    <input
+                      matInput
+                      [type]="hideConfirmPassword ? 'password' : 'text'"
+                      formControlName="confirm_password"
+                    />
+                    <button
+                      mat-icon-button
+                      matSuffix
+                      (click)="hideConfirmPassword = !hideConfirmPassword"
+                      [attr.aria-label]="'Hide password'"
+                      [attr.aria-pressed]="hideConfirmPassword"
+                      type="button"
+                    >
+                      <mat-icon>{{
+                        hidePassword ? "visibility_off" : "visibility"
+                      }}</mat-icon>
+                    </button>
+                    @if (changePasswordFormErrors("confirm_password")) {
+                      <mat-error>{{
+                        changePasswordFormErrors("confirm_password")
+                      }}</mat-error>
+                    }
+                  </mat-form-field>
+                  @if (!changePasswordForm.valid) {
+                    <p class="text-danger">Passwords do not match</p>
+                  }
                 </div>
 
                 <div class="text-end">
@@ -231,7 +246,16 @@
                     type="submit"
                     class="btn btn-success"
                   >
-                    Change Password
+                    @if (profileUpdateLoader) {
+                      <span
+                        class="spinner-border spinner-border-sm"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Loading...
+                    } @else {
+                      Change Password
+                    }
                   </button>
                 </div>
               </form>

@@ -7,7 +7,7 @@
 >
   @if (!isCurrentUserPayer()) {
     <img
-      [src]="debtorImageUrl() ?? '/profile.png'"
+      [src]="payerImageUrl() ?? '/profile.png'"
       alt="avatar"
       class="rounded-circle d-inline-flex align-self-end me-3 shadow-1-strong"
       width="40"

@@ -47,11 +47,14 @@ export class ProfileComponent implements OnInit {
   private readonly toastr = inject(ToastrService);
 
   hidePassword = true;
+  hideNewPassword = true;
+  hideConfirmPassword = true;
   previewImage: string | null = null;
   selectedFile: File | null = null;
   hoveringImage = false;
   imageSelected = false;
   currentUser = this.authService.currentUser;
+  profileUpdateLoader = false;
   
   profileForm = new FormGroup({
     first_name: new FormControl("", {
@@ -179,6 +182,7 @@ export class ProfileComponent implements OnInit {
    * Update and saves the user profile.
    */
   saveChanges(): void {
+    this.profileUpdateLoader = true;
     if (!this.profileForm.valid || !this.profileForm.dirty && !this.imageSelected) {
       this.toastr.warning("Invalid Details", "Warning");
       return;
@@ -197,12 +201,19 @@ export class ProfileComponent implements OnInit {
     }
 
     this.userService.updateUser(this.authService.currentUser()!.user_id, formData).subscribe({
-      next: () => this.toastr.success("Updated Profile Successfully", "Success"),
-      error: () => this.toastr.error("Error Updating Profile", "Error")
+      next: () => {
+        this.profileUpdateLoader = false;
+        this.toastr.success("Updated Profile Successfully", "Success");
+      },
+      error: () => {
+        this.profileUpdateLoader = false;
+        this.toastr.error("Error Updating Profile", "Error");
+      }
     });
   }
 
   changePassword() {
+    this.profileUpdateLoader = true;
     if (!this.changePasswordForm.valid) {
       return;
     }
@@ -212,8 +223,14 @@ export class ProfileComponent implements OnInit {
     formData.append("new_password", this.changePasswordForm.get("confirm_password")!.value!);
 
     this.userService.updateUser(this.authService.currentUser()!.user_id, formData).subscribe({
-      next: () => this.toastr.success("Updated Profile Successfully", "Success"),
-      error: () => this.toastr.error("Error Updating Profile", "Error")
+      next: () => {
+        this.profileUpdateLoader = false;
+        this.toastr.success("Password Changed Successfully", "Success");
+      },
+      error: () => {
+        this.profileUpdateLoader = false;
+        this.toastr.error("Error Changing Password", "Error");
+      }
     });
   }
 }

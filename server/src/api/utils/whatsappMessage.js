@@ -160,8 +160,53 @@ const sendCollectExpenseDetailsMessage = async(phone) => {
   return responses;
 };
 
+const sendAddExpenseButton = async(phone) => {
+  const responses = [];
+
+  // Message template object for the welcome message
+  const messageData = {
+    "messaging_product": "whatsapp",
+    "to": `91${phone}`, // Send to the user's phone number
+    "type": "template",
+    "template": {
+      "name": "add_expense_button_template", // Replace with your approved welcome template name
+      "language": { "code": "en_US" },
+      "components": [
+        {
+          "type": "button",
+          "sub_type": "quick_reply", // Button type (quick reply for simple action)
+          "index": 0,
+          "parameters": [
+            {
+              "type": "payload",
+              "payload": JSON.stringify({ "action": "ADD_EXPENSE" }) // Payload for handling in webhook
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  try {
+    const response = await got.post(url, {
+      "json": messageData,
+      "responseType": "json",
+      "headers": {
+        "Authorization": `Bearer ${WHATSAPP_BUSINESS_SECRET}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    responses.push(response.body);
+  } catch (error) {
+    responses.push(error.response ? error.response.body : error.message);
+  }
+  return responses;
+};
+
 export {
   sendWhatsAppTemplateMessage,
   sendWelcomeMessage,
-  sendCollectExpenseDetailsMessage
+  sendCollectExpenseDetailsMessage,
+  sendAddExpenseButton
 };

@@ -134,6 +134,10 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async ngOnInit() {
+    this.groupsService.selectedGroup$.subscribe((group) => {
+      this.groupsService.setSelectedGroup(group); // Whenever a new group is selected, update the local state
+      this.onSelectGroup(this.selectedGroup());
+    });
     await this.groupsService.fetchGroups();
     this.removeQueryParams();
   }
@@ -582,10 +586,10 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
             const expenseParticipants = response.data.expenseParticipants;
             // Reduce the above array to add the debtor_amount of each participant into a variable debtor_amount
             const totalDebtAmount = expenseParticipants.reduce((acc, val) => acc + parseFloat(val.debtor_amount), 0);
-            expense.total_debt_amount = totalDebtAmount.toString();
+            expense.total_debt_amount = totalDebtAmount.toFixed(2);
             if (expense.payer_id === this.currentMember()?.group_membership_id) {
               expense.payer = this.commonService.getFullNameAndImage(this.currentMember());
-              expense.user_debt = (parseFloat(expense.total_amount) - totalDebtAmount).toString();
+              expense.user_debt = (parseFloat(expense.total_amount) - totalDebtAmount).toFixed(2);
             } else {
               const payer = this.groupMembers().find((member) => expense.payer_id === member.group_membership_id);
               expense.payer = this.commonService.getFullNameAndImage(
@@ -877,6 +881,7 @@ export class GroupsComponent implements OnInit, AfterViewInit, OnDestroy {
       
             // Update the signal with the new current member data
             this.currentMember.set(updatedMember);
+            this.selectedGroup()!.has_blocked = newBlockStatus;
             this.toastr.success(`Group ${newBlockStatus ? "Blocked" : "Unblocked"} Successfully`, "Success");
           }
         });

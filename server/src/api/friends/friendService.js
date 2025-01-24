@@ -322,7 +322,7 @@ class FriendService {
    */
   static addExpense = async(expenseData, userId, conversationId) => {
     const friend = await FriendDb.getFriend(conversationId);
-    const friendWithUser = await FriendDb.friendWithUsers(conversationId);
+    const friendWithUser = await FriendDb.getFriendWithUsers(conversationId);
 
     isFriendExist(friend);
     Object.assign(expenseData, { "conversation_id": conversationId });
@@ -666,12 +666,12 @@ class FriendService {
   static getBoth = async(conversationId, timestamp, pageSize = 20) => {
     let timeStamp = timestamp;
     const results = [];
+    const [ messages, expenses ] = await Promise.all([
+      this.getMessages(conversationId, timeStamp, pageSize),
+      this.getExpenses(conversationId, timeStamp, pageSize)
+    ]);
     
     while (results.length < pageSize) {
-      const [ messages, expenses ] = await Promise.all([
-        this.getMessages(conversationId, timeStamp, pageSize),
-        this.getExpenses(conversationId, timeStamp, pageSize)
-      ]);
       
       // Break if no more data to fetch
       if (!messages.length && !expenses.length) {

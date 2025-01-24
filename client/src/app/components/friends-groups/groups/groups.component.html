@@ -1,5 +1,9 @@
 <div class="d-flex row justify-content-center align-items-center m-0 p-0 mt-md-4">
-  <div class="col-md-4" style="flex: 0 0 auto">
+  <div
+    class="col-md-4 subcontainer d-md-block"
+    [ngClass]="{ 'd-none': selectedGroup() }"
+    style="flex: 0 0 auto"
+  >
     <app-groups-list
       (selectedGroup)="onSelectGroup($event)"
       [balanceAmount]="selectedGroup()?.balance_amount || '0'"
@@ -20,7 +24,7 @@
           <div>
             <span
               class="material-icons pe-2"
-              style="vertical-align: middle"
+              style="vertical-align: middle; cursor: pointer;"
               (click)="clearSelectedGroupData()"
             >
               arrow_back
@@ -254,39 +258,64 @@
         </div>
 
         <hr class="m-0" />
-        <div
-          class="d-flex input-container justify-content-around align-items-center mx-3"
-        >
-          <div class="custom-width">
-            <button
-              [disabled]="addExpenseLoader"
-              (click)="openAddExpenseDialog()"
-              class="btn btn-success w-100"
-            >
-              Add Expense
+        @if (!selectedGroup()?.has_blocked) {
+          <div
+            class="d-flex input-container justify-content-around align-items-center mx-3"
+          >
+            <div class="custom-width">
+              <button
+                [disabled]="addExpenseLoader"
+                (click)="openAddExpenseDialog()"
+                class="btn btn-success w-100"
+              >
+                Add Expense
+              </button>
+            </div>
+  
+            <div class="input-field ms-3">
+              <input
+                class="message-input"
+                [(ngModel)]="messageInput"
+                (keyup.enter)="sendMessage()"
+                style="width: 100%"
+                type="text"
+                maxlength="512"
+                (input)="onInputChange($event)"
+                class="form-control"
+                placeholder="Type something..."
+              />
+            </div>
+            @if (charCountExceeded) {
+              <div class="char-count error mx-2">{{ charCount }} / 512</div>
+            }
+            <button (click)="sendMessage()" class="send-message m-3">
+              <i class="fa fa-paper-plane"></i>
             </button>
           </div>
-
-          <div class="input-field ms-3">
-            <input
-              class="message-input"
-              [(ngModel)]="messageInput"
-              (keyup.enter)="sendMessage()"
-              style="width: 100%"
-              type="text"
-              maxlength="512"
-              (input)="onInputChange($event)"
-              class="form-control"
-              placeholder="Type something..."
-            />
+        } @else {
+          <div
+            class="d-flex input-container justify-content-around align-items-center mx-3"
+          >
+            <div class="custom-width disabled-pointer">
+              <button class="btn btn-success w-100 disabled-pointer" disabled>
+                Add Expense
+              </button>
+            </div>
+            <div class="input-field disabled-pointer ms-3">
+              <input
+                class="message-input disabled-pointer"
+                disabled
+                style="width: 100%; cursor: not-allowed !important"
+                type="text"
+                class="form-control"
+                placeholder="Type something..."
+              />
+            </div>
+            <button class="send-message m-3 disabled-pointer" disabled>
+              <i class="fa fa-paper-plane"></i>
+            </button>
           </div>
-          @if (charCountExceeded) {
-            <div class="char-count error mx-2">{{ charCount }} / 512</div>
-          }
-          <button (click)="sendMessage()" class="send-message m-3">
-            <i class="fa fa-paper-plane"></i>
-          </button>
-        </div>
+        }
       } @else {
         <div
           class="text-center p-2 d-flex flex-column justify-content-between"

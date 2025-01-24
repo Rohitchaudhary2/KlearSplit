@@ -82,7 +82,7 @@ export class ExpenseTableComponent {
       this.deleteExpense.emit({
         id: expense.group_expense_id,
         payerId: expense.payer_id,
-        debtorAmount: expense.user_debt,
+        debtorAmount: expense.payer.fullName === "You" ? expense.total_debt_amount : expense.user_debt,
       });
     } else {
       this.expenseLoadingState[expense.group_settlement_id] = { ...this.expenseLoadingState[expense.group_settlement_id], delete: true };

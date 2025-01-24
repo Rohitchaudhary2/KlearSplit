@@ -91,9 +91,10 @@ export class SelectMembersDialogComponent {
       )
       .subscribe({
         next: (users) => {
+          this.loading.set(false);
           this.users.set(users.data);
         },
-        complete: () => {
+        error: () => {
           this.loading.set(false);
         },
       });

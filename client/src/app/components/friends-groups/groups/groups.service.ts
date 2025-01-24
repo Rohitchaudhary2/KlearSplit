@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable, signal } from "@angular/core";
-import { concatMap, firstValueFrom, map, Observable } from "rxjs";
+import { BehaviorSubject, concatMap, firstValueFrom, map, Observable } from "rxjs";
 
 import { API_URLS } from "../../../constants/api-urls";
 import {
@@ -50,6 +50,13 @@ export class GroupsService {
   combinedView = signal<(CombinedGroupMessage | CombinedGroupExpense | CombinedGroupSettlement)[]>([]);
   groups = signal<GroupData[]>([]);
   groupInvites = signal<GroupData[]>([]);
+  private readonly selectedGroupSubject = new BehaviorSubject<GroupData | undefined>(undefined);
+  selectedGroup$ = this.selectedGroupSubject.asObservable();
+
+  // Method to update the selected group
+  setSelectedGroupSubject(group: GroupData) {
+    this.selectedGroupSubject.next(group);
+  }
 
   setSelectedGroup(selectedGroup: GroupData | undefined) {
     this.currentGroup.set(selectedGroup);

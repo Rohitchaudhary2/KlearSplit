@@ -233,6 +233,7 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!this.selectedUser()) {
       return;
     }
+    this.loading = false;
     // Fetch messages, expenses, and combined data (messages + expenses) for the selected user(friend)
     this.fetchMessagesAndExpenses(true, true, true, null);
     // Join the new conversation room for the selected user

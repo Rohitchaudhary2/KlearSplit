@@ -716,19 +716,19 @@ class FriendService {
       // Use Promise.all to wait for all the promises to resolve
       processedRows = await Promise.all(
         rows.map(async(row) => {
-          const payer = await UserDb.getUserByEmail(row[ "Payer Email ID" ]);
-          const debtor = await UserDb.getUserByEmail(row[ "Debtor Email ID" ]);
+          const payer = await UserDb.getUserByEmail(row[ "Payer Email ID" ].trim());
+          const debtor = await UserDb.getUserByEmail(row[ "Debtor Email ID" ].trim());
 
           const processedRow = {
-            "expense_name": row.Name,
-            "conversation_id": conversationId,
-            "total_amount": row.Amount,
-            "split_type": row[ "Split Type" ],
+            "expense_name": row.Name.trim(),
+            "conversation_id": conversationId.trim(),
+            "total_amount": row.Amount.trim(),
+            "split_type": row[ "Split Type" ].trim(),
             "payer_id": payer.user_id,
             "debtor_id": debtor.user_id,
-            "participant1_share": row[ "Payer Share" ],
-            "participant2_share": row[ "Debtor Share" ],
-            "debtor_share": row[ "Debtor Share" ]
+            "participant1_share": row[ "Payer Share" ].trim(),
+            "participant2_share": row[ "Debtor Share" ].trim(),
+            "debtor_share": row[ "Debtor Share" ].trim()
           };
           
           const debtorAmount = calculateDebtorAmount(processedRow);

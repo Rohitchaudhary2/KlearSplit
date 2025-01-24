@@ -24,7 +24,7 @@
   </mat-form-field>
 
   @if (users().length > 0) {
-    <ul>
+    <ul style="max-height: 15vh; overflow-y: auto;">
       @for (user of users(); track $index) {
         <!-- Change the 'Add' button to make the list item clickable to select the user -->
         <li (click)="selectUser(user)" style="cursor: pointer">
@@ -37,7 +37,7 @@
 
 <h3 class="text-center py-2">Selected Members</h3>
 
-<div>
+<div class="p-1" style="max-height: 15vh; overflow-y: auto;">
   @for (user of selectedMembers(); track $index) {
     <div
       class="d-flex flex-column flex-md-row px-2 justify-content-between mb-3"

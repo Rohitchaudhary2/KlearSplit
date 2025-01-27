@@ -112,7 +112,7 @@ class PaymentService {
       switch (type) {
         case "friends": {
           // Await the friend expense addition
-          const settlement = await FriendService.addExpense({ "total_amount": amount, "split_type": "SETTLEMENT" }, id);
+          const settlement = await FriendService.addExpense({ "total_amount": amount, "split_type": "SETTLEMENT" }, userId, id);
 
           logs.push(auditLogFormat("INSERT", userId, "friends_expenses", settlement.friend_expense_id, { "newData": settlement.dataValues }));
           
